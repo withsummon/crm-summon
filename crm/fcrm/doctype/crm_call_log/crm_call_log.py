@@ -53,6 +53,10 @@ class CRMCallLog(Document):
 		if not self.telephony_medium:
 			self.telephony_medium = "Manual"
 
+	def validate(self):
+		if self.duration == "" or self.duration is None:
+			self.duration = 0
+
 	@staticmethod
 	def default_list_data():
 		columns = [

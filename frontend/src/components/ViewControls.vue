@@ -514,8 +514,8 @@ function getParams() {
 list.value = createResource({
   url: 'crm.api.doc.get_data',
   params: getParams(),
-  cache: [props.doctype, route.query.view, route.params.viewType],
   onSuccess(data) {
+
     let cv = getView(route.query.view, route.params.viewType, props.doctype)
     let params = list.value.params ? list.value.params : getParams()
     defaultParams.value = {
@@ -1312,6 +1312,7 @@ function likeDoc({ name, liked }) {
 }
 
 defineExpose({
+  reload,
   applyFilter,
   applyLikeFilter,
   likeDoc,

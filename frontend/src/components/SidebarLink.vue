@@ -1,11 +1,7 @@
 <template>
   <button
-    class="flex h-7.5 cursor-pointer items-center rounded text-white/75 duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary-300"
-    :class="
-      isActive
-        ? 'bg-primary-500 text-white shadow-sm'
-        : 'hover:bg-summon-charcoal hover:text-white'
-    "
+    class="flex h-7.5 cursor-pointer items-center rounded duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary-300"
+    :class="buttonClasses"
     @click="handleClick"
   >
     <div
@@ -18,7 +14,7 @@
             <Icon
               :icon="icon"
               class="flex items-center size-4"
-              :class="isActive ? 'text-white' : 'text-white/75'"
+              :class="iconClasses"
             />
           </slot>
         </Tooltip>
@@ -60,6 +56,25 @@ const props = defineProps({
   label: { type: String, default: '' },
   to: { type: [Object, String], default: null },
   isCollapsed: { type: Boolean, default: false },
+  theme: { type: String, default: 'dark' },
+})
+
+const buttonClasses = computed(() => {
+  if (props.theme === 'light') {
+    return isActive.value
+      ? 'bg-surface-selected text-ink-gray-9 shadow-sm'
+      : 'text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
+  }
+  return isActive.value
+    ? 'bg-primary-500 text-white shadow-sm'
+    : 'text-white/75 hover:bg-summon-charcoal hover:text-white'
+})
+
+const iconClasses = computed(() => {
+  if (props.theme === 'light') {
+    return isActive.value ? 'text-ink-gray-9' : 'text-ink-gray-5'
+  }
+  return isActive.value ? 'text-white' : 'text-white/75'
 })
 
 function handleClick() {
@@ -81,3 +96,4 @@ let isActive = computed(() => {
   return route.name === props.to
 })
 </script>
+

@@ -15,7 +15,7 @@ def get_context():
 	from crm.api import check_app_permission
 
 	if not check_app_permission():
-		frappe.throw(_("You do not have permission to access Summon"), frappe.PermissionError)
+		frappe.throw(_("You do not have permission to access Frappe CRM"), frappe.PermissionError)
 
 	frappe.db.commit()
 	context = frappe._dict()
@@ -25,8 +25,10 @@ def get_context():
 	return context
 
 
-@frappe.whitelist(methods=["POST", "GET"], allow_guest=True)
+@frappe.whitelist(methods=["GET", "POST"], allow_guest=True)
 def get_context_for_dev():
+	if not frappe.conf.developer_mode:
+		frappe.throw(_("This method is only meant for developer mode"))
 	return get_boot()
 
 

@@ -1,0 +1,85 @@
+/* Summon CRM - Login Page Branding Override */
+
+/* Hide default Frappe app logo */
+.page-card .login-content .login-image,
+.page-card .login-content img.login-image,
+img.app-logo,
+.for-login .page-card-head img {
+  display: none !important;
+}
+
+/* Summon logo above the login form - using inline SVG data URI to avoid 403 */
+.for-login .page-card-head::before,
+.page-card .login-content::before {
+  content: '';
+  display: block;
+  width: 72px;
+  height: 72px;
+  background-image: url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M214.286 0H85.7143C38.3756 0 0 38.3756 0 85.7143V214.286C0 261.624 38.3756 300 85.7143 300H214.286C261.624 300 300 261.624 300 214.286V85.7143C300 38.3756 261.624 0 214.286 0Z' fill='%23EF0BF5'/%3E%3Cpath d='M64.2141 90.301V111.862H214.339V140.214L160.187 193.146V208.993L139.705 208.885V193.146L85.6605 140.214H64.2141V149.269L118.259 202.202V230.23L181.634 230.769V202.202L235.786 149.269V90.301H64.2141Z' fill='white'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin: 0 auto 16px auto;
+  border-radius: 14px;
+}
+
+/* Override the login title text */
+.page-card .login-content .login-image + h4,
+.for-login .page-card-head h4,
+.page-card-head > h4 {
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+.for-login .page-card-head h4::after,
+.page-card-head > h4::after {
+  content: 'Login to Summon';
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+/* Override navbar brand logo */
+.navbar .navbar-brand .app-logo {
+  display: none !important;
+}
+
+.navbar .navbar-brand::before {
+  content: '';
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M214.286 0H85.7143C38.3756 0 0 38.3756 0 85.7143V214.286C0 261.624 38.3756 300 85.7143 300H214.286C261.624 300 300 261.624 300 214.286V85.7143C300 38.3756 261.624 0 214.286 0Z' fill='%23EF0BF5'/%3E%3Cpath d='M64.2141 90.301V111.862H214.339V140.214L160.187 193.146V208.993L139.705 208.885V193.146L85.6605 140.214H64.2141V149.269L118.259 202.202V230.23L181.634 230.769V202.202L235.786 149.269V90.301H64.2141Z' fill='white'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 8px;
+  border-radius: 6px;
+}
+
+.navbar .navbar-brand::after {
+  content: 'Summon';
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.navbar-brand {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Style the login button with Summon brand color */
+.for-login .btn-primary,
+.login-content .btn-primary {
+  background-color: #EF0BF5 !important;
+  border-color: #EF0BF5 !important;
+}
+
+.for-login .btn-primary:hover,
+.login-content .btn-primary:hover {
+  background-color: #d00ad6 !important;
+  border-color: #d00ad6 !important;
+}

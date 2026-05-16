@@ -55,30 +55,23 @@ app.use(telemetryPlugin, { app_name: 'crm' })
 app.config.globalProperties.$dialog = createDialog
 
 let socket
-function mountApp() {
-  socket = initSocket()
-  app.config.globalProperties.$socket = socket
-  app.mount('#app')
-}
-
 if (import.meta.env.DEV) {
   frappeRequest({
     url: '/api/method/crm.www.crm.get_context_for_dev',
     method: 'GET',
-  }).then(
-    (values) => {
+  }).then((values) => {
       for (let key in values) {
         window[key] = values[key]
       }
-      mountApp()
-    },
-    (error) => {
-      console.warn('Unable to load CRM dev context, mounting app anyway', error)
-      mountApp()
+      socket = initSocket()
+      app.config.globalProperties.$socket = socket
+      app.mount('#app')
     },
   )
 } else {
-  mountApp()
+  socket = initSocket()
+  app.config.globalProperties.$socket = socket
+  app.mount('#app')
 }
 
 if (import.meta.env.DEV) {

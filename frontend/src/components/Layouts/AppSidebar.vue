@@ -149,6 +149,7 @@
 </template>
 
 <script setup>
+import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
@@ -258,6 +259,11 @@ const links = [
     label: 'Call Logs',
     icon: PhoneIcon,
     to: 'Call Logs',
+  },
+  {
+    label: 'AI Desk',
+    icon: AIDeskIcon,
+    to: 'AI Desk',
   },
 ]
 

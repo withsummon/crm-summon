@@ -130,12 +130,12 @@ msgstr "501-1000"
 msgid "51-200"
 msgstr "51-200"
 
-#. Paragraph text in the Frappe CRM Workspace
+#. Paragraph text in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "<b>META</b>"
 msgstr "<b>META</b>"
 
-#. Paragraph text in the Frappe CRM Workspace
+#. Paragraph text in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "<b>SHORTCUTS</b>"
 msgstr "<b>PREČICE</b>"
@@ -145,7 +145,7 @@ msgstr "<b>PREČICE</b>"
 msgid "<p>Dear {{ lead_name }},</p>\\n\\n<p>This is a reminder for the payment of {{ grand_total }}.</p>\\n\\n<p>Thanks,</p>\\n<p>Frappé</p>"
 msgstr "<p>Poštovani {{ lead_name }},</p>\\n\\n<p>Ovo je podsjetnik za plaćanje {{ grand_total }}.</p>\\n\\n<p>Hvala,</p>\\n<p>Frappé</p>"
 
-#. Header text in the Frappe CRM Workspace
+#. Header text in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "<span class=\"h5\"><b>PORTAL</b></span>"
 msgstr "<span class=\"h5\"><b>PORTAL</b></span>"
@@ -668,8 +668,8 @@ msgid "Are you sure you want to go back? Unsaved changes will be lost."
 msgstr "Jeste li sigurni da se želite vratiti? Nesačuvane promjene će biti izgubljene."
 
 #: frontend/src/composables/frappecloud.js:24
-msgid "Are you sure you want to login to your Frappe Cloud dashboard?"
-msgstr "Jeste li sigurni da se želite prijaviti na svoju Frappe Cloud Nadzornu Tablu?"
+msgid "Are you sure you want to login to your Summon Cloud dashboard?"
+msgstr "Jeste li sigurni da se želite prijaviti na svoju Summon Cloud Nadzornu Tablu?"
 
 #: frontend/src/components/FieldLayoutEditor.vue:428
 msgid "Are you sure you want to remove this tab and all its content?"
@@ -746,7 +746,7 @@ msgstr "Dani Dodjele"
 msgid "Assignment Days are required"
 msgstr "Dani Dodjele su obavezni"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/components/Layouts/AppSidebar.vue:606
 #: frontend/src/components/Settings/AssignmentRules/AssignmentRulesList.vue:16
@@ -1133,7 +1133,7 @@ msgstr "Obavještenje"
 msgid "CRM Organization"
 msgstr "Organizacija"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "CRM Portal Page"
 msgstr "Stranica Portala"
@@ -1529,7 +1529,7 @@ msgstr "Uobičajeni razlozi za gubitak poslova"
 msgid "Communication Status"
 msgstr "Status Konverzacije"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Communication Statuses"
 msgstr "Status Konverzacije"
@@ -1646,7 +1646,7 @@ msgid "Confirm {0}"
 msgstr "Potvrdi {0}"
 
 #: frontend/src/components/Settings/ERPNextSettings.vue:246
-msgid "Connect ERPNext to Frappe CRM"
+msgid "Connect ERPNext to Summon CRM"
 msgstr "Poveži System sa Podrškom Prodaje"
 
 #: frontend/src/pages/Welcome.vue:35
@@ -1709,7 +1709,7 @@ msgstr "Slika kontakta ažurirana"
 
 #. Label of the contacts_tab (Tab Break) field in DocType 'CRM Deal'
 #. Label of the contacts (Table) field in DocType 'CRM Deal'
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/pages/Contact.vue:246 frontend/src/pages/MobileContact.vue:223
@@ -2033,7 +2033,7 @@ msgstr "Odgovorni"
 msgid "Deal Status"
 msgstr "Status Posla"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Deal Statuses"
 msgstr "Status Posla"
@@ -2055,7 +2055,7 @@ msgstr "Status posla je obavezan"
 msgid "Deal value"
 msgstr "Vrijednost posla"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/pages/Deal.vue:513 frontend/src/pages/MobileContact.vue:299
 #: frontend/src/pages/MobileDeal.vue:392
@@ -3398,16 +3398,16 @@ msgstr "Skripta Forme je uspješno ažurirana"
 
 #. Name of a Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
-msgid "Frappe CRM"
+msgid "Summon CRM"
 msgstr "Podrška Prodaje"
 
 #: frontend/src/components/Layouts/AppSidebar.vue:632
-msgid "Frappe CRM mobile"
+msgid "Summon CRM mobile"
 msgstr "Mobilna Aplikacija"
 
 #: frontend/src/components/Settings/emailConfig.js:81
-msgid "Frappe Mail Site"
-msgstr "Frappe Mail Site"
+msgid "Summon Mail Site"
+msgstr "Summon Mail Site"
 
 #. Option for the 'Weekly Off' (Select) field in DocType 'CRM Holiday List'
 #. Option for the 'Workday' (Select) field in DocType 'CRM Service Day'
@@ -3721,7 +3721,7 @@ msgstr "Dolazni poziv..."
 msgid "Incorrect current password. Please try again."
 msgstr "Trenutna lozinka je netačna. Molimo pokušajte ponovo."
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Industries"
 msgstr "Industrije"
@@ -4183,13 +4183,13 @@ msgstr "Odgovorni"
 msgid "Lead Owner cannot be same as the Lead Email Address"
 msgstr "Odgovorni za Potencijalnog Klijenta ne može biti isti kao i adresa e-pošte potencijalnog klijenta"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/components/Settings/LeadSyncing/LeadSyncSources.vue:9
 msgid "Lead Sources"
 msgstr "Izvor Potencijalnog Klijenta"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Lead Statuses"
 msgstr "Status Potencijalnog Klijenta"
@@ -4227,7 +4227,7 @@ msgstr "Izvor sinhronizacije potencijalnih klijenata uspješno izbrisan"
 msgid "Lead to deal conversion pipeline"
 msgstr "Konverzija potencijalnih klijenata u poslove"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/pages/InvalidPage.vue:9 frontend/src/pages/Lead.vue:368
 #: frontend/src/pages/MobileLead.vue:238
@@ -4344,8 +4344,8 @@ msgid "Log a Call"
 msgstr "Zabilježi poziv"
 
 #: frontend/src/composables/frappecloud.js:23
-msgid "Login to Frappe Cloud?"
-msgstr "Prijavi se na Frappe Cloud?"
+msgid "Login to Summon Cloud?"
+msgstr "Prijavi se na Summon Cloud?"
 
 #: frontend/src/pages/NotPermitted.vue:21
 msgid "Login with Different Account"
@@ -5304,7 +5304,7 @@ msgstr "Naziv Poduzeća"
 msgid "Organization is required to create a customer"
 msgstr "Organizacija je potrebna za kreiranje klijenta"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 #: frontend/src/pages/MobileOrganization.vue:218
 #: frontend/src/pages/Organization.vue:256
@@ -6067,7 +6067,7 @@ msgstr "Redovi"
 #. Label of the sla (Link) field in DocType 'CRM Deal'
 #. Label of the sla_tab (Tab Break) field in DocType 'CRM Lead'
 #. Label of the sla (Link) field in DocType 'CRM Lead'
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/doctype/crm_deal/crm_deal.json
 #: crm/fcrm/doctype/crm_lead/crm_lead.json
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
@@ -6522,8 +6522,8 @@ msgid "Setting enabled successfully"
 msgstr "Postavka je uspješno omogućena"
 
 #: frontend/src/components/Settings/emailConfig.js:158
-msgid "Setting up Frappe Mail requires you to have an API key and API Secret of your email account. Read more"
-msgstr "Za postavljanje Frappe Mail-a potrebno je da imate API Ključ i API Tajnu za račun e-pošte. Pročitaj više"
+msgid "Setting up Summon Mail requires you to have an API key and API Secret of your email account. Read more"
+msgstr "Za postavljanje Summon Mail-a potrebno je da imate API Ključ i API Tajnu za račun e-pošte. Pročitaj više"
 
 #: frontend/src/components/Settings/emailConfig.js:104
 msgid "Setting up GMail requires you to enable two factor authentication and app specific passwords. Read more"
@@ -6988,7 +6988,7 @@ msgstr "Šablon je uspješno ažuriran"
 msgid "Templates"
 msgstr "Šabloni"
 
-#. Label of a shortcut in the Frappe CRM Workspace
+#. Label of a shortcut in the Summon CRM Workspace
 #: crm/fcrm/workspace/frappe_crm/frappe_crm.json
 msgid "Territories"
 msgstr "Distrikti"
@@ -7775,7 +7775,7 @@ msgid "You do not have Exotel Number set in your Telephony Agent"
 msgstr "Nemate podešen Exotel Broj u vašem Telefonskom Agentu"
 
 #: frontend/src/pages/NotPermitted.vue:12
-msgid "You do not have enough permissions to access Frappe CRM. Please contact your administrator if you believe this is an error."
+msgid "You do not have enough permissions to access Summon CRM. Please contact your administrator if you believe this is an error."
 msgstr "Nemate dovoljno dozvola za pristup Podrški Prodaje. Kontaktiraj administratora ako smatrate da je ovo greška."
 
 #: crm/integrations/exotel/handler.py:92
@@ -7783,7 +7783,7 @@ msgid "You do not have mobile number set in your Telephony Agent"
 msgstr "Nemate podešen broj mobilnog telefona u vašem Telefonskom Agentu"
 
 #: crm/www/crm.py:18
-msgid "You do not have permission to access Frappe CRM"
+msgid "You do not have permission to access Summon CRM"
 msgstr "Nemate dozvolu za pristup Podršci Prodaje"
 
 #: frontend/src/data/document.js:41

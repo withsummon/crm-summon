@@ -90,6 +90,11 @@ const routes = [
     component: () => import('@/pages/Calendar.vue'),
   },
   {
+    path: '/ai-desk',
+    name: 'AI Desk',
+    component: () => import('@/pages/AIDesk.vue'),
+  },
+  {
     path: '/data-import',
     name: 'DataImportList',
     component: () => import('@/pages/DataImport.vue'),
