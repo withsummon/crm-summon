@@ -1,16 +1,18 @@
 #!/bin/bash
+set -e
 
-if [ -d "/home/frappe/frappe-bench/apps/frappe" ]; then
+cd /workspace
+
+if [ -d "/workspace/frappe-bench/apps/frappe" ]; then
     echo "Bench already exists, skipping init"
-    cd frappe-bench
+    cd /workspace/frappe-bench
     bench start
-else
-    echo "Creating new bench..."
+    exit 0
 fi
 
+echo "Creating new bench..."
 bench init --skip-redis-config-generation frappe-bench --version version-15
-
-cd frappe-bench
+cd /workspace/frappe-bench
 
 # Use containers instead of localhost
 bench set-mariadb-host mariadb
@@ -18,16 +20,25 @@ bench set-redis-cache-host redis://redis:6379
 bench set-redis-queue-host redis://redis:6379
 bench set-redis-socketio-host redis://redis:6379
 
-# Remove redis, watch from Procfile
-sed -i '/redis/d' ./Procfile
-sed -i '/watch/d' ./Procfile
+# Remove redis and watch from Procfile if present
+if [ -f ./Procfile ]; then
+  sed -i '/redis/d' ./Procfile || true
+  sed -i '/watch/d' ./Procfile || true
+fi
 
-bench get-app crm --branch main
+# Install local CRM app if available, otherwise fetch remote app
+if [ -d "/workspace/crm" ]; then
+  rm -rf ./apps/crm
+  mkdir -p ./apps
+  cp -R /workspace/crm ./apps/crm
+else
+  bench get-app crm https://github.com/frappe/crm.git --branch main
+fi
 
 bench new-site crm.localhost \
     --force \
-    --mariadb-root-password 123 \
-    --admin-password admin \
+    --mariadb-root-password ${MYSQL_ROOT_PASSWORD:-admin} \
+    --admin-password ${ADMIN_PASSWORD:-admin} \
     --no-mariadb-socket
 
 bench --site crm.localhost install-app crm
