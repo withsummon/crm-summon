@@ -20,6 +20,12 @@ MYSQL_PORT=${MYSQL_PORT:-3306}
 MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-admin}
 MYSQL_DB_NAME=${MYSQL_DB_NAME:-}
 
+# Support host:port syntax via MYSQL_HOST when needed
+if [[ "${MYSQL_HOST}" == *:* ]]; then
+  MYSQL_PORT="${MYSQL_HOST##*:}"
+  MYSQL_HOST="${MYSQL_HOST%%:*}"
+fi
+
 REDIS_CACHE=${REDIS_CACHE:-${REDIS_URI:-redis://redis:6379}}
 REDIS_QUEUE=${REDIS_QUEUE:-${REDIS_URI:-redis://redis:6379}}
 REDIS_SOCKETIO=${REDIS_SOCKETIO:-${REDIS_URI:-redis://redis:6379}}
@@ -47,6 +53,7 @@ fi
 bench new-site crm.localhost \
     --force \
     --db-host ${MYSQL_HOST} \
+    --db-port ${MYSQL_PORT} \
     --mariadb-root-password ${MYSQL_ROOT_PASSWORD} \
     --admin-password ${ADMIN_PASSWORD:-admin} \
     --no-mariadb-socket \
