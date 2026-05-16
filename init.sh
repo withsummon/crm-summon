@@ -46,7 +46,7 @@ fi
 
 bench new-site crm.localhost \
     --force \
-    --mariadb-host ${MYSQL_HOST} \
+    --db-host ${MYSQL_HOST} \
     --mariadb-root-password ${MYSQL_ROOT_PASSWORD} \
     --admin-password ${ADMIN_PASSWORD:-admin} \
     --no-mariadb-socket \
