@@ -19,7 +19,7 @@ services:
   frappe:
     build:
       context: ..
-      dockerfile: ../Dockerfile
+      dockerfile: Dockerfile
     image: crm-app
     command: bash /workspace/init.sh
     environment:
