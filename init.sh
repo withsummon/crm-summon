@@ -14,11 +14,20 @@ echo "Creating new bench..."
 bench init --skip-redis-config-generation frappe-bench --version version-15
 cd /workspace/frappe-bench
 
-# Use containers instead of localhost
-bench set-mariadb-host mariadb
-bench set-redis-cache-host redis://redis:6379
-bench set-redis-queue-host redis://redis:6379
-bench set-redis-socketio-host redis://redis:6379
+# Use containers instead of localhost or external services
+MYSQL_HOST=${MYSQL_HOST:-mariadb}
+MYSQL_PORT=${MYSQL_PORT:-3306}
+MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-admin}
+MYSQL_DB_NAME=${MYSQL_DB_NAME:-}
+
+REDIS_CACHE=${REDIS_CACHE:-${REDIS_URI:-redis://redis:6379}}
+REDIS_QUEUE=${REDIS_QUEUE:-${REDIS_URI:-redis://redis:6379}}
+REDIS_SOCKETIO=${REDIS_SOCKETIO:-${REDIS_URI:-redis://redis:6379}}
+
+bench set-mariadb-host ${MYSQL_HOST}
+bench set-redis-cache-host ${REDIS_CACHE}
+bench set-redis-queue-host ${REDIS_QUEUE}
+bench set-redis-socketio-host ${REDIS_SOCKETIO}
 
 # Remove redis and watch from Procfile if present
 if [ -f ./Procfile ]; then
@@ -37,9 +46,11 @@ fi
 
 bench new-site crm.localhost \
     --force \
-    --mariadb-root-password ${MYSQL_ROOT_PASSWORD:-admin} \
+    --mariadb-host ${MYSQL_HOST} \
+    --mariadb-root-password ${MYSQL_ROOT_PASSWORD} \
     --admin-password ${ADMIN_PASSWORD:-admin} \
-    --no-mariadb-socket
+    --no-mariadb-socket \
+    ${MYSQL_DB_NAME:+--db-name ${MYSQL_DB_NAME}}
 
 bench --site crm.localhost install-app crm
 bench --site crm.localhost set-config developer_mode 1

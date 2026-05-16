@@ -20,4 +20,5 @@ CLAUDE.md
 AGENTS.md
 .claude
 .pi
+.env.prod
 .env
