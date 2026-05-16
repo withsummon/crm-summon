@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mariadb:
     image: mariadb:10.8
@@ -20,18 +18,16 @@ services:
     image: redis:alpine
     restart: unless-stopped
 
-  app:
+  frappe:
     build:
       context: .
       dockerfile: Dockerfile
     image: crm-app
-    env_file:
-      - .env
     environment:
       SHELL: /bin/bash
-      FRAPPE_SITE_NAME: ${FRAPPE_SITE_NAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      FRAPPE_SITE_NAME: ${FRAPPE_SITE_NAME:-crm.localhost}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-admin}
       MYSQL_HOST: mariadb
       REDIS_CACHE: redis://redis:6379
       REDIS_QUEUE: redis://redis:6379
