@@ -11,35 +11,18 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     restart: unless-stopped
+    networks:
+      - crm_net
 
   redis:
     image: redis:alpine
     restart: unless-stopped
-
-  frappe:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: crm-app
-    environment:
-      SHELL: /bin/bash
-      FRAPPE_SITE_NAME: ${FRAPPE_SITE_NAME:-crm.localhost}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-admin}
-      MYSQL_HOST: mariadb
-      REDIS_CACHE: redis://redis:6379
-      REDIS_QUEUE: redis://redis:6379
-      REDIS_SOCKETIO: redis://redis:6379
-    working_dir: /workspace
-    ports:
-      - "8000:8000"
-      - "9001:9000"
-    volumes:
-      - .:/workspace:delegated
-    depends_on:
-      - mariadb
-      - redis
-    restart: unless-stopped
+    networks:
+      - crm_net
 
 volumes:
   mariadb-data:
+
+networks:
+  crm_net:
+    name: crm_net
