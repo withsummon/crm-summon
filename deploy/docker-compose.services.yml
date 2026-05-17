@@ -14,13 +14,21 @@ services:
     volumes:
       - mariadb-data:/var/lib/mysql
     restart: always
+    networks:
+      - crm-network
 
   redis:
     image: redis:alpine
     restart: always
     volumes:
       - redis-data:/data
+    networks:
+      - crm-network
 
 volumes:
   mariadb-data:
   redis-data:
+
+networks:
+  crm-network:
+    external: true

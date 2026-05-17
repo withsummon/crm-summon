@@ -24,16 +24,31 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build and push Worker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./deploy/Dockerfile
+          target: worker
           push: true
           tags: |
             ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
+      - name: Build and push Nginx image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./deploy/Dockerfile
+          target: nginx
+          push: true
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}-nginx:latest
+            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}-nginx:${{ github.sha }}
+
       - name: Trigger Dokploy redeploy
         run: |
-          curl -fsSL "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
+          curl -fsSL -X POST "https://dokploy.withsummon.com/api/compose.redeploy" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_API_TOKEN }}" \
+            -d "{\"composeId\":\"${{ secrets.DOKPLOY_COMPOSE_ID }}\"}"
