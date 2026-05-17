@@ -9,8 +9,8 @@ COPY . .
 WORKDIR /build/frontend
 RUN yarn install --frozen-lockfile && yarn build
 
-# Stage 2: Build the Frappe Worker Image
-FROM frappe/frappe-worker:version-15
+# Stage 2: Build the Frappe Image
+FROM frappe/erpnext:version-15
 USER root
 
 # Create the apps directory for our custom app
