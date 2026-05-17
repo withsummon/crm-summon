@@ -1,0 +1,99 @@
+version: "3.7"
+name: crm-app
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.worker
+    image: summon-crm-worker:latest
+    restart: on-failure
+    environment:
+      # These refer to the service names in Dokploy or your external network
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - REDIS_CACHE=redis://redis:6379/1
+      - REDIS_QUEUE=redis://redis:6379/2
+      - REDIS_SOCKETIO=redis://redis:6379/3
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.nginx
+    image: summon-crm-nginx:latest
+    restart: on-failure
+    environment:
+      - BACKEND=backend:8000
+      - SOCKETIO=websocket:9000
+      - FRAPPE_SITE_NAME_HEADER=crm.localhost
+      - UPSTREAM_REAL_IP_ADDRESS=127.0.0.1
+      - UPSTREAM_REAL_IP_HEADER=X-Forwarded-For
+      - UPSTREAM_REAL_IP_RECURSIVE=off
+    ports:
+      - "8080:8080"
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  websocket:
+    image: summon-crm-worker:latest
+    restart: on-failure
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - REDIS_CACHE=redis://redis:6379/1
+      - REDIS_QUEUE=redis://redis:6379/2
+      - REDIS_SOCKETIO=redis://redis:6379/3
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  queue-default:
+    image: summon-crm-worker:latest
+    restart: on-failure
+    command: ["bench", "worker", "--queue", "default,short"]
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - REDIS_CACHE=redis://redis:6379/1
+      - REDIS_QUEUE=redis://redis:6379/2
+      - REDIS_SOCKETIO=redis://redis:6379/3
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  queue-long:
+    image: summon-crm-worker:latest
+    restart: on-failure
+    command: ["bench", "worker", "--queue", "long"]
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - REDIS_CACHE=redis://redis:6379/1
+      - REDIS_QUEUE=redis://redis:6379/2
+      - REDIS_SOCKETIO=redis://redis:6379/3
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+  schedule:
+    image: summon-crm-worker:latest
+    restart: on-failure
+    command: ["bench", "schedule"]
+    environment:
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - REDIS_CACHE=redis://redis:6379/1
+      - REDIS_QUEUE=redis://redis:6379/2
+      - REDIS_SOCKETIO=redis://redis:6379/3
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+volumes:
+  sites:
+  logs:
