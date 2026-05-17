@@ -1,27 +1,31 @@
-# Stage 1: Build the frontend (Vue 3 / Vite)
-FROM node:20-bookworm-slim AS frontend-builder
-WORKDIR /build
+FROM frappe/bench:latest AS frontend-builder
 
-# Copy the entire repository to ensure all workspace dependencies (like frappe-ui) are present
-COPY . .
-
-# Run yarn install and build in the frontend directory
-WORKDIR /build/frontend
-RUN yarn install --frozen-lockfile && yarn build
-
-# Stage 2: Build the Frappe Image
-FROM frappe/erpnext:version-15
 USER root
 
-# Create the apps directory for our custom app
-RUN mkdir -p /home/frappe/frappe-bench/apps/crm
+WORKDIR /build/crm
 
-# Copy the custom app along with the built frontend assets from Stage 1
-COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frappe-bench/apps/crm/
+COPY . .
+
+RUN chown -R frappe:frappe /build/crm
 
 USER frappe
 
-# Install the app into the python environment and register it in apps.txt
+WORKDIR /build/crm/frontend
+
+RUN yarn install --frozen-lockfile
+RUN yarn build
+
+
+FROM frappe/erpnext-worker:latest
+
+USER root
+
+COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frappe-bench/apps/crm
+
+USER frappe
+
 RUN cd /home/frappe/frappe-bench && \
+    ls -la ./apps/crm && \
+    test -f ./apps/crm/pyproject.toml && \
     ./env/bin/pip install -e ./apps/crm && \
-    echo "crm" >> ./sites/apps.txt
+    grep -qxF "crm" ./sites/apps.txt || echo "crm" >> ./sites/apps.txt
