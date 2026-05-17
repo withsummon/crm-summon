@@ -33,6 +33,9 @@ RUN cd /home/frappe/frappe-bench && \
     ./env/bin/pip install -e ./apps/crm && \
     grep -qxF "crm" ./sites/apps.txt || echo "crm" >> ./sites/apps.txt
 
+RUN cd /home/frappe/frappe-bench/apps/frappe && \
+    yarn install --frozen-lockfile
+
 
 # --- Nginx Image ---
 FROM frappe/erpnext-nginx:latest AS nginx

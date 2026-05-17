@@ -17,6 +17,7 @@ x-common-volumes: &common_volumes
 services:
   backend:
     image: *worker_image
+    pull_policy: always
     restart: on-failure
 
     environment:
@@ -50,6 +51,7 @@ services:
 
   websocket:
     image: *worker_image
+    pull_policy: always
     restart: on-failure
 
     command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
@@ -64,6 +66,7 @@ services:
 
   queue-default:
     image: *worker_image
+    pull_policy: always
     restart: on-failure
 
     command: ["bench", "worker", "--queue", "default,short"]
@@ -78,6 +81,7 @@ services:
 
   queue-long:
     image: *worker_image
+    pull_policy: always
     restart: on-failure
 
     command: ["bench", "worker", "--queue", "long"]
@@ -92,6 +96,7 @@ services:
 
   schedule:
     image: *worker_image
+    pull_policy: always
     restart: on-failure
 
     command: ["bench", "schedule"]
