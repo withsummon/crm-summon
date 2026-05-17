@@ -39,9 +39,9 @@ FROM frappe/erpnext-nginx:latest AS nginx
 
 USER root
 
-COPY --chown=frappe:frappe --from=worker /home/frappe/frappe-bench/apps/crm /home/frappe/frappe-bench/apps/crm
-
-USER frappe
+COPY --from=worker /home/frappe/frappe-bench/apps/crm /home/frappe/frappe-bench/apps/crm
 
 RUN cd /home/frappe/frappe-bench && \
+    mkdir -p ./sites && \
+    touch ./sites/apps.txt && \
     grep -qxF "crm" ./sites/apps.txt || echo "crm" >> ./sites/apps.txt
