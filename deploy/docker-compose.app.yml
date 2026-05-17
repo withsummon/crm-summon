@@ -141,7 +141,7 @@ services:
 
     networks:
       - crm-network
-      
+
   frontend:
     image: *nginx_image
     pull_policy: always
@@ -169,7 +169,7 @@ services:
       - crm-network
 
   websocket:
-    image: *worker_image
+    image: *nginx_image
     pull_policy: always
     restart: on-failure
 
