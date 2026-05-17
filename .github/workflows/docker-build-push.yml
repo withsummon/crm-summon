@@ -36,4 +36,4 @@ jobs:
 
       - name: Trigger Dokploy redeploy
         run: |
-          curl -fsSL -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
+          curl -fsSL "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
