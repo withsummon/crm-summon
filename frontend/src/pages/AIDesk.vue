@@ -174,11 +174,14 @@
           <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-summon-black to-summon-charcoal shadow-sm">
             <AIDeskIcon class="h-4 w-4 text-white" />
           </div>
-          <div class="rounded-2xl rounded-bl-md bg-white border border-gray-200 px-5 py-4 shadow-sm">
-            <div class="flex gap-1.5">
-              <span class="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0ms" />
-              <span class="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 150ms" />
-              <span class="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 300ms" />
+          <div class="rounded-2xl rounded-bl-md bg-white border border-gray-200 px-5 py-3 shadow-sm flex flex-col justify-center">
+            <div class="flex items-center gap-3">
+              <div class="flex gap-1.5 items-center mt-0.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" style="animation-delay: 0ms" />
+                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" style="animation-delay: 150ms" />
+                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" style="animation-delay: 300ms" />
+              </div>
+              <span class="text-[11px] font-medium text-gray-400 italic">{{ currentThought }}</span>
             </div>
           </div>
         </div>
@@ -230,6 +233,15 @@ const inputMessage = ref('')
 const messages = ref([])
 const isLoading = ref(false)
 const showQuery = ref({})
+
+const thoughts = [
+  'Membaca database CRM...',
+  'Menganalisa riwayat klien...',
+  'Menyusun kerangka jawaban...',
+  'Menulis respon AI...',
+]
+const currentThought = ref(thoughts[0])
+let thoughtInterval = null
 
 const { isScraping, scrapingProgress, scrapingTotal, scrapingProcessed, lastScrapedLead } = toRefs(backgroundStore())
 const { startScraping, updateProgress, stopScraping } = backgroundStore()
@@ -365,6 +377,16 @@ async function sendMessage(text) {
 
   inputMessage.value = ''
   isLoading.value = true
+  
+  // Chain of thought simulation
+  let thoughtIndex = 0
+  currentThought.value = thoughts[0]
+  if (thoughtInterval) clearInterval(thoughtInterval)
+  thoughtInterval = setInterval(() => {
+    thoughtIndex = (thoughtIndex + 1) % thoughts.length
+    currentThought.value = thoughts[thoughtIndex]
+  }, 1800)
+  
   scrollToBottom()
 
   try {
@@ -418,6 +440,8 @@ async function sendMessage(text) {
     saveHistory()
     console.error('AI Desk error:', error)
     scrollToBottom()
+  } finally {
+    if (thoughtInterval) clearInterval(thoughtInterval)
   }
 }
 

@@ -87,11 +87,15 @@ const numberCharts = [
     label: __('Avg Time to Close a Deal'),
     value: 'average_time_to_close_a_deal',
   },
+  { label: __('AI API Usage Cost (USD)'), value: 'ai_usage_cost' },
+  { label: __('AI API Usage Cost (IDR)'), value: 'ai_usage_cost_idr' },
 ]
 
 const axisChart = ref('sales_trend')
 const axisCharts = [
   { label: __('Sales Trend'), value: 'sales_trend' },
+  { label: __('AI API Cost Trend (USD)'), value: 'ai_usage_trend' },
+  { label: __('AI API Cost Trend (IDR)'), value: 'ai_usage_trend_idr' },
   { label: __('Forecasted Revenue'), value: 'forecasted_revenue' },
   { label: __('Funnel Conversion'), value: 'funnel_conversion' },
   { label: __('Deals by Ongoing & Won Stage'), value: 'deals_by_stage_axis' },

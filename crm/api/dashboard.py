@@ -134,6 +134,165 @@ def get_total_leads(from_date: str | None = None, to_date: str | None = None, us
 		"deltaSuffix": "%",
 	}
 
+@frappe.whitelist()
+def get_ai_usage_cost(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
+	"""Get total AI usage cost recorded in the selected date range."""
+	if not frappe.db.table_exists("AI Usage Log"):
+		return {
+			"title": _("AI API Usage Cost (USD)"),
+			"tooltip": _("Total AI Cost in USD"),
+			"value": 0.0,
+			"prefix": "$",
+			"delta": 0,
+			"deltaSuffix": "%",
+		}
+		
+	# Sum cost from date range
+	result = frappe.db.sql('''
+		SELECT SUM(cost) as total_cost
+		FROM `tabAI Usage Log`
+		WHERE DATE(creation) BETWEEN %s AND %s
+	''', (from_date, to_date))
+	
+	cost = float(result[0][0] or 0.0) if result else 0.0
+	
+	# Format as string with zero-width space \u200b to bypass frontend compact rounding of small floats
+	formatted_value = f"{cost:.4f}\u200b" if cost < 1.0 else round(cost, 2)
+	
+	return {
+		"title": _("AI API Usage Cost (USD)"),
+		"tooltip": _("Total AI Cost in USD"),
+		"value": formatted_value,
+		"prefix": "$",
+		"delta": 0,
+		"deltaSuffix": "%",
+	}
+
+@frappe.whitelist()
+def get_ai_usage_trend(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
+	"""Return daily AI API cost for an axis chart"""
+	from frappe.utils import add_days, date_diff, get_datetime
+	
+	if not frappe.db.table_exists("AI Usage Log"):
+		return {
+			"data": [],
+			"title": _("AI API Cost Trend"),
+			"subtitle": _("Daily AI API Cost in USD"),
+			"xAxis": {"title": _("Date"), "key": "date", "type": "time", "timeGrain": "day"},
+			"yAxis": {"title": _("Cost (USD)")},
+			"series": [{"name": "cost", "type": "line", "showDataPoints": True}]
+		}
+		
+	# Setup date range
+	diff = date_diff(to_date, from_date)
+	if diff < 0:
+		return {
+			"data": [],
+			"title": _("AI API Cost Trend"),
+			"subtitle": _("Daily AI API Cost in USD"),
+			"xAxis": {"title": _("Date"), "key": "date", "type": "time", "timeGrain": "day"},
+			"yAxis": {"title": _("Cost (USD)")},
+			"series": [{"name": "cost", "type": "line", "showDataPoints": True}]
+		}
+		
+	dates = [add_days(from_date, i) for i in range(diff + 1)]
+	
+	# Fetch logs
+	logs = frappe.db.sql('''
+		SELECT DATE(creation) as date, SUM(cost) as total_cost
+		FROM `tabAI Usage Log`
+		WHERE DATE(creation) BETWEEN %s AND %s
+		GROUP BY DATE(creation)
+	''', (from_date, to_date), as_dict=True)
+	
+	cost_by_date = {str(log.date): log.total_cost for log in logs if log.date}
+	
+	chart_data = []
+	for d in dates:
+		date_str = get_datetime(d).strftime("%Y-%m-%d")
+		chart_data.append({
+			"date": date_str,
+			"cost": round(cost_by_date.get(date_str, 0.0), 6)
+		})
+		
+	return {
+		"data": chart_data,
+		"title": _("AI API Cost Trend"),
+		"subtitle": _("Daily AI API Cost in USD"),
+		"xAxis": {
+			"title": _("Date"),
+			"key": "date",
+			"type": "time",
+			"timeGrain": "day",
+		},
+		"yAxis": {
+			"title": _("Cost (USD)"),
+		},
+		"series": [
+			{"name": "cost", "type": "line", "showDataPoints": True}
+		],
+	}
+
+@frappe.whitelist()
+def get_ai_usage_cost_idr(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
+	"""Get total AI usage cost in IDR for the selected date range."""
+	if not frappe.db.table_exists("AI Usage Log"):
+		return {
+			"title": _("AI API Usage Cost (IDR)"),
+			"tooltip": _("Total AI Cost in IDR"),
+			"value": 0.0,
+			"prefix": "Rp",
+			"delta": 0,
+			"deltaSuffix": "%",
+		}
+		
+	# Sum cost from date range
+	result = frappe.db.sql('''
+		SELECT SUM(cost) as total_cost
+		FROM `tabAI Usage Log`
+		WHERE DATE(creation) BETWEEN %s AND %s
+	''', (from_date, to_date))
+	
+	cost = float(result[0][0] or 0.0) if result else 0.0
+	idr_value = round(cost * 17602.25, 2)
+	
+	return {
+		"title": _("AI API Usage Cost (IDR)"),
+		"tooltip": _("Total AI Cost in IDR"),
+		"value": idr_value,
+		"prefix": "Rp",
+		"delta": 0,
+		"deltaSuffix": "%",
+	}
+
+@frappe.whitelist()
+def get_ai_usage_trend_idr(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
+	"""Return daily AI API cost in IDR for an axis chart"""
+	usd_trend = get_ai_usage_trend(from_date, to_date, user)
+	idr_data = []
+	for row in usd_trend.get("data", []):
+		idr_data.append({
+			"date": row.get("date"),
+			"cost": round((row.get("cost") or 0.0) * 17602.25, 2)
+		})
+		
+	return {
+		"data": idr_data,
+		"title": _("AI API Cost Trend (IDR)"),
+		"subtitle": _("Daily AI API Cost in IDR (Rate: 17.602,95)"),
+		"xAxis": {
+			"title": _("Date"),
+			"key": "date",
+			"type": "time",
+			"timeGrain": "day",
+		},
+		"yAxis": {
+			"title": _("Cost (IDR)"),
+		},
+		"series": [
+			{"name": "cost", "type": "line", "showDataPoints": True}
+		],
+	}
 
 def get_ongoing_deals(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
 	"""

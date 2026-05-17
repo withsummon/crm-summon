@@ -4,9 +4,8 @@
       v-if="item.type == 'number_chart'"
       class="flex h-full w-full rounded shadow overflow-hidden cursor-pointer"
     >
-      <Tooltip :text="__(item.data.tooltip)">
+      <Tooltip v-if="item.data" :text="__(item.data.tooltip || item.tooltip || '')">
         <NumberChart
-          v-if="item.data"
           :key="index"
           class="!items-start"
           :config="item.data"

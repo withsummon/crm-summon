@@ -21,12 +21,28 @@ def extract_and_execute_action(response_text: str) -> str:
 				"doctype": "CRM Task",
 				"title": action_data.get("title", "New Task"),
 				"priority": action_data.get("priority", "Medium"),
+				"status": "Todo",
+				"owner": frappe.session.user
+			})
+			if action_data.get("due_date"):
+				doc.due_date = action_data.get("due_date")
+			doc.insert(ignore_permissions=True)
+			frappe.db.commit()
+			result_msg = f"\n\n*(Sistem: Berhasil membuat Task **{doc.title}**)*"
+			
+		elif action == "create_event":
+			doc = frappe.get_doc({
+				"doctype": "Event",
+				"subject": action_data.get("subject", "Meeting"),
+				"starts_on": action_data.get("starts_on", frappe.utils.now()),
+				"ends_on": action_data.get("ends_on", frappe.utils.add_to_date(frappe.utils.now(), hours=1)),
 				"status": "Open",
+				"event_type": "Private",
 				"owner": frappe.session.user
 			})
 			doc.insert(ignore_permissions=True)
 			frappe.db.commit()
-			result_msg = f"\n\n*(Sistem: Berhasil membuat Task **{doc.title}**)*"
+			result_msg = f"\n\n*(Sistem: Berhasil menjadwalkan Event **{doc.subject}** pada kalender)*"
 			
 		elif action == "create_note":
 			doc = frappe.get_doc({
@@ -62,7 +78,7 @@ def extract_and_execute_action(response_text: str) -> str:
 				
 			try:
 				doc = frappe.get_doc(doctype, actual_name).as_dict()
-				clean_doc = {k: v for k, v in doc.items() if not k.startswith('_') and k not in ['creation', 'modified', 'owner', 'idx', 'docstatus'] and not isinstance(v, (list, dict))}
+				clean_doc = {k: v for k, v in doc.items() if not k.startswith('_') and k not in ['creation', 'modified', 'owner', 'idx', 'docstatus'] and type(v) not in (list, dict, tuple)}
 				gen_ui_payload = {"type": "record_detail", "doctype": doctype, "data": clean_doc}
 				result_msg = f"\n\n___GENUI_RECORD_DETAIL___ {frappe.as_json(gen_ui_payload)}"
 			except Exception as e:
@@ -80,6 +96,7 @@ def extract_and_execute_action(response_text: str) -> str:
 def get_ai_desk_context():
 	"""Get CRM context information for the AI Desk chatbot."""
 	context = {
+		"current_datetime": frappe.utils.now(),
 		"doctypes": [],
 		"summary": {},
 	}
@@ -153,50 +170,50 @@ def get_ai_desk_context():
 		context["recent_data"]["leads"] = frappe.get_list(
 			"CRM Lead",
 			fields=["lead_name", "status", "organization", "mobile_no", "email"],
-			limit_page_length=50,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["contacts"] = frappe.get_list(
 			"Contact",
 			fields=["first_name", "last_name", "email_id", "mobile_no"],
-			limit_page_length=50,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["deals"] = frappe.get_list(
 			"CRM Deal",
 			fields=["name", "organization", "status", "deal_value"],
-			limit_page_length=30,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["organizations"] = frappe.get_list(
 			"CRM Organization",
 			fields=["name", "organization_name", "industry", "website"],
-			limit_page_length=30,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["tasks"] = frappe.get_list(
 			"CRM Task",
 			fields=["name", "title", "status", "priority", "due_date"],
-			limit_page_length=30,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["notes"] = frappe.get_list(
 			"CRM Note",
 			fields=["name", "title", "content"],
-			limit_page_length=20,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		context["recent_data"]["call_logs"] = frappe.get_list(
 			"CRM Call Log",
 			fields=["name", "type", "status", "duration", "summary"],
-			limit_page_length=20,
+			limit_page_length=10,
 			order_by="modified desc"
 		)
 		if frappe.db.exists("DocType", "Event"):
 			context["recent_data"]["events"] = frappe.get_list(
 				"Event",
 				fields=["name", "subject", "starts_on", "ends_on", "status"],
-				limit_page_length=20,
+				limit_page_length=10,
 				order_by="starts_on asc"
 			)
 
@@ -204,6 +221,39 @@ def get_ai_desk_context():
 		pass
 
 	return context
+
+def log_ai_usage(provider, tokens, cost):
+	"""Log API usage to a raw SQL table for charting without needing Frappe DocType migration"""
+	try:
+		# Ensure table exists
+		frappe.db.sql('''
+			CREATE TABLE IF NOT EXISTS `tabAI Usage Log` (
+				name VARCHAR(255) PRIMARY KEY,
+				creation DATETIME,
+				provider VARCHAR(255),
+				tokens INT,
+				cost DECIMAL(18, 9)
+			)
+		''')
+		
+		# Insert record
+		import uuid
+		from frappe.utils import now_datetime
+		uid = str(uuid.uuid4())
+		
+		frappe.db.sql('''
+			INSERT INTO `tabAI Usage Log` (name, creation, provider, tokens, cost)
+			VALUES (%s, %s, %s, %s, %s)
+		''', (uid, now_datetime(), provider, tokens, cost))
+		
+		# Also maintain the total default
+		current_cost = float(frappe.db.get_default("ai_usage_cost") or 0.0)
+		frappe.db.set_default("ai_usage_cost", str(current_cost + cost))
+		frappe.db.commit()
+	except Exception as e:
+		frappe.log_error(f"log_ai_usage error: {str(e)}", "AI Usage Tracking")
+
+
 
 
 @frappe.whitelist()
@@ -289,10 +339,11 @@ def call_gemini_api(message: str, api_key: str, context: dict, history: list) ->
 		"}\n"
 		"```\n"
 		"Available actions:\n"
-		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High).\n"
-		"2. `create_note`: requires `title` (string), `content` (string).\n"
-		"3. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
-		"4. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
+		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High), and optional `due_date` (YYYY-MM-DD).\n"
+		"2. `create_event`: requires `subject` (string), `starts_on` (YYYY-MM-DD HH:MM:SS), `ends_on` (YYYY-MM-DD HH:MM:SS).\n"
+		"3. `create_note`: requires `title` (string), `content` (string).\n"
+		"4. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
+		"5. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
 	)
 	
 	payload = {
@@ -337,6 +388,12 @@ def call_gemini_api(message: str, api_key: str, context: dict, history: list) ->
 		response.raise_for_status()
 		data = response.json()
 		
+		# Track cost
+		usage = data.get("usageMetadata", {})
+		total_tokens = usage.get("totalTokenCount", 0)
+		cost = total_tokens * 0.00000015  # Estimated $0.15 per 1M tokens for Gemini Flash
+		log_ai_usage("Gemini", total_tokens, cost)
+		
 		reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
 		reply_text = extract_and_execute_action(reply_text)
 		return {"response": reply_text, "data": None, "query": None}
@@ -369,10 +426,11 @@ def call_kimi_api(message: str, api_key: str, context: dict, history: list) -> d
 		"}\n"
 		"```\n"
 		"Available actions:\n"
-		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High).\n"
-		"2. `create_note`: requires `title` (string), `content` (string).\n"
-		"3. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
-		"4. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
+		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High), and optional `due_date` (YYYY-MM-DD).\n"
+		"2. `create_event`: requires `subject` (string), `starts_on` (YYYY-MM-DD HH:MM:SS), `ends_on` (YYYY-MM-DD HH:MM:SS).\n"
+		"3. `create_note`: requires `title` (string), `content` (string).\n"
+		"4. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
+		"5. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
 	)
 	
 	messages = [{"role": "system", "content": system_instruction}]
@@ -399,6 +457,12 @@ def call_kimi_api(message: str, api_key: str, context: dict, history: list) -> d
 		response = requests.post(url, json=payload, headers=headers, timeout=45)
 		response.raise_for_status()
 		data = response.json()
+		
+		# Track cost
+		usage = data.get("usage", {})
+		total_tokens = usage.get("total_tokens", 0)
+		cost = total_tokens * 0.000012  # Estimated $0.012 per 1k tokens for Kimi
+		log_ai_usage("Kimi", total_tokens, cost)
 		
 		reply_text = data["choices"][0]["message"]["content"]
 		reply_text = extract_and_execute_action(reply_text)
