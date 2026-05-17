@@ -1,27 +1,32 @@
-version: "3.7"
 name: crm-services
 
 services:
   mariadb:
     image: mariadb:10.6
+    restart: always
+
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
-      - --skip-innodb-read-only-compressed # Fix for MariaDB 10.6
+      - --skip-innodb-read-only-compressed
+
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
     volumes:
       - mariadb-data:/var/lib/mysql
-    restart: always
+
     networks:
       - crm-network
 
   redis:
     image: redis:alpine
     restart: always
+
     volumes:
       - redis-data:/data
+
     networks:
       - crm-network
 

@@ -7,7 +7,8 @@ on:
 
 env:
   REGISTRY_URL: registry.withsummon.com
-  IMAGE_NAME: summon-crm
+  WORKER_IMAGE: summon-crm-worker
+  NGINX_IMAGE: summon-crm-nginx
 
 jobs:
   build-push-deploy:
@@ -24,7 +25,7 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push Worker image
+      - name: Build and push worker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -32,10 +33,10 @@ jobs:
           target: worker
           push: true
           tags: |
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.WORKER_IMAGE }}:latest
+            ${{ env.REGISTRY_URL }}/${{ env.WORKER_IMAGE }}:${{ github.sha }}
 
-      - name: Build and push Nginx image
+      - name: Build and push nginx image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -43,8 +44,8 @@ jobs:
           target: nginx
           push: true
           tags: |
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}-nginx:latest
-            ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}-nginx:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.NGINX_IMAGE }}:latest
+            ${{ env.REGISTRY_URL }}/${{ env.NGINX_IMAGE }}:${{ github.sha }}
 
       - name: Trigger Dokploy redeploy
         run: |

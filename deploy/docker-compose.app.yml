@@ -1,8 +1,6 @@
-version: "3.7"
-
 name: crm-app
 
-x-worker-image: &worker_image registry.withsummon.com/summon-crm:latest
+x-worker-image: &worker_image registry.withsummon.com/summon-crm-worker:latest
 x-nginx-image: &nginx_image registry.withsummon.com/summon-crm-nginx:latest
 
 x-common-env: &common_env
@@ -20,16 +18,21 @@ services:
   backend:
     image: *worker_image
     restart: on-failure
+
     environment:
       <<: *common_env
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
   frontend:
     image: *nginx_image
     restart: on-failure
+
     command: ["nginx-entrypoint.sh"]
+
     environment:
       BACKEND: backend:8000
       SOCKETIO: websocket:9000
@@ -37,49 +40,68 @@ services:
       UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
       UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
       UPSTREAM_REAL_IP_RECURSIVE: "off"
+
     expose:
       - "8080"
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
   websocket:
     image: *worker_image
     restart: on-failure
+
     command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+
     environment:
       <<: *common_env
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
   queue-default:
     image: *worker_image
     restart: on-failure
+
     command: ["bench", "worker", "--queue", "default,short"]
+
     environment:
       <<: *common_env
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
   queue-long:
     image: *worker_image
     restart: on-failure
+
     command: ["bench", "worker", "--queue", "long"]
+
     environment:
       <<: *common_env
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
   schedule:
     image: *worker_image
     restart: on-failure
+
     command: ["bench", "schedule"]
+
     environment:
       <<: *common_env
+
     volumes: *common_volumes
+
     networks:
       - crm-network
 
