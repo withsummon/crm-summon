@@ -56,6 +56,7 @@ import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import EmailTemplateIcon from '@/components/Icons/EmailTemplateIcon.vue'
 import SettingsIcon from '@/components/Icons/SettingsIcon.vue'
 import SettingsIcon2 from '@/components/Icons/SettingsIcon2.vue'
+import AISettings from '@/components/Settings/AISettings.vue'
 import Users from '@/components/Settings/Users.vue'
 import InviteUserPage from '@/components/Settings/InviteUserPage.vue'
 import ProfilePage from '@/components/Settings/Profile/ProfilePage.vue'
@@ -119,6 +120,11 @@ const tabs = computed(() => {
           label: __('General'),
           component: markRaw(GeneralSettings),
           icon: SettingsIcon,
+        },
+        {
+          label: __('AI Settings'),
+          component: markRaw(AISettings),
+          icon: SparkleIcon,
         },
         {
           label: __('Dashboard'),

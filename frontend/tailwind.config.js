@@ -36,6 +36,9 @@ export default {
           violet: '#7c3aed',
         },
       },
+      fontFamily: {
+        sans: ['Poppins', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],

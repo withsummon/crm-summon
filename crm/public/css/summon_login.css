@@ -1,4 +1,15 @@
 /* Summon CRM - Login Page Branding Override */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Apply Poppins globally on login page */
+.for-login,
+.for-login body,
+.for-login .page-card,
+.for-login input,
+.for-login button,
+.for-login .btn {
+  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
 
 /* Hide default Frappe app logo */
 .page-card .login-content .login-image,

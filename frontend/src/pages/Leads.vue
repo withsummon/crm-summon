@@ -12,7 +12,7 @@
         variant="solid"
         :loading="isScraping"
         :label="__('Run Lead Gen')"
-        @click="runMockScraping"
+        @click="showPromptDialog = true"
       >
         <template #prefix>
           <FeatherIcon name="cpu" class="h-4 w-4" />
@@ -294,6 +294,38 @@
     :totalCount="scrapingTotal"
     :processedCount="scrapingProcessed"
   />
+  <Dialog
+    v-model="showPromptDialog"
+    :options="{
+      title: __('Run Lead Gen'),
+      size: 'sm',
+      actions: [
+        {
+          label: __('Run Engine'),
+          variant: 'solid',
+          onClick: () => {
+            showPromptDialog = false
+            runMockScraping()
+          }
+        }
+      ]
+    }"
+  >
+    <template #body-content>
+      <div class="py-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('Scraping Prompt') }}</label>
+        <textarea
+          v-model="promptText"
+          rows="3"
+          :placeholder="__('E.g. Carikan saya 10 software engineer di jakarta...')"
+          class="w-full resize-none rounded-md border border-gray-300 p-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        ></textarea>
+        <p class="mt-2 text-xs text-gray-500">
+          {{ __('AI will use this prompt to find matching leads in the global database.') }}
+        </p>
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -347,10 +379,17 @@ const route = useRoute()
 const leadsListView = ref(null)
 const showLeadModal = ref(false)
 const showImportDialog = ref(false)
+const showPromptDialog = ref(false)
+const promptText = ref('')
 
 
 async function runMockScraping() {
-  startScraping(10)
+  let count = 15;
+  const matchCount = promptText.value.match(/\b(\d+)\b/);
+  if (matchCount) {
+    count = Math.min(parseInt(matchCount[1], 10), 50);
+  }
+  startScraping(count)
 
   // Simulate progress
   const progressInterval = setInterval(() => {
@@ -360,7 +399,12 @@ async function runMockScraping() {
   }, 800)
 
   try {
-    const res = await call('crm.api.lead_gen.mock_lead_scraping')
+    const res = await call('crm.api.lead_gen.mock_lead_scraping', {
+      prompt: promptText.value
+    })
+    
+    // Clear prompt text after successful execution
+    promptText.value = ''
     clearInterval(progressInterval)
     updateProgress(scrapingTotal.value)
 

@@ -1,58 +1,58 @@
 <template>
-  <div class="flex h-full flex-col bg-gradient-to-br from-gray-50 to-blue-50/30">
+  <div class="flex h-full flex-col bg-white">
     <!-- Header -->
-    <header class="flex items-center justify-between border-b bg-white/80 backdrop-blur-sm px-6 py-4">
-      <div class="flex items-center gap-3">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg shadow-primary-500/25">
-          <AIDeskIcon class="h-5 w-5 text-white" />
+    <LayoutHeader>
+      <template #left-header>
+        <div class="flex items-center gap-3">
+          <div>
+            <h1 class="text-base font-semibold text-gray-900">{{ __('AI Desk') }}</h1>
+          </div>
         </div>
-        <div>
-          <h1 class="text-lg font-semibold text-gray-900">{{ __('AI Desk') }}</h1>
-          <p class="text-xs text-gray-500">{{ __('Your intelligent CRM assistant') }}</p>
+      </template>
+      <template #right-header>
+        <div class="flex items-center gap-2">
+          <Badge v-if="messageCount > 0" :label="messageCount + ' messages'" variant="subtle" theme="blue" />
+          <Button
+            variant="ghost"
+            size="sm"
+            :label="__('Clear Chat')"
+            @click="clearChat"
+          >
+            <template #prefix>
+              <FeatherIcon name="trash-2" class="h-4 w-4" />
+            </template>
+          </Button>
         </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <Badge v-if="messageCount > 0" :label="messageCount + ' messages'" variant="subtle" theme="blue" />
-        <Button
-          variant="ghost"
-          size="sm"
-          :label="__('Clear Chat')"
-          @click="clearChat"
-        >
-          <template #prefix>
-            <FeatherIcon name="trash-2" class="h-3.5 w-3.5" />
-          </template>
-        </Button>
-      </div>
-    </header>
+      </template>
+    </LayoutHeader>
 
     <!-- Chat Area -->
     <div ref="chatContainer" class="flex-1 overflow-y-auto px-4 py-6 scroll-smooth relative">
       <!-- Scraping Status Overlay -->
       <Transition name="fade">
         <div v-if="isScraping" class="sticky top-0 z-20 mb-4 -mt-2">
-          <div class="mx-auto max-w-2xl overflow-hidden rounded-xl border border-primary-100 bg-white/90 p-3 shadow-lg backdrop-blur-md">
+          <div class="mx-auto max-w-2xl overflow-hidden rounded-xl border border-summon-graphite bg-summon-charcoal/90 p-3 shadow-lg backdrop-blur-md">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
-                <div class="flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-primary-100">
-                  <FeatherIcon name="loader" class="h-3 w-3 animate-spin text-primary-600" />
+                <div class="flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-summon-graphite">
+                  <FeatherIcon name="loader" class="h-3 w-3 animate-spin text-summon-blue" />
                 </div>
-                <span class="text-xs font-semibold text-gray-700">
+                <span class="text-xs font-semibold text-white">
                   {{ __('Scraping Leads...') }}
                 </span>
               </div>
-              <span class="text-[10px] font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
+              <span class="text-[10px] font-medium text-summon-blue bg-summon-graphite px-2 py-0.5 rounded-full">
                 {{ scrapingProcessed }} / {{ scrapingTotal }}
               </span>
             </div>
-            <div class="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-summon-graphite">
               <div 
-                class="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500 ease-out"
+                class="h-full bg-gradient-to-r from-summon-blue to-summon-navy transition-all duration-500 ease-out"
                 :style="{ width: `${scrapingProgress}%` }"
               />
             </div>
-            <p v-if="lastScrapedLead" class="mt-2 text-[10px] text-gray-500 truncate">
-              {{ __('Found:') }} <span class="font-medium text-gray-700">{{ lastScrapedLead.name || lastScrapedLead.company }}</span>
+            <p v-if="lastScrapedLead" class="mt-2 text-[10px] text-gray-400 truncate">
+              {{ __('Found:') }} <span class="font-medium text-white">{{ lastScrapedLead.name || lastScrapedLead.company }}</span>
             </p>
           </div>
         </div>
@@ -61,8 +61,8 @@
       <div class="mx-auto max-w-3xl space-y-6">
         <!-- Welcome message -->
         <div v-if="messages.length === 0" class="flex flex-col items-center justify-center py-16">
-          <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-xl shadow-primary-500/30">
-            <AIDeskIcon class="h-10 w-10 text-white" />
+          <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-summon-black to-summon-charcoal shadow-xl">
+            <AIDeskIcon class="h-8 w-8 text-white" />
           </div>
           <h2 class="mb-2 text-2xl font-bold text-gray-900">{{ __('Welcome to AI Desk') }}</h2>
           <p class="mb-8 max-w-md text-center text-gray-500">
@@ -74,11 +74,11 @@
             <button
               v-for="suggestion in quickSuggestions"
               :key="suggestion.text"
-              class="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+              class="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all duration-200 hover:border-summon-charcoal hover:shadow-md hover:-translate-y-0.5"
               @click="sendMessage(suggestion.text)"
             >
-              <span class="text-xl">{{ suggestion.icon }}</span>
-              <span class="text-sm font-medium text-gray-700 group-hover:text-primary-700">{{ suggestion.text }}</span>
+              <FeatherIcon :name="suggestion.icon" class="h-5 w-5 text-summon-charcoal" />
+              <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">{{ suggestion.text }}</span>
             </button>
           </div>
         </div>
@@ -94,7 +94,7 @@
             <!-- Bot avatar -->
             <div
               v-if="msg.role === 'assistant'"
-              class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 shadow-sm"
+              class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-summon-black to-summon-charcoal shadow-sm"
             >
               <AIDeskIcon class="h-4 w-4 text-white" />
             </div>
@@ -104,15 +104,20 @@
               class="max-w-[80%] rounded-2xl px-4 py-3 shadow-sm"
               :class="
                 msg.role === 'user'
-                  ? 'bg-primary-600 text-white rounded-br-md'
-                  : 'bg-white border border-gray-100 text-gray-800 rounded-bl-md'
+                  ? 'bg-summon-charcoal text-white rounded-br-md'
+                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
               "
             >
-              <div v-if="msg.role === 'assistant'" class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-table:text-sm" v-html="renderMarkdown(msg.content)" />
+              <div v-if="msg.role === 'assistant' && msg.isTyping" class="flex gap-1 items-center h-5">
+                <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse"></span>
+                <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse" style="animation-delay: 150ms"></span>
+                <span class="h-1.5 w-1.5 rounded-full bg-gray-400 animate-pulse" style="animation-delay: 300ms"></span>
+              </div>
+              <div v-else-if="msg.role === 'assistant'" class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-table:text-sm" v-html="renderMarkdown(msg.content)" />
               <p v-else class="text-sm leading-relaxed whitespace-pre-wrap">{{ msg.content }}</p>
 
               <!-- SQL query badge -->
-              <div v-if="msg.query" class="mt-3 pt-3 border-t" :class="msg.role === 'user' ? 'border-white/20' : 'border-gray-100'">
+              <div v-if="msg.query && !msg.isTyping" class="mt-3 pt-3 border-t" :class="msg.role === 'user' ? 'border-white/20' : 'border-gray-200'">
                 <button
                   class="flex items-center gap-1.5 text-xs rounded-md px-2 py-1 transition-colors"
                   :class="msg.role === 'user' ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'"
@@ -122,11 +127,12 @@
                   {{ showQuery[index] ? __('Hide Query') : __('Show Query') }}
                 </button>
                 <Transition name="fade">
-                  <pre v-if="showQuery[index]" class="mt-2 rounded-lg p-3 text-xs font-mono overflow-x-auto" :class="msg.role === 'user' ? 'bg-primary-700 text-white/80' : 'bg-gray-50 text-gray-600'">{{ msg.query }}</pre>
+                  <pre v-if="showQuery[index]" class="mt-2 rounded-lg p-3 text-xs font-mono overflow-x-auto" :class="msg.role === 'user' ? 'bg-summon-charcoal text-white/80' : 'bg-gray-50 text-gray-600'">{{ msg.query }}</pre>
                 </Transition>
               </div>
 
               <span
+                v-if="!msg.isTyping"
                 class="mt-1 block text-[10px]"
                 :class="msg.role === 'user' ? 'text-white/50 text-right' : 'text-gray-400'"
               >
@@ -146,10 +152,10 @@
 
         <!-- Typing indicator -->
         <div v-if="isLoading" class="flex gap-3 justify-start">
-          <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 shadow-sm">
+          <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-summon-black to-summon-charcoal shadow-sm">
             <AIDeskIcon class="h-4 w-4 text-white" />
           </div>
-          <div class="rounded-2xl rounded-bl-md bg-white border border-gray-100 px-5 py-4 shadow-sm">
+          <div class="rounded-2xl rounded-bl-md bg-white border border-gray-200 px-5 py-4 shadow-sm">
             <div class="flex gap-1.5">
               <span class="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0ms" />
               <span class="h-2 w-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 150ms" />
@@ -161,7 +167,7 @@
     </div>
 
     <!-- Input Area -->
-    <div class="border-t bg-white/90 backdrop-blur-sm px-4 py-4">
+    <div class="border-t bg-gray-50/90 backdrop-blur-sm px-4 py-4">
       <div class="mx-auto max-w-3xl">
         <form @submit.prevent="sendMessage()" class="flex items-end gap-3">
           <div class="relative flex-1">
@@ -169,7 +175,7 @@
               ref="inputRef"
               v-model="inputMessage"
               :placeholder="__('Ask about your CRM data or features...')"
-              class="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-800 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20"
+              class="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-800 placeholder-gray-400 shadow-sm transition-all duration-200 focus:border-summon-charcoal focus:outline-none focus:ring-2 focus:ring-summon-charcoal/20"
               :rows="inputRows"
               @keydown="handleKeydown"
               @input="autoResize"
@@ -178,7 +184,7 @@
           <button
             type="submit"
             :disabled="!inputMessage.trim() || isLoading"
-            class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-600 text-white shadow-sm transition-all duration-200 hover:bg-primary-700 hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary-600 disabled:hover:shadow-sm"
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-summon-charcoal text-white shadow-sm transition-all duration-200 hover:bg-summon-graphite hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-summon-charcoal disabled:hover:shadow-sm"
           >
             <FeatherIcon name="send" class="h-4 w-4" />
           </button>
@@ -192,6 +198,7 @@
 </template>
 
 <script setup>
+import LayoutHeader from '@/components/LayoutHeader.vue'
 import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
 import { Badge, Button, FeatherIcon, call } from 'frappe-ui'
 import { ref, computed, nextTick, onMounted, toRefs } from 'vue'
@@ -232,10 +239,10 @@ const inputRows = computed(() => {
 })
 
 const quickSuggestions = [
-  { icon: '📊', text: 'How many leads do I have?' },
-  { icon: '💰', text: 'Show me recent deals' },
-  { icon: '📋', text: 'How do leads work?' },
-  { icon: '🚀', text: 'How to get started?' },
+  { icon: 'bar-chart-2', text: 'How many leads do I have?' },
+  { icon: 'dollar-sign', text: 'Show me recent deals' },
+  { icon: 'file-text', text: 'How do leads work?' },
+  { icon: 'rocket', text: 'How to get started?' },
 ]
 
 function formatTime(timestamp) {
@@ -299,6 +306,31 @@ function autoResize() {
   // Auto-resize is handled by computed inputRows
 }
 
+async function simulateTyping(messageIndex, fullText, callback) {
+  const msg = messages.value[messageIndex]
+  msg.isTyping = false
+  msg.content = ''
+  
+  // Faster typing speed (chunk by 2-4 chars)
+  const chunkSize = 3
+  let i = 0
+  
+  const typeChar = () => {
+    if (i < fullText.length) {
+      msg.content += fullText.substring(i, i + chunkSize)
+      i += chunkSize
+      scrollToBottom()
+      // Very fast timeout 5-15ms
+      setTimeout(typeChar, Math.random() * 10 + 5)
+    } else {
+      msg.content = fullText
+      if (callback) callback()
+    }
+  }
+  
+  typeChar()
+}
+
 async function sendMessage(text) {
   const msg = text || inputMessage.value.trim()
   if (!msg) return
@@ -316,6 +348,7 @@ async function sendMessage(text) {
 
   try {
     const conversationHistory = messages.value
+      .filter(m => !m.isTyping)
       .slice(-10)
       .map(m => ({ role: m.role, content: m.content }))
 
@@ -324,22 +357,30 @@ async function sendMessage(text) {
       conversation_history: JSON.stringify(conversationHistory),
     })
 
-    messages.value.push({
+    const newIndex = messages.value.push({
       role: 'assistant',
-      content: response.response || 'I could not process your request. Please try again.',
+      content: '', // Start empty
       data: response.data,
       query: response.query,
       timestamp: new Date().toISOString(),
-    })
+      isTyping: true, // Show typing bubbles briefly before text starts
+    }) - 1
+    
+    isLoading.value = false
+    
+    // Simulate thinking delay, then type
+    setTimeout(() => {
+      simulateTyping(newIndex, response.response || 'I could not process your request. Please try again.')
+    }, 400)
+    
   } catch (error) {
+    isLoading.value = false
     messages.value.push({
       role: 'assistant',
       content: '❌ Sorry, there was an error processing your request. Please try again.',
       timestamp: new Date().toISOString(),
     })
     console.error('AI Desk error:', error)
-  } finally {
-    isLoading.value = false
     scrollToBottom()
   }
 }

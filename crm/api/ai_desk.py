@@ -106,10 +106,107 @@ def query_ai_desk(message: str, conversation_history: str | None = None):
 	# Get CRM context
 	context = get_ai_desk_context()
 
+	gemini_api_key = None
+	try:
+		doc = frappe.get_doc("FCRM Settings")
+		gemini_api_key = doc.get_password("gemini_api_key")
+	except Exception:
+		try:
+			gemini_api_key = frappe.db.get_single_value("FCRM Settings", "gemini_api_key")
+		except Exception:
+			pass
+			
+	# If get_password returns encrypted string (stars/hash), it might have failed to decrypt, but let's trust get_password.
+	# Actually, get_password returns the unencrypted value.
+	if gemini_api_key and "******" not in gemini_api_key:
+		return call_gemini_api(message, gemini_api_key, context, history)
+
 	# Try to answer the query using CRM data
 	response = process_crm_query(message, context, history)
 
 	return response
+
+
+def call_gemini_api(message: str, api_key: str, context: dict, history: list) -> dict:
+	import requests
+	api_key = api_key.strip()
+	
+	try:
+		models_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+		r_models = requests.get(models_url, timeout=10)
+		r_models.raise_for_status()
+		
+		available = r_models.json().get("models", [])
+		valid_models = [m["name"] for m in available if "generateContent" in m.get("supportedGenerationMethods", [])]
+		
+		if not valid_models:
+			return {"response": "No supported Gemini models found for this API Key.", "data": None, "query": None}
+			
+		# Prefer flash, else take first
+		model_name = next((m for m in valid_models if "1.5-flash" in m), valid_models[0])
+	except Exception as e:
+		return {"response": f"Failed to fetch available Gemini models: {str(e)}", "data": None, "query": None}
+		
+	url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
+	
+	system_instruction = (
+		"You are Summon CRM AI Assistant. Be helpful, concise, and professional. "
+		"You format your responses in Markdown. "
+		"Here is the current CRM context with counts of various records:\n"
+		f"{json.dumps(context)}"
+	)
+	
+	payload = {
+		"contents": []
+	}
+	
+	contents = []
+	last_role = None
+	
+	for msg in history:
+		role = "model" if msg.get("sender") == "ai" else "user"
+		text = msg.get("text", "")
+		if not text: continue
+		
+		if role == last_role:
+			contents[-1]["parts"][0]["text"] += "\n" + text
+		else:
+			contents.append({
+				"role": role,
+				"parts": [{"text": text}]
+			})
+		last_role = role
+		
+	if last_role == "user":
+		contents[-1]["parts"][0]["text"] += "\n" + message
+	else:
+		contents.append({
+			"role": "user",
+			"parts": [{"text": message}]
+		})
+		
+	if contents and contents[0]["role"] == "model":
+		contents.insert(0, {"role": "user", "parts": [{"text": "Hello"}]})
+		
+	if contents:
+		contents[0]["parts"][0]["text"] = f"[SYSTEM INSTRUCTION]\n{system_instruction}\n[END SYSTEM INSTRUCTION]\n\n" + contents[0]["parts"][0]["text"]
+		
+	payload["contents"] = contents
+	
+	try:
+		response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=15)
+		response.raise_for_status()
+		data = response.json()
+		
+		reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
+		return {"response": reply_text, "data": None, "query": None}
+	except requests.exceptions.RequestException as e:
+		error_details = response.text if 'response' in locals() and hasattr(response, 'text') else str(e)
+		frappe.log_error(error_details, "Gemini API Error")
+		return {"response": f"Sorry, Gemini API rejected the request: {error_details}", "data": None, "query": None}
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Gemini API Error")
+		return {"response": f"Sorry, an internal error occurred: {str(e)}", "data": None, "query": None}
 
 
 def process_crm_query(message: str, context: dict, history: list) -> dict:

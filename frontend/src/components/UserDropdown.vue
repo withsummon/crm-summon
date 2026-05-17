@@ -143,7 +143,7 @@ function getStandardItem(item) {
         icon: h(FrappeCloudIcon),
         label: __(item.label),
         onClick: () => confirmLoginToFrappeCloud(),
-        condition: () => !isMobileView.value && window.is_fc_site,
+        condition: () => false, // Hidden for Summon branding
       }
     case 'about':
       return {

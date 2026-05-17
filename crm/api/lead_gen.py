@@ -198,14 +198,23 @@ def _get_cell(row: tuple, idx: int | None) -> str | None:
 	return str(val).strip()
 
 @frappe.whitelist()
-def mock_lead_scraping():
+def mock_lead_scraping(prompt: str | None = None):
 	"""Mock a scraping process by reading from the predefined /tmp/Lead Gen Data.xlsx"""
 	try:
 		import openpyxl
 	except ImportError:
 		frappe.throw(_("openpyxl is required."))
 
-	file_path = "/tmp/Lead Gen Data.xlsx"
+	import os
+	import re
+
+	# Resolve path perfectly based on this file's location
+	# __file__ is frappe-crm/crm/api/lead_gen.py
+	current_dir = os.path.dirname(os.path.abspath(__file__))
+	file_path = os.path.abspath(os.path.join(current_dir, "..", "..", "Lead Gen Data.xlsx"))
+
+	if not os.path.exists(file_path):
+		frappe.throw(_("Excel file not found at {0}").format(file_path))
 
 	try:
 		wb = openpyxl.load_workbook(file_path, read_only=True)
@@ -234,7 +243,35 @@ def mock_lead_scraping():
 			column_map["email"] = idx
 		elif any(x in h for x in ["linkedin", "website", "url"]):
 			column_map["linkedin"] = idx
-	
+			
+	rows_iterator = list(ws.iter_rows(min_row=2, values_only=True))
+
+	count_limit = 15
+	if prompt:
+		match_count = re.search(r'\b(\d+)\b', prompt)
+		if match_count: count_limit = min(int(match_count.group(1)), 50)
+		
+		# Extract search keywords
+		p = prompt.lower()
+		for word in ["carikan", "saya", "tolong", "find", "me", "get", "di", "in", "lead", "data", "orang", "buatkan", "cariin", "dari", str(count_limit)]:
+			p = p.replace(word, " ")
+			
+		keywords = [kw.strip() for kw in p.split() if kw.strip()]
+		
+		if keywords:
+			filtered_rows = []
+			for row in rows_iterator:
+				if all(cell is None for cell in row): continue
+				row_str = " ".join([str(c).lower() for c in row if c is not None])
+				if any(kw in row_str for kw in keywords):
+					filtered_rows.append(row)
+			
+			# Fallback if no keywords matched (so the UI mockup still shows data)
+			if not filtered_rows:
+				filtered_rows = rows_iterator[:count_limit]
+				
+			rows_iterator = filtered_rows
+
 	# Debug mapping
 	frappe.log_error(json.dumps(column_map), _("Lead Gen Detected Columns"))
 	frappe.msgprint(_("Detected Columns: {0}").format(json.dumps(column_map)))
@@ -254,12 +291,12 @@ def mock_lead_scraping():
 		"do not contact": "Do Not Contact",
 	}
 
-	for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+	for row_idx, row in enumerate(rows_iterator, start=2):
 		if all(cell is None for cell in row):
 			continue
 		
-		# Limit to 15 rows for the mock to prevent timeout
-		if total >= 15:
+		# Limit to count_limit for the mock to prevent timeout
+		if total >= count_limit:
 			break
 			
 		total += 1

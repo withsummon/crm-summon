@@ -1151,7 +1151,11 @@ def get_base_currency_symbol():
 	"""
 	Get the base currency symbol from the system settings.
 	"""
-	base_currency = frappe.db.get_single_value("FCRM Settings", "currency") or "USD"
+	base_currency = (
+		frappe.db.get_single_value("FCRM Settings", "currency")
+		or frappe.db.get_default("currency")
+		or "USD"
+	)
 	return frappe.db.get_value("Currency", base_currency, "symbol") or ""
 
 
