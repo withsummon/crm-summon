@@ -29,9 +29,8 @@ services:
 
   frontend:
     image: *nginx_image
+    pull_policy: always
     restart: on-failure
-
-    command: ["nginx-entrypoint.sh"]
 
     environment:
       BACKEND: backend:8000
