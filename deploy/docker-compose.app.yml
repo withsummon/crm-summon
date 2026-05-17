@@ -1,100 +1,115 @@
 version: "3.7"
+
 name: crm-app
+
+x-app-image: &app_image registry.withsummon.com/summon-crm:latest
+
+x-common-env: &common_env
+  DB_HOST: mariadb
+  DB_PORT: "3306"
+  REDIS_CACHE: redis://redis:6379/1
+  REDIS_QUEUE: redis://redis:6379/2
+  REDIS_SOCKETIO: redis://redis:6379/3
+
+x-common-volumes: &common_volumes
+  - sites:/home/frappe/frappe-bench/sites
+  - logs:/home/frappe/frappe-bench/logs
 
 services:
   backend:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     environment:
-      # These refer to the service names in Dokploy or your external network
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379/1
-      - REDIS_QUEUE=redis://redis:6379/2
-      - REDIS_SOCKETIO=redis://redis:6379/3
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
   frontend:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     command: ["nginx-entrypoint.sh"]
+
     environment:
-      - BACKEND=backend:8000
-      - SOCKETIO=websocket:9000
-      - FRAPPE_SITE_NAME_HEADER=crm.localhost
-      - UPSTREAM_REAL_IP_ADDRESS=127.0.0.1
-      - UPSTREAM_REAL_IP_HEADER=X-Forwarded-For
-      - UPSTREAM_REAL_IP_RECURSIVE=off
-    ports:
-      - "8080:8080"
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+
+    expose:
+      - "8080"
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
   websocket:
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+
     environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379/1
-      - REDIS_QUEUE=redis://redis:6379/2
-      - REDIS_SOCKETIO=redis://redis:6379/3
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
   queue-default:
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     command: ["bench", "worker", "--queue", "default,short"]
+
     environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379/1
-      - REDIS_QUEUE=redis://redis:6379/2
-      - REDIS_SOCKETIO=redis://redis:6379/3
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
   queue-long:
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     command: ["bench", "worker", "--queue", "long"]
+
     environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379/1
-      - REDIS_QUEUE=redis://redis:6379/2
-      - REDIS_SOCKETIO=redis://redis:6379/3
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
   schedule:
-    image: summon-crm:latest
+    image: *app_image
     restart: on-failure
+
     command: ["bench", "schedule"]
+
     environment:
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - REDIS_CACHE=redis://redis:6379/1
-      - REDIS_QUEUE=redis://redis:6379/2
-      - REDIS_SOCKETIO=redis://redis:6379/3
-    volumes:
-      - sites:/home/frappe/frappe-bench/sites
-      - logs:/home/frappe/frappe-bench/logs
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
 volumes:
   sites:
   logs:
+
+networks:
+  crm-network:
+    external: true
