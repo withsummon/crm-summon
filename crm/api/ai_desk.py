@@ -1,7 +1,80 @@
 import frappe
 from frappe import _
 import json
+import re
 
+def extract_and_execute_action(response_text: str) -> str:
+	"""Extract JSON action block from AI response, execute it, and return the modified response text."""
+	pattern = r'```json\s*(\{.*?"_action".*?\})\s*```'
+	match = re.search(pattern, response_text, re.DOTALL)
+	if not match:
+		return response_text
+		
+	action_json = match.group(1)
+	try:
+		action_data = json.loads(action_json)
+		action = action_data.get("_action")
+		result_msg = ""
+		
+		if action == "create_task":
+			doc = frappe.get_doc({
+				"doctype": "CRM Task",
+				"title": action_data.get("title", "New Task"),
+				"priority": action_data.get("priority", "Medium"),
+				"status": "Open",
+				"owner": frappe.session.user
+			})
+			doc.insert(ignore_permissions=True)
+			frappe.db.commit()
+			result_msg = f"\n\n*(Sistem: Berhasil membuat Task **{doc.title}**)*"
+			
+		elif action == "create_note":
+			doc = frappe.get_doc({
+				"doctype": "CRM Note",
+				"title": action_data.get("title", "New Note"),
+				"content": action_data.get("content", ""),
+				"owner": frappe.session.user
+			})
+			doc.insert(ignore_permissions=True)
+			frappe.db.commit()
+			result_msg = f"\n\n*(Sistem: Berhasil membuat Note **{doc.title}**)*"
+			
+		elif action == "update_lead_status":
+			lead_name = action_data.get("lead_name")
+			new_status = action_data.get("status")
+			
+			leads = frappe.get_all("CRM Lead", filters={"lead_name": ["like", f"%{lead_name}%"]}, limit=1)
+			if leads:
+				frappe.db.set_value("CRM Lead", leads[0].name, "status", new_status)
+				frappe.db.commit()
+				result_msg = f"\n\n*(Sistem: Berhasil mengubah status Lead **{lead_name}** menjadi **{new_status}**)*"
+			else:
+				result_msg = f"\n\n*(Sistem: Gagal mengubah status. Lead '{lead_name}' tidak ditemukan.)*"
+				
+		elif action == "show_record_detail":
+			doctype = action_data.get("doctype")
+			docname = action_data.get("docname")
+			
+			actual_name = docname
+			if doctype == "CRM Lead" and not frappe.db.exists(doctype, docname):
+				leads = frappe.get_all(doctype, filters={"lead_name": ["like", f"%{docname}%"]}, limit=1)
+				if leads: actual_name = leads[0].name
+				
+			try:
+				doc = frappe.get_doc(doctype, actual_name).as_dict()
+				clean_doc = {k: v for k, v in doc.items() if not k.startswith('_') and k not in ['creation', 'modified', 'owner', 'idx', 'docstatus'] and not isinstance(v, (list, dict))}
+				gen_ui_payload = {"type": "record_detail", "doctype": doctype, "data": clean_doc}
+				result_msg = f"\n\n___GENUI_RECORD_DETAIL___ {frappe.as_json(gen_ui_payload)}"
+			except Exception as e:
+				result_msg = f"\n\n*(Sistem: Gagal memuat data {doctype} '{docname}'. Error: {str(e)})*"
+				
+		# Remove the JSON block from the user's view and append the system result
+		clean_text = response_text.replace(match.group(0), "").strip()
+		return clean_text + result_msg
+		
+	except Exception as e:
+		clean_text = response_text.replace(match.group(0), "").strip()
+		return clean_text + f"\n\n*(Sistem: Gagal mengeksekusi aksi: {str(e)})*"
 
 @frappe.whitelist()
 def get_ai_desk_context():
@@ -205,7 +278,21 @@ def call_gemini_api(message: str, api_key: str, context: dict, history: list) ->
 		"You are Summon CRM AI Assistant. Be helpful, concise, and professional. "
 		"You format your responses in Markdown. "
 		"Here is the current CRM context with counts of various records:\n"
-		f"{json.dumps(context)}"
+		f"{frappe.as_json(context)}\n\n"
+		"IMPORTANT - ACTION CAPABILITIES:\n"
+		"If the user asks you to CREATE a Task, Note, UPDATE a Lead, or SHOW DETAILED DATA for a specific record, you MUST output a JSON block at the end of your response inside triple backticks exactly like this:\n"
+		"```json\n"
+		"{\n"
+		'  "_action": "show_record_detail",\n'
+		'  "doctype": "CRM Lead",\n'
+		'  "docname": "Dalzi"\n'
+		"}\n"
+		"```\n"
+		"Available actions:\n"
+		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High).\n"
+		"2. `create_note`: requires `title` (string), `content` (string).\n"
+		"3. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
+		"4. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
 	)
 	
 	payload = {
@@ -251,6 +338,7 @@ def call_gemini_api(message: str, api_key: str, context: dict, history: list) ->
 		data = response.json()
 		
 		reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
+		reply_text = extract_and_execute_action(reply_text)
 		return {"response": reply_text, "data": None, "query": None}
 	except requests.exceptions.RequestException as e:
 		error_details = response.text if 'response' in locals() and hasattr(response, 'text') else str(e)
@@ -270,7 +358,21 @@ def call_kimi_api(message: str, api_key: str, context: dict, history: list) -> d
 		"You are Summon CRM AI Assistant powered by Kimi. Be helpful, concise, and professional. "
 		"You format your responses in Markdown. "
 		"Here is the current CRM context with counts of various records:\n"
-		f"{json.dumps(context)}"
+		f"{frappe.as_json(context)}\n\n"
+		"IMPORTANT - ACTION CAPABILITIES:\n"
+		"If the user asks you to CREATE a Task, Note, UPDATE a Lead, or SHOW DETAILED DATA for a specific record, you MUST output a JSON block at the end of your response inside triple backticks exactly like this:\n"
+		"```json\n"
+		"{\n"
+		'  "_action": "show_record_detail",\n'
+		'  "doctype": "CRM Lead",\n'
+		'  "docname": "Dalzi"\n'
+		"}\n"
+		"```\n"
+		"Available actions:\n"
+		"1. `create_task`: requires `title` (string), `priority` (Low/Medium/High).\n"
+		"2. `create_note`: requires `title` (string), `content` (string).\n"
+		"3. `update_lead_status`: requires `lead_name` (string, EXACT match from context), `status` (string, e.g., Qualified, Replied, Interested).\n"
+		"4. `show_record_detail`: requires `doctype` (e.g., CRM Lead, Contact), `docname` (exact name of the record). IMPORTANT: When using this, just write a 1-sentence intro like 'Berikut detail lengkap untuk [Name]:'. DO NOT write a markdown table of the details, as the system will auto-generate a UI card.\n"
 	)
 	
 	messages = [{"role": "system", "content": system_instruction}]
@@ -299,6 +401,7 @@ def call_kimi_api(message: str, api_key: str, context: dict, history: list) -> d
 		data = response.json()
 		
 		reply_text = data["choices"][0]["message"]["content"]
+		reply_text = extract_and_execute_action(reply_text)
 		return {"response": reply_text, "data": None, "query": None}
 	except requests.exceptions.RequestException as e:
 		error_details = response.text if 'response' in locals() and hasattr(response, 'text') else str(e)

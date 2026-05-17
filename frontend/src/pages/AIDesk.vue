@@ -116,6 +116,25 @@
               <div v-else-if="msg.role === 'assistant'" class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-table:text-sm" v-html="renderMarkdown(msg.content)" />
               <p v-else class="text-sm leading-relaxed whitespace-pre-wrap">{{ msg.content }}</p>
 
+              <!-- Generative UI Details Card -->
+              <div v-if="msg.genUI && msg.genUI.type === 'record_detail' && !msg.isTyping" class="mt-4 mb-2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm text-left">
+                <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                  <span class="font-semibold text-gray-800 text-sm flex gap-2 items-center">
+                    <FeatherIcon name="file-text" class="w-4 h-4 text-summon-charcoal" />
+                    {{ msg.genUI.doctype }} Details
+                  </span>
+                  <span v-if="msg.genUI.data.status" class="text-[10px] uppercase tracking-wider font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md">{{ msg.genUI.data.status }}</span>
+                </div>
+                <div class="p-4 grid grid-cols-2 gap-y-4 gap-x-4 text-sm bg-white">
+                  <template v-for="(value, key) in msg.genUI.data" :key="key">
+                    <div v-if="value !== null && value !== '' && key !== 'name'" class="flex flex-col">
+                      <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">{{ String(key).replace(/_/g, ' ') }}</span>
+                      <span class="text-gray-900">{{ value }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
               <!-- SQL query badge -->
               <div v-if="msg.query && !msg.isTyping" class="mt-3 pt-3 border-t" :class="msg.role === 'user' ? 'border-white/20' : 'border-gray-200'">
                 <button
@@ -359,11 +378,25 @@ async function sendMessage(text) {
       conversation_history: JSON.stringify(conversationHistory),
     })
 
+    let replyText = response.response || 'I could not process your request. Please try again.'
+    let genUI = null
+    
+    const genUIMatch = replyText.match(/___GENUI_RECORD_DETAIL___\s*(\{[\s\S]*\})/)
+    if (genUIMatch) {
+      try {
+        genUI = JSON.parse(genUIMatch[1])
+        replyText = replyText.replace(genUIMatch[0], '').trim()
+      } catch (e) {
+        console.error('Failed to parse GenUI payload', e)
+      }
+    }
+
     const newIndex = messages.value.push({
       role: 'assistant',
       content: '', // Start empty
       data: response.data,
       query: response.query,
+      genUI: genUI,
       timestamp: new Date().toISOString(),
       isTyping: true, // Show typing bubbles briefly before text starts
     }) - 1
@@ -372,7 +405,7 @@ async function sendMessage(text) {
     
     // Simulate thinking delay, then type
     setTimeout(() => {
-      simulateTyping(newIndex, response.response || 'I could not process your request. Please try again.')
+      simulateTyping(newIndex, replyText)
     }, 400)
     
   } catch (error) {
