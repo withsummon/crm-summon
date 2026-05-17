@@ -58,3 +58,11 @@ def get_boot():
 
 def get_default_route():
 	return "/crm"
+
+
+def get_home_page(user=None):
+	"""Dynamic home page: logged-in users go to CRM, guests see login."""
+	if frappe.session.user and frappe.session.user != "Guest":
+		return "crm"
+	return "login"
+

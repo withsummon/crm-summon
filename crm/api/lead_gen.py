@@ -289,6 +289,14 @@ def mock_lead_scraping():
 			if email and (email.strip() == "-" or "@" not in str(email)):
 				email = None
 
+			# --- DUPLICATE CHECK ---
+			if email and frappe.db.exists("CRM Lead", {"email": email}):
+				skipped += 1
+				continue
+			if phone and frappe.db.exists("CRM Lead", {"mobile_no": phone}):
+				skipped += 1
+				continue
+
 			# Safely check Industry
 			valid_industry = None
 			if industry:

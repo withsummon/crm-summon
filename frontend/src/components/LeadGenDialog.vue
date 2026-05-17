@@ -196,6 +196,7 @@ import {
   FileUploader,
   FeatherIcon,
   call,
+  toast,
 } from 'frappe-ui'
 
 const showDialog = defineModel()
@@ -208,6 +209,10 @@ const previewData = ref({ headers: [], rows: [], total_rows: 0 })
 const importResult = ref({ created: 0, skipped: 0, errors: [], total: 0 })
 
 async function onFileUploaded(file) {
+  if (!file || !file.file_url) {
+    toast.error(__('File upload failed. Please try again.'))
+    return
+  }
   fileUrl.value = file.file_url
   fileName.value = file.file_name
 
@@ -220,6 +225,7 @@ async function onFileUploaded(file) {
     step.value = 'preview'
   } catch (e) {
     console.error('Preview error:', e)
+    toast.error(__('Failed to preview file: {0}', [e.message || 'Unknown error']))
   }
 }
 

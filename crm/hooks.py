@@ -58,7 +58,7 @@ web_include_css = "/assets/crm/css/summon_login.css"
 # ----------
 
 # application home page (will override Website Settings)
-home_page = "crm"
+get_website_user_home_page = "crm.www.crm.get_home_page"
 
 
 # website user home page (by Role)
