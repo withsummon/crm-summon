@@ -41,7 +41,7 @@ def get_ai_desk_context():
 
 	for doctype, info in crm_doctypes.items():
 		try:
-			count = frappe.db.count(doctype)
+			count = len(frappe.get_list(doctype, limit_page_length=0))
 			context["doctypes"].append(
 				{
 					"doctype": doctype,
@@ -55,27 +55,77 @@ def get_ai_desk_context():
 
 	# Get summary stats
 	try:
-		context["summary"]["total_leads"] = frappe.db.count("CRM Lead")
-		context["summary"]["total_deals"] = frappe.db.count("CRM Deal")
-		context["summary"]["total_contacts"] = frappe.db.count("Contact")
-		context["summary"]["total_organizations"] = frappe.db.count("CRM Organization")
-		context["summary"]["total_tasks"] = frappe.db.count("CRM Task")
+		context["summary"]["total_leads"] = len(frappe.get_list("CRM Lead", limit_page_length=0))
+		context["summary"]["total_deals"] = len(frappe.get_list("CRM Deal", limit_page_length=0))
+		context["summary"]["total_contacts"] = len(frappe.get_list("Contact", limit_page_length=0))
+		context["summary"]["total_organizations"] = len(frappe.get_list("CRM Organization", limit_page_length=0))
+		context["summary"]["total_tasks"] = len(frappe.get_list("CRM Task", limit_page_length=0))
 
 		# Get lead status distribution
-		lead_statuses = frappe.db.get_all(
-			"CRM Lead",
-			fields=["status", "count(*) as count"],
-			group_by="status",
-		)
-		context["summary"]["lead_statuses"] = {s.status: s.count for s in lead_statuses}
+		lead_statuses = {}
+		for lead in frappe.get_list("CRM Lead", fields=["status"], limit_page_length=0):
+			status = lead.status or "Unknown"
+			lead_statuses[status] = lead_statuses.get(status, 0) + 1
+		context["summary"]["lead_statuses"] = lead_statuses
 
 		# Get deal status distribution
-		deal_statuses = frappe.db.get_all(
-			"CRM Deal",
-			fields=["status", "count(*) as count"],
-			group_by="status",
+		deal_statuses = {}
+		for deal in frappe.get_list("CRM Deal", fields=["status"], limit_page_length=0):
+			status = deal.status or "Unknown"
+			deal_statuses[status] = deal_statuses.get(status, 0) + 1
+		context["summary"]["deal_statuses"] = deal_statuses
+
+		# Include actual recent data for RAG so AI can answer "who are they?"
+		context["recent_data"] = {}
+		context["recent_data"]["leads"] = frappe.get_list(
+			"CRM Lead",
+			fields=["lead_name", "status", "organization", "mobile_no", "email"],
+			limit_page_length=50,
+			order_by="modified desc"
 		)
-		context["summary"]["deal_statuses"] = {s.status: s.count for s in deal_statuses}
+		context["recent_data"]["contacts"] = frappe.get_list(
+			"Contact",
+			fields=["first_name", "last_name", "email_id", "mobile_no"],
+			limit_page_length=50,
+			order_by="modified desc"
+		)
+		context["recent_data"]["deals"] = frappe.get_list(
+			"CRM Deal",
+			fields=["name", "organization", "status", "deal_value"],
+			limit_page_length=30,
+			order_by="modified desc"
+		)
+		context["recent_data"]["organizations"] = frappe.get_list(
+			"CRM Organization",
+			fields=["name", "organization_name", "industry", "website"],
+			limit_page_length=30,
+			order_by="modified desc"
+		)
+		context["recent_data"]["tasks"] = frappe.get_list(
+			"CRM Task",
+			fields=["name", "title", "status", "priority", "due_date"],
+			limit_page_length=30,
+			order_by="modified desc"
+		)
+		context["recent_data"]["notes"] = frappe.get_list(
+			"CRM Note",
+			fields=["name", "title", "content"],
+			limit_page_length=20,
+			order_by="modified desc"
+		)
+		context["recent_data"]["call_logs"] = frappe.get_list(
+			"CRM Call Log",
+			fields=["name", "type", "status", "duration", "summary"],
+			limit_page_length=20,
+			order_by="modified desc"
+		)
+		if frappe.db.exists("DocType", "Event"):
+			context["recent_data"]["events"] = frappe.get_list(
+				"Event",
+				fields=["name", "subject", "starts_on", "ends_on", "status"],
+				limit_page_length=20,
+				order_by="starts_on asc"
+			)
 
 	except Exception:
 		pass
@@ -106,19 +156,21 @@ def query_ai_desk(message: str, conversation_history: str | None = None):
 	# Get CRM context
 	context = get_ai_desk_context()
 
+	ai_provider = "Gemini"
 	gemini_api_key = None
+	kimi_api_key = None
+	
 	try:
 		doc = frappe.get_doc("FCRM Settings")
+		ai_provider = doc.ai_provider or "Gemini"
 		gemini_api_key = doc.get_password("gemini_api_key")
+		kimi_api_key = doc.get_password("kimi_api_key")
 	except Exception:
-		try:
-			gemini_api_key = frappe.db.get_single_value("FCRM Settings", "gemini_api_key")
-		except Exception:
-			pass
+		pass
 			
-	# If get_password returns encrypted string (stars/hash), it might have failed to decrypt, but let's trust get_password.
-	# Actually, get_password returns the unencrypted value.
-	if gemini_api_key and "******" not in gemini_api_key:
+	if ai_provider == "Kimi" and kimi_api_key and "******" not in kimi_api_key:
+		return call_kimi_api(message, kimi_api_key, context, history)
+	elif ai_provider == "Gemini" and gemini_api_key and "******" not in gemini_api_key:
 		return call_gemini_api(message, gemini_api_key, context, history)
 
 	# Try to answer the query using CRM data
@@ -206,6 +258,54 @@ def call_gemini_api(message: str, api_key: str, context: dict, history: list) ->
 		return {"response": f"Sorry, Gemini API rejected the request: {error_details}", "data": None, "query": None}
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "Gemini API Error")
+		return {"response": f"Sorry, an internal error occurred: {str(e)}", "data": None, "query": None}
+
+
+def call_kimi_api(message: str, api_key: str, context: dict, history: list) -> dict:
+	import requests
+	api_key = api_key.strip()
+	url = "https://api.moonshot.ai/v1/chat/completions"
+	
+	system_instruction = (
+		"You are Summon CRM AI Assistant powered by Kimi. Be helpful, concise, and professional. "
+		"You format your responses in Markdown. "
+		"Here is the current CRM context with counts of various records:\n"
+		f"{json.dumps(context)}"
+	)
+	
+	messages = [{"role": "system", "content": system_instruction}]
+	
+	for msg in history:
+		role = "assistant" if msg.get("sender") == "ai" else "user"
+		text = msg.get("text", "")
+		if not text: continue
+		messages.append({"role": role, "content": text})
+		
+	messages.append({"role": "user", "content": message})
+	
+	payload = {
+		"model": "kimi-k2.6",
+		"messages": messages
+	}
+	
+	headers = {
+		"Content-Type": "application/json",
+		"Authorization": f"Bearer {api_key}"
+	}
+	
+	try:
+		response = requests.post(url, json=payload, headers=headers, timeout=45)
+		response.raise_for_status()
+		data = response.json()
+		
+		reply_text = data["choices"][0]["message"]["content"]
+		return {"response": reply_text, "data": None, "query": None}
+	except requests.exceptions.RequestException as e:
+		error_details = response.text if 'response' in locals() and hasattr(response, 'text') else str(e)
+		frappe.log_error(error_details, "Kimi API Error")
+		return {"response": f"Sorry, Kimi API rejected the request: {error_details}", "data": None, "query": None}
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "Kimi API Error")
 		return {"response": f"Sorry, an internal error occurred: {str(e)}", "data": None, "query": None}
 
 

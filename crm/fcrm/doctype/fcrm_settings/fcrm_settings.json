@@ -55,9 +55,23 @@
    "label": "AI Settings"
   },
   {
+   "default": "Gemini",
+   "fieldname": "ai_provider",
+   "fieldtype": "Select",
+   "label": "AI Provider",
+   "options": "Gemini\nKimi"
+  },
+  {
+   "depends_on": "eval:doc.ai_provider=='Gemini'",
    "fieldname": "gemini_api_key",
    "fieldtype": "Password",
    "label": "Gemini API Key"
+  },
+  {
+   "depends_on": "eval:doc.ai_provider=='Kimi'",
+   "fieldname": "kimi_api_key",
+   "fieldtype": "Password",
+   "label": "Kimi API Key"
   },
   {
    "fieldname": "branding_tab",

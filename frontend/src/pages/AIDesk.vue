@@ -201,7 +201,7 @@
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
 import { Badge, Button, FeatherIcon, call } from 'frappe-ui'
-import { ref, computed, nextTick, onMounted, toRefs } from 'vue'
+import { ref, computed, nextTick, onMounted, toRefs, watch } from 'vue'
 import { backgroundStore } from '@/stores/background'
 import { useBroadcast } from '@/composables/useBroadcast'
 
@@ -324,6 +324,7 @@ async function simulateTyping(messageIndex, fullText, callback) {
       setTimeout(typeChar, Math.random() * 10 + 5)
     } else {
       msg.content = fullText
+      saveHistory()
       if (callback) callback()
     }
   }
@@ -341,6 +342,7 @@ async function sendMessage(text) {
     content: msg,
     timestamp: new Date().toISOString(),
   })
+  saveHistory()
 
   inputMessage.value = ''
   isLoading.value = true
@@ -380,6 +382,7 @@ async function sendMessage(text) {
       content: '❌ Sorry, there was an error processing your request. Please try again.',
       timestamp: new Date().toISOString(),
     })
+    saveHistory()
     console.error('AI Desk error:', error)
     scrollToBottom()
   }
@@ -388,6 +391,11 @@ async function sendMessage(text) {
 function clearChat() {
   messages.value = []
   showQuery.value = {}
+  localStorage.removeItem('ai_desk_history')
+}
+
+function saveHistory() {
+  localStorage.setItem('ai_desk_history', JSON.stringify(messages.value))
 }
 
 function scrollToBottom() {
@@ -400,6 +408,15 @@ function scrollToBottom() {
 
 onMounted(() => {
   inputRef.value?.focus()
+  try {
+    const saved = localStorage.getItem('ai_desk_history')
+    if (saved) {
+      messages.value = JSON.parse(saved)
+      scrollToBottom()
+    }
+  } catch (e) {
+    console.error('Failed to load chat history:', e)
+  }
 })
 </script>
 
