@@ -24,6 +24,10 @@ USER root
 
 COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frappe-bench/apps/crm
 
+# Fix Frappe socketio dependencies
+RUN rm -rf /home/frappe/frappe-bench/apps/frappe/node_modules && \
+    chown -R frappe:frappe /home/frappe/frappe-bench/apps/frappe
+
 USER frappe
 
 RUN cd /home/frappe/frappe-bench && \
