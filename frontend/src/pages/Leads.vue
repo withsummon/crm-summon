@@ -10,6 +10,25 @@
       />
       <Button
         variant="solid"
+        :loading="isScraping"
+        :label="__('Run Lead Gen')"
+        @click="runMockScraping"
+      >
+        <template #prefix>
+          <FeatherIcon name="cpu" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
+        variant="outline"
+        :label="__('Import Excel')"
+        @click="showImportDialog = true"
+      >
+        <template #prefix>
+          <FeatherIcon name="upload" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
+        variant="solid"
         :label="__('Create')"
         iconLeft="plus"
         @click="showLeadModal = true"
@@ -265,6 +284,16 @@
     v-model="showLeadModal"
     :defaults="defaults"
   />
+  <LeadGenDialog
+    v-model="showImportDialog"
+    @imported="onLeadsImported"
+  />
+  <ScrapingAnimation
+    v-model="isScraping"
+    :progress="scrapingProgress"
+    :totalCount="scrapingTotal"
+    :processedCount="scrapingProcessed"
+  />
 </template>
 
 <script setup>
@@ -283,7 +312,10 @@ import LeadsListView from '@/components/ListViews/LeadsListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'
 import LeadModal from '@/components/Modals/LeadModal.vue'
+import LeadGenDialog from '@/components/LeadGenDialog.vue'
+import ScrapingAnimation from '@/components/ScrapingAnimation.vue'
 import ViewControls from '@/components/ViewControls.vue'
+import { backgroundStore } from '@/stores/background'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { getMeta } from '@/stores/meta'
 import { globalStore } from '@/stores/global'
@@ -293,9 +325,9 @@ import { callEnabled } from '@/composables/telephony'
 import { useBroadcast } from '@/composables/useBroadcast'
 import { formatDate, timeAgo, website, formatTime } from '@/utils'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
-import { Avatar, Tooltip, Dropdown } from 'frappe-ui'
+import { Avatar, Tooltip, Dropdown, FeatherIcon, toast, call } from 'frappe-ui'
 import { useRoute } from 'vue-router'
-import { ref, computed, reactive, h } from 'vue'
+import { ref, computed, reactive, h, onMounted, onUnmounted, watch, toRefs } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Lead')
@@ -307,23 +339,128 @@ const { updateOnboardingStep } = useOnboarding('frappecrm')
 const { capture } = useTelemetry()
 const { showModal } = useDoctypeModal()
 
+const { isScraping, scrapingProgress, scrapingTotal, scrapingProcessed } = toRefs(backgroundStore())
+const { startScraping, updateProgress, stopScraping } = backgroundStore()
+
 const route = useRoute()
 
 const leadsListView = ref(null)
 const showLeadModal = ref(false)
+const showImportDialog = ref(false)
+
+
+async function runMockScraping() {
+  startScraping(10)
+
+  // Simulate progress
+  const progressInterval = setInterval(() => {
+    if (scrapingProgress.value < 90) {
+      updateProgress(scrapingProcessed.value + 1)
+    }
+  }, 800)
+
+  try {
+    const res = await call('crm.api.lead_gen.mock_lead_scraping')
+    clearInterval(progressInterval)
+    updateProgress(scrapingTotal.value)
+
+    // Small delay to show 100% before closing
+    setTimeout(() => {
+      stopScraping()
+      if (typeof toast === 'function') {
+        toast({
+          title: __('Lead Gen Complete'),
+          text: res.message,
+          icon: 'check-circle',
+          iconClasses: 'text-green-600',
+        })
+      } else {
+        toast.success(res.message)
+      }
+      onLeadsImported()
+    }, 1000)
+
+  } catch (e) {
+    clearInterval(progressInterval)
+    stopScraping()
+    toast.error(__('Lead Gen Failed: {0}', [e.message || 'Unknown error']))
+  }
+}
 
 on('trigger_lead_create', (data) => {
   showLeadModal.value = Boolean(data)
 })
 
+// Real-time listener for scraping and list updates
+on('lead_gen_start', (data) => {
+  startScraping(data.total || 10)
+})
+
+on('lead_scraped', (data) => {
+  onLeadsImported()
+  if (data.count !== undefined) {
+    updateProgress(data.count, data.lead)
+  }
+})
+
+on('lead_gen_complete', () => {
+  stopScraping()
+  onLeadsImported()
+})
+
+on('list_update', () => {
+  onLeadsImported()
+})
+
+// Polling fallback when socket is broken
+let refreshInterval = null
+watch(isScraping, (value) => {
+  if (value) {
+    refreshInterval = setInterval(() => {
+      onLeadsImported()
+    }, 5000) // Poll every 5 seconds during scraping
+  } else {
+    if (refreshInterval) {
+      clearInterval(refreshInterval)
+      refreshInterval = null
+    }
+    // Final refresh when done
+    onLeadsImported()
+  }
+})
+
+// Tab focus refresh (safety net)
+const handleFocus = () => {
+  onLeadsImported()
+}
+
+
+onMounted(() => {
+  window.addEventListener('focus', handleFocus)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('focus', handleFocus)
+})
+
+
 const defaults = reactive({})
 
-// leads data is loaded in the ViewControls component
 const leads = ref({})
-const loadMore = ref(1)
-const triggerResize = ref(1)
+const loadMore = ref(false)
+const triggerResize = ref(false)
 const updatedPageCount = ref(20)
 const viewControls = ref(null)
+
+
+
+function onLeadsImported() {
+  // Reload the resource directly - this is the most efficient way
+  if (leads.value && typeof leads.value.reload === 'function') {
+    leads.value.reload()
+  }
+}
+
 
 function getRow(name, field) {
   function getValue(value) {

@@ -6,7 +6,7 @@ Detailed layouts for Frappe app shells derived from official apps.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  🔲 Frappe CRM        Search...                          🔔  👤 User Menu  │
+│  🔲 Summon CRM        Search...                          🔔  👤 User Menu  │
 ├──────────────┬──────────────────────────────────────────────────────────────┤
 │              │                                                              │
 │  📊 Leads    │  Leads                      [+ New Lead]                    │
@@ -31,7 +31,7 @@ Detailed layouts for Frappe app shells derived from official apps.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  🔲 Frappe CRM        Search...                          🔔  👤 User Menu  │
+│  🔲 Summon CRM        Search...                          🔔  👤 User Menu  │
 ├──────────────┬─────────────────────────────┬────────────────────────────────┤
 │              │                             │                                │
 │  📊 Leads    │  Leads              [+ New] │  ✕  Lead: John Doe            │

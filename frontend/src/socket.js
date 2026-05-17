@@ -12,8 +12,10 @@ export function initSocket() {
 
   let socket = io(url, {
     withCredentials: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
+    transports: ['polling', 'websocket'], // Allow polling as fallback
   })
+
   socket.on('refetch_resource', (data) => {
     if (data.cache_key) {
       let resource =

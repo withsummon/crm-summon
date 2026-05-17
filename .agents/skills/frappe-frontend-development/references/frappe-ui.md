@@ -6,7 +6,7 @@ Frappe UI is a set of components and utilities for building frontend apps based 
 - Reactive data-fetching with Resource, List Resource, and Document Resource
 - Utilities and Vue directives for common patterns
 
-**Used by**: Frappe Cloud, Gameplan, Helpdesk, Frappe Insights, Frappe Drive, Frappe Builder
+**Used by**: Summon Cloud, Gameplan, Helpdesk, Frappe Insights, Frappe Drive, Frappe Builder
 
 **Under the hood**: Vue 3, TailwindCSS, Headless UI, TipTap (rich text), PopperJS, dayjs, Feather Icons
 

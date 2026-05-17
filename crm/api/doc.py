@@ -298,6 +298,8 @@ def get_data(
 
 	is_default = True
 	data = []
+
+
 	_list = get_controller(doctype)
 	default_rows = []
 	if hasattr(_list, "default_list_data"):
@@ -520,6 +522,10 @@ def get_data(
 					"options": get_options(field.get("fieldtype"), field.get("options")),
 				}
 
+	# Debug data retrieval
+	if doctype == "CRM Lead":
+		frappe.log_error(f"Returning {len(data)} leads. Filters: {json.dumps(filters)}", "CRM Lead Data Debug")
+
 	return {
 		"data": data,
 		"columns": columns,
@@ -540,6 +546,8 @@ def get_data(
 		"list_script": get_form_script(doctype, "List"),
 		"view_type": view_type,
 	}
+
+
 
 
 def parse_list_data(data, doctype):

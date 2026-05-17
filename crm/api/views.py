@@ -2,7 +2,7 @@ import frappe
 from pypika import Criterion
 
 
-@frappe.whitelist(methods=["POST", "GET"])
+@frappe.whitelist()
 def get_views(doctype: str):
 	View = frappe.qb.DocType("CRM View Settings")
 	query = (

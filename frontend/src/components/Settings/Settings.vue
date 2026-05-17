@@ -24,6 +24,7 @@
                 :key="item.label"
                 :icon="item.icon"
                 :label="__(item.label)"
+                theme="light"
                 class="w-full"
                 :class="
                   activeTab?.label == item.label

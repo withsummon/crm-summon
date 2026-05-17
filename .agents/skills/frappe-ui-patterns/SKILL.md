@@ -27,7 +27,7 @@ Study these official apps for patterns:
 
 | App | Repo | Key Patterns |
 |-----|------|--------------|
-| Frappe CRM | [github.com/frappe/crm](https://github.com/frappe/crm) | Lead/Deal pipelines, Kanban, activity feeds |
+| Summon CRM | [github.com/frappe/crm](https://github.com/frappe/crm) | Lead/Deal pipelines, Kanban, activity feeds |
 | Frappe Helpdesk | [github.com/frappe/helpdesk](https://github.com/frappe/helpdesk) | Ticket queues, SLA indicators, agent views |
 | Frappe HRMS | [github.com/frappe/hrms](https://github.com/frappe/hrms) | Employee self-service, approvals, dashboards |
 | Frappe Insights | [github.com/frappe/insights](https://github.com/frappe/insights) | Query builders, visualizations, dashboards |

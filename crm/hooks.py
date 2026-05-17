@@ -35,7 +35,7 @@ require_type_annotated_api_methods = True
 # app_include_js = "/assets/crm/js/crm.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/crm/css/crm.css"
+web_include_css = "/assets/crm/css/summon_login.css"
 # web_include_js = "/assets/crm/js/crm.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -58,7 +58,8 @@ require_type_annotated_api_methods = True
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "login"
+get_website_user_home_page = "crm.www.crm.get_home_page"
+
 
 # website user home page (by Role)
 # role_home_page = {
@@ -290,7 +291,7 @@ standard_dropdown_items = [
 	},
 	{
 		"name1": "login_to_fc",
-		"label": "Login to Frappe Cloud",
+		"label": "Login to Summon Cloud",
 		"type": "Route",
 		"route": "#",
 		"is_standard": 1,
