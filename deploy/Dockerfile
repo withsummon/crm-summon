@@ -1,5 +1,5 @@
 # Stage 1: Build the frontend (Vue 3 / Vite)
-FROM node:18-bookworm-slim AS frontend-builder
+FROM node:20-bookworm-slim AS frontend-builder
 WORKDIR /build
 
 # Copy the entire repository to ensure all workspace dependencies (like frappe-ui) are present
