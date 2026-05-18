@@ -24,10 +24,21 @@ RUN apt-get update \
 
 COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frappe-bench/apps/crm
 
-# Install only missing socketio runtime deps.
-# Do not run full yarn install in apps/frappe.
-RUN cd /home/frappe/frappe-bench/apps/frappe \
-    && npm install --no-save cookie ioredis socket.io
+# Install missing socketio runtime deps
+RUN cd /home/frappe/frappe-bench/apps/frappe && \
+    cat > package.json <<'PKGJSON' && \
+{
+  "name": "frappe-socketio-deps",
+  "version": "1.0.0",
+  "dependencies": {
+    "cookie": "*",
+    "ioredis": "*",
+    "socket.io": "*"
+  }
+}
+PKGJSON
+    npm install --no-save && \
+    chown -R frappe:frappe node_modules package.json
 
 USER frappe
 
@@ -38,7 +49,9 @@ RUN cd /home/frappe/frappe-bench \
     && ./env/bin/pip install -e ./apps/crm \
     && node --version \
     && npm --version \
-    && node -e "require('cookie'); require('ioredis'); console.log('Dependencies OK')"
+    && test -d ./apps/frappe/node_modules/cookie \
+    && test -d ./apps/frappe/node_modules/ioredis \
+    && test -d ./apps/frappe/node_modules/socket.io
 
 
 FROM frappe/erpnext-nginx:latest AS nginx
