@@ -183,31 +183,31 @@ services:
     networks:
       - crm-network
 
-frontend:
-  image: *nginx_image
-  pull_policy: always
-  restart: on-failure
+  frontend:
+    image: *nginx_image
+    pull_policy: always
+    restart: on-failure
 
-  depends_on:
-    - configurator
-    - backend
-    - websocket
+    depends_on:
+      - configurator
+      - backend
+      - websocket
 
-  environment:
-    BACKEND: backend:8000
-    SOCKETIO: websocket:9000
-    FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
-    UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
-    UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
-    UPSTREAM_REAL_IP_RECURSIVE: "off"
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
 
-  expose:
-    - "8080"
+    expose:
+      - "8080"
 
-  volumes: *common_volumes
+    volumes: *common_volumes
 
-  networks:
-    - crm-network
+    networks:
+      - crm-network
 
   queue-default:
     image: *worker_image
