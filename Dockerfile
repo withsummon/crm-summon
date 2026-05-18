@@ -38,6 +38,7 @@ RUN cd /home/frappe/frappe-bench \
     && ./env/bin/pip install -e ./apps/crm \
     && node --version \
     && npm --version \
+    && cd /home/frappe/frappe-bench/apps/frappe \
     && node -e "require('cookie'); console.log('cookie ok')"
 
 
