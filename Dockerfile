@@ -24,6 +24,11 @@ RUN apt-get update \
 
 COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frappe-bench/apps/crm
 
+# Install only missing socketio runtime deps.
+# Do not run full yarn install in apps/frappe.
+RUN cd /home/frappe/frappe-bench/apps/frappe \
+    && npm install --no-save cookie redis socket.io
+
 USER frappe
 
 RUN cd /home/frappe/frappe-bench \
@@ -32,7 +37,8 @@ RUN cd /home/frappe/frappe-bench \
     && test -f ./apps/crm/pyproject.toml \
     && ./env/bin/pip install -e ./apps/crm \
     && node --version \
-    && npm --version
+    && npm --version \
+    && node -e "require('cookie'); console.log('cookie ok')"
 
 
 FROM frappe/erpnext-nginx:latest AS nginx
