@@ -1,55 +1,424 @@
+name: crm-app
+
+x-worker-image: &worker_image registry.withsummon.com/summon-crm-worker:latest
+x-nginx-image: &nginx_image registry.withsummon.com/summon-crm-nginx:latest
+
+x-common-env: &common_env
+  DB_HOST: mariadb
+  DB_PORT: "3306"
+  REDIS_CACHE: redis://redis:6379/1
+  REDIS_QUEUE: redis://redis:6379/2
+  REDIS_SOCKETIO: redis://redis:6379/3
+
+x-common-volumes: &common_volumes
+  - sites:/home/frappe/frappe-bench/sites
+  - logs:/home/frappe/frappe-bench/logs
+
 services:
   mariadb:
-    image: mariadb:10.8
+    image: mariadb:10.6
+    restart: always
+
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
       - --skip-innodb-read-only-compressed
+
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-admin}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
     volumes:
       - mariadb-data:/var/lib/mysql
-    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
     networks:
-      - crm_net
+      - crm-network
 
   redis:
     image: redis:alpine
-    restart: unless-stopped
-    networks:
-      - crm_net
+    restart: always
 
-  frappe:
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - crm-network
+
+  configurator:
     build:
       context: .
       dockerfile: Dockerfile
-    image: crm-app
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: "no"
+
     environment:
-      SHELL: /bin/bash
-      FRAPPE_SITE_NAME: ${FRAPPE_SITE_NAME:-crm.localhost}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-admin}
-      MYSQL_HOST: mariadb
-      REDIS_CACHE: redis://redis:6379
-      REDIS_QUEUE: redis://redis:6379
-      REDIS_SOCKETIO: redis://redis:6379
-    working_dir: /workspace
-    ports:
-      - "8000:8000"
-      - "9001:9000"
-    volumes:
-      - .:/workspace:delegated
+      <<: *common_env
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        echo "Running configurator..."
+
+        rm -f sites/.configurator_done
+
+        mkdir -p sites
+
+        cat > sites/apps.txt <<'EOF'
+        frappe
+        payments
+        erpnext
+        crm
+        EOF
+
+        python3 - <<'PY'
+        import json
+        import os
+        from pathlib import Path
+
+        path = Path("sites/common_site_config.json")
+
+        config = {}
+        if path.exists():
+            try:
+                config = json.loads(path.read_text() or "{}")
+            except Exception:
+                config = {}
+
+        config.update({
+            "db_host": os.environ.get("DB_HOST", "mariadb"),
+            "db_port": int(os.environ.get("DB_PORT", "3306")),
+            "redis_cache": os.environ.get("REDIS_CACHE", "redis://redis:6379/1"),
+            "redis_queue": os.environ.get("REDIS_QUEUE", "redis://redis:6379/2"),
+            "redis_socketio": os.environ.get("REDIS_SOCKETIO", "redis://redis:6379/3"),
+            "socketio_port": 9000
+        })
+
+        path.write_text(json.dumps(config, indent=2, sort_keys=True))
+        PY
+
+        echo "=== sites/apps.txt ==="
+        cat sites/apps.txt
+
+        echo "=== sites/common_site_config.json ==="
+        cat sites/common_site_config.json
+
+        test -f sites/apps.txt
+        test -f sites/common_site_config.json
+        grep -q '^frappe$' sites/apps.txt
+        grep -q '^erpnext$' sites/apps.txt
+        grep -q '^crm$' sites/apps.txt
+        grep -q '"redis_queue"' sites/common_site_config.json
+
+        touch sites/.configurator_done
+
+        echo "Configurator done."
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: on-failure
+
     depends_on:
+      - configurator
       - mariadb
       - redis
-    restart: unless-stopped
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        until \
+          [ -f sites/.configurator_done ] && \
+          [ -f sites/apps.txt ] && \
+          [ -f sites/common_site_config.json ] && \
+          grep -q '^frappe$' sites/apps.txt && \
+          grep -q '^erpnext$' sites/apps.txt && \
+          grep -q '^crm$' sites/apps.txt && \
+          grep -q '"redis_queue"' sites/common_site_config.json
+        do
+          echo "waiting for configurator..."
+          sleep 2
+        done
+
+        echo "Starting Frappe backend on port 8000..."
+
+        exec /home/frappe/frappe-bench/env/bin/gunicorn \
+          --chdir=/home/frappe/frappe-bench/sites \
+          --bind=0.0.0.0:8000 \
+          --threads=4 \
+          --workers=2 \
+          --worker-class=gthread \
+          --worker-tmp-dir=/dev/shm \
+          --timeout=120 \
+          --preload \
+          frappe.app:application
+
+    environment:
+      <<: *common_env
+
+    volumes: *common_volumes
+
     networks:
-      - crm_net
+      - crm-network
+
+  websocket:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: on-failure
+
+    depends_on:
+      - configurator
+      - redis
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        until \
+          [ -f sites/.configurator_done ] && \
+          [ -f sites/apps.txt ] && \
+          [ -f sites/common_site_config.json ] && \
+          grep -q '^frappe$' sites/apps.txt && \
+          grep -q '^erpnext$' sites/apps.txt && \
+          grep -q '^crm$' sites/apps.txt && \
+          grep -q '"redis_socketio"' sites/common_site_config.json
+        do
+          echo "waiting for configurator..."
+          sleep 2
+        done
+
+        echo "Starting Frappe websocket..."
+
+        exec node /home/frappe/frappe-bench/apps/frappe/socketio.js
+
+    environment:
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    image: *nginx_image
+    pull_policy: never
+    restart: on-failure
+
+    depends_on:
+      - configurator
+      - backend
+      - websocket
+
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+
+    ports:
+      - "80:8080"
+      - "443:8443"
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  queue-default:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: on-failure
+
+    depends_on:
+      - configurator
+      - redis
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        until \
+          [ -f sites/.configurator_done ] && \
+          [ -f sites/apps.txt ] && \
+          [ -f sites/common_site_config.json ] && \
+          grep -q '^frappe$' sites/apps.txt && \
+          grep -q '^erpnext$' sites/apps.txt && \
+          grep -q '^crm$' sites/apps.txt && \
+          grep -q '"redis_queue"' sites/common_site_config.json
+        do
+          echo "waiting for configurator..."
+          sleep 2
+        done
+
+        echo "Starting default and short queue worker..."
+
+        cd /home/frappe/frappe-bench/sites
+        exec bench worker --queue default,short
+
+    environment:
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  queue-long:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: on-failure
+
+    depends_on:
+      - configurator
+      - redis
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        until \
+          [ -f sites/.configurator_done ] && \
+          [ -f sites/apps.txt ] && \
+          [ -f sites/common_site_config.json ] && \
+          grep -q '^frappe$' sites/apps.txt && \
+          grep -q '^erpnext$' sites/apps.txt && \
+          grep -q '^crm$' sites/apps.txt && \
+          grep -q '"redis_queue"' sites/common_site_config.json
+        do
+          echo "waiting for configurator..."
+          sleep 2
+        done
+
+        echo "Starting long queue worker..."
+
+        cd /home/frappe/frappe-bench/sites
+        exec bench worker --queue long
+
+    environment:
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  schedule:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: *worker_image
+    pull_policy: never
+    restart: on-failure
+
+    depends_on:
+      - configurator
+      - redis
+
+    command:
+      - bash
+      - -lc
+      - |
+        set -e
+
+        cd /home/frappe/frappe-bench
+
+        until \
+          [ -f sites/.configurator_done ] && \
+          [ -f sites/apps.txt ] && \
+          [ -f sites/common_site_config.json ] && \
+          grep -q '^frappe$' sites/apps.txt && \
+          grep -q '^erpnext$' sites/apps.txt && \
+          grep -q '^crm$' sites/apps.txt && \
+          grep -q '"redis_queue"' sites/common_site_config.json
+        do
+          echo "waiting for configurator..."
+          sleep 2
+        done
+
+        echo "Starting scheduler..."
+
+        cd /home/frappe/frappe-bench/sites
+        exec bench schedule
+
+    environment:
+      <<: *common_env
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
 
 volumes:
+  sites:
+  logs:
   mariadb-data:
+  redis-data:
 
 networks:
-  crm_net:
-    name: crm_net
+  crm-network:
+    driver: bridge
