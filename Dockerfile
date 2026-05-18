@@ -26,17 +26,15 @@ COPY --chown=frappe:frappe --from=frontend-builder /build/crm /home/frappe/frapp
 
 # Install missing socketio runtime deps
 RUN cd /home/frappe/frappe-bench/apps/frappe && \
-    cat > package.json <<'PKGJSON' && \
-{
-  "name": "frappe-socketio-deps",
-  "version": "1.0.0",
-  "dependencies": {
-    "cookie": "*",
-    "ioredis": "*",
-    "socket.io": "*"
-  }
-}
-PKGJSON
+    printf '%s\n' '{' \
+    '  "name": "frappe-socketio-deps",' \
+    '  "version": "1.0.0",' \
+    '  "dependencies": {' \
+    '    "cookie": "*",' \
+    '    "ioredis": "*",' \
+    '    "socket.io": "*"' \
+    '  }' \
+    '}' > package.json && \
     npm install --no-save && \
     chown -R frappe:frappe node_modules package.json
 
