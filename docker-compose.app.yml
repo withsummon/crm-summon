@@ -1,7 +1,7 @@
 name: crm-app
 
-x-worker-image: &worker_image registry.withsummon.com/summon-crm-worker:latest
-x-nginx-image: &nginx_image registry.withsummon.com/summon-crm-nginx:latest
+x-worker-image: &worker_image crm-app-worker:latest
+x-nginx-image: &nginx_image crm-app-nginx:latest
 
 x-common-env: &common_env
   DB_HOST: mariadb
@@ -16,8 +16,12 @@ x-common-volumes: &common_volumes
 
 services:
   configurator:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: "no"
 
     environment:
@@ -93,8 +97,12 @@ services:
       - crm-network
 
   backend:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
@@ -143,8 +151,12 @@ services:
       - crm-network
 
   websocket:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
@@ -184,8 +196,12 @@ services:
       - crm-network
 
   frontend:
-    image: *nginx_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    image: crm-app-nginx:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
@@ -210,8 +226,12 @@ services:
       - crm-network
 
   queue-default:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
@@ -252,8 +272,12 @@ services:
       - crm-network
 
   queue-long:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
@@ -294,8 +318,12 @@ services:
       - crm-network
 
   schedule:
-    image: *worker_image
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    image: crm-app-worker:latest
+    pull_policy: never
     restart: on-failure
 
     depends_on:
