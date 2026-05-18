@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./deploy/Dockerfile
+          file: ./Dockerfile
           target: worker
           push: true
           tags: |
@@ -40,7 +40,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./deploy/Dockerfile
+          file: ./Dockerfile
           target: nginx
           push: true
           tags: |
