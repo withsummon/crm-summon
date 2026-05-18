@@ -25,7 +25,9 @@ services:
       start_period: 30s
 
     networks:
-      - crm-network
+      crm-network:
+        aliases:
+          - mariadb
 
   redis:
     image: redis:alpine
@@ -42,7 +44,9 @@ services:
       start_period: 10s
 
     networks:
-      - crm-network
+      crm-network:
+        aliases:
+          - redis
 
 volumes:
   mariadb-data:

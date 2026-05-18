@@ -1,7 +1,7 @@
 name: crm-app
 
-x-worker-image: &worker_image crm-app-worker:latest
-x-nginx-image: &nginx_image crm-app-nginx:latest
+x-worker-image: &worker_image registry.withsummon.com/summon-crm-worker:latest
+x-nginx-image: &nginx_image registry.withsummon.com/summon-crm-nginx:latest
 
 x-common-env: &common_env
   DB_HOST: mariadb
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: "no"
 
@@ -101,7 +101,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: on-failure
 
@@ -155,7 +155,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: on-failure
 
@@ -200,7 +200,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: nginx
-    image: crm-app-nginx:latest
+    image: *nginx_image
     pull_policy: never
     restart: on-failure
 
@@ -230,7 +230,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: on-failure
 
@@ -276,7 +276,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: on-failure
 
@@ -322,7 +322,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    image: crm-app-worker:latest
+    image: *worker_image
     pull_policy: never
     restart: on-failure
 
