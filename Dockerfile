@@ -40,5 +40,3 @@ FROM frappe/erpnext-nginx:latest AS nginx
 USER root
 
 COPY --from=worker /home/frappe/frappe-bench/apps/crm /home/frappe/frappe-bench/apps/crm
-
-USER frappe
