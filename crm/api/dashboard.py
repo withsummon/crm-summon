@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from frappe.query_builder import Case, DocType
 from frappe.query_builder.functions import Avg, Coalesce, Count, Date, DateFormat, IfNull, Sum
+from frappe.utils import flt
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
@@ -59,6 +60,295 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 			l["data"] = None
 
 	return layout
+
+
+@frappe.whitelist()
+@sales_user_only
+def get_bni_crm_dashboard(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
+	"""Return real-data dashboard payload for the BNI CRM visual dashboard."""
+	if not from_date or not to_date:
+		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
+		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
+
+	roles = frappe.get_roles(frappe.session.user)
+	if "Sales User" in roles and "Sales Manager" not in roles and "System Manager" not in roles:
+		user = frappe.session.user
+
+	lead_count = _count_doctype("CRM Lead", from_date, to_date, "lead_owner", user)
+	prev_lead_count = _count_doctype(
+		"CRM Lead",
+		frappe.utils.add_days(from_date, -max(frappe.utils.date_diff(to_date, from_date), 1)),
+		frappe.utils.add_days(from_date, -1),
+		"lead_owner",
+		user,
+	)
+	avg_cycle_days = _average_cycle_days(from_date, to_date, user)
+	conversion_rate = _conversion_rate(from_date, to_date, user)
+	revenue_total = _won_revenue(from_date, to_date, user)
+	prev_revenue = _won_revenue(
+		frappe.utils.add_months(from_date, -1),
+		frappe.utils.add_days(from_date, -1),
+		user,
+	)
+
+	return {
+		"last_updated": frappe.utils.now(),
+		"metrics": [
+			{"label": "Leads", "value": lead_count, "change": _pct_delta(lead_count, prev_lead_count), "caption": "vs minggu lalu", "icon": "users"},
+			{"label": "CLV", "value": round(avg_cycle_days), "suffix": " hari", "change": 0, "caption": "vs minggu lalu", "icon": "clock", "negative_is_better": True},
+			{"label": "Conversion Rate", "value": round(conversion_rate), "suffix": "%", "change": 0, "caption": "vs minggu lalu", "icon": "trending-up"},
+			{"label": "Pendapatan", "value": revenue_total, "format": "currency", "change": _pct_delta(revenue_total, prev_revenue), "caption": "vs bulan lalu", "icon": "banknote"},
+		],
+		"revenue": {
+			"total": revenue_total,
+			"change": _pct_delta(revenue_total, prev_revenue),
+			"months": _monthly_revenue(user),
+		},
+		"calendar": _dashboard_events(from_date, to_date),
+		"lead_management": _lead_management(from_date, to_date, user),
+		"regions": _region_rows(from_date, to_date, user),
+		"top_branches": _top_branch_rows(from_date, to_date, user),
+		"retention": _retention_rows(from_date, to_date),
+	}
+
+
+def _table_exists(doctype: str) -> bool:
+	try:
+		return frappe.db.table_exists(doctype)
+	except Exception:
+		return False
+
+
+def _meta_has_field(doctype: str, fieldname: str) -> bool:
+	if not _table_exists(doctype):
+		return False
+	try:
+		return frappe.get_meta(doctype).has_field(fieldname)
+	except Exception:
+		return False
+
+
+def _date_range_filter(from_date, to_date):
+	return [["creation", ">=", from_date], ["creation", "<", frappe.utils.add_days(to_date, 1)]]
+
+
+def _count_doctype(doctype: str, from_date, to_date, owner_field: str | None = None, user: str | None = None):
+	if not _table_exists(doctype):
+		return 0
+	filters = _date_range_filter(from_date, to_date)
+	if user and owner_field and _meta_has_field(doctype, owner_field):
+		filters.append([owner_field, "=", user])
+	return frappe.db.count(doctype, filters=filters)
+
+
+def _deal_owner_condition(user):
+	if user and _meta_has_field("CRM Deal", "deal_owner"):
+		return " AND deal_owner = %(user)s"
+	return ""
+
+
+def _won_deal_sql_fragment():
+	return """
+		FROM `tabCRM Deal` deal
+		LEFT JOIN `tabCRM Deal Status` status ON status.name = deal.status
+		WHERE COALESCE(status.type, '') = 'Won'
+		AND DATE(COALESCE(deal.closed_date, deal.modified, deal.creation)) BETWEEN %(from_date)s AND %(to_date)s
+	"""
+
+
+def _won_revenue(from_date, to_date, user: str | None = None):
+	if not _table_exists("CRM Deal"):
+		return 0
+	try:
+		rows = frappe.db.sql(
+			f"""
+			SELECT SUM(COALESCE(deal.deal_value, 0) * COALESCE(deal.exchange_rate, 1)) AS total
+			{_won_deal_sql_fragment()}
+			{_deal_owner_condition(user)}
+			""",
+			{"from_date": from_date, "to_date": to_date, "user": user},
+			as_dict=True,
+		)
+		return flt(rows[0].total if rows else 0)
+	except Exception:
+		return 0
+
+
+def _won_deal_count(from_date, to_date, user: str | None = None):
+	if not _table_exists("CRM Deal"):
+		return 0
+	try:
+		rows = frappe.db.sql(
+			f"""
+			SELECT COUNT(deal.name) AS total
+			{_won_deal_sql_fragment()}
+			{_deal_owner_condition(user)}
+			""",
+			{"from_date": from_date, "to_date": to_date, "user": user},
+			as_dict=True,
+		)
+		return int(rows[0].total if rows else 0)
+	except Exception:
+		return 0
+
+
+def _average_cycle_days(from_date, to_date, user: str | None = None):
+	if not _table_exists("CRM Deal"):
+		return 0
+	try:
+		rows = frappe.db.sql(
+			f"""
+			SELECT AVG(GREATEST(DATEDIFF(COALESCE(deal.closed_date, deal.modified), deal.creation), 0)) AS average_days
+			{_won_deal_sql_fragment()}
+			{_deal_owner_condition(user)}
+			""",
+			{"from_date": from_date, "to_date": to_date, "user": user},
+			as_dict=True,
+		)
+		return flt(rows[0].average_days if rows else 0)
+	except Exception:
+		return 0
+
+
+def _conversion_rate(from_date, to_date, user: str | None = None):
+	leads = _count_doctype("CRM Lead", from_date, to_date, "lead_owner", user)
+	if not leads:
+		return 0
+	return (_won_deal_count(from_date, to_date, user) / leads) * 100
+
+
+def _pct_delta(current, previous):
+	current = flt(current)
+	previous = flt(previous)
+	if not previous:
+		return 0
+	return ((current - previous) / previous) * 100
+
+
+def _monthly_revenue(user: str | None = None):
+	labels = []
+	values_by_month = {}
+	start = frappe.utils.get_first_day(frappe.utils.add_months(frappe.utils.nowdate(), -11))
+	for offset in range(12):
+		month_date = frappe.utils.add_months(start, offset)
+		key = frappe.utils.formatdate(month_date, "yyyy-MM")
+		labels.append({"key": key, "label": frappe.utils.formatdate(month_date, "MMM")})
+		values_by_month[key] = 0
+
+	if _table_exists("CRM Deal"):
+		try:
+			rows = frappe.db.sql(
+				f"""
+				SELECT DATE_FORMAT(COALESCE(deal.closed_date, deal.modified, deal.creation), '%%Y-%%m') AS month,
+					SUM(COALESCE(deal.deal_value, 0) * COALESCE(deal.exchange_rate, 1)) AS total
+				{_won_deal_sql_fragment().replace("BETWEEN %(from_date)s AND %(to_date)s", ">= %(from_date)s")}
+				{_deal_owner_condition(user)}
+				GROUP BY DATE_FORMAT(COALESCE(deal.closed_date, deal.modified, deal.creation), '%%Y-%%m')
+				""",
+				{"from_date": start, "to_date": frappe.utils.nowdate(), "user": user},
+				as_dict=True,
+			)
+			for row in rows:
+				if row.month in values_by_month:
+					values_by_month[row.month] = flt(row.total)
+		except Exception:
+			pass
+
+	max_value = max(values_by_month.values() or [0]) or 1
+	return [
+		{"label": row["label"], "value": values_by_month[row["key"]], "height": round(values_by_month[row["key"]] / max_value * 100)}
+		for row in labels
+	]
+
+
+def _dashboard_events(from_date, to_date):
+	if not _table_exists("Event"):
+		return []
+	fields = ["name", "subject", "starts_on", "ends_on", "event_type"]
+	try:
+		return frappe.get_all(
+			"Event",
+			fields=fields,
+			filters=[["starts_on", ">=", from_date], ["starts_on", "<", frappe.utils.add_days(to_date, 1)]],
+			order_by="starts_on asc",
+			limit=8,
+		)
+	except Exception:
+		return []
+
+
+def _group_count(doctype: str, fieldname: str, from_date, to_date, user: str | None = None, owner_field: str | None = None, limit: int = 6):
+	if not _table_exists(doctype) or not _meta_has_field(doctype, fieldname):
+		return []
+	filters = _date_range_filter(from_date, to_date)
+	if user and owner_field and _meta_has_field(doctype, owner_field):
+		filters.append([owner_field, "=", user])
+	try:
+		rows = frappe.get_all(doctype, fields=[fieldname, "count(name) as count"], filters=filters, group_by=fieldname, order_by="count desc", limit=limit)
+	except Exception:
+		return []
+	total = sum(int(row.count or 0) for row in rows) or 1
+	return [
+		{"label": row.get(fieldname) or _("Unassigned"), "count": int(row.count or 0), "percent": round((int(row.count or 0) / total) * 100)}
+		for row in rows
+	]
+
+
+def _lead_management(from_date, to_date, user: str | None = None):
+	return {
+		"status": _group_count("CRM Lead", "status", from_date, to_date, user, "lead_owner"),
+		"source": _group_count("CRM Lead", "source", from_date, to_date, user, "lead_owner"),
+		"qualification": _group_count("CRM Lead", "qualification_status", from_date, to_date, user, "lead_owner")
+		or _group_count("CRM Lead", "status", from_date, to_date, user, "lead_owner"),
+	}
+
+
+def _region_rows(from_date, to_date, user: str | None = None):
+	if not _table_exists("Customer"):
+		return []
+	try:
+		rows = frappe.get_all(
+			"Customer",
+			fields=["territory", "count(name) as customers"],
+			filters=_date_range_filter(from_date, to_date),
+			group_by="territory",
+			order_by="customers desc",
+			limit=6,
+		)
+	except Exception:
+		return []
+	total = sum(int(row.customers or 0) for row in rows) or 1
+	return [
+		{"region": row.territory or _("Unassigned"), "customers": int(row.customers or 0), "percent": round((int(row.customers or 0) / total) * 100)}
+		for row in rows
+	]
+
+
+def _top_branch_rows(from_date, to_date, user: str | None = None):
+	rows = _region_rows(from_date, to_date, user)
+	if not rows:
+		return []
+	return [{"branch": row["region"], "percent": row["percent"], "customers": row["customers"]} for row in rows[:4]]
+
+
+def _retention_rows(from_date, to_date):
+	if not _table_exists("Customer"):
+		return {"months": [], "segments": []}
+	total_customers = frappe.db.count("Customer") or 1
+	start = frappe.utils.get_first_day(frappe.utils.add_months(to_date or frappe.utils.nowdate(), -6))
+	months = []
+	for offset in range(7):
+		month_start = frappe.utils.add_months(start, offset)
+		month_end = frappe.utils.get_last_day(month_start)
+		active = frappe.db.count(
+			"Customer",
+			filters=[["modified", ">=", month_start], ["modified", "<", frappe.utils.add_days(month_end, 1)]],
+		)
+		months.append({"label": frappe.utils.formatdate(month_start, "MMM"), "value": round((active / total_customers) * 100)})
+	return {
+		"months": months,
+		"segments": _group_count("Customer", "customer_group", from_date, to_date, limit=5),
+	}
 
 
 @frappe.whitelist()

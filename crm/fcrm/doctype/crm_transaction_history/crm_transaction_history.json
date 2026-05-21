@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-21 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "customer", "facility", "transaction_date", "transaction_type", "column_break_amount", "amount", "running_balance", "status", "notes"],
+ "fields": [
+  {"default": "CRM-TXN-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-TXN-.YYYY.-"},
+  {"fieldname": "customer", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Customer", "options": "Customer", "reqd": 1},
+  {"fieldname": "facility", "fieldtype": "Link", "label": "Facility", "options": "CRM Credit Facility"},
+  {"fieldname": "transaction_date", "fieldtype": "Date", "in_list_view": 1, "label": "Transaction Date"},
+  {"default": "Repayment", "fieldname": "transaction_type", "fieldtype": "Select", "in_list_view": 1, "label": "Transaction Type", "options": "Repayment\nMissed Payment\nDisbursement\nFee\nAdjustment"},
+  {"fieldname": "column_break_amount", "fieldtype": "Column Break"},
+  {"fieldname": "amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Amount"},
+  {"fieldname": "running_balance", "fieldtype": "Currency", "label": "Running Balance"},
+  {"default": "Posted", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Posted\nPending\nFailed"},
+  {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-21 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Transaction History",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales User", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "transaction_type",
+ "track_changes": 1
+}

@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-21 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "customer", "channel", "direction", "subject", "communication_time", "column_break_status", "conversation_link", "compose_status", "status", "message"],
+ "fields": [
+  {"default": "CRM-COMM-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-COMM-.YYYY.-"},
+  {"fieldname": "customer", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Customer", "options": "Customer", "reqd": 1},
+  {"default": "Email", "fieldname": "channel", "fieldtype": "Select", "in_list_view": 1, "label": "Channel", "options": "Email\nWA\nSMS\nCall"},
+  {"default": "Outbound", "fieldname": "direction", "fieldtype": "Select", "label": "Direction", "options": "Inbound\nOutbound"},
+  {"fieldname": "subject", "fieldtype": "Data", "in_list_view": 1, "label": "Subject", "reqd": 1},
+  {"fieldname": "communication_time", "fieldtype": "Datetime", "label": "Communication Time"},
+  {"fieldname": "column_break_status", "fieldtype": "Column Break"},
+  {"fieldname": "conversation_link", "fieldtype": "Data", "label": "Conversation Link"},
+  {"default": "Manual", "fieldname": "compose_status", "fieldtype": "Select", "label": "Compose Status", "options": "Manual\nPending Vendor\nSent\nFailed\nUnavailable"},
+  {"default": "Open", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Open\nClosed\nFailed"},
+  {"fieldname": "message", "fieldtype": "Text Editor", "label": "Message"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-21 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Customer Communication",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales User", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "subject",
+ "track_changes": 1
+}

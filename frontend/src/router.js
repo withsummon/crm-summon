@@ -56,12 +56,24 @@ const routes = [
       {
         path: 'customer-360',
         name: 'Customer 360',
+        component: () => import('@/pages/Customer360List.vue'),
+      },
+      {
+        path: 'customer-360/:customer',
+        name: 'Customer 360 Detail',
         component: () => import('@/pages/Customer360.vue'),
+        props: true,
       },
       {
         path: 'credit-analysis',
         name: 'Credit Analysis',
+        component: () => import('@/pages/CreditAnalysisList.vue'),
+      },
+      {
+        path: 'credit-analysis/:applicationId',
+        name: 'Credit Analysis Detail',
         component: () => import('@/pages/CreditAnalysis.vue'),
+        props: true,
       },
       {
         alias: 'leads',
@@ -233,7 +245,7 @@ const routes = [
         component: () => import('@/pages/EmbeddedAppPage.vue'),
         props: {
           title: 'Notification Center',
-          subtitle: 'Frappe Notification',
+          subtitle: 'Notification',
           icon: 'bell',
           sourcePath: '/app/notification',
         },

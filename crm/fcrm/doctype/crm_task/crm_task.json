@@ -17,6 +17,8 @@
   "assigned_to",
   "status",
   "due_date",
+  "recurring",
+  "recurrence_rule",
   "section_break_bzhd",
   "description"
  ],
@@ -65,6 +67,17 @@
    "fieldtype": "Datetime",
    "in_standard_filter": 1,
    "label": "Due Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "recurring",
+   "fieldtype": "Check",
+   "label": "Recurring"
+  },
+  {
+   "fieldname": "recurrence_rule",
+   "fieldtype": "Data",
+   "label": "Recurrence Rule"
   },
   {
    "fieldname": "section_break_bzhd",
