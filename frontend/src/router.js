@@ -59,6 +59,11 @@ const routes = [
         component: () => import('@/pages/Customer360.vue'),
       },
       {
+        path: 'credit-analysis',
+        name: 'Credit Analysis',
+        component: () => import('@/pages/CreditAnalysis.vue'),
+      },
+      {
         alias: 'leads',
         path: 'leads/view/:viewType?',
         name: 'Leads',
@@ -160,8 +165,6 @@ const routes = [
           subtitle: 'Lending',
           icon: 'dollar-sign',
           sourcePath: '/app/loans',
-          note:
-            'The complete Lending loan workspace is embedded here so existing loan forms, lists, and actions remain available inside CRM.',
         },
       },
       {
@@ -184,8 +187,6 @@ const routes = [
           subtitle: 'Item',
           icon: 'package',
           sourcePath: '/app/item',
-          note:
-            'The complete product and item configuration workspace is embedded here so standard ERPNext setup remains available inside CRM.',
         },
       },
     ],
@@ -213,8 +214,6 @@ const routes = [
           subtitle: 'Frappe Drive',
           icon: 'folder',
           sourcePath: '/drive',
-          note:
-            'Frappe Drive is embedded here so upload, sharing, folders, previews, teams, and document actions stay fully available inside CRM.',
         },
       },
       {
@@ -226,8 +225,6 @@ const routes = [
           subtitle: 'Supplier',
           icon: 'truck',
           sourcePath: '/app/supplier',
-          note:
-            'The complete supplier and vendor management workspace is embedded here so ERPNext vendor functionality remains available inside CRM.',
         },
       },
       {
@@ -239,8 +236,6 @@ const routes = [
           subtitle: 'Frappe Notification',
           icon: 'bell',
           sourcePath: '/app/notification',
-          note:
-            'The native Frappe notification workspace is embedded here so notification setup, rules, recipients, and delivery behavior stay aligned with ERPNext.',
         },
       },
       {
@@ -292,8 +287,6 @@ const routes = [
           subtitle: 'Integrations',
           icon: 'link',
           sourcePath: '/app/integrations',
-          note:
-            'The complete integrations workspace is embedded here so existing API and integration setup stays available inside CRM.',
         },
       },
       {
@@ -305,8 +298,6 @@ const routes = [
           subtitle: 'Assignment Rule',
           icon: 'filter',
           sourcePath: '/app/assignment-rule',
-          note:
-            'The complete assignment rule workspace is embedded here so rule configuration remains available inside CRM.',
         },
       },
       // RBAC Routes
@@ -366,8 +357,6 @@ const routes = [
           subtitle: 'ClefinCode Chat',
           icon: 'message-square',
           sourcePath: '/app/clefincode-chat-channel',
-          note:
-            'The installed chat channel workspace is embedded here so omnichannel setup stays available inside CRM.',
         },
       },
       {
@@ -379,8 +368,6 @@ const routes = [
           subtitle: 'Helpdesk',
           icon: 'life-buoy',
           sourcePath: '/helpdesk',
-          note:
-            'The Helpdesk portal is embedded here so the customer portal experience remains available inside CRM.',
         },
       },
     ],

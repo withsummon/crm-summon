@@ -124,8 +124,8 @@ export const summonModules = [
     description:
       'Financial spreading, ratio analysis, AI extraction, scenario simulation, and AI-generated credit memo.',
     priority: 'High',
-    status: 'planned',
-    href: '/crm/modules/credit-analysis',
+    status: 'available',
+    href: '/crm/crm-core/credit-analysis',
     group: 'Lending & Risk',
     icon: 'file-text',
     features: [
