@@ -33,9 +33,9 @@
         <div
           v-for="cust in directoryCustomers"
           :key="cust.name"
-          @click="selectCustomer(cust)"
-          class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-slate-50"
           :class="selectedCustomerName === cust.name ? 'bg-teal-50 border border-teal-100' : ''"
+          class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-slate-50"
+          @click="selectCustomer(cust)"
         >
           <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
             {{ initials(cust.customer_name || cust.name) }}
@@ -119,9 +119,9 @@
             <button
               v-for="tab in tabs"
               :key="tab.key"
-              @click="activeTab = tab.key"
               class="pb-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap"
               :class="activeTab === tab.key ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+              @click="activeTab = tab.key"
             >
               {{ tab.label }}
             </button>
