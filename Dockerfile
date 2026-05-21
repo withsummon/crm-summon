@@ -14,7 +14,7 @@ RUN yarn install --frozen-lockfile
 RUN yarn build
 
 
-FROM frappe/erpnext-worker:latest AS worker
+FROM frappe/erpnext-worker:version-15 AS worker
 
 USER root
 
@@ -42,7 +42,7 @@ RUN cd /home/frappe/frappe-bench \
     && node -e "require('cookie'); console.log('cookie ok')"
 
 
-FROM frappe/erpnext-nginx:latest AS nginx
+FROM frappe/erpnext-nginx:version-15 AS nginx
 
 USER root
 

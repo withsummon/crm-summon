@@ -1,0 +1,197 @@
+services:
+  mariadb:
+    image: mariadb:10.8
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --innodb-flush-log-at-trx-commit=2
+      - --max-connections=300
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL","mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+  redis-cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - yes
+      - --save
+      - "900 1"
+    volumes:
+      - redis-cache-data:/data
+    healthcheck:
+      test: ["CMD-SHELL","redis-cli -h localhost ping | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+  redis-queue:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - yes
+      - --save
+      - "900 1"
+    volumes:
+      - redis-queue-data:/data
+    healthcheck:
+      test: ["CMD-SHELL","redis-cli -h localhost ping | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+  redis-socketio:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - yes
+      - --save
+      - "900 1"
+    volumes:
+      - redis-socketio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL","redis-cli -h localhost ping | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+  backend:
+    image: ${FRAPPE_IMAGE:-frappe/erpnext-worker:version-15}
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+      redis-socketio:
+        condition: service_healthy
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_ROOT_USER: root
+      DB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
+      REDIS_SOCKETIO: redis-socketio:6379
+      FRAPPE_ENV: production
+    working_dir: /home/frappe/frappe-bench
+    volumes:
+      - frappe-sites:/home/frappe/frappe-bench/sites
+      - frappe-logs:/home/frappe/frappe-bench/logs
+    ports:
+      - "8000:8000"
+    command: ["bench", "serve", "--port", "8000", "--socketio_port", "9000"]
+    healthcheck:
+      test: ["CMD-SHELL","curl -f http://127.0.0.1:8000/api/method/frappe.ping || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+  socketio:
+    image: ${FRAPPE_IMAGE:-frappe/erpnext-worker:version-15}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      REDIS_SOCKETIO: redis-socketio:6379
+      FRAPPE_ENV: production
+    working_dir: /home/frappe/frappe-bench
+    command: ["bench", "--site", "${SITE_NAME}", "socketio"]
+    networks:
+      - frappe_net
+
+  scheduler:
+    image: ${FRAPPE_IMAGE:-frappe/erpnext-worker:version-15}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      REDIS_QUEUE: redis-queue:6379
+      FRAPPE_ENV: production
+    working_dir: /home/frappe/frappe-bench
+    command: ["bench", "--site", "${SITE_NAME}", "schedule"]
+    networks:
+      - frappe_net
+
+  worker:
+    image: ${FRAPPE_IMAGE:-frappe/erpnext-worker:version-15}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      SITE_NAME: ${SITE_NAME}
+      REDIS_QUEUE: redis-queue:6379
+      FRAPPE_ENV: production
+    working_dir: /home/frappe/frappe-bench
+    command: ["bench", "--site", "${SITE_NAME}", "worker", "--queue", "default"]
+    networks:
+      - frappe_net
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      socketio:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL","curl -f http://127.0.0.1/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - frappe_net
+
+networks:
+  frappe_net:
+    driver: bridge
+
+volumes:
+  mariadb-data:
+  redis-cache-data:
+  redis-queue-data:
+  redis-socketio-data:
+  frappe-sites:
+  frappe-logs:
