@@ -7,29 +7,6 @@
       <UserDropdown :isCollapsed="isSidebarCollapsed" />
     </div>
     <div class="flex-1 overflow-y-auto">
-      <div class="flex flex-col">
-        <SidebarLink
-          id="notifications-btn"
-          :label="__('Notifications')"
-          :icon="NotificationsIcon"
-          to="Notification Center"
-          :isCollapsed="isSidebarCollapsed"
-          class="relative mx-2 my-[1.5px]"
-        >
-          <template #right>
-            <Badge
-              v-if="!isSidebarCollapsed && unreadNotificationsCount"
-              :label="unreadNotificationsCount"
-              variant="subtle"
-            />
-            <div
-              v-else-if="unreadNotificationsCount"
-              class="absolute -left-1.5 top-1 z-20 h-[5px] w-[5px] translate-x-6 translate-y-1 rounded-full bg-crm-orange ring-1 ring-white"
-            />
-          </template>
-        </SidebarLink>
-      </div>
-
       <!-- Parent Route Groups -->
       <div v-for="group in parentRouteGroups" :key="group.name">
         <div class="mx-2 my-1.5" />
