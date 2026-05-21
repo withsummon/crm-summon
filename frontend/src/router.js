@@ -27,7 +27,7 @@ const routes = [
   {
     path: '/notifications',
     name: 'Notifications',
-    component: () => import('@/pages/MobileNotification.vue'),
+    redirect: { name: 'Notification Center' },
   },
   // ─── CRM Core ────────────────────────────────────────────
   {
@@ -228,6 +228,19 @@ const routes = [
           sourcePath: '/app/supplier',
           note:
             'The complete supplier and vendor management workspace is embedded here so ERPNext vendor functionality remains available inside CRM.',
+        },
+      },
+      {
+        path: 'notification-center',
+        name: 'Notification Center',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Notification Center',
+          subtitle: 'Frappe Notification',
+          icon: 'bell',
+          sourcePath: '/app/notification',
+          note:
+            'The native Frappe notification workspace is embedded here so notification setup, rules, recipients, and delivery behavior stay aligned with ERPNext.',
         },
       },
       {

@@ -137,7 +137,44 @@ The script will set up a production-ready instance of Summon CRM with all the ne
 
 ## Getting Started (Development)
 
-### Local Setup
+### Full Stack Setup (Recommended)
+
+Summon CRM terintegrasi dengan beberapa modul tambahan untuk fitur lengkap:
+
+| Module | Feature |
+| ------ | ------- |
+| [Drive](https://github.com/frappe/drive) | File storage & management |
+| [Helpdesk](https://github.com/frappe/helpdesk) | Ticketing & SLA |
+| [Insights](https://github.com/frappe/insights) | Data analytics & dashboards |
+| [Lending](https://github.com/frappe/lending) | Loan management |
+| [Telephony](https://github.com/frappe/telephony) | Call integration (Twilio/Exotel) |
+| [Omnichannel Chat](https://github.com/clefincode/clefincode_chat) | WhatsApp & multi-channel messaging |
+
+Untuk setup lengkap semua modul, gunakan file [`apps.json`](apps.json) yang sudah disediakan:
+
+```bash
+# Clone repo ini
+git clone https://github.com/withsummon/crm-summon.git frappe-crm
+
+# Init bench dengan semua app sekaligus
+bench init my-frappe-bench \
+  --frappe-branch version-15 \
+  --apps_path ./frappe-crm/apps.json
+
+# Buat site dan install semua app
+cd my-frappe-bench
+bench new-site crm.localhost --admin-password admin
+bench --site crm.localhost install-app erpnext lending drive telephony helpdesk insights clefincode_chat crm
+bench start
+```
+
+> 📖 **Panduan lengkap step-by-step** termasuk prerequisites, troubleshooting, dan FAQ ada di [**SETUP.md**](SETUP.md).
+
+---
+
+### CRM-Only Setup (Quick Start)
+
+Jika hanya butuh modul CRM saja tanpa modul tambahan:
 
 1. [Setup Bench](https://docs.frappe.io/framework/user/en/installation).
 1. In the frappe-bench directory, run `bench start` and keep it running.

@@ -137,24 +137,6 @@ export const summonModules = [
     ],
   },
   {
-    label: 'AI Agent Center',
-    sheet: '08_AIAgent',
-    description:
-      'Hub of specialized AI agents with chat interface, context-aware memory, and action execution.',
-    priority: 'High',
-    status: 'partial',
-    href: '/crm/ai-desk',
-    group: 'Admin & Platform',
-    icon: 'cpu',
-    features: [
-      'AI Credit Analyst Agent',
-      'AI Relationship Manager Agent',
-      'AI Document Validator Agent',
-      'Universal Chat Interface',
-      'Action Execution',
-    ],
-  },
-  {
     label: 'Document Management',
     sheet: '09_DocMgmt',
     description:
@@ -249,24 +231,6 @@ export const summonModules = [
     ],
   },
   {
-    label: 'Administration',
-    sheet: '14_Admin',
-    description:
-      'User, branch, product, workflow, SLA, role, and system configuration management.',
-    priority: 'Medium',
-    status: 'available',
-    routeName: 'User List',
-    group: 'Admin & Platform',
-    icon: 'settings',
-    features: [
-      'User Management',
-      'Branch Management',
-      'Role Management',
-      'SLA Configuration',
-      'System Settings',
-    ],
-  },
-  {
     label: 'Role-Based Access Control',
     sheet: '15_RBAC',
     description:
@@ -323,31 +287,14 @@ export const summonModules = [
     ],
   },
   {
-    label: 'Task & SLA Management',
-    sheet: '18_TaskSLA',
-    description:
-      'Task assignment, SLA timers, escalation workflows, recurring tasks, and SLA analytics.',
-    priority: 'High',
-    status: 'available',
-    href: '/crm/tasks',
-    group: 'Operations',
-    icon: 'check-square',
-    features: [
-      'Task Inbox',
-      'Task Assignment',
-      'Task Priorities',
-      'SLA Timer',
-      'Escalation Workflows',
-    ],
-  },
-  {
     label: 'Notification Center',
     sheet: '19_Notification',
     description:
       'Multi-channel notifications with preferences, templates, batching, and delivery analytics.',
     priority: 'Medium',
     status: 'available',
-    href: '/crm/notifications',
+    href: '/crm/operations/notification-center',
+    routeName: 'Notification Center',
     group: 'Operations',
     icon: 'bell',
     features: [

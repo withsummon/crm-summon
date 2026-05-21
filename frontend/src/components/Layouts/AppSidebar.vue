@@ -12,9 +12,9 @@
           id="notifications-btn"
           :label="__('Notifications')"
           :icon="NotificationsIcon"
+          to="Notification Center"
           :isCollapsed="isSidebarCollapsed"
           class="relative mx-2 my-[1.5px]"
-          @click="() => toggleNotificationPanel()"
         >
           <template #right>
             <Badge
@@ -183,7 +183,6 @@
         </template>
       </SidebarLink>
     </div>
-    <Notifications />
     <Settings />
     <HelpModal
       v-if="showHelpModal"
@@ -230,14 +229,10 @@ import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import HelpIcon from '@/components/Icons/HelpIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
-import Notifications from '@/components/Notifications.vue'
 import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
 import { summonModules } from '@/data/summonModules'
-import {
-  unreadNotificationsCount,
-  notificationsStore,
-} from '@/stores/notifications'
+import { unreadNotificationsCount } from '@/stores/notifications'
 import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
@@ -261,7 +256,6 @@ import { useDemoData } from '@/composables/demoData'
 import { ref, reactive, computed, markRaw, onMounted } from 'vue'
 
 const { getPinnedViews, getPublicViews } = viewsStore()
-const { toggle: toggleNotificationPanel } = notificationsStore()
 const { capture } = useTelemetry()
 const { clearDemoData, isDemoDataCreated } = useDemoData()
 const { send } = useBroadcast()
