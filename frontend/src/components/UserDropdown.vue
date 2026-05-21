@@ -7,7 +7,7 @@
           isCollapsed
             ? 'w-auto px-0'
             : open
-              ? 'w-full px-2 bg-crm-peach shadow-sm'
+              ? 'w-full px-2 bg-crm-surface shadow-sm'
               : 'w-full px-2 hover:bg-gray-50'
         "
       >

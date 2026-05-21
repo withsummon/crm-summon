@@ -71,12 +71,12 @@
             v-model="searchQuery"
             type="text"
             :placeholder="__('Search subject, user, document, or IP address...')"
-            class="h-9 w-full rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-orange focus:ring-2 focus:ring-crm-orange/20"
+            class="h-9 w-full rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
           />
         </div>
         <select
           v-model="operationFilter"
-          class="h-9 rounded-[10px] border border-crm-border bg-white px-3 text-sm text-crm-text outline-none focus:border-crm-orange focus:ring-2 focus:ring-crm-orange/20"
+          class="h-9 rounded-[10px] border border-crm-border bg-white px-3 text-sm text-crm-text outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
         >
           <option value="">{{ __('All Operations') }}</option>
           <option
@@ -89,7 +89,7 @@
         </select>
         <select
           v-model="statusFilter"
-          class="h-9 rounded-[10px] border border-crm-border bg-white px-3 text-sm text-crm-text outline-none focus:border-crm-orange focus:ring-2 focus:ring-crm-orange/20"
+          class="h-9 rounded-[10px] border border-crm-border bg-white px-3 text-sm text-crm-text outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
         >
           <option value="">{{ __('All Status') }}</option>
           <option v-for="status in statusOptions" :key="status" :value="status">
@@ -130,7 +130,7 @@
           <div
             v-for="log in filteredLogs"
             :key="log.name"
-            class="grid grid-cols-[minmax(220px,1.4fr)_minmax(120px,0.8fr)_minmax(150px,0.9fr)_minmax(140px,0.8fr)_minmax(170px,0.8fr)] gap-4 px-4 py-4 text-sm hover:bg-crm-peach/40"
+            class="grid grid-cols-[minmax(220px,1.4fr)_minmax(120px,0.8fr)_minmax(150px,0.9fr)_minmax(140px,0.8fr)_minmax(170px,0.8fr)] gap-4 px-4 py-4 text-sm hover:bg-crm-surface/40"
           >
             <div class="min-w-0">
               <div class="truncate font-medium text-crm-text">

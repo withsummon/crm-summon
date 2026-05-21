@@ -5,7 +5,7 @@
         <div class="flex items-center gap-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #ff8a1f, #ffd0b0)"
+            style="background: linear-gradient(135deg, #008C95, #D9F3F4)"
           >
             <LucideLayoutDashboard class="h-4 w-4 text-white" />
           </div>
@@ -142,7 +142,7 @@ const metrics = computed(() => {
       value: data?.total_leads ?? '7,089',
       label: __('New Leads'),
       icon: 'user-plus',
-      color: 'crm-orange',
+      color: 'crm-teal',
     },
     {
       value: data?.total_customers ?? '65',
@@ -172,7 +172,7 @@ const metrics = computed(() => {
       value: data?.overdue_tasks ?? '48',
       label: __('Overdue Task'),
       icon: 'alert-circle',
-      color: 'crm-orange',
+      color: 'crm-teal',
     },
   ]
 })

@@ -63,7 +63,7 @@
       <div v-else-if="permissions.length" class="rounded-[18px] bg-white shadow-sm border border-crm-border overflow-hidden">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-[#fffaf6]">
+            <tr class="bg-crm-surface-light">
               <th class="px-4 py-3 text-left font-semibold text-crm-text">{{ __('User') }}</th>
               <th class="px-4 py-3 text-left font-medium text-crm-muted">{{ __('Allow') }}</th>
               <th class="px-4 py-3 text-left font-medium text-crm-muted">{{ __('For Value') }}</th>
@@ -76,7 +76,7 @@
             <tr
               v-for="perm in permissions"
               :key="perm.name"
-              class="border-t border-crm-border/50 hover:bg-crm-peach-light transition-colors"
+              class="border-t border-crm-border/50 hover:bg-crm-surface-light transition-colors"
             >
               <td class="px-4 py-3 font-medium text-crm-text">{{ perm.user }}</td>
               <td class="px-4 py-3 text-crm-text">

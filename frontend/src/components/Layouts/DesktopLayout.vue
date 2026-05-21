@@ -3,7 +3,7 @@
     <div class="h-full border-r border-crm-border bg-white">
       <AppSidebar />
     </div>
-    <div class="flex-1 flex flex-col h-full overflow-auto bg-[#fffaf6]">
+    <div class="flex-1 flex flex-col h-full overflow-auto bg-crm-surface-light">
       <AppHeader />
       <slot />
     </div>

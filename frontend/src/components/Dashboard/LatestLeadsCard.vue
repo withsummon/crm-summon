@@ -9,7 +9,7 @@
         {{ __('Latest Leads') }}
       </h3>
       <button
-        class="text-[13px] text-crm-orange font-medium hover:underline transition-colors"
+        class="text-[13px] text-crm-teal font-medium hover:underline transition-colors"
       >
         {{ __('See All') }}
       </button>

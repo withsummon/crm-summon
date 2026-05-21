@@ -53,7 +53,7 @@
     </LayoutHeader>
 
     <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-orange border-t-transparent" />
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
     </div>
 
     <div v-else-if="userData" class="flex-1 overflow-y-auto">
@@ -61,7 +61,7 @@
         <!-- Basic Info Card -->
         <div class="rounded-[18px] bg-white p-6 shadow-sm border border-crm-border">
           <h2 class="mb-4 text-base font-semibold text-crm-text flex items-center gap-2">
-            <LucideUser class="h-4 w-4 text-crm-orange" />
+            <LucideUser class="h-4 w-4 text-crm-teal" />
             {{ __('Basic Information') }}
           </h2>
           <div class="grid gap-4 sm:grid-cols-2">
@@ -141,7 +141,7 @@
               v-model="roleSearch"
               type="text"
               :placeholder="__('Search roles...')"
-              class="h-9 w-full rounded-[10px] border border-crm-border bg-[#fffaf6] pl-9 pr-4 text-sm outline-none focus:border-crm-orange focus:ring-2 focus:ring-crm-orange/20"
+              class="h-9 w-full rounded-[10px] border border-crm-border bg-crm-surface-light pl-9 pr-4 text-sm outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
             />
           </div>
 
@@ -152,15 +152,15 @@
               class="flex cursor-pointer items-center gap-3 rounded-[10px] border p-3 transition-all"
               :class="
                 userRoleNames.includes(role.name)
-                  ? 'border-crm-orange/40 bg-crm-peach'
-                  : 'border-crm-border hover:border-crm-soft-orange hover:bg-crm-peach-light'
+                  ? 'border-crm-teal/40 bg-crm-surface'
+                  : 'border-crm-border hover:border-crm-teal-light hover:bg-crm-surface-light'
               "
             >
               <input
                 type="checkbox"
                 :checked="userRoleNames.includes(role.name)"
                 @change="toggleRole(role.name, $event)"
-                class="h-4 w-4 rounded border-gray-300 text-crm-orange focus:ring-crm-orange/30"
+                class="h-4 w-4 rounded border-gray-300 text-crm-teal focus:ring-crm-teal/30"
               />
               <span class="text-sm font-medium text-crm-text">{{ role.name }}</span>
             </label>
@@ -174,19 +174,19 @@
             {{ __('Activity') }}
           </h2>
           <div class="grid gap-3 sm:grid-cols-3">
-            <div class="rounded-[10px] bg-[#fffaf6] p-4">
+            <div class="rounded-[10px] bg-crm-surface-light p-4">
               <div class="text-xs text-crm-muted">{{ __('Last Active') }}</div>
               <div class="mt-1 text-sm font-semibold text-crm-text">
                 {{ userData.last_active ? timeAgo(userData.last_active) : __('Never') }}
               </div>
             </div>
-            <div class="rounded-[10px] bg-[#fffaf6] p-4">
+            <div class="rounded-[10px] bg-crm-surface-light p-4">
               <div class="text-xs text-crm-muted">{{ __('Last Login') }}</div>
               <div class="mt-1 text-sm font-semibold text-crm-text">
                 {{ userData.last_login ? timeAgo(userData.last_login) : __('Never') }}
               </div>
             </div>
-            <div class="rounded-[10px] bg-[#fffaf6] p-4">
+            <div class="rounded-[10px] bg-crm-surface-light p-4">
               <div class="text-xs text-crm-muted">{{ __('Created On') }}</div>
               <div class="mt-1 text-sm font-semibold text-crm-text">
                 {{ userData.creation ? formatDate(userData.creation) : '-' }}

@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-[16px] font-semibold text-crm-text">{{ __(title) }}</h3>
       <div class="flex items-center gap-1">
-        <span class="w-2 h-2 rounded-full bg-crm-orange" />
+        <span class="w-2 h-2 rounded-full bg-crm-teal" />
         <span class="text-[12px] text-crm-muted">{{ __('Active') }}</span>
         <span class="w-2 h-2 rounded-full bg-[#edf0f4] ml-2" />
         <span class="text-[12px] text-crm-muted">{{ __('Remaining') }}</span>
@@ -44,7 +44,7 @@
         <path
           :d="activeArcPath"
           fill="none"
-          stroke="#ff8a1f"
+          stroke="#008C95"
           :stroke-width="strokeWidth"
           stroke-linecap="round"
           class="gauge-progress"

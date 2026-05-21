@@ -53,7 +53,7 @@ const props = defineProps({
   },
   accentColor: {
     type: String,
-    default: 'crm-orange',
+    default: 'crm-teal',
   },
   animationDelay: {
     type: Number,
@@ -82,7 +82,7 @@ const displayValue = computed(() => {
 })
 
 const accentColorMap = {
-  'crm-orange': 'bg-crm-orange',
+  'crm-teal': 'bg-crm-teal',
   'crm-purple': 'bg-crm-purple',
   'crm-blue': 'bg-crm-blue',
   'crm-green': 'bg-crm-green',
@@ -90,7 +90,7 @@ const accentColorMap = {
 }
 
 const valueColorMap = {
-  'crm-orange': 'text-crm-text',
+  'crm-teal': 'text-crm-text',
   'crm-purple': 'text-crm-text',
   'crm-blue': 'text-crm-text',
   'crm-green': 'text-crm-text',
@@ -98,7 +98,7 @@ const valueColorMap = {
 }
 
 const accentStripClass = computed(() => {
-  return accentColorMap[props.accentColor] || 'bg-crm-orange'
+  return accentColorMap[props.accentColor] || 'bg-crm-teal'
 })
 
 const valueColorClass = computed(() => {

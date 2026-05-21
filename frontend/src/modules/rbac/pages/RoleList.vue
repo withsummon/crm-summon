@@ -24,7 +24,7 @@
               v-model="searchQuery"
               type="text"
               :placeholder="__('Search roles...')"
-              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-orange focus:ring-2 focus:ring-crm-orange/20"
+              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
             />
           </div>
           <Button
@@ -73,11 +73,11 @@
           <div class="flex items-center gap-3">
             <div
               class="flex h-9 w-9 items-center justify-center rounded-[10px]"
-              :class="role.is_custom ? 'bg-crm-peach' : 'bg-indigo-50'"
+              :class="role.is_custom ? 'bg-crm-surface' : 'bg-indigo-50'"
             >
               <LucideShieldCheck
                 class="h-4 w-4"
-                :class="role.is_custom ? 'text-crm-orange' : 'text-indigo-500'"
+                :class="role.is_custom ? 'text-crm-teal' : 'text-indigo-500'"
               />
             </div>
             <div>
@@ -108,7 +108,7 @@
       >
         <template #body-content>
           <div v-if="rolePermsLoading" class="flex items-center justify-center py-8">
-            <div class="h-6 w-6 animate-spin rounded-full border-2 border-crm-orange border-t-transparent" />
+            <div class="h-6 w-6 animate-spin rounded-full border-2 border-crm-teal border-t-transparent" />
           </div>
           <div v-else-if="rolePerms.length" class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -128,7 +128,7 @@
                 <tr
                   v-for="perm in rolePerms"
                   :key="perm.name"
-                  class="border-b border-crm-border/50 hover:bg-crm-peach-light transition-colors"
+                  class="border-b border-crm-border/50 hover:bg-crm-surface-light transition-colors"
                 >
                   <td class="py-2.5 pr-4 font-medium text-crm-text">{{ perm.parent }}</td>
                   <td class="px-2 py-2.5 text-center">

@@ -10,7 +10,7 @@
       </h3>
       <Tooltip :text="__('View all meetings')">
         <button
-          class="text-[13px] text-crm-orange font-medium hover:underline transition-colors"
+          class="text-[13px] text-crm-teal font-medium hover:underline transition-colors"
         >
           {{ __('See All') }}
         </button>
@@ -82,8 +82,8 @@ const meetingGroups = [
         name: "Sam Saltman's Meeting",
         subtitle: 'Sales Team',
         iconComponent: markRaw(LucideVideo),
-        iconBg: 'bg-crm-peach',
-        iconColor: 'text-crm-orange',
+        iconBg: 'bg-crm-surface',
+        iconColor: 'text-crm-teal',
       },
       {
         name: "Tom Harris's Meeting",

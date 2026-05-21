@@ -1,6 +1,6 @@
 <template>
   <button
-    class="flex h-7.5 cursor-pointer items-center rounded-[14px] duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded-[14px] focus-visible:ring-2 focus-visible:ring-crm-orange/40"
+    class="flex h-7.5 cursor-pointer items-center rounded-[10px] duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-crm-teal/40"
     :class="buttonClasses"
     @click="handleClick"
   >
@@ -66,17 +66,17 @@ const buttonClasses = computed(() => {
       ? 'bg-surface-selected text-ink-gray-9 shadow-sm'
       : 'text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
   }
-  // CRM theme (DESIGN.md)
+  // CRM theme (DESIGN.md — BNI Teal)
   return isActive.value
-    ? 'crm-sidebar-active text-[#e8872f] font-semibold'
-    : 'text-[#222] hover:bg-crm-peach hover:text-[#111]'
+    ? 'bg-crm-surface text-crm-text font-semibold'
+    : 'text-crm-text-secondary hover:bg-crm-surface hover:text-crm-text'
 })
 
 const iconClasses = computed(() => {
   if (props.theme === 'light') {
     return isActive.value ? 'text-ink-gray-9' : 'text-ink-gray-5'
   }
-  return isActive.value ? 'text-[#e8872f]' : 'text-[#777]'
+  return isActive.value ? 'text-crm-teal' : 'text-crm-muted'
 })
 
 function handleClick() {
@@ -118,9 +118,3 @@ let isActive = computed(() => {
   return route.name === props.to
 })
 </script>
-
-<style scoped>
-.crm-sidebar-active {
-  background: linear-gradient(90deg, rgba(255, 160, 64, 0.18), rgba(180, 120, 255, 0.22));
-}
-</style>

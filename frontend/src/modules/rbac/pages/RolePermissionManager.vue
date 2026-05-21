@@ -36,7 +36,7 @@
 
       <!-- Permissions Table -->
       <div v-if="loading" class="flex items-center justify-center py-16">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-orange border-t-transparent" />
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
       </div>
 
       <div v-else-if="!selectedRole" class="flex flex-col items-center justify-center py-20">
@@ -49,8 +49,8 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="bg-[#fffaf6]">
-                <th class="px-4 py-3 text-left font-semibold text-crm-text sticky left-0 bg-[#fffaf6] z-10">{{ __('DocType') }}</th>
+              <tr class="bg-crm-surface-light">
+                <th class="px-4 py-3 text-left font-semibold text-crm-text sticky left-0 bg-crm-surface-light z-10">{{ __('DocType') }}</th>
                 <th class="px-3 py-3 text-center font-medium text-crm-muted w-16">{{ __('Level') }}</th>
                 <th v-for="perm in permColumns" :key="perm.field" class="px-3 py-3 text-center font-medium text-crm-muted w-16">
                   {{ __(perm.label) }}
@@ -61,7 +61,7 @@
               <tr
                 v-for="row in filteredPerms"
                 :key="row.name"
-                class="border-t border-crm-border/50 hover:bg-crm-peach-light transition-colors"
+                class="border-t border-crm-border/50 hover:bg-crm-surface-light transition-colors"
               >
                 <td class="px-4 py-3 font-medium text-crm-text sticky left-0 bg-white z-10">
                   {{ row.parent }}
@@ -73,7 +73,7 @@
                       type="checkbox"
                       :checked="row[perm.field]"
                       @change="updatePerm(row, perm.field, $event)"
-                      class="h-4 w-4 rounded border-gray-300 text-crm-orange focus:ring-crm-orange/30 cursor-pointer"
+                      class="h-4 w-4 rounded border-gray-300 text-crm-teal focus:ring-crm-teal/30 cursor-pointer"
                     />
                   </label>
                 </td>
