@@ -66,6 +66,43 @@
                 </nav>
               </CollapsibleSection>
             </div>
+            <div v-for="group in summonModuleGroups" :key="group.name">
+              <CollapsibleSection :label="group.name" :opened="group.opened">
+                <template #header="{ opened, hide, toggle }">
+                  <div
+                    v-if="!hide"
+                    class="ml-2 mt-4 flex h-7 w-auto cursor-pointer gap-1.5 px-1 text-base font-medium text-ink-gray-5 opacity-100 transition-all duration-300 ease-in-out"
+                    @click="toggle()"
+                  >
+                    <FeatherIcon
+                      name="chevron-right"
+                      class="h-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
+                      :class="{ 'rotate-90': opened }"
+                    />
+                    <span>{{ __(group.name) }}</span>
+                  </div>
+                </template>
+                <nav class="flex flex-col">
+                  <SidebarLink
+                    v-for="module in group.views"
+                    :key="module.sheet"
+                    :icon="module.icon"
+                    :label="__(module.label)"
+                    :href="module.href"
+                    class="mx-2 my-0.5"
+                  >
+                    <template #right>
+                      <Badge
+                        v-if="module.status !== 'available'"
+                        :label="module.status === 'partial' ? __('Partial') : __('Soon')"
+                        variant="subtle"
+                        theme="gray"
+                      />
+                    </template>
+                  </SidebarLink>
+                </nav>
+              </CollapsibleSection>
+            </div>
           </div>
         </div>
       </TransitionChild>
@@ -104,6 +141,7 @@ import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
+import { summonModuleGroups } from '@/data/summonModules'
 import { computed, h } from 'vue'
 import { mobileSidebarOpened as sidebarOpened } from '@/composables/settings'
 

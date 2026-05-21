@@ -7,13 +7,13 @@
           isCollapsed
             ? 'w-auto px-0'
             : open
-              ? 'w-full px-2 bg-summon-graphite shadow-sm'
-              : 'w-full px-2 hover:bg-summon-charcoal'
+              ? 'w-full px-2 bg-crm-peach shadow-sm'
+              : 'w-full px-2 hover:bg-gray-50'
         "
       >
         <BrandLogo
           v-model="brand"
-          class="h-8 max-w-16 flex-shrink-0 text-white"
+          class="h-8 max-w-16 flex-shrink-0 text-crm-text"
         />
         <div
           class="flex flex-1 flex-col text-left duration-300 ease-in-out truncate"
@@ -24,11 +24,11 @@
           "
         >
           <div
-            class="text-base font-medium leading-none text-white truncate"
+            class="text-base font-medium leading-none text-crm-text truncate"
           >
             {{ __(brand.name || 'Summon') }}
           </div>
-          <div class="mt-1 text-sm leading-none text-white/60 truncate">
+          <div class="mt-1 text-sm leading-none text-crm-muted truncate">
             {{ user.full_name }}
           </div>
         </div>
@@ -42,7 +42,7 @@
         >
           <FeatherIcon
             name="chevron-down"
-            class="size-4 text-white/60"
+            class="size-4 text-crm-muted"
             aria-hidden="true"
           />
         </div>
@@ -54,7 +54,6 @@
 <script setup>
 import BrandLogo from '@/components/BrandLogo.vue'
 import FrappeCloudIcon from '@/components/Icons/FrappeCloudIcon.vue'
-import Apps from '@/components/Apps.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
@@ -90,9 +89,10 @@ const dropdownItems = computed(() => {
   items.forEach((item) => {
     if (item.hidden) return
     if (item.type !== 'Separator') {
-      _dropdownItems[_dropdownItems.length - 1].items.push(
-        dropdownItemObj(item),
-      )
+      let dropdownItem = dropdownItemObj(item)
+      if (dropdownItem) {
+        _dropdownItems[_dropdownItems.length - 1].items.push(dropdownItem)
+      }
     } else {
       _dropdownItems.push({
         group: '',
@@ -128,9 +128,7 @@ function dropdownItemObj(item) {
 function getStandardItem(item) {
   switch (item.name1) {
     case 'app_selector':
-      return {
-        component: markRaw(Apps),
-      }
+      return null
     case 'settings':
       return {
         icon: item.icon,

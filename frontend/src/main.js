@@ -65,12 +65,14 @@ if (import.meta.env.DEV) {
       }
       socket = initSocket()
       app.config.globalProperties.$socket = socket
+      app.provide('socket', socket)
       app.mount('#app')
     },
   )
 } else {
   socket = initSocket()
   app.config.globalProperties.$socket = socket
+  app.provide('socket', socket)
   app.mount('#app')
 }
 

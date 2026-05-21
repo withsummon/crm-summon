@@ -1,5 +1,5 @@
 <template>
-  <div class="flex border-b border-primary-200 pr-5">
+  <div class="flex h-[72px] border-b border-crm-border bg-white pr-5">
     <div id="app-header" class="flex-1"></div>
     <div class="flex items-center justify-center">
       <CallUI />

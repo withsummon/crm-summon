@@ -3,97 +3,376 @@ import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { viewsStore } from '@/stores/views'
 
+const handleMobileView = (componentName) => {
+  return window.innerWidth < 768 ? `Mobile${componentName}` : componentName
+}
+
+const requiresCrmRole = (route) => {
+  if (route.path.startsWith('/crm-core')) return true
+  
+  const flatCrmRoutes = [
+    'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Desk'
+  ]
+  if (flatCrmRoutes.includes(route.name)) return true
+  
+  return false
+}
+
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'CRM Dispatcher',
   },
   {
     path: '/notifications',
     name: 'Notifications',
     component: () => import('@/pages/MobileNotification.vue'),
   },
+  // ─── CRM Core ────────────────────────────────────────────
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/pages/Dashboard.vue'),
+    path: '/crm-core',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'CRM Core Dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'CRM Core Dashboard',
+        component: () => import('@/pages/CRMCoreDashboard.vue'),
+      },
+      {
+        path: 'insights-dashboard',
+        name: 'SUMMON Insights Dashboard',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Dashboard',
+          subtitle: 'Insights',
+          icon: 'bar-chart-2',
+          sourcePath: '/insights/dashboards',
+        },
+      },
+      {
+        path: 'customer-360',
+        name: 'Customer 360',
+        component: () => import('@/pages/Customer360.vue'),
+      },
+      {
+        alias: 'leads',
+        path: 'leads/view/:viewType?',
+        name: 'Leads',
+        component: () => import('@/pages/Leads.vue'),
+      },
+      {
+        path: 'leads/:leadId',
+        name: 'Lead',
+        component: () => import(`@/pages/${handleMobileView('Lead')}.vue`),
+        props: true,
+      },
+      {
+        alias: 'deals',
+        path: 'deals/view/:viewType?',
+        name: 'Deals',
+        component: () => import('@/pages/Deals.vue'),
+      },
+      {
+        path: 'deals/:dealId',
+        name: 'Deal',
+        component: () => import(`@/pages/${handleMobileView('Deal')}.vue`),
+        props: true,
+      },
+      {
+        alias: 'contacts',
+        path: 'contacts/view/:viewType?',
+        name: 'Contacts',
+        component: () => import('@/pages/Contacts.vue'),
+      },
+      {
+        path: 'contacts/:contactId',
+        name: 'Contact',
+        component: () => import(`@/pages/${handleMobileView('Contact')}.vue`),
+        props: true,
+      },
+      {
+        alias: 'organizations',
+        path: 'organizations/view/:viewType?',
+        name: 'Organizations',
+        component: () => import('@/pages/Organizations.vue'),
+      },
+      {
+        path: 'organizations/:organizationId',
+        name: 'Organization',
+        component: () =>
+          import(`@/pages/${handleMobileView('Organization')}.vue`),
+        props: true,
+      },
+      {
+        alias: 'notes',
+        path: 'notes/view/:viewType?',
+        name: 'Notes',
+        component: () => import('@/pages/Notes.vue'),
+      },
+      {
+        alias: 'tasks',
+        path: 'tasks/view/:viewType?',
+        name: 'Tasks',
+        component: () => import('@/pages/Tasks.vue'),
+      },
+      {
+        path: 'calendar',
+        name: 'Calendar',
+        component: () => import('@/pages/Calendar.vue'),
+      },
+      {
+        alias: 'call-logs',
+        path: 'call-logs/view/:viewType?',
+        name: 'Call Logs',
+        component: () => import('@/pages/CallLogs.vue'),
+      },
+      {
+        path: 'ai-desk',
+        name: 'AI Desk',
+        component: () => import('@/pages/AIDesk.vue'),
+      },
+    ],
   },
+  // ─── Lending & Risk ──────────────────────────────────────
   {
-    alias: '/leads',
-    path: '/leads/view/:viewType?',
-    name: 'Leads',
-    component: () => import('@/pages/Leads.vue'),
+    path: '/lending-risk',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'Lending Dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'Lending Dashboard',
+        component: () => import('@/pages/ModuleDashboard.vue'),
+        props: { moduleGroup: 'Lending & Risk' },
+      },
+      {
+        path: 'loan-origination-system',
+        name: 'Loan Origination System',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Loan Origination System',
+          subtitle: 'Lending',
+          icon: 'dollar-sign',
+          sourcePath: '/app/loans',
+          note:
+            'The complete Lending loan workspace is embedded here so existing loan forms, lists, and actions remain available inside CRM.',
+        },
+      },
+      {
+        path: 'portfolio-monitoring',
+        name: 'Portfolio Monitoring',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Portfolio Monitoring',
+          subtitle: 'Insights',
+          icon: 'pie-chart',
+          sourcePath: '/insights/dashboards',
+        },
+      },
+      {
+        path: 'product-configuration',
+        name: 'Product Configuration',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Product Configuration',
+          subtitle: 'Item',
+          icon: 'package',
+          sourcePath: '/app/item',
+          note:
+            'The complete product and item configuration workspace is embedded here so standard ERPNext setup remains available inside CRM.',
+        },
+      },
+    ],
   },
+  // ─── Operations ──────────────────────────────────────────
   {
-    path: '/leads/:leadId',
-    name: 'Lead',
-    component: () => import(`@/pages/${handleMobileView('Lead')}.vue`),
-    props: true,
+    path: '/operations',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'Operations Dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'Operations Dashboard',
+        component: () => import('@/pages/ModuleDashboard.vue'),
+        props: { moduleGroup: 'Operations' },
+      },
+      {
+        path: 'document-management',
+        name: 'Document Management',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Document Management',
+          subtitle: 'Frappe Drive',
+          icon: 'folder',
+          sourcePath: '/drive',
+          note:
+            'Frappe Drive is embedded here so upload, sharing, folders, previews, teams, and document actions stay fully available inside CRM.',
+        },
+      },
+      {
+        path: 'partner-vendor-management',
+        name: 'Partner & Vendor Management',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Partner & Vendor Management',
+          subtitle: 'Supplier',
+          icon: 'truck',
+          sourcePath: '/app/supplier',
+          note:
+            'The complete supplier and vendor management workspace is embedded here so ERPNext vendor functionality remains available inside CRM.',
+        },
+      },
+      {
+        path: 'drive/:pathMatch(.*)*',
+        redirect: { name: 'Document Management' },
+      },
+    ],
   },
+  // ─── Admin & Platform ────────────────────────────────────
   {
-    alias: '/deals',
-    path: '/deals/view/:viewType?',
-    name: 'Deals',
-    component: () => import('@/pages/Deals.vue'),
+    path: '/admin-platform',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'Admin Dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'Admin Dashboard',
+        component: () => import('@/pages/ModuleDashboard.vue'),
+        props: { moduleGroup: 'Admin & Platform' },
+      },
+      {
+        path: 'workflow-engine',
+        name: 'Workflow Engine',
+        component: () => import('@/modules/admin/pages/WorkflowEngine.vue'),
+      },
+      {
+        path: 'workflow',
+        redirect: { name: 'Workflow Engine' },
+      },
+      {
+        path: 'reporting-bi',
+        name: 'Reporting & BI',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Reporting & BI',
+          subtitle: 'Insights',
+          icon: 'bar-chart',
+          sourcePath: '/insights/dashboards',
+        },
+      },
+      {
+        path: 'api-integration-center',
+        name: 'API & Integration Center',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'API & Integration Center',
+          subtitle: 'Integrations',
+          icon: 'link',
+          sourcePath: '/app/integrations',
+          note:
+            'The complete integrations workspace is embedded here so existing API and integration setup stays available inside CRM.',
+        },
+      },
+      {
+        path: 'rules-engine',
+        name: 'Rules Engine',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Rules Engine',
+          subtitle: 'Assignment Rule',
+          icon: 'filter',
+          sourcePath: '/app/assignment-rule',
+          note:
+            'The complete assignment rule workspace is embedded here so rule configuration remains available inside CRM.',
+        },
+      },
+      // RBAC Routes
+      {
+        path: 'users',
+        name: 'User List',
+        component: () => import('@/modules/rbac/pages/UserList.vue'),
+      },
+      {
+        path: 'users/:userId',
+        name: 'User Detail',
+        component: () => import('@/modules/rbac/pages/UserDetail.vue'),
+        props: true,
+      },
+      {
+        path: 'roles',
+        name: 'Role List',
+        component: () => import('@/modules/rbac/pages/RoleList.vue'),
+      },
+      {
+        path: 'role-permissions',
+        name: 'Role Permissions',
+        component: () => import('@/modules/rbac/pages/RolePermissionManager.vue'),
+      },
+      {
+        path: 'user-permissions',
+        name: 'User Permissions',
+        component: () => import('@/modules/rbac/pages/UserPermissions.vue'),
+      },
+      {
+        path: 'audit-trail',
+        name: 'Audit Trail',
+        component: () => import('@/modules/admin/pages/AuditTrail.vue'),
+      },
+    ],
   },
+  // ─── Channels & Portal ───────────────────────────────────
   {
-    path: '/deals/:dealId',
-    name: 'Deal',
-    component: () => import(`@/pages/${handleMobileView('Deal')}.vue`),
-    props: true,
+    path: '/channels-portal',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'Channels Dashboard' },
+      },
+      {
+        path: 'dashboard',
+        name: 'Channels Dashboard',
+        component: () => import('@/pages/ModuleDashboard.vue'),
+        props: { moduleGroup: 'Channels & Portal' },
+      },
+      {
+        path: 'omnichannel-communication',
+        name: 'Omnichannel Communication',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Omnichannel Communication',
+          subtitle: 'ClefinCode Chat',
+          icon: 'message-square',
+          sourcePath: '/app/clefincode-chat-channel',
+          note:
+            'The installed chat channel workspace is embedded here so omnichannel setup stays available inside CRM.',
+        },
+      },
+      {
+        path: 'customer-portal',
+        name: 'Customer Portal',
+        component: () => import('@/pages/EmbeddedAppPage.vue'),
+        props: {
+          title: 'Customer Portal',
+          subtitle: 'Helpdesk',
+          icon: 'life-buoy',
+          sourcePath: '/helpdesk',
+          note:
+            'The Helpdesk portal is embedded here so the customer portal experience remains available inside CRM.',
+        },
+      },
+    ],
   },
-  {
-    alias: '/notes',
-    path: '/notes/view/:viewType?',
-    name: 'Notes',
-    component: () => import('@/pages/Notes.vue'),
-  },
-  {
-    alias: '/tasks',
-    path: '/tasks/view/:viewType?',
-    name: 'Tasks',
-    component: () => import('@/pages/Tasks.vue'),
-  },
-  {
-    alias: '/contacts',
-    path: '/contacts/view/:viewType?',
-    name: 'Contacts',
-    component: () => import('@/pages/Contacts.vue'),
-  },
-  {
-    path: '/contacts/:contactId',
-    name: 'Contact',
-    component: () => import(`@/pages/${handleMobileView('Contact')}.vue`),
-    props: true,
-  },
-  {
-    alias: '/organizations',
-    path: '/organizations/view/:viewType?',
-    name: 'Organizations',
-    component: () => import('@/pages/Organizations.vue'),
-  },
-  {
-    path: '/organizations/:organizationId',
-    name: 'Organization',
-    component: () => import(`@/pages/${handleMobileView('Organization')}.vue`),
-    props: true,
-  },
-  {
-    alias: '/call-logs',
-    path: '/call-logs/view/:viewType?',
-    name: 'Call Logs',
-    component: () => import('@/pages/CallLogs.vue'),
-  },
-  {
-    path: '/calendar',
-    name: 'Calendar',
-    component: () => import('@/pages/Calendar.vue'),
-  },
-  {
-    path: '/ai-desk',
-    name: 'AI Desk',
-    component: () => import('@/pages/AIDesk.vue'),
-  },
+  // ─── Shared / Utility Routes ─────────────────────────────
   {
     path: '/data-import',
     name: 'DataImportList',
@@ -117,20 +396,42 @@ const routes = [
     component: () => import('@/pages/Welcome.vue'),
   },
   {
-    path: '/:invalidpath',
-    name: 'Invalid Page',
-    component: () => import('@/pages/InvalidPage.vue'),
+    path: '/modules/:moduleSlug',
+    name: 'Summon Module',
+    component: () => import('@/pages/SummonModulePlaceholder.vue'),
+    props: true,
   },
+  // Legacy redirect: /dashboard → /crm-core/dashboard
+  {
+    path: '/dashboard',
+    redirect: { name: 'CRM Core Dashboard' },
+  },
+  // Legacy redirects for old flat routes
+  { path: '/leads', redirect: '/crm-core/leads' },
+  { path: '/leads/view/:viewType?', redirect: (to) => ({ path: `/crm-core/leads/view/${to.params.viewType || ''}`, query: to.query }) },
+  { path: '/deals', redirect: '/crm-core/deals' },
+  { path: '/deals/view/:viewType?', redirect: (to) => ({ path: `/crm-core/deals/view/${to.params.viewType || ''}`, query: to.query }) },
+  { path: '/contacts', redirect: '/crm-core/contacts' },
+  { path: '/organizations', redirect: '/crm-core/organizations' },
+  { path: '/notes', redirect: '/crm-core/notes' },
+  { path: '/tasks', redirect: '/crm-core/tasks' },
+  { path: '/calendar', redirect: '/crm-core/calendar' },
+  { path: '/call-logs', redirect: '/crm-core/call-logs' },
+  { path: '/ai-desk', redirect: '/crm-core/ai-desk' },
+  // Drive legacy CRM redirects now land on the iframe-based Document Management page.
+  { path: '/drive', redirect: '/operations/document-management' },
+  { path: '/drive/:pathMatch(.*)*', redirect: '/operations/document-management' },
   {
     path: '/not-permitted',
     name: 'Not Permitted',
     component: () => import('@/pages/NotPermitted.vue'),
   },
+  {
+    path: '/:invalidpath(.*)',
+    name: 'Invalid Page',
+    component: () => import('@/pages/InvalidPage.vue'),
+  },
 ]
-
-const handleMobileView = (componentName) => {
-  return window.innerWidth < 768 ? `Mobile${componentName}` : componentName
-}
 
 let router = createRouter({
   history: createWebHistory('/crm'),
@@ -148,25 +449,33 @@ router.beforeEach(async (to, from, next) => {
       await users.promise
     } catch (error) {
       console.error('Error loading users', error)
+      // If user API failed (e.g., bench not running), don't block navigation
+      // Just proceed to the requested page
+      next()
+      return
     }
   }
 
   if (to.name === 'Not Permitted') {
     next()
-  } else if (isLoggedIn && !isCrmUser()) {
+  } else if (isLoggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
     next({ name: 'Not Permitted' })
-  } else if (to.name === 'Home' && isLoggedIn) {
+  } else if (to.name === 'CRM Dispatcher' && isLoggedIn) {
     const { views, getDefaultView } = viewsStore()
     await views.promise
 
     let defaultView = getDefaultView()
     if (!defaultView) {
-      next({ name: 'Dashboard' })
+      if (!isCrmUser()) {
+        next({ name: 'Home' })
+      } else {
+        next({ name: 'CRM Core Dashboard' })
+      }
       return
     }
 
     let { route_name, type, name, is_standard } = defaultView
-    route_name = route_name || 'Dashboard'
+    route_name = route_name || 'CRM Core Dashboard'
 
     if (name && !is_standard) {
       next({
@@ -178,7 +487,8 @@ router.beforeEach(async (to, from, next) => {
       next({ name: route_name, params: { viewType: type } })
     }
   } else if (!isLoggedIn) {
-    window.location.href = '/login?redirect-to=/crm'
+    window.location.href = `/login?redirect-to=${encodeURIComponent(`/crm${to.fullPath}`)}`
+    next(false)
   } else if (to.matched.length === 0) {
     next({ name: 'Invalid Page' })
   } else if (['Deal', 'Lead'].includes(to.name) && !to.hash) {

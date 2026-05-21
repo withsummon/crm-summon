@@ -6,11 +6,10 @@ CRM_ALLOWED_ROLES = ["System Manager", "Sales Manager", "Sales User"]
 
 def get_session_role_flags():
 	roles = set(frappe.get_roles())
-
-	if not roles.intersection(set(CRM_ALLOWED_ROLES)):
-		frappe.throw(_("You are not permitted to access CRM resources."), frappe.PermissionError)
+	has_crm_role = bool(roles.intersection(set(CRM_ALLOWED_ROLES)))
 
 	return {
+		"has_crm_role": has_crm_role,
 		"is_system_manager": "System Manager" in roles,
 		"is_sales_manager": "Sales Manager" in roles and "System Manager" not in roles,
 		"is_sales_user": "Sales User" in roles
@@ -78,7 +77,9 @@ def get_users():
 
 @frappe.whitelist()
 def get_organizations():
-	get_session_role_flags()
+	session_roles = get_session_role_flags()
+	if not session_roles["has_crm_role"]:
+		frappe.throw(_("You are not permitted to access CRM resources."), frappe.PermissionError)
 
 	organizations = frappe.qb.get_query(
 		"CRM Organization",

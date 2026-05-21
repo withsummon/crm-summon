@@ -1,6 +1,6 @@
 <template>
   <button
-    class="flex h-7.5 cursor-pointer items-center rounded duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-primary-300"
+    class="flex h-7.5 cursor-pointer items-center rounded-[14px] duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded-[14px] focus-visible:ring-2 focus-visible:ring-crm-orange/40"
     :class="buttonClasses"
     @click="handleClick"
   >
@@ -55,8 +55,9 @@ const props = defineProps({
   icon: { type: [Object, String, Function], default: null },
   label: { type: String, default: '' },
   to: { type: [Object, String], default: null },
+  href: { type: String, default: '' },
   isCollapsed: { type: Boolean, default: false },
-  theme: { type: String, default: 'dark' },
+  theme: { type: String, default: 'crm' },
 })
 
 const buttonClasses = computed(() => {
@@ -65,35 +66,61 @@ const buttonClasses = computed(() => {
       ? 'bg-surface-selected text-ink-gray-9 shadow-sm'
       : 'text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
   }
+  // CRM theme (DESIGN.md)
   return isActive.value
-    ? 'bg-primary-500 text-white shadow-sm'
-    : 'text-white/75 hover:bg-summon-charcoal hover:text-white'
+    ? 'crm-sidebar-active text-[#e8872f] font-semibold'
+    : 'text-[#222] hover:bg-crm-peach hover:text-[#111]'
 })
 
 const iconClasses = computed(() => {
   if (props.theme === 'light') {
     return isActive.value ? 'text-ink-gray-9' : 'text-ink-gray-5'
   }
-  return isActive.value ? 'text-white' : 'text-white/75'
+  return isActive.value ? 'text-[#e8872f]' : 'text-[#777]'
 })
 
 function handleClick() {
-  if (!props.to) return
-  if (typeof props.to === 'object') {
+  if (props.href) {
+    window.location.href = props.href
+  } else if (typeof props.to === 'object') {
     router.push(props.to)
-  } else {
+  } else if (props.to) {
     router.push({ name: props.to })
+  } else {
+    return
   }
+
   if (isMobileView.value) {
     mobileSidebarOpened.value = false
   }
 }
 
 let isActive = computed(() => {
+  if (props.href) {
+    let targetPath = new URL(props.href, window.location.origin).pathname
+    let currentPath = window.location.pathname
+
+    return (
+      currentPath === targetPath ||
+      currentPath.startsWith(`${targetPath}/`) ||
+      route.fullPath === targetPath.replace(/^\/crm/, '')
+    )
+  }
+
   if (route.query.view) {
     return route.query.view == props.to?.query?.view
   }
+
+  if (typeof props.to === 'object') {
+    return route.name === props.to?.name
+  }
+
   return route.name === props.to
 })
 </script>
 
+<style scoped>
+.crm-sidebar-active {
+  background: linear-gradient(90deg, rgba(255, 160, 64, 0.18), rgba(180, 120, 255, 0.22));
+}
+</style>

@@ -31,7 +31,7 @@ require_type_annotated_api_methods = True
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/crm/css/crm.css"
+app_include_css = "/assets/crm/css/customer_360.css"
 # app_include_js = "/assets/crm/js/crm.js"
 
 # include js, css files in header of web template
@@ -49,8 +49,8 @@ web_include_css = "/assets/crm/css/summon_login.css"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {"Customer": "public/js/customer_360_form.js"}
+doctype_list_js = {"Customer": "public/js/customer_360_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 

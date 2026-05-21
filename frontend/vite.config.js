@@ -7,6 +7,27 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development'
+  const backendHost = process.env.FRAPPE_DEV_SITE || 'crm.localhost'
+  const backendPort = Number(process.env.FRAPPE_WEB_SERVER_PORT || 8000)
+  const devServerPort = Number(process.env.CRM_DEV_SERVER_PORT || 8080)
+  const backendTarget = `http://127.0.0.1:${backendPort}`
+  const backendProxy = {
+    target: backendTarget,
+    ws: true,
+    changeOrigin: false,
+    headers: {
+      Host: backendHost,
+    },
+  }
+  const backendRootPostProxy = {
+    ...backendProxy,
+    bypass: (req) => {
+      if (req.method !== 'POST') {
+        return req.url
+      }
+    },
+  }
+
   const config = {
     plugins: [
       vue(),
@@ -55,6 +76,7 @@ export default defineConfig(async ({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
+        'vuex': path.resolve(__dirname, 'src/modules/drive/store.js'),
       },
     },
     optimizeDeps: {
@@ -68,8 +90,27 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     server: {
+      host: '0.0.0.0',
+      port: devServerPort,
+      strictPort: true,
       fs: {
         allow: [path.resolve(__dirname, '..')],
+      },
+      proxy: {
+        '^/$': backendRootPostProxy,
+        '/api': backendProxy,
+        '/app': backendProxy,
+        '/assets': backendProxy,
+        '/desk': backendProxy,
+        '/drive': backendProxy,
+        '/files': backendProxy,
+        '/helpdesk': backendProxy,
+        '/insights': backendProxy,
+        '/login': backendProxy,
+        '/private': backendProxy,
+        '/website_script.js': backendProxy,
+        '/favicon.ico': backendProxy,
+        '/robots.txt': backendProxy,
       },
     },
   }
@@ -77,7 +118,7 @@ export default defineConfig(async ({ mode }) => {
   const frappeui = await importFrappeUIPlugin(isDev, config)
   config.plugins.unshift(
     frappeui({
-      frappeProxy: true,
+      frappeProxy: false,
       lucideIcons: true,
       jinjaBootData: true,
       buildConfig: {

@@ -1,7 +1,7 @@
 <template>
   <div
-    class="relative flex h-full flex-col justify-between bg-summon-black text-white transition-all duration-300 ease-in-out"
-    :class="isSidebarCollapsed ? 'w-12' : 'w-[220px]'"
+    class="relative flex h-full flex-col justify-between bg-white text-crm-text transition-all duration-300 ease-in-out"
+    :class="isSidebarCollapsed ? 'w-12' : 'w-[260px]'"
   >
     <div class="p-2">
       <UserDropdown :isCollapsed="isSidebarCollapsed" />
@@ -24,22 +24,23 @@
             />
             <div
               v-else-if="unreadNotificationsCount"
-              class="absolute -left-1.5 top-1 z-20 h-[5px] w-[5px] translate-x-6 translate-y-1 rounded-full bg-primary-400 ring-1 ring-white"
+              class="absolute -left-1.5 top-1 z-20 h-[5px] w-[5px] translate-x-6 translate-y-1 rounded-full bg-crm-orange ring-1 ring-white"
             />
           </template>
         </SidebarLink>
       </div>
-      <div v-for="view in allViews" :key="view.label">
+
+      <!-- Parent Route Groups -->
+      <div v-for="group in parentRouteGroups" :key="group.name">
         <div class="mx-2 my-1.5" />
         <CollapsibleSection
-          :label="view.name"
-          :hideLabel="view.hideLabel"
-          :opened="view.opened"
+          :label="group.name"
+          :opened="group.opened"
         >
           <template #header="{ opened, hide, toggle }">
             <div
               v-if="!hide"
-              class="flex items-center cursor-pointer gap-1.5 text-base text-white/55 transition-all duration-300 ease-in-out"
+              class="flex items-center cursor-pointer gap-1.5 text-base text-crm-muted transition-all duration-300 ease-in-out"
               :class="
                 isSidebarCollapsed
                   ? 'h-0 overflow-hidden opacity-0'
@@ -49,7 +50,61 @@
             >
               <FeatherIcon
                 name="chevron-right"
-                class="h-4 text-white/80 transition-all duration-300 ease-in-out"
+                class="h-4 text-crm-muted transition-all duration-300 ease-in-out"
+                :class="{ 'rotate-90': opened }"
+              />
+              <span>{{ __(group.name) }}</span>
+            </div>
+          </template>
+          <nav class="flex flex-col">
+            <SidebarLink
+              v-for="link in group.views"
+              :key="link.label"
+              :icon="link.icon"
+              :label="__(link.label)"
+              :to="link.to"
+              :href="link.href"
+              :isCollapsed="isSidebarCollapsed"
+              class="mx-2 my-[1.5px]"
+            >
+              <template #right>
+                <Badge
+                  v-if="!isSidebarCollapsed && link.status && link.status !== 'available'"
+                  :label="link.status === 'partial' ? __('Partial') : __('Soon')"
+                  variant="subtle"
+                  theme="gray"
+                />
+                <div
+                  v-else-if="isSidebarCollapsed && link.status && link.status !== 'available'"
+                  class="absolute -left-1.5 top-1 z-20 h-[5px] w-[5px] translate-x-6 translate-y-1 rounded-full bg-amber-400 ring-1 ring-white"
+                />
+              </template>
+            </SidebarLink>
+          </nav>
+        </CollapsibleSection>
+      </div>
+
+      <!-- Public & Pinned Views -->
+      <div v-for="view in dynamicViews" :key="view.label">
+        <div class="mx-2 my-1.5" />
+        <CollapsibleSection
+          :label="view.name"
+          :opened="view.opened"
+        >
+          <template #header="{ opened, hide, toggle }">
+            <div
+              v-if="!hide"
+              class="flex items-center cursor-pointer gap-1.5 text-base text-crm-muted transition-all duration-300 ease-in-out"
+              :class="
+                isSidebarCollapsed
+                  ? 'h-0 overflow-hidden opacity-0'
+                  : 'px-4 pt-[11px] pb-2.5 w-auto opacity-100'
+              "
+              @click="toggle()"
+            >
+              <FeatherIcon
+                name="chevron-right"
+                class="h-4 text-crm-muted transition-all duration-300 ease-in-out"
                 :class="{ 'rotate-90': opened }"
               />
               <span>{{ __(view.name) }}</span>
@@ -121,7 +176,7 @@
         <template #icon>
           <span class="grid h-4 w-4 flex-shrink-0 place-items-center">
             <CollapseSidebar
-              class="h-4 w-4 text-white/70 duration-300 ease-in-out"
+              class="h-4 w-4 text-crm-muted duration-300 ease-in-out"
               :class="{ '[transform:rotateY(180deg)]': isSidebarCollapsed }"
             />
           </span>
@@ -152,6 +207,7 @@
 import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
+import LucideUserRoundSearch from '~icons/lucide/user-round-search'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
 import ConvertIcon from '@/components/Icons/ConvertIcon.vue'
@@ -177,6 +233,7 @@ import SidebarLink from '@/components/SidebarLink.vue'
 import Notifications from '@/components/Notifications.vue'
 import Settings from '@/components/Settings/Settings.vue'
 import { viewsStore } from '@/stores/views'
+import { summonModules } from '@/data/summonModules'
 import {
   unreadNotificationsCount,
   notificationsStore,
@@ -214,11 +271,19 @@ const isSidebarCollapsed = useStorage('isSidebarCollapsed', false)
 const isFCSite = ref(window.is_fc_site)
 const isDemoSite = ref(window.is_demo_site)
 
-const links = [
+// ─── Parent Route Groups ─────────────────────────────────
+// Each parent route group has its own dashboard + sub-items
+
+const crmCoreLinks = [
   {
     label: 'Dashboard',
     icon: LucideLayoutDashboard,
-    to: 'Dashboard',
+    to: 'CRM Core Dashboard',
+  },
+  {
+    label: 'Customer 360',
+    icon: LucideUserRoundSearch,
+    to: 'Customer 360',
   },
   {
     label: 'Leads',
@@ -267,20 +332,57 @@ const links = [
   },
 ]
 
-const allViews = computed(() => {
-  let _views = [
-    {
-      name: 'All Views',
-      hideLabel: true,
-      opened: true,
-      views: links.filter((link) => {
-        if (link.condition) {
-          return link.condition()
-        }
-        return true
-      }),
-    },
-  ]
+// Build module groups for non-CRM-Core parent routes
+function buildModuleGroupLinks(groupName, dashboardRouteName) {
+  const dashboardLink = {
+    label: 'Dashboard',
+    icon: LucideLayoutDashboard,
+    to: dashboardRouteName,
+  }
+  const moduleLinks = summonModules
+    .filter((m) => m.group === groupName)
+    .map((m) => ({
+      label: m.label,
+      icon: m.icon,
+      // Use internal route name when available, otherwise fall back to href
+      ...(m.routeName ? { to: m.routeName } : { href: m.href }),
+      status: m.status,
+    }))
+  return [dashboardLink, ...moduleLinks]
+}
+
+const parentRouteGroups = computed(() => [
+  {
+    name: 'CRM Core',
+    opened: true,
+    views: crmCoreLinks,
+  },
+  {
+    name: 'Lending & Risk',
+    opened: false,
+    views: buildModuleGroupLinks('Lending & Risk', 'Lending Dashboard'),
+  },
+  {
+    name: 'Operations',
+    opened: false,
+    views: buildModuleGroupLinks('Operations', 'Operations Dashboard'),
+  },
+  {
+    name: 'Admin & Platform',
+    opened: false,
+    views: buildModuleGroupLinks('Admin & Platform', 'Admin Dashboard'),
+  },
+  {
+    name: 'Channels & Portal',
+    opened: false,
+    views: buildModuleGroupLinks('Channels & Portal', 'Channels Dashboard'),
+  },
+])
+
+// ─── Dynamic Views (Public & Pinned) ─────────────────────
+
+const dynamicViews = computed(() => {
+  let _views = []
   if (getPublicViews().length) {
     _views.push({
       name: 'Public Views',

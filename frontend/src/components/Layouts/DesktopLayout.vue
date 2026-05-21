@@ -1,9 +1,9 @@
 <template>
   <div class="flex h-screen w-screen">
-    <div class="h-full border-r border-summon-graphite bg-summon-black">
+    <div class="h-full border-r border-crm-border bg-white">
       <AppSidebar />
     </div>
-    <div class="flex-1 flex flex-col h-full overflow-auto bg-surface-white">
+    <div class="flex-1 flex flex-col h-full overflow-auto bg-[#fffaf6]">
       <AppHeader />
       <slot />
     </div>
