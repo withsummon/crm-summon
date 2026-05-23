@@ -10,6 +10,9 @@
  "engine": "InnoDB",
  "field_order": [
   "source_name",
+  "source_group",
+  "is_active",
+  "source_fields_json",
   "details"
  ],
  "fields": [
@@ -20,6 +23,29 @@
    "label": "Source Name",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "default": "Digital",
+   "fieldname": "source_group",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Source Group",
+   "options": "Digital\nOffline\nReferral\nPartner\nInternal\nOther"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Active"
+  },
+  {
+   "fieldname": "source_fields_json",
+   "fieldtype": "Code",
+   "label": "Source-specific Fields",
+   "options": "JSON"
   },
   {
    "fieldname": "details",

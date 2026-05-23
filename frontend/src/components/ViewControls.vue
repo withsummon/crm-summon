@@ -623,6 +623,28 @@ if (allowedViews.includes('group_by')) {
     },
   })
 }
+if (allowedViews.includes('calendar')) {
+  standardViews.push({
+    name: 'calendar',
+    label: __('Calendar'),
+    icon: markRaw(ListIcon),
+    onClick() {
+      viewUpdated.value = false
+      router.push({ name: route.name, params: { viewType: 'calendar' } })
+    },
+  })
+}
+if (allowedViews.includes('timeline')) {
+  standardViews.push({
+    name: 'timeline',
+    label: __('Timeline'),
+    icon: markRaw(ListIcon),
+    onClick() {
+      viewUpdated.value = false
+      router.push({ name: route.name, params: { viewType: 'timeline' } })
+    },
+  })
+}
 
 function getIcon(icon, type) {
   if (isEmoji(icon)) {

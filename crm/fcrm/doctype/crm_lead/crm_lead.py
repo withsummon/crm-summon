@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.desk.form.assign_to import add as assign
 from frappe.model.document import Document
-from frappe.utils import has_gravatar, validate_email_address
+from frappe.utils import has_gravatar, now, validate_email_address
 
 from crm.fcrm.doctype.crm_service_level_agreement.utils import get_sla
 from crm.fcrm.doctype.crm_status_change_log.crm_status_change_log import (
@@ -82,10 +82,13 @@ class CRMLead(Document):
 		self.set_lead_name()
 		self.set_title()
 		self.validate_email()
+		self.validate_exact_duplicate()
 		self.validate_lost_reason()
+		self.set_uat_timestamps()
 		if not self.is_new() and self.has_value_changed("lead_owner") and self.lead_owner:
 			self.share_with_agent(self.lead_owner)
 			self.assign_agent(self.lead_owner)
+			self.log_assignment_change()
 		if self.has_value_changed("status"):
 			add_status_change_log(self)
 
@@ -94,6 +97,11 @@ class CRMLead(Document):
 			if self.lead_owner != frappe.session.user:
 				self.share_with_agent(self.lead_owner)
 			self.assign_agent(self.lead_owner)
+			self.log_assignment_change(assignment_type="Initial", reason="Initial lead owner")
+		self.update_uat_score()
+
+	def on_update(self):
+		self.update_uat_score()
 
 	def before_save(self):
 		self.apply_sla()
@@ -143,6 +151,69 @@ class CRMLead(Document):
 
 			if self.is_new() or not self.image:
 				self.image = has_gravatar(self.email)
+
+	def validate_exact_duplicate(self):
+		if not self.is_new() or self.flags.allow_duplicate:
+			return
+		if not self.flags.enforce_duplicate_check and self.get("capture_channel") in (None, "", "Manual"):
+			return
+		try:
+			from crm.api.lead_management import preview_duplicates
+
+			duplicates = preview_duplicates(data=self.as_dict())
+		except Exception:
+			return
+		exact = next((row for row in duplicates if row.get("score", 0) >= 100), None)
+		if exact:
+			frappe.throw(
+				_("Exact duplicate lead exists: {0}").format(exact.get("name")),
+				title=_("Duplicate Lead"),
+			)
+
+	def set_uat_timestamps(self):
+		if self.lead_owner and self.meta.has_field("first_assigned_on") and not self.first_assigned_on:
+			self.first_assigned_on = now()
+		if self.has_value_changed("status") and self.status:
+			status_type = frappe.get_cached_value("CRM Lead Status", self.status, "type")
+			if status_type == "Won" and self.meta.has_field("qualified_on") and not self.qualified_on:
+				self.qualified_on = now()
+			if status_type == "Lost" and self.meta.has_field("dropped_off_on") and not self.dropped_off_on:
+				self.dropped_off_on = now()
+		if (
+			self.meta.has_field("last_activity_on")
+			and (self.has_value_changed("communication_status") or self.has_value_changed("status"))
+		):
+			self.last_activity_on = now()
+
+	def update_uat_score(self):
+		if self.flags.in_update_uat_score or not self.name or not self.meta.has_field("lead_score"):
+			return
+		if not frappe.db.table_exists("CRM Lead"):
+			return
+		try:
+			from crm.api.lead_management import score_lead
+
+			self.flags.in_update_uat_score = True
+			score_lead(self.name)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), _("Lead score update failed"))
+		finally:
+			self.flags.in_update_uat_score = False
+
+	def log_assignment_change(self, assignment_type="Manual", reason=None):
+		try:
+			from crm.api.lead_management import _log_assignment
+
+			before = self.get_doc_before_save()
+			_log_assignment(
+				self.name,
+				before.lead_owner if before else None,
+				self.lead_owner,
+				reason or getattr(self, "reassignment_reason", None),
+				assignment_type,
+			)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), _("Lead assignment log failed"))
 
 	def validate_lost_reason(self):
 		"""
@@ -452,6 +523,24 @@ class CRMLead(Document):
 				"width": "11rem",
 			},
 			{
+				"label": "Score",
+				"type": "Int",
+				"key": "lead_score",
+				"width": "6rem",
+			},
+			{
+				"label": "Band",
+				"type": "Select",
+				"key": "lead_score_band",
+				"width": "7rem",
+			},
+			{
+				"label": "Channel",
+				"type": "Select",
+				"key": "capture_channel",
+				"width": "9rem",
+			},
+			{
 				"label": "Assigned To",
 				"type": "Text",
 				"key": "_assign",
@@ -471,6 +560,14 @@ class CRMLead(Document):
 			"status",
 			"email",
 			"mobile_no",
+			"capture_channel",
+			"campaign",
+			"lead_score",
+			"lead_score_band",
+			"lead_quality_probability",
+			"lead_quality_confidence",
+			"duplicate_of",
+			"duplicate_score",
 			"lead_owner",
 			"first_name",
 			"sla_status",
@@ -486,10 +583,10 @@ class CRMLead(Document):
 	@staticmethod
 	def default_kanban_settings():
 		return {
-			"column_field": "status",
-			"title_field": "lead_name",
-			"kanban_fields": '["organization", "email", "mobile_no", "_assign", "modified"]',
-		}
+		"column_field": "status",
+		"title_field": "lead_name",
+		"kanban_fields": '["organization", "email", "mobile_no", "lead_score_band", "_assign", "modified"]',
+	}
 
 
 @frappe.whitelist()
@@ -508,7 +605,11 @@ def convert_to_deal(
 	lead = frappe.get_cached_doc("CRM Lead", lead)
 	if frappe.db.exists("CRM Lead Status", "Qualified"):
 		lead.db_set("status", "Qualified")
+		if frappe.get_meta("CRM Lead").has_field("qualified_on"):
+			lead.db_set("qualified_on", now())
 	lead.db_set("converted", 1)
+	if frappe.get_meta("CRM Lead").has_field("converted_on"):
+		lead.db_set("converted_on", now())
 	if lead.sla and frappe.db.exists("CRM Communication Status", "Replied"):
 		lead.db_set("communication_status", "Replied")
 	contact = lead.create_contact(existing_contact, False)

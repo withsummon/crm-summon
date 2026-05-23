@@ -182,6 +182,100 @@
         v-model="doc"
         @updateField="updateField"
       />
+      <div class="border-b p-5">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-semibold text-ink-gray-9">
+              {{ __('Lead UAT Intelligence') }}
+            </div>
+            <div class="text-xs text-ink-gray-5">
+              {{ __('Score, duplicate, attribution, and assignment context') }}
+            </div>
+          </div>
+          <Button variant="subtle" size="sm" icon="refresh-cw" @click="refreshUatSummary" />
+        </div>
+        <div v-if="uatSummary.loading" class="text-sm text-ink-gray-5">
+          {{ __('Loading...') }}
+        </div>
+        <div v-else class="flex flex-col gap-4">
+          <div class="grid grid-cols-3 gap-2">
+            <div class="rounded border bg-surface-gray-1 p-3">
+              <div class="text-xs text-ink-gray-5">{{ __('Score') }}</div>
+              <div class="text-xl font-semibold text-ink-gray-9">
+                {{ uatSummary.data?.score?.value || 0 }}
+              </div>
+            </div>
+            <div class="rounded border bg-surface-gray-1 p-3">
+              <div class="text-xs text-ink-gray-5">{{ __('Band') }}</div>
+              <Badge
+                :label="uatSummary.data?.score?.band || __('Cold')"
+                variant="subtle"
+                theme="blue"
+              />
+            </div>
+            <div class="rounded border bg-surface-gray-1 p-3">
+              <div class="text-xs text-ink-gray-5">{{ __('Quality') }}</div>
+              <div class="text-sm font-medium text-ink-gray-9">
+                {{ uatSummary.data?.score?.probability || 0 }}%
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-2 text-xs font-semibold uppercase text-ink-gray-5">
+              {{ __('Attribution') }}
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div>{{ __('Channel') }}: {{ uatSummary.data?.attribution?.channel || '-' }}</div>
+              <div>{{ __('Source') }}: {{ uatSummary.data?.attribution?.source || '-' }}</div>
+              <div>{{ __('Campaign') }}: {{ uatSummary.data?.attribution?.campaign || '-' }}</div>
+              <div>{{ __('Referrer') }}: {{ uatSummary.data?.attribution?.referrer || '-' }}</div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <div class="text-xs font-semibold uppercase text-ink-gray-5">
+                {{ __('Duplicate Candidates') }}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                :label="__('Refresh')"
+                @click="refreshDuplicates"
+              />
+            </div>
+            <div v-if="uatSummary.data?.duplicates?.length" class="flex flex-col gap-2">
+              <div
+                v-for="candidate in uatSummary.data.duplicates"
+                :key="candidate.name"
+                class="rounded border p-2 text-sm"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="truncate font-medium">{{ candidate.lead_name || candidate.name }}</span>
+                  <Badge :label="`${candidate.score}%`" variant="subtle" theme="orange" />
+                </div>
+                <div class="truncate text-xs text-ink-gray-5">
+                  {{ candidate.match_basis || candidate.email || candidate.mobile_no }}
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-sm text-ink-gray-5">{{ __('No duplicate candidates') }}</div>
+          </div>
+          <div v-if="uatSummary.data?.tags?.length">
+            <div class="mb-2 text-xs font-semibold uppercase text-ink-gray-5">
+              {{ __('Tags') }}
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <Badge
+                v-for="tag in uatSummary.data.tags"
+                :key="tag.tag"
+                :label="tag.tag"
+                variant="subtle"
+                theme="teal"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <div
         v-if="sections.data"
         class="flex flex-1 flex-col justify-between overflow-hidden"
@@ -279,6 +373,7 @@ import {
   createResource,
   FileUploader,
   Dropdown,
+  Badge,
   Tooltip,
   Avatar,
   Tabs,
@@ -472,6 +567,23 @@ const sections = createResource({
   auto: true,
 })
 
+const uatSummary = createResource({
+  url: 'crm.api.lead_management.get_lead_uat_summary',
+  cache: ['leadUatSummary', props.leadId],
+  params: { lead: props.leadId },
+  auto: true,
+})
+
+async function refreshUatSummary() {
+  await call('crm.api.lead_management.score_lead', { lead: props.leadId })
+  uatSummary.reload()
+}
+
+async function refreshDuplicates() {
+  await call('crm.api.lead_management.preview_duplicates', { lead: props.leadId })
+  uatSummary.reload()
+}
+
 async function triggerStatusChange(value) {
   await triggerOnChange('status', value)
   setLostReason()
@@ -548,6 +660,7 @@ function beforeStatusChange(data) {
 }
 
 function reloadResources(data) {
+  uatSummary.reload()
   if (Object.hasOwn(data ?? {}, 'lead_owner')) {
     assignees.reload()
   }

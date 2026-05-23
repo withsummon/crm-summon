@@ -26,6 +26,35 @@
   "job_title",
   "source",
   "lead_owner",
+  "lead_tab",
+  "capture_channel",
+  "campaign",
+  "lead_score",
+  "lead_score_band",
+  "column_break_uat_score",
+  "lead_quality_probability",
+  "lead_quality_confidence",
+  "attribution_section",
+  "referrer_type",
+  "referrer",
+  "referral_fee",
+  "npwp",
+  "column_break_utm",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "dedupe_assignment_section",
+  "duplicate_of",
+  "duplicate_score",
+  "last_activity_on",
+  "first_assigned_on",
+  "reassignment_reason",
+  "conversion_section",
+  "qualified_on",
+  "converted_on",
+  "dropped_off_on",
   "organization_tab",
   "section_break_uixv",
   "naming_series",
@@ -167,6 +196,181 @@
    "fieldtype": "Link",
    "label": "Lead Owner",
    "options": "User"
+  },
+  {
+   "fieldname": "lead_tab",
+   "fieldtype": "Tab Break",
+   "label": "Lead Management"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "capture_channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Capture Channel",
+   "options": "Manual\nWeb Form\nWhatsApp\nEmail\nWalk-in\nReferral\nCampaign\nWidget\nMobile\nOCR\nAI Chatbot\nExcel Import"
+  },
+  {
+   "fieldname": "campaign",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Campaign",
+   "options": "CRM Lead Campaign"
+  },
+  {
+   "default": "0",
+   "fieldname": "lead_score",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead Score",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lead_score_band",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead Score Band",
+   "options": "\nCold\nWarm\nHot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_uat_score",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_quality_probability",
+   "fieldtype": "Percent",
+   "label": "Lead Quality Probability",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lead_quality_confidence",
+   "fieldtype": "Percent",
+   "label": "Lead Quality Confidence",
+   "read_only": 1
+  },
+  {
+   "fieldname": "attribution_section",
+   "fieldtype": "Section Break",
+   "label": "Attribution"
+  },
+  {
+   "fieldname": "referrer_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Referrer Type",
+   "options": "\nCustomer\nRM\nPartner\nOther"
+  },
+  {
+   "fieldname": "referrer",
+   "fieldtype": "Data",
+   "label": "Referrer"
+  },
+  {
+   "fieldname": "referral_fee",
+   "fieldtype": "Currency",
+   "label": "Referral Fee"
+  },
+  {
+   "fieldname": "npwp",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "NPWP",
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_utm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "utm_source",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "UTM Source"
+  },
+  {
+   "fieldname": "utm_medium",
+   "fieldtype": "Data",
+   "label": "UTM Medium"
+  },
+  {
+   "fieldname": "utm_campaign",
+   "fieldtype": "Data",
+   "label": "UTM Campaign"
+  },
+  {
+   "fieldname": "utm_content",
+   "fieldtype": "Data",
+   "label": "UTM Content"
+  },
+  {
+   "fieldname": "utm_term",
+   "fieldtype": "Data",
+   "label": "UTM Term"
+  },
+  {
+   "fieldname": "dedupe_assignment_section",
+   "fieldtype": "Section Break",
+   "label": "Deduplication & Assignment"
+  },
+  {
+   "fieldname": "duplicate_of",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Duplicate Of",
+   "options": "CRM Lead",
+   "read_only": 1
+  },
+  {
+   "fieldname": "duplicate_score",
+   "fieldtype": "Percent",
+   "label": "Duplicate Score",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_activity_on",
+   "fieldtype": "Datetime",
+   "in_standard_filter": 1,
+   "label": "Last Activity On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_assigned_on",
+   "fieldtype": "Datetime",
+   "label": "First Assigned On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reassignment_reason",
+   "fieldtype": "Small Text",
+   "label": "Reassignment Reason"
+  },
+  {
+   "fieldname": "conversion_section",
+   "fieldtype": "Section Break",
+   "label": "Conversion Tracking"
+  },
+  {
+   "fieldname": "qualified_on",
+   "fieldtype": "Datetime",
+   "label": "Qualified On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "converted_on",
+   "fieldtype": "Datetime",
+   "label": "Converted On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dropped_off_on",
+   "fieldtype": "Datetime",
+   "label": "Dropped Off On",
+   "read_only": 1
   },
   {
    "fieldname": "source",

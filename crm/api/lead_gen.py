@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 import json
 
+from crm.api.lead_management import capture_lead
+
 
 @frappe.whitelist()
 def import_leads_from_excel(file_url: str):
@@ -117,10 +119,8 @@ def import_leads_from_excel(file_url: str):
 			if phone and "wa.me/" in str(phone):
 				phone = "+" + str(phone).split("wa.me/")[-1].strip()
 
-			# Create the lead
-			lead = frappe.get_doc(
+			result = capture_lead(
 				{
-					"doctype": "CRM Lead",
 					"lead_name": name or company,
 					"first_name": name.split()[0] if name and " " in name else (name or ""),
 					"last_name": " ".join(name.split()[1:]) if name and " " in name else "",
@@ -132,10 +132,13 @@ def import_leads_from_excel(file_url: str):
 					"status": status,
 					"source": "Excel Import",
 					"website": linkedin if linkedin else None,
-				}
+				},
+				channel="Excel Import",
 			)
-			lead.insert(ignore_permissions=True)
-			created += 1
+			if result.get("created"):
+				created += 1
+			else:
+				skipped += 1
 
 		except Exception as e:
 			errors.append({"row": row_idx, "error": str(e)})
@@ -343,9 +346,8 @@ def mock_lead_scraping(prompt: str | None = None):
 				except Exception:
 					pass
 
-			lead = frappe.get_doc(
+			result = capture_lead(
 				{
-					"doctype": "CRM Lead",
 					"lead_name": name or company,
 					"first_name": name.split()[0] if name and " " in name else (name or ""),
 					"last_name": " ".join(name.split()[1:]) if name and " " in name else "",
@@ -359,10 +361,14 @@ def mock_lead_scraping(prompt: str | None = None):
 					"lead_owner": frappe.session.user,
 					"owner": frappe.session.user,
 					"website": linkedin if linkedin else None,
-				}
+				},
+				channel="Campaign",
 			)
+			if not result.get("created"):
+				skipped += 1
+				continue
 
-			lead.insert(ignore_permissions=True, ignore_links=True)
+			lead = frappe.get_doc("CRM Lead", result.get("lead"))
 			created += 1
 			frappe.db.commit()
 
@@ -397,4 +403,3 @@ def mock_lead_scraping(prompt: str | None = None):
 		"message": f"Successfully scraped and imported {created} new leads. Skipped {skipped} duplicates.",
 		"created": created
 	}
-

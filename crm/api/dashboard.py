@@ -295,11 +295,45 @@ def _group_count(doctype: str, fieldname: str, from_date, to_date, user: str | N
 
 
 def _lead_management(from_date, to_date, user: str | None = None):
+	lead_filters = _date_range_filter(from_date, to_date)
+	if user and _meta_has_field("CRM Lead", "lead_owner"):
+		lead_filters.append(["lead_owner", "=", user])
+
+	total_leads = _count_doctype("CRM Lead", from_date, to_date, "lead_owner", user)
+	converted_leads = 0
+	stale_7 = stale_14 = stale_30 = sla_failed = 0
+	if _table_exists("CRM Lead"):
+		try:
+			converted_leads = frappe.db.count("CRM Lead", filters=lead_filters + [["converted", "=", 1]])
+			stale_7 = frappe.db.count("CRM Lead", filters=lead_filters + [["converted", "=", 0], ["modified", "<=", frappe.utils.add_days(frappe.utils.nowdate(), -7)]])
+			stale_14 = frappe.db.count("CRM Lead", filters=lead_filters + [["converted", "=", 0], ["modified", "<=", frappe.utils.add_days(frappe.utils.nowdate(), -14)]])
+			stale_30 = frappe.db.count("CRM Lead", filters=lead_filters + [["converted", "=", 0], ["modified", "<=", frappe.utils.add_days(frappe.utils.nowdate(), -30)]])
+			if _meta_has_field("CRM Lead", "sla_status"):
+				sla_failed = frappe.db.count("CRM Lead", filters=lead_filters + [["sla_status", "=", "Failed"]])
+		except Exception:
+			pass
+
 	return {
 		"status": _group_count("CRM Lead", "status", from_date, to_date, user, "lead_owner"),
 		"source": _group_count("CRM Lead", "source", from_date, to_date, user, "lead_owner"),
+		"campaign": _group_count("CRM Lead", "campaign", from_date, to_date, user, "lead_owner"),
+		"score_band": _group_count("CRM Lead", "lead_score_band", from_date, to_date, user, "lead_owner"),
+		"channel": _group_count("CRM Lead", "capture_channel", from_date, to_date, user, "lead_owner"),
+		"assignment_load": _group_count("CRM Lead", "lead_owner", from_date, to_date, user, "lead_owner"),
+		"drop_off_reasons": _group_count("CRM Lead", "lost_reason", from_date, to_date, user, "lead_owner"),
 		"qualification": _group_count("CRM Lead", "qualification_status", from_date, to_date, user, "lead_owner")
 		or _group_count("CRM Lead", "status", from_date, to_date, user, "lead_owner"),
+		"funnel": {
+			"total": total_leads,
+			"converted": converted_leads,
+			"conversion_rate": round((converted_leads / total_leads) * 100, 2) if total_leads else 0,
+		},
+		"aging": {
+			"stale_7_days": stale_7,
+			"stale_14_days": stale_14,
+			"stale_30_days": stale_30,
+			"sla_failed": sla_failed,
+		},
 	}
 
 

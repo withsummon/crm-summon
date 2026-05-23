@@ -9,6 +9,24 @@
         :actions="leadsListView.customListActions"
       />
       <Button
+        variant="outline"
+        :label="__('Capture Lead')"
+        @click="showCaptureDialog = true"
+      >
+        <template #prefix>
+          <FeatherIcon name="edit-3" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
+        variant="outline"
+        :label="__('Export')"
+        @click="exportFilteredLeads"
+      >
+        <template #prefix>
+          <FeatherIcon name="download" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
         variant="solid"
         :loading="isScraping"
         :label="__('Run Lead Gen')"
@@ -33,6 +51,9 @@
         iconLeft="plus"
         @click="showLeadModal = true"
       />
+      <Dropdown :options="viewModeActions">
+        <Button variant="subtle" icon="layout" />
+      </Dropdown>
     </template>
   </LayoutHeader>
   <ViewControls
@@ -44,7 +65,7 @@
     doctype="CRM Lead"
     :filters="{ converted: 0 }"
     :options="{
-      allowedViews: ['list', 'group_by', 'kanban'],
+      allowedViews: ['list', 'group_by', 'kanban', 'calendar', 'timeline'],
     }"
   />
   <KanbanView
@@ -251,6 +272,86 @@
       </div>
     </template>
   </KanbanView>
+  <div
+    v-else-if="route.params.viewType == 'calendar' && rows.length"
+    class="flex h-full flex-col overflow-auto bg-surface-gray-1 p-5"
+  >
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        v-for="row in rows"
+        :key="row.name"
+        class="rounded-lg border bg-white p-4 shadow-sm"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="truncate text-base font-semibold text-ink-gray-9">
+              {{ rowLabel(row, 'lead_name') || row.name }}
+            </div>
+            <div class="mt-1 truncate text-sm text-ink-gray-5">
+              {{ rowLabel(row, 'organization') || rowLabel(row, 'email') || '-' }}
+            </div>
+          </div>
+          <Badge
+            v-if="rowLabel(row, 'lead_score_band')"
+            :label="rowLabel(row, 'lead_score_band')"
+            variant="subtle"
+            theme="blue"
+          />
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div class="text-xs text-ink-gray-5">{{ __('Created') }}</div>
+            <div class="text-ink-gray-8">{{ rowLabel(row, 'creation') }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-ink-gray-5">{{ __('SLA') }}</div>
+            <div class="text-ink-gray-8">{{ rowLabel(row, 'sla_status') || '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    v-else-if="route.params.viewType == 'timeline' && rows.length"
+    class="h-full overflow-auto bg-surface-gray-1 p-5"
+  >
+    <div class="mx-auto flex max-w-4xl flex-col gap-3">
+      <div
+        v-for="row in rows"
+        :key="row.name"
+        class="grid grid-cols-[140px_minmax(0,1fr)] gap-4 rounded-lg border bg-white p-4 shadow-sm"
+      >
+        <div class="text-sm text-ink-gray-5">
+          {{ rowLabel(row, 'modified') || rowLabel(row, 'creation') }}
+        </div>
+        <div class="min-w-0">
+          <div class="truncate font-semibold text-ink-gray-9">
+            {{ rowLabel(row, 'lead_name') || row.name }}
+          </div>
+          <div class="mt-1 flex flex-wrap gap-2">
+            <Badge
+              v-if="rowLabel(row, 'status')"
+              :label="rowLabel(row, 'status')"
+              variant="subtle"
+              theme="gray"
+            />
+            <Badge
+              v-if="rowLabel(row, 'capture_channel')"
+              :label="rowLabel(row, 'capture_channel')"
+              variant="subtle"
+              theme="teal"
+            />
+            <Badge
+              v-if="rowLabel(row, 'lead_score_band')"
+              :label="rowLabel(row, 'lead_score_band')"
+              variant="subtle"
+              theme="blue"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <LeadsListView
     v-else-if="leads.data && rows.length"
     ref="leadsListView"
@@ -294,6 +395,34 @@
     :totalCount="scrapingTotal"
     :processedCount="scrapingProcessed"
   />
+  <Dialog
+    v-model="showCaptureDialog"
+    :options="{
+      title: __('Capture UAT Lead'),
+      size: 'md',
+      actions: [
+        {
+          label: __('Create Lead'),
+          variant: 'solid',
+          loading: captureLoading,
+          onClick: captureUatLead,
+        },
+      ],
+    }"
+  >
+    <template #body-content>
+      <div class="grid gap-3 py-3 sm:grid-cols-2">
+        <FormControl v-model="captureDraft.lead_name" :label="__('Full Name')" />
+        <FormControl v-model="captureDraft.organization" :label="__('Organization')" />
+        <FormControl v-model="captureDraft.email" :label="__('Email')" />
+        <FormControl v-model="captureDraft.mobile_no" :label="__('Mobile No.')" />
+        <FormControl v-model="captureDraft.source" :label="__('Source')" />
+        <FormControl v-model="captureDraft.campaign" :label="__('Campaign')" />
+        <FormControl v-model="captureDraft.referrer" :label="__('Referrer')" />
+        <FormControl v-model="captureDraft.npwp" :label="__('NPWP')" />
+      </div>
+    </template>
+  </Dialog>
   <Dialog
     v-model="showPromptDialog"
     :options="{
@@ -357,8 +486,18 @@ import { callEnabled } from '@/composables/telephony'
 import { useBroadcast } from '@/composables/useBroadcast'
 import { formatDate, timeAgo, website, formatTime } from '@/utils'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
-import { Avatar, Tooltip, Dropdown, FeatherIcon, toast, call } from 'frappe-ui'
-import { useRoute } from 'vue-router'
+import {
+  Avatar,
+  Badge,
+  Dialog,
+  FormControl,
+  Tooltip,
+  Dropdown,
+  FeatherIcon,
+  toast,
+  call,
+} from 'frappe-ui'
+import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, reactive, h, onMounted, onUnmounted, watch, toRefs } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
@@ -375,12 +514,44 @@ const { isScraping, scrapingProgress, scrapingTotal, scrapingProcessed } = toRef
 const { startScraping, updateProgress, stopScraping } = backgroundStore()
 
 const route = useRoute()
+const router = useRouter()
 
 const leadsListView = ref(null)
 const showLeadModal = ref(false)
 const showImportDialog = ref(false)
 const showPromptDialog = ref(false)
+const showCaptureDialog = ref(false)
+const captureLoading = ref(false)
 const promptText = ref('')
+const captureDraft = reactive({
+  lead_name: '',
+  organization: '',
+  email: '',
+  mobile_no: '',
+  source: 'Web Form',
+  campaign: '',
+  referrer: '',
+  npwp: '',
+})
+
+const viewModeActions = computed(() => [
+  {
+    label: __('List'),
+    onClick: () => router.push({ name: 'Leads', params: { viewType: 'list' } }),
+  },
+  {
+    label: __('Kanban'),
+    onClick: () => router.push({ name: 'Leads', params: { viewType: 'kanban' } }),
+  },
+  {
+    label: __('Calendar'),
+    onClick: () => router.push({ name: 'Leads', params: { viewType: 'calendar' } }),
+  },
+  {
+    label: __('Timeline'),
+    onClick: () => router.push({ name: 'Leads', params: { viewType: 'timeline' } }),
+  },
+])
 
 
 async function runMockScraping() {
@@ -505,6 +676,52 @@ function onLeadsImported() {
   }
 }
 
+async function captureUatLead(close) {
+  captureLoading.value = true
+  try {
+    const result = await call('crm.api.lead_management.capture_lead', {
+      data: captureDraft,
+      channel: captureDraft.source || 'Web Form',
+    })
+    if (result.created) {
+      toast.success(__('Lead created'))
+      Object.assign(captureDraft, {
+        lead_name: '',
+        organization: '',
+        email: '',
+        mobile_no: '',
+        source: 'Web Form',
+        campaign: '',
+        referrer: '',
+        npwp: '',
+      })
+      showCaptureDialog.value = false
+      close?.()
+      onLeadsImported()
+      router.push({ name: 'Lead', params: { leadId: result.lead } })
+    } else {
+      toast.error(__('Duplicate lead found. Review duplicate candidates before creating.'))
+    }
+  } finally {
+    captureLoading.value = false
+  }
+}
+
+async function exportFilteredLeads() {
+  const filters = {
+    converted: 0,
+    ...(leads.value?.params?.filters || {}),
+  }
+  const result = await call('crm.api.lead_management.export_leads', {
+    filters,
+    format: 'CSV',
+  })
+  if (result.file_url) {
+    window.location.href = result.file_url
+  }
+  toast.success(__('Lead export prepared'))
+}
+
 
 function getRow(name, field) {
   function getValue(value) {
@@ -514,6 +731,14 @@ function getRow(name, field) {
     return { label: value }
   }
   return getValue(rows.value?.find((row) => row.name == name)[field])
+}
+
+function rowLabel(row, field) {
+  const value = row?.[field]
+  if (value && typeof value === 'object') {
+    return value.value || value.label || value.full_name || ''
+  }
+  return value || ''
 }
 
 // Rows

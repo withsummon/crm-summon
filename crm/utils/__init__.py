@@ -226,6 +226,8 @@ def create_lead_from_incoming_email(doc: Communication, method: str | None = Non
 
 	if frappe.db.exists("CRM Lead Source", "Email"):
 		lead.source = "Email"
+	if lead.meta.has_field("capture_channel"):
+		lead.capture_channel = "Email"
 
 	lead.insert(ignore_permissions=True)
 
@@ -270,6 +272,8 @@ def on_communication_update(doc: Communication, method: str | None = None):
 
 	if should_update_modified:
 		values["modified"] = now()
+		if frappe.get_meta(doc.reference_doctype).has_field("last_activity_on"):
+			values["last_activity_on"] = now()
 
 	if status:
 		last_communication = frappe.get_last_doc(
