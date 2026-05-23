@@ -10,15 +10,6 @@
       />
       <Button
         variant="outline"
-        :label="__('Capture Lead')"
-        @click="showCaptureDialog = true"
-      >
-        <template #prefix>
-          <FeatherIcon name="edit-3" class="h-4 w-4" />
-        </template>
-      </Button>
-      <Button
-        variant="outline"
         :label="__('Export')"
         @click="exportFilteredLeads"
       >
