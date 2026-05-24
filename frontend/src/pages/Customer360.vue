@@ -134,11 +134,28 @@
           <div v-else-if="activeTab === 'overview'" class="space-y-6">
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
               <Panel class="xl:col-span-2" :title="__('AI Customer Summary')" icon="cpu">
-                <textarea
-                  v-model="summaryText"
-                  rows="6"
-                  class="w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-teal-400"
-                />
+                <div class="relative">
+                  <div v-if="!editingSummary"
+                    class="min-h-[150px] w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 cursor-pointer hover:border-teal-300 prose prose-sm prose-teal max-w-none overflow-auto"
+                    style="min-height: 144px"
+                    @click="editingSummary = true"
+                    v-html="renderMarkdown(summaryText)"
+                  />
+                  <textarea
+                    v-else
+                    v-model="summaryText"
+                    rows="9"
+                    class="w-full p-4 bg-white border border-teal-400 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-teal-500 font-mono"
+                    @blur="editingSummary = false"
+                    ref="summaryTextareaRef"
+                  />
+                  <button
+                    class="absolute top-2 right-2 rounded-md bg-white border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:border-teal-400 hover:text-teal-700"
+                    @click="editingSummary = !editingSummary"
+                  >
+                    {{ editingSummary ? __('Preview') : __('Edit') }}
+                  </button>
+                </div>
                 <div class="mt-3 flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
                   <span>{{ __('RAG summary generated from indexed Customer 360 records and documents') }}</span>
                   <div class="flex gap-2">
@@ -503,6 +520,7 @@
 import { Button, FeatherIcon, Badge, Dialog, usePageMeta, createListResource, createResource, toast, call } from 'frappe-ui'
 import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -528,6 +546,8 @@ const documentSearch = ref('')
 const communicationFilter = ref('All')
 const transactionFrom = ref('')
 const transactionTo = ref('')
+const editingSummary = ref(false)
+const summaryTextareaRef = ref(null)
 let searchTimer = null
 const routeCustomer = computed(() => String(route.params.customer || ''))
 
@@ -986,6 +1006,29 @@ function initials(value) {
   return (value || 'CU').slice(0, 2).toUpperCase()
 }
 
+function renderMarkdown(text) {
+  if (!text) return '<p class="text-slate-400 text-sm">Click to edit or generate a summary...</p>'
+  let html = String(text)
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^\|(.*)\|$/gm, (match) => {
+      const cells = match.split('|').filter((cell) => cell.trim())
+      if (cells.every((cell) => /^[\s:-]+$/.test(cell))) return ''
+      return '<tr>' + cells.map((cell) => `<td>${cell.trim()}</td>`).join('') + '</tr>'
+    })
+    .replace(/^- (.*$)/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+  html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+  html = html.replace(/(<tr>.*<\/tr>)/gs, '<table class="w-full border-collapse text-xs">$1</table>')
+  if (!html.startsWith('<')) html = `<p>${html}</p>`
+  return DOMPurify.sanitize(html)
+}
+
 function formatCurrency(value) {
   const amount = Number(value || 0)
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount)
@@ -1232,5 +1275,41 @@ const FormCheckbox = {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+:deep(.prose table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+:deep(.prose td), :deep(.prose th) {
+  border: 1px solid #e2e8f0;
+  padding: 0.3rem 0.5rem;
+  vertical-align: top;
+}
+:deep(.prose tr:nth-child(even)) {
+  background: #f8fafc;
+}
+:deep(.prose h2) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.25rem;
+  color: #1e293b;
+}
+:deep(.prose h3) {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.25rem;
+  color: #334155;
+}
+:deep(.prose ul) {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+:deep(.prose hr) {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0.75rem 0;
 }
 </style>

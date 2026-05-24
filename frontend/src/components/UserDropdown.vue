@@ -60,7 +60,7 @@ import { getSettings } from '@/stores/settings'
 import { showSettings, activeSettingsPage, isMobileView } from '@/composables/settings'
 import { showAboutModal } from '@/composables/modals'
 import { confirmLoginToFrappeCloud } from '@/composables/frappecloud'
-import { Dropdown } from 'frappe-ui'
+import { Dropdown, FeatherIcon } from 'frappe-ui'
 import { computed, h, markRaw } from 'vue'
 
 defineProps({
@@ -74,35 +74,62 @@ const { getUser } = usersStore()
 const user = computed(() => getUser() || {})
 
 const dropdownItems = computed(() => {
-  if (!settings.value?.dropdown_items) return []
-
-  let items = settings.value.dropdown_items
-
-  let _dropdownItems = [
-    {
-      group: 'Dropdown Items',
-      hideLabel: true,
-      items: [],
-    },
-  ]
-
-  items.forEach((item) => {
-    if (item.hidden) return
-    if (item.type !== 'Separator') {
-      let dropdownItem = dropdownItemObj(item)
-      if (dropdownItem) {
-        _dropdownItems[_dropdownItems.length - 1].items.push(dropdownItem)
-      }
-    } else {
-      _dropdownItems.push({
-        group: '',
+  // If settings have dropdown_items configured, use them
+  if (settings.value?.dropdown_items?.length) {
+    let items = settings.value.dropdown_items
+    let _dropdownItems = [
+      {
+        group: 'Dropdown Items',
         hideLabel: true,
         items: [],
-      })
-    }
-  })
+      },
+    ]
+    items.forEach((item) => {
+      if (item.hidden) return
+      if (item.type !== 'Separator') {
+        let dropdownItem = dropdownItemObj(item)
+        if (dropdownItem) {
+          _dropdownItems[_dropdownItems.length - 1].items.push(dropdownItem)
+        }
+      } else {
+        _dropdownItems.push({
+          group: '',
+          hideLabel: true,
+          items: [],
+        })
+      }
+    })
+    return _dropdownItems
+  }
 
-  return _dropdownItems
+  // Fallback: always show Settings, About, Logout
+  return [
+    {
+      group: 'User',
+      hideLabel: true,
+      items: [
+        {
+          icon: 'settings',
+          label: __('Settings'),
+          onClick: () => {
+            activeSettingsPage.value = 'AI Settings'
+            showSettings.value = true
+          },
+          condition: () => !isMobileView.value,
+        },
+        {
+          icon: 'info',
+          label: __('About'),
+          onClick: () => (showAboutModal.value = true),
+        },
+        {
+          icon: 'log-out',
+          label: __('Logout'),
+          onClick: () => logout.submit(),
+        },
+      ],
+    },
+  ]
 })
 
 function dropdownItemObj(item) {

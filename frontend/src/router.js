@@ -12,7 +12,7 @@ const requiresCrmRole = (route) => {
   
   const flatCrmRoutes = [
     'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
-    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center', 'AI Desk'
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center'
   ]
   if (flatCrmRoutes.includes(route.name)) return true
   

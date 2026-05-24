@@ -248,11 +248,12 @@ import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { Badge, Button, FeatherIcon, call, toast } from 'frappe-ui'
 import DOMPurify from 'dompurify'
-import { computed, h, nextTick, onMounted, ref } from 'vue'
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 
 const agents = ref([])
 const selectedAgent = ref(null)
-const messages = ref([])
+const STORAGE_KEY = 'ai_agent_center_messages'
+const messages = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(m => ({ ...m, loading: false })))
 const inputMessage = ref('')
 const sessionId = ref(null)
 const isLoading = ref(false)
@@ -267,6 +268,12 @@ const auditLog = ref([])
 const sandboxPrompt = ref('Summarize portfolio risk signals from the indexed CRM data.')
 const sandboxResult = ref('')
 const chatContainer = ref(null)
+
+watch(messages, (newMessages) => {
+  // Save non-loading messages to localStorage
+  const toSave = newMessages.filter(m => !m.loading)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+}, { deep: true })
 
 const quickSuggestions = computed(() => [
   'Summarize top credit risks from Customer 360 data.',
@@ -436,7 +443,7 @@ function clearChat() {
   messages.value = []
   sessionId.value = null
   selectedSources.value = []
-  localStorage.removeItem('ai_agent_center_history')
+  localStorage.removeItem(STORAGE_KEY)
 }
 
 const PanelBlock = {
