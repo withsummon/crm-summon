@@ -10,6 +10,7 @@ crm/public/frontend
 crm/www/crm.html
 build
 frontend/coverage
+docs/modules
 
 .vscode
 .github/instructions
@@ -20,3 +21,5 @@ CLAUDE.md
 AGENTS.md
 .claude
 .pi
+[VENDOR] Technical Proposal - SUMMON OS - Enterprise AI-Native BFSI CRM & Lending Operating System - BNI dan
+List of Feature SUMMON (BNI).xlsx

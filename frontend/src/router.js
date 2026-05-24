@@ -363,13 +363,7 @@ const routes = [
       {
         path: 'omnichannel-communication',
         name: 'Omnichannel Communication',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Omnichannel Communication',
-          subtitle: 'ClefinCode Chat',
-          icon: 'message-square',
-          sourcePath: '/app/clefincode-chat-channel',
-        },
+        component: () => import('@/pages/OmnichannelCommunication.vue'),
       },
       {
         path: 'customer-portal',
