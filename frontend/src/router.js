@@ -219,13 +219,7 @@ const routes = [
       {
         path: 'document-management',
         name: 'Document Management',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Document Management',
-          subtitle: 'Frappe Drive',
-          icon: 'folder',
-          sourcePath: '/drive',
-        },
+        component: () => import('@/pages/DocumentManagement.vue'),
       },
       {
         path: 'partner-vendor-management',
