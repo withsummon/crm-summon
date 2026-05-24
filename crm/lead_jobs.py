@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import add_days, add_to_date, get_datetime, now_datetime, time_diff_in_seconds
+from frappe.utils import add_days, add_to_date, get_datetime, now_datetime, nowdate, time_diff_in_seconds
 
 
 def _doctype_ready(doctype):

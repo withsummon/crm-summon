@@ -255,7 +255,7 @@ def _normalize_activity(log):
         "severity": "warning" if ("fail" in operation or "error" in operation) else "info",
         "ip": log.get("ip_address") or "",
         "geo": "",
-        "summary": _strip_html(log.get("subject") or log.get("content") or "Activity Log entry"),
+        "summary": frappe.utils.strip_html(log.get("subject") or log.get("content") or "Activity Log entry"),
         "metadata": log,
     }
 
@@ -323,15 +323,7 @@ def _parse_version_diff(data):
         return []
 
 
-def _strip_html(value):
-    if not value:
-        return ""
-    import re
-    return re.sub(r"<[^>]*>", " ", str(value)).strip()
 
 
-def cint(v):
-    try:
-        return int(v)
-    except (ValueError, TypeError):
-        return 0
+
+

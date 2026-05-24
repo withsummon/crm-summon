@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 import frappe
-from frappe.utils import add_days, get_datetime, now, now_datetime
+from frappe.utils import add_days, add_months, cint, get_datetime, now, now_datetime, time_diff_in_seconds
 
 
 def _parse_recurrence_rule(rule):
@@ -34,7 +34,7 @@ def process_recurring_tasks():
     recurring = frappe.get_all(
         "CRM Task",
         filters={"recurring": 1, "status": ["!=", "Cancelled"]},
-        fields=["name", "title", "description", "type", "priority", "due_date", "recurrence_rule", "owner"],
+        fields=["name", "title", "description", "task_type", "priority", "due_date", "recurrence_rule", "owner"],
     )
     now = now_datetime()
     created = 0
@@ -71,8 +71,7 @@ def _compute_next_due(last_due, interval):
     if "days" in interval:
         return add_days(last_due, interval["days"])
     if "months" in interval:
-        # Approximate: add 30 days per month
-        return add_days(last_due, interval["months"] * 30)
+        return add_months(last_due, interval["months"])
     return None
 
 
@@ -86,10 +85,10 @@ def _create_task_instance(task, due_date):
         "doctype": "CRM Task",
         "title": task.title,
         "description": task.description,
-        "type": task.type,
+        "task_type": task.task_type,
         "priority": task.priority,
         "due_date": due_date,
-        "status": "Not Started",
+        "status": "Todo",
         "parent_task": task.name,
     })
     doc.insert(ignore_permissions=True)
@@ -105,9 +104,9 @@ def process_escalations():
         "CRM Task",
         filters={
             "status": ["not in", ["Done", "Cancelled"]],
-            "sla_due": ["<=", now],
+            "sla_due_at": ["<=", now],
         },
-        fields=["name", "title", "status", "sla_due", "type", "priority", "owner"],
+        fields=["name", "title", "status", "sla_due_at", "task_type", "priority", "owner"],
     )
     fired = 0
     for task in tasks:
@@ -126,18 +125,22 @@ def _already_escalated(task_name):
 
 
 def _matching_escalation_rules(task):
+    now = now_datetime()
     rules = frappe.get_all(
         "CRM Task Escalation Rule",
         filters={"active": 1},
-        fields=["name", "trigger_condition", "notify_users", "escalate_to", "message_template"],
+        fields=["name", "after_minutes_past_due", "action", "recipient_user", "recipient_role", "level"],
     )
     matched = []
+    sla_due = get_datetime(task.get("sla_due_at"))
+    minutes_past = 0
+    if sla_due:
+        minutes_past = time_diff_in_seconds(now, sla_due) / 60
     for rule in rules:
-        condition = (rule.get("trigger_condition") or "").lower()
-        if "breach" in condition or "overdue" in condition:
-            matched.append(rule)
-        elif task.get("priority") == "Critical" and "critical" in condition:
-            matched.append(rule)
+        threshold = cint(rule.get("after_minutes_past_due"))
+        if threshold and minutes_past < threshold:
+            continue
+        matched.append(rule)
     return matched
 
 
@@ -145,24 +148,31 @@ def _fire_escalation(task, rule):
     event = frappe.get_doc({
         "doctype": "CRM Task Escalation Event",
         "task": task["name"],
-        "escalation_rule": rule["name"],
-        "triggered_at": now(),
-        "status": "Open",
-        "message": (rule.get("message_template") or "Task SLA breached").format(**task),
+        "rule": rule["name"],
+        "level": rule.get("level", 1),
+        "fired_at": now(),
+        "action": rule.get("action", "notify"),
+        "recipient_user": rule.get("recipient_user"),
     })
     event.insert(ignore_permissions=True)
-    notify_users = json.loads(rule.get("notify_users") or "[]")
-    if not notify_users and rule.get("escalate_to"):
-        notify_users = [rule["escalate_to"]]
-    for user in notify_users:
+    notify_user = rule.get("recipient_user")
+    if not notify_user and rule.get("recipient_role"):
+        users = frappe.get_all(
+            "User",
+            filters={"enabled": 1},
+            fields=["name"],
+            limit=1,
+        )
+        notify_user = users[0]["name"] if users else None
+    if notify_user:
         try:
             frappe.get_doc({
                 "doctype": "CRM Notification",
                 "from_user": frappe.session.user if frappe.session.user != "Guest" else "Administrator",
-                "to_user": user,
+                "to_user": notify_user,
                 "type": "Task",
-                "message": event.message,
-                "notification_text": event.message,
+                "message": f"Task SLA breached: {task['title']}",
+                "notification_text": f"Task SLA breached: {task['title']}",
                 "reference_doctype": "CRM Task",
                 "reference_name": task["name"],
             }).insert(ignore_permissions=True)

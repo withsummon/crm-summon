@@ -812,7 +812,7 @@ def seed_committee_sample_data():
 
 	# Sample vote + decision
 	member = c1.members[0].member if c1.members else user
-	member_name = c1.members[0].member_name if c1.members else _user_full_name(user)
+	member_name = c1.members[0].member_name if c1.members else (frappe.db.get_value("User", user, "full_name") or user)
 	signed_at = now_datetime()
 	sig_hash = _compute_vote_hash(item.name, member, "Approve", str(signed_at))
 	vote = frappe.new_doc("CRM Committee Vote")
