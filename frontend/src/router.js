@@ -275,13 +275,7 @@ const routes = [
       {
         path: 'reporting-bi',
         name: 'Reporting & BI',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Reporting & BI',
-          subtitle: 'Insights',
-          icon: 'bar-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/ReportingBI.vue'),
       },
       {
         path: 'api-integration-center',
