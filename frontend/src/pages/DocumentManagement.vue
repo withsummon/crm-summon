@@ -1,15 +1,31 @@
 <template>
-  <div class="flex h-full bg-gray-50 font-sans select-none">
-    <!-- ── Folder Sidebar ── -->
-    <div class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
-      <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <span class="text-sm font-bold text-gray-800">{{ __("Documents") }}</span>
+  <div class="flex h-full flex-col bg-gray-50 font-sans select-none">
+    <LayoutHeader stretch-left>
+      <template #left-header>
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+            <FeatherIcon name="folder" class="h-4 w-4 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-lg font-semibold text-ink-gray-9">{{ __("Document Management") }}</h1>
+          </div>
+        </div>
+      </template>
+      <template #right-header>
         <button
           @click="showUpload = true"
-          class="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700 transition-colors"
+          class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
         >
           <FeatherIcon name="upload" class="h-3.5 w-3.5" />
+          {{ __("Upload") }}
         </button>
+      </template>
+    </LayoutHeader>
+    <div class="flex flex-1 min-h-0 overflow-hidden">
+    <!-- ── Folder Sidebar ── -->
+    <div class="w-56 bg-white border-r border-gray-200 flex flex-col shrink-0">
+      <div class="px-4 py-3 border-b border-gray-200">
+        <span class="text-sm font-bold text-gray-800">{{ __("Documents") }}</span>
       </div>
 
       <div class="flex-1 overflow-y-auto p-2">
@@ -137,13 +153,6 @@
             <FeatherIcon :name="v.icon" class="h-3 w-3" />{{ v.label }}
           </button>
         </div>
-
-        <button
-          @click="showUpload = true"
-          class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors shrink-0"
-        >
-          <FeatherIcon name="upload-cloud" class="h-3.5 w-3.5" />{{ __("Upload") }}
-        </button>
       </div>
 
       <!-- Filter Bar (docs view) -->
@@ -949,6 +958,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <!-- ── Upload Modal ── -->
     <div
@@ -1196,6 +1206,7 @@
 <script setup>
 import { ref, computed, defineComponent, h } from "vue";
 import { FeatherIcon } from "frappe-ui";
+import LayoutHeader from "@/components/LayoutHeader.vue";
 
 // ── Recursive folder node component ──
 const FolderNode = defineComponent({

@@ -1,16 +1,28 @@
 <template>
-  <div class="flex h-full bg-slate-50 font-sans">
+  <div class="flex h-full flex-col bg-slate-50 font-sans">
+    <LayoutHeader stretch-left>
+      <template #left-header>
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+            <FeatherIcon name="file-text" class="h-4 w-4 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-lg font-semibold text-ink-gray-9">{{ __('Loan Origination') }}</h1>
+          </div>
+        </div>
+      </template>
+      <template #right-header>
+        <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+          <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+          {{ __('New Application') }}
+        </button>
+      </template>
+    </LayoutHeader>
+    <div class="flex flex-1 min-h-0 overflow-hidden">
     <!-- Sidebar -->
     <div class="w-72 border-r border-slate-200 bg-white flex flex-col shrink-0">
-      <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h2 class="text-sm font-bold text-slate-800">{{ __('Loan Origination') }}</h2>
-          <p class="text-xs text-slate-500 mt-0.5">{{ filteredApps.length }} {{ __('applications') }}</p>
-        </div>
-        <button @click="startNew" class="flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
-          <FeatherIcon name="plus" class="h-3.5 w-3.5" />
-          {{ __('New') }}
-        </button>
+      <div class="px-4 py-2.5 border-b border-slate-200">
+        <p class="text-xs text-slate-500">{{ filteredApps.length }} {{ __('applications') }}</p>
       </div>
       <div class="p-3 border-b border-slate-100">
         <div class="relative">
@@ -725,6 +737,7 @@
         </div>
       </template>
     </div>
+    </div>
 
     <!-- New Application Modal -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showModal=false">
@@ -759,6 +772,7 @@
 <script setup>
 import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { FeatherIcon, call } from 'frappe-ui'
+import LayoutHeader from '@/components/LayoutHeader.vue'
 
 // ── Step Header helper component ──
 const StepHeader = defineComponent({
