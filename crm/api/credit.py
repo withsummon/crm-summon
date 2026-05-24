@@ -444,9 +444,18 @@ def create_credit_application(payload=None):
 		},
 	)
 	try:
-		from crm.api.credit_analysis import save_spreading
+		from crm.api.credit_analysis import ensure_credit_analysis_tables, _replace_artifact
 
-		save_spreading(application.get("name"), status="Draft")
+		ensure_credit_analysis_tables()
+		# Initialize an empty workspace artifact (no demo data)
+		_replace_artifact(
+			application.get("name"),
+			borrower,
+			"spreading_status",
+			"Financial Spreading",
+			{"status": "Draft", "row_count": 0, "balance_checks": [], "message": "No financial data yet. Upload a PDF or enter data manually in the Financial Spreading tab."},
+			status="Draft",
+		)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "Credit Application Workspace Init Failed")
 	frappe.db.commit()

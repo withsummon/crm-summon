@@ -1,0 +1,179 @@
+2026-05-24 15:06:46,923 DEBUG cd my-frappe-bench && uv venv env --seed --python python3.11
+2026-05-24 15:06:51,934 LOG Getting frappe
+2026-05-24 15:06:51,936 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/frappe.git --branch version-15 --depth 1 --origin upstream
+2026-05-24 15:06:58,633 LOG Installing frappe
+2026-05-24 15:06:58,638 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:07:25,623 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe && yarn install --check-files
+2026-05-24 15:12:14,565 LOG Getting erpnext
+2026-05-24 15:12:14,565 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/erpnext.git --branch version-15 --depth 1 --origin upstream
+2026-05-24 15:12:18,598 LOG Installing erpnext
+2026-05-24 15:12:18,598 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:12:23,159 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext && yarn install --check-files
+2026-05-24 15:12:23,654 LOG Getting lending
+2026-05-24 15:12:23,654 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/lending.git --branch version-15 --depth 1 --origin upstream
+2026-05-24 15:12:24,674 LOG Installing lending
+2026-05-24 15:12:24,674 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/lending  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:12:25,023 LOG Getting drive
+2026-05-24 15:12:25,023 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/drive.git --branch main --depth 1 --origin upstream
+2026-05-24 15:12:28,861 LOG Installing drive
+2026-05-24 15:12:28,862 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:12:33,927 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive && yarn install --check-files
+2026-05-24 15:13:29,420 LOG Getting telephony
+2026-05-24 15:13:29,421 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/telephony.git --branch develop --depth 1 --origin upstream
+2026-05-24 15:13:30,331 LOG Installing telephony
+2026-05-24 15:13:30,331 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/telephony  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:13:31,472 LOG Getting helpdesk
+2026-05-24 15:13:31,472 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/helpdesk.git --branch main --depth 1 --origin upstream
+2026-05-24 15:13:34,278 LOG Installing helpdesk
+2026-05-24 15:13:34,278 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:13:35,002 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk && yarn install --check-files
+2026-05-24 15:13:51,653 LOG Getting insights
+2026-05-24 15:13:51,654 DEBUG cd my-frappe-bench/apps && git clone https://github.com/frappe/insights.git --branch version-3 --depth 1 --origin upstream
+2026-05-24 15:13:54,869 LOG Installing insights
+2026-05-24 15:13:54,869 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:13:57,035 WARNING cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python executed with exit code 1
+2026-05-24 15:13:57,035 WARNING /Users/rafaelrnzo/.local/bin/bench init my-frappe-bench --frappe-branch version-15 --python python3.11 --apps_path /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/apps.json executed with exit code 167
+2026-05-24 15:13:57,333 INFO /Users/rafaelrnzo/.local/bin/bench set-config -g redis_cache redis://127.0.0.1:6379/0
+2026-05-24 15:14:01,662 INFO /Users/rafaelrnzo/.local/bin/bench set-config -g redis_queue redis://127.0.0.1:6379/1
+2026-05-24 15:14:02,040 INFO /Users/rafaelrnzo/.local/bin/bench set-config -g redis_socketio redis://127.0.0.1:6379/2
+2026-05-24 15:14:02,394 INFO /Users/rafaelrnzo/.local/bin/bench new-site crm.localhost --admin-password admin --db-root-username root --db-root-password 123 --db-host 127.0.0.1 --db-port 3306
+2026-05-24 15:14:02,904 INFO /Users/rafaelrnzo/.local/bin/bench use crm.localhost
+2026-05-24 15:14:03,292 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 15:14:04,743 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 15:14:05,096 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 15:14:05,117 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 15:14:05,120 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 15:14:05,130 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 15:21:33,787 INFO /Users/rafaelrnzo/.local/bin/bench new-site crm.localhost --admin-password admin --db-root-username root --db-root-password 123 --db-host 127.0.0.1 --db-port 3306
+2026-05-24 15:21:59,931 INFO /Users/rafaelrnzo/.local/bin/bench use crm.localhost
+2026-05-24 15:22:00,449 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 15:22:00,828 INFO /Users/rafaelrnzo/.local/bin/bench setup requirements
+2026-05-24 15:22:00,834 DEBUG uv pip install --quiet --upgrade pip --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:01,104 LOG Installing frappe
+2026-05-24 15:22:01,104 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:02,339 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe && yarn install --check-files
+2026-05-24 15:22:03,340 LOG Installing insights
+2026-05-24 15:22:03,340 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:09,576 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights && yarn install --check-files
+2026-05-24 15:22:19,999 LOG Installing lending
+2026-05-24 15:22:20,000 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/lending  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:20,539 LOG Installing telephony
+2026-05-24 15:22:20,539 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/telephony  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:20,984 LOG Installing erpnext
+2026-05-24 15:22:20,985 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:21,406 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext && yarn install --check-files
+2026-05-24 15:22:21,540 LOG Installing drive
+2026-05-24 15:22:21,540 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:22,005 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive && yarn install --check-files
+2026-05-24 15:22:23,813 LOG Installing helpdesk
+2026-05-24 15:22:23,813 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 15:22:24,133 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk && yarn install --check-files
+2026-05-24 15:22:25,036 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 15:22:26,011 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 15:22:26,311 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 15:22:26,316 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 15:22:26,322 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 15:22:26,337 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 15:24:39,913 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 15:25:25,342 INFO /Users/rafaelrnzo/.local/bin/bench get-app crm --branch version-1
+2026-05-24 15:25:27,584 LOG Getting crm
+2026-05-24 15:25:27,585 DEBUG cd ./apps && git clone https://github.com/frappe/crm.git --branch version-1 --depth 1 --origin upstream
+2026-05-24 15:25:29,015 WARNING cd ./apps && git clone https://github.com/frappe/crm.git --branch version-1 --depth 1 --origin upstream executed with exit code 128
+2026-05-24 15:25:29,016 WARNING /Users/rafaelrnzo/.local/bin/bench get-app crm --branch version-1 executed with exit code 1
+2026-05-24 15:25:44,396 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app erpnext
+2026-05-24 15:26:59,274 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 15:27:00,437 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app drive
+2026-05-24 15:27:16,469 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app helpdesk
+2026-05-24 15:27:32,801 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app insights
+2026-05-24 15:28:07,075 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app lending
+2026-05-24 15:28:15,624 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app telephony
+2026-05-24 15:41:24,704 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 15:41:25,009 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 15:41:25,009 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 15:41:25,017 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 15:41:25,018 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 15:42:33,102 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost migrate
+2026-05-24 15:42:50,596 INFO /Users/rafaelrnzo/.local/bin/bench build
+2026-05-24 15:50:35,550 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 15:50:35,860 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 15:50:35,863 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 15:50:35,864 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 15:50:35,865 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 18:10:00,225 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 18:10:45,196 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app drive
+2026-05-24 18:11:08,316 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app drive --force
+2026-05-24 18:11:30,786 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost mariadb
+2026-05-24 18:11:45,414 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app drive
+2026-05-24 18:11:46,936 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost migrate
+2026-05-24 18:11:54,261 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 18:20:01,057 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app drive --force
+2026-05-24 18:20:52,869 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost migrate
+2026-05-24 18:21:11,667 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 18:21:34,053 INFO /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main
+2026-05-24 18:21:34,073 LOG Getting crm
+2026-05-24 18:21:34,073 DEBUG cd ./apps && git clone https://github.com/frappe/crm.git --branch main --depth 1 --origin upstream
+2026-05-24 18:21:36,872 WARNING /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main executed with exit code 1
+2026-05-24 18:21:37,300 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 18:21:46,640 INFO /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main
+2026-05-24 18:21:46,659 LOG Getting crm
+2026-05-24 18:21:46,660 DEBUG cd ./apps && git clone https://github.com/frappe/crm.git --branch main --depth 1 --origin upstream
+2026-05-24 18:21:50,314 LOG Installing crm
+2026-05-24 18:21:50,314 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:21:51,175 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm && yarn install --check-files
+2026-05-24 18:22:19,701 WARNING cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm && yarn install --check-files executed with exit code 1
+2026-05-24 18:22:19,702 WARNING /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main executed with exit code 1
+2026-05-24 18:22:20,178 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 18:23:03,708 INFO /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main
+2026-05-24 18:23:08,499 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost install-app crm
+2026-05-24 18:23:38,553 INFO /Users/rafaelrnzo/.local/bin/bench --site crm.localhost list-apps
+2026-05-24 18:23:45,550 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 18:23:45,935 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 18:23:45,936 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 18:23:45,946 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 18:23:45,948 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 18:25:08,214 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 18:25:08,526 INFO /Users/rafaelrnzo/.local/bin/bench schedule
+2026-05-24 18:25:08,526 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 18:25:08,529 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 18:25:08,543 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 18:26:40,144 INFO /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/withsummon/crm-summon.git --branch develop
+2026-05-24 18:26:40,166 LOG Getting crm-summon
+2026-05-24 18:26:40,166 DEBUG cd ./apps && git clone https://github.com/withsummon/crm-summon.git --branch develop --depth 1 --origin upstream
+2026-05-24 18:26:42,764 WARNING /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/withsummon/crm-summon.git --branch develop executed with exit code 1
+2026-05-24 18:28:08,146 INFO /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main
+2026-05-24 18:28:08,168 LOG Getting crm
+2026-05-24 18:28:08,168 DEBUG cd ./apps && git clone https://github.com/frappe/crm.git --branch main --depth 1 --origin upstream
+2026-05-24 18:28:11,452 LOG Installing crm
+2026-05-24 18:28:11,452 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:28:12,376 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm && yarn install --check-files
+2026-05-24 18:28:13,550 WARNING cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm && yarn install --check-files executed with exit code 1
+2026-05-24 18:28:13,550 WARNING /Users/rafaelrnzo/.local/bin/bench get-app https://github.com/frappe/crm.git --branch main executed with exit code 1
+2026-05-24 18:29:53,150 INFO /Users/rafaelrnzo/.local/bin/bench setup requirements
+2026-05-24 18:29:53,154 DEBUG uv pip install --quiet --upgrade pip --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:29:53,503 LOG Installing frappe
+2026-05-24 18:29:53,504 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:29:55,266 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/frappe && yarn install --check-files
+2026-05-24 18:29:56,527 LOG Installing insights
+2026-05-24 18:29:56,527 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:29:57,105 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/insights && yarn install --check-files
+2026-05-24 18:29:59,275 LOG Installing crm
+2026-05-24 18:29:59,275 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:29:59,797 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/crm && yarn install --check-files
+2026-05-24 18:30:12,131 LOG Installing lending
+2026-05-24 18:30:12,132 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/lending  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:30:12,814 LOG Installing telephony
+2026-05-24 18:30:12,814 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/telephony  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:30:13,329 LOG Installing erpnext
+2026-05-24 18:30:13,329 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:30:13,859 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/erpnext && yarn install --check-files
+2026-05-24 18:30:13,990 LOG Installing drive
+2026-05-24 18:30:13,990 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:30:14,744 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/drive && yarn install --check-files
+2026-05-24 18:30:16,529 LOG Installing helpdesk
+2026-05-24 18:30:16,529 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench && uv pip install --quiet --upgrade -e /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk  --python /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/env/bin/python
+2026-05-24 18:30:17,022 DEBUG cd /Users/rafaelrnzo/Proj/Proj/summon/crm-summon/my-frappe-bench/apps/helpdesk && yarn install --check-files
+2026-05-24 18:30:21,760 INFO /Users/rafaelrnzo/.local/bin/bench start
+2026-05-24 18:30:22,197 INFO /Users/rafaelrnzo/.local/bin/bench serve --port 8000
+2026-05-24 18:30:22,198 INFO /Users/rafaelrnzo/.local/bin/bench watch
+2026-05-24 18:30:22,200 INFO /Users/rafaelrnzo/.local/bin/bench worker
+2026-05-24 18:30:22,206 INFO /Users/rafaelrnzo/.local/bin/bench schedule

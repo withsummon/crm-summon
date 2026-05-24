@@ -1,0 +1,3 @@
+2026-05-24 18:21:10,921 ERROR frappe Not queueing job crm.localhost::helpdesk.search_sqlite.HelpdeskSearch because it is in queue already
+Site: crm.localhost
+Form Dict: {}
