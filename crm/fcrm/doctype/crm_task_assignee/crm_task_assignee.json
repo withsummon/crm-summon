@@ -1,0 +1,26 @@
+{
+ "actions": [],
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["user", "user_name", "role", "primary"],
+ "fields": [
+  {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "label": "User", "options": "User", "reqd": 1},
+  {"fieldname": "user_name", "fieldtype": "Data", "in_list_view": 1, "label": "Display Name"},
+  {"default": "Assignee", "fieldname": "role", "fieldtype": "Select", "in_list_view": 1, "label": "Role", "options": "Assignee\nReviewer\nFollower"},
+  {"default": "0", "fieldname": "primary", "fieldtype": "Check", "in_list_view": 1, "label": "Primary"}
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Task Assignee",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
