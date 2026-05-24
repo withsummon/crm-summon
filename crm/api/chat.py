@@ -78,9 +78,16 @@ def _get_or_create_contact_for_lead(lead_docname: str) -> str | None:
         ["lead_name", "email", "mobile_no", "phone"], as_dict=True)
     if not lead or not (lead.lead_name or lead.email or lead.mobile_no):
         return None
+
+    contact_name = None
     if lead.email:
         contact_name = frappe.db.get_value("Contact",
             {"email_id": lead.email}, "name")
+        if contact_name:
+            return contact_name
+    if not contact_name and lead.mobile_no:
+        contact_name = frappe.db.get_value("Contact",
+            {"mobile_no": lead.mobile_no}, "name")
         if contact_name:
             return contact_name
     if not contact_name and lead.mobile_no:

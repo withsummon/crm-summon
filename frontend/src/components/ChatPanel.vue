@@ -83,8 +83,10 @@ const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
 let pollTimer = null
+let timeoutTimer = null
 
 async function init() {
+  clearTimeout(timeoutTimer)
   loading.value = true
   error.value = ''
   noProfile.value = false
@@ -92,25 +94,37 @@ async function init() {
   messages.value = []
   newMessage.value = ''
 
+  timeoutTimer = setTimeout(() => {
+    loading.value = false
+    error.value = 'Chat service timed out'
+  }, 15000)
+
   try {
     const res = await call('crm.api.chat.resolve_record_channels', {
       doctype: props.doctype,
       docname: props.docname,
     })
+    clearTimeout(timeoutTimer)
 
-    if (!res.profile) {
-      noProfile.value = true
+    if (!res || !res.profile) {
+      if (res && res.contact && !res.profile) {
+        noProfile.value = true
+      } else {
+        error.value = 'No profile found'
+      }
       return
     }
 
     if (res.channels && res.channels.length) {
       channel.value = res.channels[0]
       await fetchMessages()
+      startPolling()
     }
   } catch (err) {
-    console.error(err)
+    console.error('[ChatPanel] init error:', err)
     error.value = err.messages?.[0] || err.message || 'Failed to load chat'
   } finally {
+    clearTimeout(timeoutTimer)
     loading.value = false
   }
 }
@@ -122,7 +136,7 @@ async function ensureChannel() {
       doctype: props.doctype,
       docname: props.docname,
     })
-    if (res.channel) {
+    if (res && res.channel) {
       channel.value = res.channel
       await fetchMessages()
       startPolling()
@@ -130,7 +144,7 @@ async function ensureChannel() {
       error.value = 'Could not create chat channel'
     }
   } catch (err) {
-    console.error(err)
+    console.error('[ChatPanel] ensureChannel error:', err)
     error.value = err.messages?.[0] || err.message || 'Failed to create channel'
   } finally {
     creating.value = false
@@ -147,13 +161,13 @@ async function fetchMessages() {
       limit: 50,
       offset: 0,
     })
-    if (res.messages) {
+    if (res && res.messages) {
       messages.value = res.messages
       await nextTick()
       scrollToBottom()
     }
   } catch (err) {
-    console.error(err)
+    console.error('[ChatPanel] fetchMessages error:', err)
   } finally {
     messagesLoading.value = false
   }
@@ -172,20 +186,26 @@ async function send() {
     newMessage.value = ''
     await fetchMessages()
   } catch (err) {
-    console.error(err)
+    console.error('[ChatPanel] send error:', err)
   } finally {
     sending.value = false
   }
 }
 
 function isMine(msg) {
-  return msg.sender === frappe.session.user || msg.owner === frappe.session.user
+  if (!msg) return false
+  const user = window.frappe?.session?.user || ''
+  return msg.sender === user || msg.owner === user
 }
 
 function formatTime(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return ''
+  }
 }
 
 function scrollToBottom() {
@@ -206,8 +226,13 @@ function stopPolling() {
   }
 }
 
-watch(() => props.docname, () => { init() })
+function cleanup() {
+  stopPolling()
+  clearTimeout(timeoutTimer)
+}
+
+watch(() => props.docname, () => { cleanup(); init() })
 
 onMounted(() => { init() })
-onBeforeUnmount(() => { stopPolling() })
+onBeforeUnmount(() => { cleanup() })
 </script>

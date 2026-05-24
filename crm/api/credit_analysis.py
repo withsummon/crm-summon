@@ -571,7 +571,9 @@ def _spread_rows(application):
 				}
 				for row in financials
 			]
-	return _default_spreading(application)
+	if str(application.name).startswith("DEMO"):
+		return _default_spreading(application)
+	return []
 
 
 def _metric_key(value):
@@ -930,13 +932,19 @@ def _peers(application, ratios):
 	for row in ratios:
 		if row["key"] in {"current_ratio", "debt_to_equity", "net_margin", "dscr"} and row["year"] >= latest.get(row["key"], {}).get("year", 0):
 			latest[row["key"]] = row
+
+	# Fallback values from form fields if calculated ratios are empty
+	rev = flt(application.get("revenue"))
+	np = flt(application.get("net_profit"))
+	fallback_margin = np / rev if rev > 0 else 0.0
+
 	peers = [
 		{
 			"name": application.get("borrower_name") or application.name,
 			"type": "Borrower",
-			"current_ratio": (latest.get("current_ratio") or {}).get("value", 0),
-			"debt_to_equity": (latest.get("debt_to_equity") or {}).get("value", 0),
-			"net_margin": (latest.get("net_margin") or {}).get("value", 0.0),
+			"current_ratio": (latest.get("current_ratio") or {}).get("value") or flt(application.get("current_ratio")),
+			"debt_to_equity": (latest.get("debt_to_equity") or {}).get("value") or flt(application.get("der")),
+			"net_margin": (latest.get("net_margin") or {}).get("value") or fallback_margin,
 		},
 		{"name": "Peer Alpha", "type": "Peer", "current_ratio": 1.42, "debt_to_equity": 1.65, "net_margin": 0.09},
 		{"name": "Peer Beta", "type": "Peer", "current_ratio": 1.25, "debt_to_equity": 2.2, "net_margin": 0.07},
@@ -1011,11 +1019,17 @@ def _workspace_payload(application_id, persist_artifacts=False):
 	application = _get_application(application_id)
 	rows = _spread_rows(application)
 	ratios = _calculate_ratios_from_rows(rows, application.get("kbli"))
-	dscr = _calculate_dscr_from_rows(rows, application.get("requested_amount"))
+	
+	# Dynamically calculate and pass tenor and annual interest rate from application document
+	tenor_months = flt(application.get("tenor_months")) or 60
+	tenor_years = max(1, round(tenor_months / 12))
+	annual_rate = flt(application.get("interest_rate")) / 100 if flt(application.get("interest_rate")) else 0.11
+
+	dscr = _calculate_dscr_from_rows(rows, application.get("requested_amount"), tenor_years, annual_rate)
 	trend = _trend_projection(rows, "revenue")
 	scenarios = _scenario(rows)
 	sensitivity = _sensitivity(rows)
-	cashflow = _cashflow_projection(rows, application.get("requested_amount"))
+	cashflow = _cashflow_projection(rows, application.get("requested_amount"), tenor_years, {"rate": annual_rate})
 	bureau = _latest_bureau(application.get("borrower")) or _artifact(application.name, "bureau_report", {})
 	collateral = _collaterals(application.get("borrower"), application.get("requested_amount"))
 	risk_grade = _risk_grade(application, ratios, dscr, bureau, collateral)

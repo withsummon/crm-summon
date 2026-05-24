@@ -65,7 +65,7 @@
                 <h1 class="text-xl font-bold text-slate-800 truncate">{{ selectedApp.borrower_name }}</h1>
                 <Badge :label="selectedApp.borrower_type || __('Credit')" theme="teal" variant="subtle" />
                 <Badge :label="selectedApp.status" :theme="statusTheme(selectedApp.status)" variant="solid" />
-                <Badge :label="riskGrade.grade ? `${riskGrade.grade} / ${riskGrade.score}` : __('Unscored')" theme="blue" variant="subtle" />
+                <Badge :label="riskGrade.grade ? `${riskGrade.grade} / ${riskGrade.score}` : (selectedApp.risk_grade ? selectedApp.risk_grade : __('Unscored'))" theme="blue" variant="subtle" />
               </div>
               <div class="text-sm text-slate-500 flex flex-wrap items-center gap-4 mt-1.5">
                 <span class="flex items-center gap-1">

@@ -122,6 +122,15 @@ class TestCreditAnalysisUAT(TestCase):
 			"kbli": "6419",
 			"status": "Draft",
 			"purpose": "New credit analysis creation flow.",
+			"financial_year": 2025,
+			"revenue": 5000000000,
+			"ebitda": 1000000000,
+			"net_profit": 500000000,
+			"total_assets": 12000000000,
+			"total_liabilities": 8000000000,
+			"equity": 4000000000,
+			"current_ratio": 1.5,
+			"der": 2.0,
 		}
 
 		application = create_credit_application(payload)
@@ -131,7 +140,7 @@ class TestCreditAnalysisUAT(TestCase):
 
 		self.assertEqual(application.borrower_type, "Company")
 		self.assertEqual(application.facility_type, "Working Capital")
-		self.assertGreaterEqual(len(workspace["spreading"]), 100)
+		self.assertGreaterEqual(len(workspace["spreading"]), 20)
 		self.assertGreaterEqual(len(workspace["proof"]), 20)
 
 	def test_ai_memo_recommendation_approval_export_and_demo_proof(self):
