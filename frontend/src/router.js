@@ -187,13 +187,7 @@ const routes = [
       {
         path: 'portfolio-monitoring',
         name: 'Portfolio Monitoring',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Portfolio Monitoring',
-          subtitle: 'Insights',
-          icon: 'pie-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/PortfolioMonitoring.vue'),
       },
       {
         path: 'product-configuration',
