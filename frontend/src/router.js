@@ -200,6 +200,11 @@ const routes = [
           sourcePath: '/app/item',
         },
       },
+      {
+        path: 'covenant-monitoring',
+        name: 'Covenant Monitoring',
+        component: () => import('@/pages/CovenantMonitoring.vue'),
+      },
     ],
   },
   // ─── Operations ──────────────────────────────────────────

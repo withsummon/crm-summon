@@ -1,0 +1,2195 @@
+<template>
+  <div class="flex flex-1 flex-col min-h-0 bg-gray-50 font-sans select-none">
+    <LayoutHeader>
+      <template #left-header>
+        <div class="flex min-w-0 items-center gap-3">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700"
+          >
+            <FeatherIcon name="shield" class="h-4 w-4 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
+              {{ __("Covenant Monitoring") }}
+            </h1>
+          </div>
+        </div>
+      </template>
+      <template #right-header>
+        <div class="flex items-center gap-2">
+          <button
+            @click="runAllTests"
+            class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white"
+          >
+            <FeatherIcon
+              :name="testing ? 'loader' : 'cpu'"
+              class="h-3.5 w-3.5"
+              :class="testing && 'animate-spin'"
+            />
+            {{ __("Run Tests") }}
+          </button>
+          <button
+            @click="
+              activeNav = 'library';
+              showAddCovenant = true;
+            "
+            class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+          >
+            <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+            {{ __("Add Covenant") }}
+          </button>
+        </div>
+      </template>
+    </LayoutHeader>
+
+    <div class="flex flex-1 min-h-0 overflow-hidden">
+      <!-- ── Left Sidebar ── -->
+      <div class="w-52 bg-white border-r border-gray-200 flex flex-col shrink-0">
+        <div class="p-3 space-y-0.5">
+          <button
+            v-for="nav in navItems"
+            :key="nav.id"
+            @click="activeNav = nav.id"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all text-left"
+            :class="
+              activeNav === nav.id
+                ? 'bg-teal-50 text-teal-700 font-semibold'
+                : 'text-gray-600 hover:bg-gray-50'
+            "
+          >
+            <FeatherIcon :name="nav.icon" class="h-3.5 w-3.5 shrink-0" />
+            <span class="truncate">{{ nav.label }}</span>
+            <span
+              v-if="nav.badge"
+              class="ml-auto text-[9px] rounded-full px-1.5 font-bold"
+              :class="nav.badgeColor || 'bg-teal-100 text-teal-700'"
+              >{{ nav.badge }}</span
+            >
+          </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="mt-2 border-t border-gray-100 p-3 space-y-2">
+          <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+            {{ __("Portfolio Health") }}
+          </p>
+          <div
+            v-for="s in quickStats"
+            :key="s.label"
+            class="flex items-center justify-between"
+          >
+            <div class="flex items-center gap-1.5">
+              <div class="w-2 h-2 rounded-full" :class="s.dot" />
+              <span class="text-[11px] text-gray-600">{{ s.label }}</span>
+            </div>
+            <span class="text-[11px] font-bold" :class="s.textColor">{{ s.value }}</span>
+          </div>
+          <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden flex mt-1">
+            <div class="h-full bg-green-500 transition-all" :style="{ width: '62%' }" />
+            <div class="h-full bg-amber-400 transition-all" :style="{ width: '24%' }" />
+            <div class="h-full bg-red-500 transition-all" :style="{ width: '14%' }" />
+          </div>
+        </div>
+
+        <div class="mt-auto p-3 border-t border-gray-100">
+          <p class="text-[10px] text-gray-400">
+            {{ __("Last tested") }}:
+            <span class="font-semibold text-gray-600">24 May 08:00</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- ── Main Content ── -->
+      <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <!-- DASHBOARD -->
+        <div
+          v-if="activeNav === 'dashboard'"
+          class="flex-1 overflow-y-auto p-5 space-y-5"
+        >
+          <!-- Stat cards -->
+          <div class="grid grid-cols-4 gap-4">
+            <div
+              v-for="stat in dashStats"
+              :key="stat.label"
+              class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-all"
+              @click="activeNav = stat.nav"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div
+                  class="w-9 h-9 rounded-xl flex items-center justify-center"
+                  :class="stat.iconBg"
+                >
+                  <FeatherIcon
+                    :name="stat.icon"
+                    class="h-4 w-4"
+                    :class="stat.iconColor"
+                  />
+                </div>
+                <span
+                  class="text-[10px] font-bold rounded-full px-2 py-0.5"
+                  :class="stat.badgeClass"
+                  >{{ stat.badge }}</span
+                >
+              </div>
+              <p class="text-2xl font-black text-gray-900 mb-0.5">{{ stat.value }}</p>
+              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                {{ stat.label }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Charts row -->
+          <div class="grid grid-cols-3 gap-4">
+            <!-- Breach Trend -->
+            <div
+              class="col-span-2 bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="text-sm font-bold text-gray-800">
+                    {{ __("Breach Trend") }}
+                  </h3>
+                  <p class="text-[10px] text-gray-400">
+                    {{ __("Active breaches by month") }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-3 text-[10px]">
+                  <span class="flex items-center gap-1"
+                    ><span
+                      class="w-2 h-2 rounded-full bg-red-500 inline-block"
+                    />Breach</span
+                  >
+                  <span class="flex items-center gap-1"
+                    ><span
+                      class="w-2 h-2 rounded-full bg-amber-400 inline-block"
+                    />Watch</span
+                  >
+                </div>
+              </div>
+              <svg class="w-full" viewBox="0 0 400 100" preserveAspectRatio="none">
+                <line
+                  v-for="i in 4"
+                  :key="i"
+                  x1="0"
+                  :y1="(100 / 4) * i"
+                  x2="400"
+                  :y2="(100 / 4) * i"
+                  stroke="#f3f4f6"
+                  stroke-width="1"
+                />
+                <!-- Watch bars -->
+                <rect
+                  v-for="(v, i) in watchTrend"
+                  :key="'w' + i"
+                  :x="(400 / watchTrend.length) * i + 4"
+                  :y="100 - (v / 16) * 100"
+                  :width="400 / watchTrend.length - 10"
+                  :height="(v / 16) * 100"
+                  fill="#fbbf24"
+                  rx="2"
+                />
+                <!-- Breach bars -->
+                <rect
+                  v-for="(v, i) in breachTrend"
+                  :key="'b' + i"
+                  :x="(400 / breachTrend.length) * i + 4"
+                  :y="100 - (v / 16) * 100"
+                  :width="400 / breachTrend.length - 10"
+                  :height="(v / 16) * 100"
+                  fill="#ef4444"
+                  rx="2"
+                  opacity="0.8"
+                />
+              </svg>
+              <div class="flex justify-around mt-1">
+                <span
+                  v-for="m in trendMonths"
+                  :key="m"
+                  class="text-[9px] text-gray-400 flex-1 text-center"
+                  >{{ m }}</span
+                >
+              </div>
+            </div>
+
+            <!-- Status Donut -->
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-800 mb-0.5">
+                {{ __("Covenant Status") }}
+              </h3>
+              <p class="text-[10px] text-gray-400 mb-3">
+                {{ __("All active covenants") }}
+              </p>
+              <div class="flex flex-col items-center">
+                <svg viewBox="0 0 120 120" class="w-28 h-28">
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="42"
+                    fill="none"
+                    stroke="#f3f4f6"
+                    stroke-width="18"
+                  />
+                  <circle
+                    v-for="seg in statusDonut"
+                    :key="seg.label"
+                    cx="60"
+                    cy="60"
+                    r="42"
+                    fill="none"
+                    :stroke="seg.color"
+                    stroke-width="18"
+                    :stroke-dasharray="`${seg.dash} ${donutC}`"
+                    :stroke-dashoffset="seg.offset"
+                  />
+                  <text
+                    x="60"
+                    y="56"
+                    text-anchor="middle"
+                    fill="#1f2937"
+                    font-size="11"
+                    font-weight="700"
+                  >
+                    {{ totalCovenants }}
+                  </text>
+                  <text x="60" y="68" text-anchor="middle" fill="#9ca3af" font-size="7">
+                    Covenants
+                  </text>
+                </svg>
+                <div class="w-full space-y-1 mt-1">
+                  <div
+                    v-for="s in statusBreakdown"
+                    :key="s.label"
+                    class="flex items-center justify-between"
+                  >
+                    <div class="flex items-center gap-1.5">
+                      <div
+                        class="w-2 h-2 rounded-full"
+                        :style="{ background: s.color }"
+                      />
+                      <span class="text-[10px] text-gray-600">{{ s.label }}</span>
+                    </div>
+                    <span class="text-[10px] font-bold" :class="s.textClass">{{
+                      s.count
+                    }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom row -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Active Breaches -->
+            <div
+              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <div
+                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
+              >
+                <h3 class="text-sm font-bold text-gray-800">
+                  {{ __("Active Breaches") }}
+                </h3>
+                <button
+                  @click="activeNav = 'breach'"
+                  class="text-[10px] text-teal-600 hover:underline"
+                >
+                  {{ __("View all") }}
+                </button>
+              </div>
+              <div class="divide-y divide-gray-50">
+                <div
+                  v-for="b in activeBreaches.slice(0, 4)"
+                  :key="b.id"
+                  class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                  @click="activeNav = 'breach'"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold text-gray-800 truncate">
+                        {{ b.covenant }}
+                      </p>
+                      <p class="text-[10px] text-gray-400 truncate">{{ b.facility }}</p>
+                    </div>
+                    <span
+                      class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold"
+                      :class="
+                        b.severity === 'Critical'
+                          ? 'bg-red-100 text-red-700'
+                          : b.severity === 'High'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-amber-100 text-amber-700'
+                      "
+                    >
+                      {{ b.severity }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-3 mt-1.5 text-[10px] text-gray-500">
+                    <span
+                      >Actual:
+                      <span class="font-semibold text-red-600">{{ b.actual }}</span></span
+                    >
+                    <span
+                      >Threshold:
+                      <span class="font-semibold">{{ b.threshold }}</span></span
+                    >
+                    <span class="ml-auto text-[9px] text-gray-400">{{ b.since }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upcoming Tests -->
+            <div
+              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <div
+                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
+              >
+                <h3 class="text-sm font-bold text-gray-800">
+                  {{ __("Upcoming Tests") }}
+                </h3>
+                <button
+                  @click="activeNav = 'calendar'"
+                  class="text-[10px] text-teal-600 hover:underline"
+                >
+                  {{ __("Calendar") }}
+                </button>
+              </div>
+              <div class="divide-y divide-gray-50">
+                <div
+                  v-for="t in upcomingTests.slice(0, 5)"
+                  :key="t.id"
+                  class="px-4 py-2.5 flex items-center gap-3"
+                >
+                  <div
+                    class="w-9 h-9 rounded-lg flex flex-col items-center justify-center shrink-0"
+                    :class="
+                      t.urgent
+                        ? 'bg-red-50 border border-red-200'
+                        : 'bg-gray-50 border border-gray-200'
+                    "
+                  >
+                    <p
+                      class="text-[9px] font-semibold"
+                      :class="t.urgent ? 'text-red-500' : 'text-gray-500'"
+                    >
+                      {{ t.month }}
+                    </p>
+                    <p
+                      class="text-sm font-black"
+                      :class="t.urgent ? 'text-red-600' : 'text-gray-700'"
+                    >
+                      {{ t.day }}
+                    </p>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[11px] font-semibold text-gray-800 truncate">
+                      {{ t.covenant }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 truncate">{{ t.facility }}</p>
+                  </div>
+                  <span
+                    class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0"
+                    :class="
+                      t.freq === 'Monthly'
+                        ? 'bg-teal-100 text-teal-700'
+                        : t.freq === 'Quarterly'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                    "
+                  >
+                    {{ t.freq }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Risk Predictor -->
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <div
+                class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center"
+              >
+                <FeatherIcon name="zap" class="h-3.5 w-3.5 text-purple-600" />
+              </div>
+              <h3 class="text-sm font-bold text-gray-800">
+                {{ __("AI Covenant Risk Predictor") }}
+              </h3>
+              <span
+                class="text-[9px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 font-bold"
+                >BETA</span
+              >
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div
+                v-for="pred in aiPredictions"
+                :key="pred.id"
+                class="rounded-xl border p-3 cursor-pointer hover:shadow-sm transition-all"
+                :class="
+                  pred.risk === 'High'
+                    ? 'border-red-200 bg-red-50'
+                    : pred.risk === 'Medium'
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-green-200 bg-green-50'
+                "
+              >
+                <div class="flex items-start justify-between mb-2">
+                  <p class="text-[11px] font-semibold text-gray-800">
+                    {{ pred.facility }}
+                  </p>
+                  <span
+                    class="text-[9px] font-bold rounded-full px-1.5 py-0.5"
+                    :class="
+                      pred.risk === 'High'
+                        ? 'bg-red-100 text-red-700'
+                        : pred.risk === 'Medium'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-green-100 text-green-700'
+                    "
+                  >
+                    {{ pred.risk }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-600 mb-2">
+                  {{ pred.covenant }} — {{ pred.msg }}
+                </p>
+                <div class="flex items-center gap-1.5">
+                  <div class="flex-1 h-1.5 bg-white rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      :class="
+                        pred.risk === 'High'
+                          ? 'bg-red-400'
+                          : pred.risk === 'Medium'
+                          ? 'bg-amber-400'
+                          : 'bg-green-400'
+                      "
+                      :style="{ width: pred.confidence + '%' }"
+                    />
+                  </div>
+                  <span class="text-[9px] font-bold text-gray-500"
+                    >{{ pred.confidence }}%</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COVENANT LIBRARY -->
+        <div
+          v-else-if="activeNav === 'library'"
+          class="flex-1 flex flex-col overflow-hidden"
+        >
+          <div
+            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
+          >
+            <div class="relative flex-1 max-w-sm">
+              <FeatherIcon
+                name="search"
+                class="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400"
+              />
+              <input
+                v-model="libSearch"
+                type="text"
+                :placeholder="__('Search covenants...')"
+                class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
+              />
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              <button
+                v-for="t in ['All', 'Financial', 'Non-Financial', 'Reporting']"
+                :key="t"
+                @click="libFilter = t"
+                class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+                :class="
+                  libFilter === t ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
+                "
+              >
+                {{ t }}
+              </button>
+            </div>
+            <button
+              @click="showToast('Covenant added to library')"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+            >
+              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Covenant") }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div
+              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Covenant Name") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Type") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Metric") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Frequency") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Facilities") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Tags") }}
+                    </th>
+                    <th class="px-4 py-3 text-right font-semibold text-gray-500">
+                      {{ __("Actions") }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="cov in filteredLibrary"
+                    :key="cov.id"
+                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    @click="selectedCovenant = cov"
+                  >
+                    <td class="px-5 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div
+                          class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                          :class="
+                            cov.type === 'Financial'
+                              ? 'bg-teal-100'
+                              : cov.type === 'Non-Financial'
+                              ? 'bg-purple-100'
+                              : 'bg-blue-100'
+                          "
+                        >
+                          <FeatherIcon
+                            :name="cov.icon"
+                            class="h-3.5 w-3.5"
+                            :class="
+                              cov.type === 'Financial'
+                                ? 'text-teal-600'
+                                : cov.type === 'Non-Financial'
+                                ? 'text-purple-600'
+                                : 'text-blue-600'
+                            "
+                          />
+                        </div>
+                        <div>
+                          <p class="font-semibold text-gray-800">{{ cov.name }}</p>
+                          <p class="text-[10px] text-gray-400">
+                            {{ cov.template ? "Standard" : "Custom" }}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                        :class="
+                          cov.type === 'Financial'
+                            ? 'bg-teal-100 text-teal-700'
+                            : cov.type === 'Non-Financial'
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-blue-100 text-blue-700'
+                        "
+                      >
+                        {{ cov.type }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-gray-700 text-[11px]">
+                      {{ cov.metric }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">{{ cov.frequency }}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-700">
+                      {{ cov.facilities }}
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex flex-wrap gap-1">
+                        <span
+                          v-for="tag in cov.tags"
+                          :key="tag"
+                          class="text-[9px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5"
+                          >{{ tag }}</span
+                        >
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center justify-end gap-1">
+                        <button
+                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
+                        >
+                          <FeatherIcon name="edit-2" class="h-3 w-3" />
+                        </button>
+                        <button class="p-1.5 rounded hover:bg-gray-100 text-gray-400">
+                          <FeatherIcon name="copy" class="h-3 w-3" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEST ENGINE -->
+        <div
+          v-else-if="activeNav === 'tests'"
+          class="flex-1 flex flex-col overflow-hidden"
+        >
+          <div
+            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
+          >
+            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              <button
+                v-for="p in ['Latest', 'This Month', 'Last Quarter']"
+                :key="p"
+                @click="testPeriod = p"
+                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                :class="
+                  testPeriod === p ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
+                "
+              >
+                {{ p }}
+              </button>
+            </div>
+            <span class="text-xs text-gray-400">{{ testResults.length }} tests</span>
+            <button
+              @click="runAllTests"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+            >
+              <FeatherIcon
+                :name="testing ? 'loader' : 'play'"
+                class="h-3.5 w-3.5"
+                :class="testing && 'animate-spin'"
+              />
+              {{ testing ? __("Running...") : __("Run All Tests") }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div
+              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Covenant") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Facility") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Test Date") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Actual") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Threshold") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Headroom") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Status") }}
+                    </th>
+                    <th class="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in testResults"
+                    :key="r.id"
+                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  >
+                    <td class="px-5 py-3 font-semibold text-gray-800">
+                      {{ r.covenant }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">{{ r.facility }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ r.testDate }}</td>
+                    <td
+                      class="px-4 py-3 font-black"
+                      :class="
+                        r.status === 'Breach'
+                          ? 'text-red-600'
+                          : r.status === 'Watch'
+                          ? 'text-amber-600'
+                          : 'text-gray-900'
+                      "
+                    >
+                      {{ r.actual }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-600">{{ r.threshold }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            class="h-full rounded-full"
+                            :class="
+                              r.headroomPct < 10
+                                ? 'bg-red-400'
+                                : r.headroomPct < 25
+                                ? 'bg-amber-400'
+                                : 'bg-green-500'
+                            "
+                            :style="{ width: Math.min(r.headroomPct, 100) + '%' }"
+                          />
+                        </div>
+                        <span
+                          class="text-[10px] font-semibold"
+                          :class="
+                            r.headroomPct < 10
+                              ? 'text-red-500'
+                              : r.headroomPct < 25
+                              ? 'text-amber-600'
+                              : 'text-green-600'
+                          "
+                          >{{ r.headroom }}</span
+                        >
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-[9px] font-bold"
+                        :class="
+                          r.status === 'Pass'
+                            ? 'bg-green-100 text-green-700'
+                            : r.status === 'Watch'
+                            ? 'bg-amber-100 text-amber-700'
+                            : r.status === 'Breach'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-gray-100 text-gray-600'
+                        "
+                      >
+                        {{ r.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <button
+                        v-if="r.status === 'Breach'"
+                        @click="
+                          activeNav = 'cure';
+                          showToast('Cure task created for ' + r.covenant);
+                        "
+                        class="text-[10px] bg-red-600 text-white rounded-lg px-2.5 py-1 font-semibold hover:bg-red-700 transition-colors"
+                      >
+                        {{ __("Cure") }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- COVENANT CALENDAR -->
+        <div v-else-if="activeNav === 'calendar'" class="flex-1 overflow-y-auto p-5">
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-gray-800">{{ __("June 2026") }}</h3>
+              <div class="flex items-center gap-2">
+                <button class="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                  <FeatherIcon name="chevron-left" class="h-4 w-4" />
+                </button>
+                <button class="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                  <FeatherIcon name="chevron-right" class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <!-- Calendar grid -->
+            <div class="grid grid-cols-7 gap-1 mb-2">
+              <div
+                v-for="d in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']"
+                :key="d"
+                class="text-center text-[10px] font-semibold text-gray-400 py-1"
+              >
+                {{ d }}
+              </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1">
+              <div
+                v-for="cell in calendarCells"
+                :key="cell.key"
+                class="min-h-[72px] rounded-lg border p-1.5 transition-colors"
+                :class="
+                  cell.day
+                    ? cell.today
+                      ? 'border-teal-400 bg-teal-50'
+                      : 'border-gray-100 hover:bg-gray-50'
+                    : 'border-transparent'
+                "
+              >
+                <p
+                  v-if="cell.day"
+                  class="text-[11px] font-semibold mb-1"
+                  :class="cell.today ? 'text-teal-700' : 'text-gray-700'"
+                >
+                  {{ cell.day }}
+                </p>
+                <div class="space-y-0.5">
+                  <div
+                    v-for="ev in cell.events"
+                    :key="ev.id"
+                    class="text-[9px] rounded px-1 py-0.5 truncate font-semibold cursor-pointer"
+                    :class="
+                      ev.status === 'Breach'
+                        ? 'bg-red-100 text-red-700'
+                        : ev.status === 'Watch'
+                        ? 'bg-amber-100 text-amber-700'
+                        : ev.status === 'Due'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
+                    "
+                    @click="showToast(ev.name + ' — ' + ev.status)"
+                  >
+                    {{ ev.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Legend -->
+            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+              <div
+                v-for="l in calLegend"
+                :key="l.label"
+                class="flex items-center gap-1.5"
+              >
+                <div class="w-3 h-3 rounded" :class="l.color" />
+                <span class="text-[10px] text-gray-500">{{ l.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BREACH & ALERTS -->
+        <div
+          v-else-if="activeNav === 'breach'"
+          class="flex-1 flex flex-col overflow-hidden"
+        >
+          <div
+            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
+          >
+            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              <button
+                v-for="s in ['All', 'Critical', 'High', 'Medium']"
+                :key="s"
+                @click="breachFilter = s"
+                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                :class="
+                  breachFilter === s
+                    ? 'bg-white text-teal-700 shadow-sm'
+                    : 'text-gray-500'
+                "
+              >
+                {{ s }}
+              </button>
+            </div>
+            <span class="text-xs text-red-500 font-semibold"
+              >{{ activeBreaches.length }} active breaches</span
+            >
+          </div>
+          <div class="flex-1 overflow-y-auto p-5 space-y-3">
+            <div
+              v-for="b in filteredBreaches"
+              :key="b.id"
+              class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-all"
+              :class="
+                b.severity === 'Critical'
+                  ? 'border-red-300'
+                  : b.severity === 'High'
+                  ? 'border-orange-200'
+                  : 'border-amber-200'
+              "
+            >
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span
+                      class="rounded-full px-2 py-0.5 text-[9px] font-bold"
+                      :class="
+                        b.severity === 'Critical'
+                          ? 'bg-red-100 text-red-700'
+                          : b.severity === 'High'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-amber-100 text-amber-700'
+                      "
+                    >
+                      {{ b.severity }}
+                    </span>
+                    <span class="text-[10px] text-gray-400">Since {{ b.since }}</span>
+                  </div>
+                  <h4 class="text-sm font-bold text-gray-800">{{ b.covenant }}</h4>
+                  <p class="text-xs text-gray-500">{{ b.facility }}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="text-[10px] text-gray-400">Actual vs Threshold</p>
+                  <p class="text-sm font-black text-red-600">
+                    {{ b.actual }} <span class="text-gray-300 font-normal">/</span>
+                    <span class="text-gray-700 font-semibold">{{ b.threshold }}</span>
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="
+                    activeNav = 'cure';
+                    showToast('Cure task created');
+                  "
+                  class="flex items-center gap-1.5 rounded-lg bg-teal-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-teal-700 transition-colors"
+                >
+                  <FeatherIcon name="check-square" class="h-3 w-3" />{{
+                    __("Create Cure Task")
+                  }}
+                </button>
+                <button
+                  @click="
+                    activeNav = 'waiver';
+                    showToast('Waiver request initiated');
+                  "
+                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  <FeatherIcon name="file-minus" class="h-3 w-3" />{{
+                    __("Request Waiver")
+                  }}
+                </button>
+                <button
+                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  <FeatherIcon name="bell" class="h-3 w-3" />{{ __("Notify") }}
+                </button>
+                <span class="ml-auto text-[10px] text-gray-400">RM: {{ b.rm }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CURE WORKFLOW -->
+        <div
+          v-else-if="activeNav === 'cure'"
+          class="flex-1 flex flex-col overflow-hidden"
+        >
+          <div
+            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
+          >
+            <h3 class="text-sm font-semibold text-gray-800">{{ __("Cure Workflow") }}</h3>
+            <span class="text-[11px] text-gray-400"
+              >{{ cureTasks.length }} {{ __("active tasks") }}</span
+            >
+            <button
+              @click="showToast('Cure task created')"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+            >
+              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Task") }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div class="grid grid-cols-3 gap-4">
+              <div v-for="col in cureColumns" :key="col.id" class="space-y-3">
+                <div class="flex items-center gap-2 px-1">
+                  <div class="w-2 h-2 rounded-full" :class="col.dot" />
+                  <p class="text-xs font-bold text-gray-700">{{ col.label }}</p>
+                  <span class="ml-auto text-[10px] text-gray-400">{{
+                    cureTasks.filter((t) => t.status === col.id).length
+                  }}</span>
+                </div>
+                <div class="space-y-2">
+                  <div
+                    v-for="task in cureTasks.filter((t) => t.status === col.id)"
+                    :key="task.id"
+                    class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                      <p class="text-xs font-semibold text-gray-800 leading-tight">
+                        {{ task.title }}
+                      </p>
+                      <span
+                        class="shrink-0 text-[9px] rounded-full px-1.5 py-0.5 font-bold"
+                        :class="
+                          task.priority === 'Critical'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700'
+                        "
+                      >
+                        {{ task.priority }}
+                      </span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mb-2">{{ task.facility }}</p>
+                    <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                      <FeatherIcon name="calendar" class="h-3 w-3" />
+                      <span :class="task.overdue ? 'text-red-500 font-semibold' : ''">{{
+                        task.deadline
+                      }}</span>
+                      <span class="ml-auto">{{ task.owner }}</span>
+                    </div>
+                    <div v-if="task.progress !== undefined" class="mt-2">
+                      <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          class="h-full bg-teal-500 rounded-full"
+                          :style="{ width: task.progress + '%' }"
+                        />
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1 mt-2">
+                      <button
+                        v-if="task.status !== 'Done'"
+                        @click="advanceCure(task)"
+                        class="text-[10px] text-teal-600 hover:underline font-semibold"
+                      >
+                        {{ task.status === "Open" ? "Start →" : "Mark Done →" }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WAIVER MANAGEMENT -->
+        <div
+          v-else-if="activeNav === 'waiver'"
+          class="flex-1 flex flex-col overflow-hidden"
+        >
+          <div
+            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
+          >
+            <h3 class="text-sm font-semibold text-gray-800">
+              {{ __("Waiver Management") }}
+            </h3>
+            <span class="text-[11px] text-gray-400"
+              >{{ waivers.length }} {{ __("waivers") }}</span
+            >
+            <button
+              @click="showToast('Waiver request submitted')"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+            >
+              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("New Waiver") }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div
+              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+            >
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Waiver") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Facility") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Requested") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Expiry") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Approver") }}
+                    </th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
+                      {{ __("Status") }}
+                    </th>
+                    <th class="px-4 py-3 text-right font-semibold text-gray-500">
+                      {{ __("Actions") }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="w in waivers"
+                    :key="w.id"
+                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  >
+                    <td class="px-5 py-3">
+                      <p class="font-semibold text-gray-800">{{ w.covenant }}</p>
+                      <p class="text-[10px] text-gray-400">{{ w.reason }}</p>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">{{ w.facility }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ w.requested }}</td>
+                    <td
+                      class="px-4 py-3"
+                      :class="
+                        w.expiring ? 'text-amber-600 font-semibold' : 'text-gray-500'
+                      "
+                    >
+                      {{ w.expiry }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">{{ w.approver }}</td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-[9px] font-bold"
+                        :class="
+                          w.status === 'Approved'
+                            ? 'bg-green-100 text-green-700'
+                            : w.status === 'Pending'
+                            ? 'bg-amber-100 text-amber-700'
+                            : w.status === 'Expired'
+                            ? 'bg-gray-100 text-gray-500'
+                            : 'bg-red-100 text-red-700'
+                        "
+                      >
+                        {{ w.status }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button
+                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
+                        >
+                          <FeatherIcon name="file-text" class="h-3 w-3" />
+                        </button>
+                        <button
+                          v-if="w.status === 'Pending'"
+                          @click="approveWaiver(w)"
+                          class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[10px] font-semibold hover:bg-teal-700 transition-colors"
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- COVENANT REPORTS -->
+        <div v-else-if="activeNav === 'reports'" class="flex-1 overflow-y-auto p-5">
+          <div class="grid grid-cols-2 gap-4">
+            <div
+              v-for="rep in covReports"
+              :key="rep.id"
+              class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-all cursor-pointer group"
+              @click="showToast('Opening ' + rep.name)"
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div
+                  class="w-9 h-9 rounded-xl flex items-center justify-center"
+                  :class="rep.colorBg"
+                >
+                  <FeatherIcon :name="rep.icon" class="h-4 w-4" :class="rep.colorText" />
+                </div>
+                <span
+                  class="text-[9px] rounded-full px-2 py-0.5 font-bold"
+                  :class="rep.statusClass"
+                  >{{ rep.status }}</span
+                >
+              </div>
+              <h3 class="text-sm font-bold text-gray-800 mb-1">{{ rep.name }}</h3>
+              <p class="text-xs text-gray-400 mb-3">{{ rep.desc }}</p>
+              <div
+                class="flex items-center justify-between pt-2 border-t border-gray-100"
+              >
+                <span class="text-[10px] text-gray-400">{{ rep.period }}</span>
+                <div
+                  class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <button
+                    @click.stop="showToast('Downloading ' + rep.name)"
+                    class="text-[10px] text-teal-600 font-semibold hover:underline"
+                  >
+                    PDF
+                  </button>
+                  <button
+                    @click.stop="showToast('Exporting ' + rep.name)"
+                    class="text-[10px] text-blue-600 font-semibold hover:underline"
+                  >
+                    Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SENSITIVITY ANALYSIS -->
+        <div
+          v-else-if="activeNav === 'sensitivity'"
+          class="flex-1 overflow-y-auto p-5 space-y-4"
+        >
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <h3 class="text-sm font-bold text-gray-800 mb-1">
+              {{ __("Breach Headroom Heatmap") }}
+            </h3>
+            <p class="text-[10px] text-gray-400 mb-4">
+              {{
+                __(
+                  "Headroom to threshold breach (%) — Red = at risk, Green = comfortable"
+                )
+              }}
+            </p>
+            <div class="overflow-x-auto">
+              <table class="text-xs w-full">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th
+                      class="px-3 py-2 text-left font-semibold text-gray-500 min-w-[160px]"
+                    >
+                      {{ __("Facility") }}
+                    </th>
+                    <th
+                      v-for="cov in heatmapCovs"
+                      :key="cov"
+                      class="px-3 py-2 text-center font-semibold text-gray-500 min-w-[90px]"
+                    >
+                      {{ cov }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="row in heatmapData"
+                    :key="row.facility"
+                    class="border-b border-gray-50"
+                  >
+                    <td class="px-3 py-2.5 font-semibold text-gray-800">
+                      {{ row.facility }}
+                    </td>
+                    <td
+                      v-for="cov in heatmapCovs"
+                      :key="cov"
+                      class="px-3 py-2.5 text-center"
+                    >
+                      <div
+                        class="inline-flex items-center justify-center w-14 h-8 rounded-lg text-[10px] font-bold"
+                        :class="heatmapColor(row[cov])"
+                      >
+                        {{ row[cov] !== null ? row[cov] + "%" : "-" }}
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+              <span class="text-[10px] font-semibold text-gray-500">{{
+                __("Legend:")
+              }}</span>
+              <div
+                v-for="l in heatLegend"
+                :key="l.label"
+                class="flex items-center gap-1.5"
+              >
+                <div class="w-8 h-4 rounded" :class="l.color" />
+                <span class="text-[10px] text-gray-500">{{ l.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <h3 class="text-sm font-bold text-gray-800 mb-3">
+              {{ __("Scenario Simulation") }}
+            </h3>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="text-[10px] font-semibold text-gray-500 mb-1.5 block">{{
+                  __("Simulate Revenue Drop")
+                }}</label>
+                <input
+                  type="range"
+                  v-model="simRevDrop"
+                  min="0"
+                  max="50"
+                  class="w-full accent-teal-600"
+                />
+                <p class="text-[10px] text-gray-500 mt-1">-{{ simRevDrop }}% revenue</p>
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-gray-500 mb-1.5 block">{{
+                  __("Debt Service Increase")
+                }}</label>
+                <input
+                  type="range"
+                  v-model="simDebtInc"
+                  min="0"
+                  max="50"
+                  class="w-full accent-teal-600"
+                />
+                <p class="text-[10px] text-gray-500 mt-1">
+                  +{{ simDebtInc }}% debt service
+                </p>
+              </div>
+              <div class="flex items-end">
+                <button
+                  @click="runSim"
+                  class="w-full flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+                >
+                  <FeatherIcon name="play" class="h-3.5 w-3.5" />{{ __("Simulate") }}
+                </button>
+              </div>
+            </div>
+            <div
+              v-if="simResult"
+              class="mt-3 p-3 rounded-lg"
+              :class="
+                simResult.breaches > 0
+                  ? 'bg-red-50 border border-red-200'
+                  : 'bg-green-50 border border-green-200'
+              "
+            >
+              <p
+                class="text-xs font-semibold"
+                :class="simResult.breaches > 0 ? 'text-red-700' : 'text-green-700'"
+              >
+                {{
+                  simResult.breaches > 0
+                    ? `⚠ ${simResult.breaches} covenants would breach under this scenario`
+                    : "✓ No additional breaches under this scenario"
+                }}
+              </p>
+              <p class="text-[10px] text-gray-500 mt-0.5">{{ simResult.detail }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <transition name="fade">
+      <div
+        v-if="toast"
+        class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2"
+      >
+        <FeatherIcon name="check-circle" class="h-4 w-4 text-teal-400" />{{ toast }}
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from "vue";
+import { FeatherIcon } from "frappe-ui";
+import LayoutHeader from "@/components/LayoutHeader.vue";
+
+// ── Nav ──
+const activeNav = ref("dashboard");
+const navItems = [
+  { id: "dashboard", label: "Dashboard", icon: "bar-chart-2" },
+  { id: "library", label: "Covenant Library", icon: "book-open" },
+  { id: "tests", label: "Test Engine", icon: "cpu" },
+  { id: "calendar", label: "Covenant Calendar", icon: "calendar" },
+  {
+    id: "breach",
+    label: "Breach & Alerts",
+    icon: "alert-triangle",
+    badge: "3",
+    badgeColor: "bg-red-100 text-red-700",
+  },
+  {
+    id: "cure",
+    label: "Cure Workflow",
+    icon: "check-square",
+    badge: "5",
+    badgeColor: "bg-amber-100 text-amber-700",
+  },
+  { id: "waiver", label: "Waiver Management", icon: "file-minus" },
+  { id: "sensitivity", label: "Sensitivity Analysis", icon: "activity" },
+  { id: "reports", label: "Reports", icon: "bar-chart" },
+];
+
+const quickStats = [
+  { label: "Pass", value: "26", dot: "bg-green-500", textColor: "text-green-600" },
+  { label: "Watch", value: "10", dot: "bg-amber-400", textColor: "text-amber-600" },
+  { label: "Breach", value: "6", dot: "bg-red-500", textColor: "text-red-600" },
+];
+
+// ── Dashboard ──
+const dashStats = [
+  {
+    label: "Total Covenants",
+    value: "42",
+    icon: "shield",
+    iconBg: "bg-teal-100",
+    iconColor: "text-teal-600",
+    badge: "Active",
+    badgeClass: "bg-teal-100 text-teal-700",
+    nav: "library",
+  },
+  {
+    label: "Pass",
+    value: "26",
+    icon: "check-circle",
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    badge: "62%",
+    badgeClass: "bg-green-100 text-green-700",
+    nav: "tests",
+  },
+  {
+    label: "Watch",
+    value: "10",
+    icon: "eye",
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badge: "24%",
+    badgeClass: "bg-amber-100 text-amber-700",
+    nav: "tests",
+  },
+  {
+    label: "Breach",
+    value: "6",
+    icon: "alert-octagon",
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    badge: "Critical",
+    badgeClass: "bg-red-100 text-red-700",
+    nav: "breach",
+  },
+];
+
+const trendMonths = ["Dec", "Jan", "Feb", "Mar", "Apr", "May"];
+const watchTrend = [9, 11, 8, 12, 10, 10];
+const breachTrend = [4, 5, 3, 7, 5, 6];
+
+// ── Donut ──
+const totalCovenants = 42;
+const donutC = 2 * Math.PI * 42;
+const statusBreakdown = [
+  { label: "Pass", count: 26, color: "#10b981", textClass: "text-green-600" },
+  { label: "Watch", count: 10, color: "#fbbf24", textClass: "text-amber-600" },
+  { label: "Breach", count: 6, color: "#ef4444", textClass: "text-red-600" },
+];
+const statusDonut = computed(() => {
+  let accum = donutC / 4;
+  return statusBreakdown.map((s) => {
+    const dash = (s.count / totalCovenants) * donutC;
+    const result = { ...s, dash, offset: accum };
+    accum -= dash;
+    return result;
+  });
+});
+
+// ── Active Breaches ──
+const activeBreaches = ref([
+  {
+    id: 1,
+    covenant: "DSCR Minimum 1.25x",
+    facility: "PT Maju Bersama — Working Capital Rp 5B",
+    actual: "1.08x",
+    threshold: "≥ 1.25x",
+    severity: "Critical",
+    since: "30 Apr 2026",
+    rm: "Reza M.",
+  },
+  {
+    id: 2,
+    covenant: "DER Maximum 3.0x",
+    facility: "CV Teknik Jaya — Investment Loan Rp 2.5B",
+    actual: "3.42x",
+    threshold: "≤ 3.0x",
+    severity: "High",
+    since: "31 Mar 2026",
+    rm: "Sari D.",
+  },
+  {
+    id: 3,
+    covenant: "Current Ratio 1.0x",
+    facility: "PT Maju Bersama — Working Capital Rp 5B",
+    actual: "0.87x",
+    threshold: "≥ 1.0x",
+    severity: "High",
+    since: "30 Apr 2026",
+    rm: "Reza M.",
+  },
+  {
+    id: 4,
+    covenant: "Insurance Renewal",
+    facility: "Budi Santoso — KPR Rp 800M",
+    actual: "Expired",
+    threshold: "Valid",
+    severity: "Medium",
+    since: "15 May 2026",
+    rm: "Ahmad F.",
+  },
+  {
+    id: 5,
+    covenant: "EBITDA Minimum Rp 2B",
+    facility: "CV Teknik Jaya — Investment Loan Rp 2.5B",
+    actual: "Rp 1.4B",
+    threshold: "≥ Rp 2B",
+    severity: "Critical",
+    since: "31 Mar 2026",
+    rm: "Sari D.",
+  },
+  {
+    id: 6,
+    covenant: "Financial Statement Submission",
+    facility: "PT Maju Bersama — Working Capital Rp 5B",
+    actual: "Overdue 15d",
+    threshold: "Quarterly",
+    severity: "Medium",
+    since: "15 May 2026",
+    rm: "Reza M.",
+  },
+]);
+
+const breachFilter = ref("All");
+const filteredBreaches = computed(() => {
+  if (breachFilter.value === "All") return activeBreaches.value;
+  return activeBreaches.value.filter((b) => b.severity === breachFilter.value);
+});
+
+// ── Upcoming Tests ──
+const upcomingTests = [
+  {
+    id: 1,
+    covenant: "DSCR Monthly Test",
+    facility: "PT Maju Bersama",
+    month: "JUN",
+    day: 1,
+    freq: "Monthly",
+    urgent: true,
+  },
+  {
+    id: 2,
+    covenant: "Financial Statement Q2",
+    facility: "CV Teknik Jaya",
+    month: "JUN",
+    day: 15,
+    freq: "Quarterly",
+    urgent: false,
+  },
+  {
+    id: 3,
+    covenant: "DER Quarterly Test",
+    facility: "All Facilities",
+    month: "JUN",
+    day: 30,
+    freq: "Quarterly",
+    urgent: false,
+  },
+  {
+    id: 4,
+    covenant: "Insurance Validity",
+    facility: "Budi Santoso",
+    month: "JUL",
+    day: 1,
+    freq: "Monthly",
+    urgent: false,
+  },
+  {
+    id: 5,
+    covenant: "EBITDA Review",
+    facility: "CV Teknik Jaya",
+    month: "JUL",
+    day: 15,
+    freq: "Monthly",
+    urgent: false,
+  },
+];
+
+// ── AI Predictions ──
+const aiPredictions = [
+  {
+    id: 1,
+    facility: "PT Maju Bersama",
+    covenant: "DSCR",
+    msg: "Likely to remain in breach — revenue recovery slow",
+    risk: "High",
+    confidence: 82,
+  },
+  {
+    id: 2,
+    facility: "CV Teknik Jaya",
+    covenant: "DER",
+    msg: "Improvement trend — potential cure by Aug 2026",
+    risk: "Medium",
+    confidence: 67,
+  },
+  {
+    id: 3,
+    facility: "Budi Santoso",
+    covenant: "LTV",
+    msg: "Property value stable — no breach risk",
+    risk: "Low",
+    confidence: 91,
+  },
+];
+
+// ── Covenant Library ──
+const libSearch = ref("");
+const libFilter = ref("All");
+
+const covenantLibrary = ref([
+  {
+    id: 1,
+    name: "DSCR Minimum 1.25x",
+    type: "Financial",
+    metric: "DSCR ≥ 1.25",
+    frequency: "Monthly",
+    facilities: 8,
+    tags: ["Cash Flow", "Core"],
+    icon: "trending-up",
+    template: true,
+  },
+  {
+    id: 2,
+    name: "DER Maximum 3.0x",
+    type: "Financial",
+    metric: "DER ≤ 3.0",
+    frequency: "Quarterly",
+    facilities: 12,
+    tags: ["Leverage", "Core"],
+    icon: "bar-chart",
+    template: true,
+  },
+  {
+    id: 3,
+    name: "EBITDA Minimum",
+    type: "Financial",
+    metric: "EBITDA ≥ Target",
+    frequency: "Quarterly",
+    facilities: 6,
+    tags: ["Profitability"],
+    icon: "dollar-sign",
+    template: true,
+  },
+  {
+    id: 4,
+    name: "Current Ratio 1.0x",
+    type: "Financial",
+    metric: "CR ≥ 1.0",
+    frequency: "Monthly",
+    facilities: 9,
+    tags: ["Liquidity"],
+    icon: "activity",
+    template: true,
+  },
+  {
+    id: 5,
+    name: "Insurance Renewal",
+    type: "Non-Financial",
+    metric: "Valid Policy",
+    frequency: "Annual",
+    facilities: 15,
+    tags: ["Insurance", "Affirmative"],
+    icon: "shield",
+    template: true,
+  },
+  {
+    id: 6,
+    name: "Financial Statement",
+    type: "Reporting",
+    metric: "On-time Submission",
+    frequency: "Quarterly",
+    facilities: 20,
+    tags: ["Reporting"],
+    icon: "file-text",
+    template: true,
+  },
+  {
+    id: 7,
+    name: "No Additional Debt",
+    type: "Non-Financial",
+    metric: "Negative Covenant",
+    frequency: "Continuous",
+    facilities: 7,
+    tags: ["Restriction", "Negative"],
+    icon: "minus-circle",
+    template: false,
+  },
+  {
+    id: 8,
+    name: "Asset Disposal Restriction",
+    type: "Non-Financial",
+    metric: "Prior Consent",
+    frequency: "Continuous",
+    facilities: 5,
+    tags: ["Asset", "Negative"],
+    icon: "lock",
+    template: false,
+  },
+]);
+
+const filteredLibrary = computed(() => {
+  let list = covenantLibrary.value;
+  if (libFilter.value !== "All") list = list.filter((c) => c.type === libFilter.value);
+  if (libSearch.value) {
+    const q = libSearch.value.toLowerCase();
+    list = list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.tags.some((t) => t.toLowerCase().includes(q))
+    );
+  }
+  return list;
+});
+
+const selectedCovenant = ref(null);
+
+// ── Test Engine ──
+const testPeriod = ref("Latest");
+const testing = ref(false);
+
+const testResults = ref([
+  {
+    id: 1,
+    covenant: "DSCR Minimum 1.25x",
+    facility: "PT Maju Bersama",
+    testDate: "31 May 2026",
+    actual: "1.08x",
+    threshold: "≥ 1.25x",
+    headroom: "-14%",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 2,
+    covenant: "DSCR Minimum 1.25x",
+    facility: "CV Teknik Jaya",
+    testDate: "31 May 2026",
+    actual: "1.48x",
+    threshold: "≥ 1.25x",
+    headroom: "+18%",
+    headroomPct: 18,
+    status: "Pass",
+  },
+  {
+    id: 3,
+    covenant: "DER Maximum 3.0x",
+    facility: "PT Maju Bersama",
+    testDate: "31 May 2026",
+    actual: "2.6x",
+    threshold: "≤ 3.0x",
+    headroom: "+13%",
+    headroomPct: 13,
+    status: "Watch",
+  },
+  {
+    id: 4,
+    covenant: "DER Maximum 3.0x",
+    facility: "CV Teknik Jaya",
+    testDate: "31 May 2026",
+    actual: "3.42x",
+    threshold: "≤ 3.0x",
+    headroom: "-14%",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 5,
+    covenant: "EBITDA Minimum Rp 2B",
+    facility: "CV Teknik Jaya",
+    testDate: "31 Mar 2026",
+    actual: "Rp 1.4B",
+    threshold: "≥ Rp 2B",
+    headroom: "-30%",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 6,
+    covenant: "Current Ratio 1.0x",
+    facility: "PT Maju Bersama",
+    testDate: "31 May 2026",
+    actual: "0.87x",
+    threshold: "≥ 1.0x",
+    headroom: "-13%",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 7,
+    covenant: "Current Ratio 1.0x",
+    facility: "CV Teknik Jaya",
+    testDate: "31 May 2026",
+    actual: "1.32x",
+    threshold: "≥ 1.0x",
+    headroom: "+32%",
+    headroomPct: 32,
+    status: "Pass",
+  },
+  {
+    id: 8,
+    covenant: "Insurance Validity",
+    facility: "Budi Santoso",
+    testDate: "24 May 2026",
+    actual: "Expired",
+    threshold: "Valid",
+    headroom: "-",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 9,
+    covenant: "Financial Statement",
+    facility: "PT Maju Bersama",
+    testDate: "15 May 2026",
+    actual: "Overdue 15d",
+    threshold: "On-time",
+    headroom: "-",
+    headroomPct: 0,
+    status: "Breach",
+  },
+  {
+    id: 10,
+    covenant: "LTV Maximum 80%",
+    facility: "Budi Santoso",
+    testDate: "31 May 2026",
+    actual: "68%",
+    threshold: "≤ 80%",
+    headroom: "+15%",
+    headroomPct: 15,
+    status: "Pass",
+  },
+]);
+
+function runAllTests() {
+  testing.value = true;
+  setTimeout(() => {
+    testing.value = false;
+    showToast("All covenant tests completed — 3 breaches detected");
+  }, 2000);
+}
+
+// ── Calendar ──
+const calLegend = [
+  { label: "Due Today", color: "bg-blue-200" },
+  { label: "Breach", color: "bg-red-200" },
+  { label: "Watch", color: "bg-amber-200" },
+  { label: "Pass", color: "bg-green-200" },
+];
+
+const calendarCells = computed(() => {
+  const cells = [];
+  // June 2026 starts on Monday
+  for (let i = 0; i < 5; i++) cells.push({ key: `empty-${i}`, day: null, events: [] });
+  const events = {
+    1: [
+      { id: 1, name: "DSCR Test", status: "Due" },
+      { id: 2, name: "Current Ratio", status: "Breach" },
+    ],
+    5: [{ id: 3, name: "Fin. Statement", status: "Due" }],
+    10: [{ id: 4, name: "DER Review", status: "Watch" }],
+    15: [
+      { id: 5, name: "Q2 Reporting", status: "Due" },
+      { id: 6, name: "Insurance", status: "Watch" },
+    ],
+    20: [{ id: 7, name: "EBITDA Test", status: "Pass" }],
+    25: [{ id: 8, name: "NPL Covenant", status: "Pass" }],
+    30: [
+      { id: 9, name: "DER Quarterly", status: "Due" },
+      { id: 10, name: "DSCR Review", status: "Watch" },
+    ],
+  };
+  for (let d = 1; d <= 30; d++) {
+    cells.push({ key: `day-${d}`, day: d, today: d === 24, events: events[d] || [] });
+  }
+  return cells;
+});
+
+// ── Cure Workflow ──
+const cureTasks = ref([
+  {
+    id: 1,
+    title: "DSCR Improvement Plan — PT Maju Bersama",
+    facility: "PT Maju Bersama",
+    status: "Open",
+    priority: "Critical",
+    deadline: "30 Jun 2026",
+    owner: "Reza M.",
+    progress: 0,
+    overdue: false,
+  },
+  {
+    id: 2,
+    title: "DER Reduction Strategy — CV Teknik Jaya",
+    facility: "CV Teknik Jaya",
+    status: "Open",
+    priority: "Critical",
+    deadline: "30 Jun 2026",
+    owner: "Sari D.",
+    progress: 0,
+    overdue: false,
+  },
+  {
+    id: 3,
+    title: "Insurance Renewal Follow-up",
+    facility: "Budi Santoso",
+    status: "In Progress",
+    priority: "High",
+    deadline: "01 Jun 2026",
+    owner: "Ahmad F.",
+    progress: 60,
+    overdue: false,
+  },
+  {
+    id: 4,
+    title: "Financial Statement Collection",
+    facility: "PT Maju Bersama",
+    status: "In Progress",
+    priority: "High",
+    deadline: "25 May 2026",
+    owner: "Reza M.",
+    progress: 40,
+    overdue: true,
+  },
+  {
+    id: 5,
+    title: "EBITDA Turnaround Meeting",
+    facility: "CV Teknik Jaya",
+    status: "Done",
+    priority: "Critical",
+    deadline: "20 May 2026",
+    owner: "Sari D.",
+    progress: 100,
+    overdue: false,
+  },
+]);
+
+const cureColumns = [
+  { id: "Open", label: "Open", dot: "bg-gray-400" },
+  { id: "In Progress", label: "In Progress", dot: "bg-amber-400" },
+  { id: "Done", label: "Done", dot: "bg-green-500" },
+];
+
+function advanceCure(task) {
+  if (task.status === "Open") {
+    task.status = "In Progress";
+    task.progress = 30;
+  } else if (task.status === "In Progress") {
+    task.status = "Done";
+    task.progress = 100;
+  }
+  showToast(`Task "${task.title.substring(0, 30)}..." updated`);
+}
+
+// ── Waivers ──
+const waivers = ref([
+  {
+    id: 1,
+    covenant: "DSCR Minimum 1.25x",
+    reason: "Post-pandemic recovery",
+    facility: "PT Maju Bersama",
+    requested: "01 May 2026",
+    expiry: "31 Jul 2026",
+    approver: "Risk Committee",
+    status: "Approved",
+    expiring: false,
+  },
+  {
+    id: 2,
+    covenant: "DER Maximum 3.0x",
+    reason: "Refinancing in progress",
+    facility: "CV Teknik Jaya",
+    requested: "10 May 2026",
+    expiry: "30 Jun 2026",
+    approver: "Credit Head",
+    status: "Pending",
+    expiring: false,
+  },
+  {
+    id: 3,
+    covenant: "Financial Statement Q1",
+    reason: "Auditor delay",
+    facility: "PT Maju Bersama",
+    requested: "01 Apr 2026",
+    expiry: "30 Apr 2026",
+    approver: "Branch Head",
+    status: "Expired",
+    expiring: false,
+  },
+  {
+    id: 4,
+    covenant: "EBITDA Minimum",
+    reason: "Seasonal business impact",
+    facility: "CV Teknik Jaya",
+    requested: "15 May 2026",
+    expiry: "30 Jun 2026",
+    approver: "Risk Committee",
+    status: "Pending",
+    expiring: true,
+  },
+]);
+
+function approveWaiver(w) {
+  w.status = "Approved";
+  showToast(`Waiver approved for ${w.covenant}`);
+}
+
+// ── Reports ──
+const covReports = [
+  {
+    id: 1,
+    name: "Monthly Compliance Report",
+    desc: "Pass/Watch/Breach summary with trend analysis",
+    icon: "bar-chart-2",
+    colorBg: "bg-teal-100",
+    colorText: "text-teal-600",
+    period: "May 2026",
+    status: "Ready",
+    statusClass: "bg-green-100 text-green-700",
+  },
+  {
+    id: 2,
+    name: "Breach & Cure Analytics",
+    desc: "Breach aging, cure progress, and resolution rates",
+    icon: "alert-triangle",
+    colorBg: "bg-red-100",
+    colorText: "text-red-600",
+    period: "May 2026",
+    status: "Ready",
+    statusClass: "bg-green-100 text-green-700",
+  },
+  {
+    id: 3,
+    name: "Portfolio Covenant Health",
+    desc: "Facility-level covenant health and portfolio segmentation",
+    icon: "activity",
+    colorBg: "bg-purple-100",
+    colorText: "text-purple-600",
+    period: "Q1 2026",
+    status: "Ready",
+    statusClass: "bg-green-100 text-green-700",
+  },
+  {
+    id: 4,
+    name: "Waiver Summary Report",
+    desc: "Active waivers, approvals, and expiry tracking",
+    icon: "file-minus",
+    colorBg: "bg-amber-100",
+    colorText: "text-amber-600",
+    period: "May 2026",
+    status: "Draft",
+    statusClass: "bg-gray-100 text-gray-600",
+  },
+  {
+    id: 5,
+    name: "AI Risk Prediction Report",
+    desc: "AI-generated breach probability and recommendations",
+    icon: "zap",
+    colorBg: "bg-indigo-100",
+    colorText: "text-indigo-600",
+    period: "May 2026",
+    status: "Ready",
+    statusClass: "bg-green-100 text-green-700",
+  },
+  {
+    id: 6,
+    name: "Regulatory Covenant Report",
+    desc: "OJK/BI required covenant monitoring disclosure",
+    icon: "shield",
+    colorBg: "bg-blue-100",
+    colorText: "text-blue-600",
+    period: "Q1 2026",
+    status: "Generating...",
+    statusClass: "bg-blue-100 text-blue-700",
+  },
+];
+
+// ── Sensitivity / Heatmap ──
+const heatmapCovs = ["DSCR", "DER", "EBITDA", "Curr. Ratio", "LTV"];
+const heatmapData = [
+  {
+    facility: "PT Maju Bersama",
+    DSCR: -14,
+    DER: 13,
+    EBITDA: null,
+    "Curr. Ratio": -13,
+    LTV: null,
+  },
+  {
+    facility: "CV Teknik Jaya",
+    DSCR: 18,
+    DER: -14,
+    EBITDA: -30,
+    "Curr. Ratio": 32,
+    LTV: null,
+  },
+  {
+    facility: "Budi Santoso",
+    DSCR: null,
+    DER: null,
+    EBITDA: null,
+    "Curr. Ratio": null,
+    LTV: 15,
+  },
+  {
+    facility: "PT Karya Utama",
+    DSCR: 35,
+    DER: 28,
+    EBITDA: 22,
+    "Curr. Ratio": 18,
+    LTV: null,
+  },
+  {
+    facility: "CV Mitra Sejati",
+    DSCR: 8,
+    DER: 45,
+    EBITDA: 12,
+    "Curr. Ratio": 6,
+    LTV: null,
+  },
+];
+
+function heatmapColor(val) {
+  if (val === null) return "bg-gray-100 text-gray-400";
+  if (val < 0) return "bg-red-100 text-red-700";
+  if (val < 10) return "bg-amber-100 text-amber-700";
+  if (val < 25) return "bg-yellow-100 text-yellow-700";
+  return "bg-green-100 text-green-700";
+}
+
+const heatLegend = [
+  { label: "Breach (<0%)", color: "bg-red-200" },
+  { label: "Danger (<10%)", color: "bg-amber-200" },
+  { label: "Watch (<25%)", color: "bg-yellow-200" },
+  { label: "Safe (≥25%)", color: "bg-green-200" },
+];
+
+const simRevDrop = ref(10);
+const simDebtInc = ref(10);
+const simResult = ref(null);
+
+function runSim() {
+  const breaches =
+    simRevDrop.value > 20 || simDebtInc.value > 30 ? 2 : simRevDrop.value > 10 ? 1 : 0;
+  simResult.value = {
+    breaches,
+    detail:
+      breaches > 0
+        ? `Under -${simRevDrop.value}% revenue / +${
+            simDebtInc.value
+          }% debt service: DSCR would drop to ${(1.08 - simRevDrop.value * 0.01).toFixed(
+            2
+          )}x, DER would rise to ${(3.42 + simDebtInc.value * 0.02).toFixed(2)}x`
+        : `Under -${simRevDrop.value}% revenue / +${simDebtInc.value}% debt service: all covenants remain within threshold`,
+  };
+  showToast("Simulation complete");
+}
+
+// ── Toast ──
+const toast = ref("");
+let toastTimer = null;
+function showToast(msg) {
+  toast.value = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.value = "";
+  }, 2500);
+}
+
+// misc
+const showAddCovenant = ref(false);
+</script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+</style>

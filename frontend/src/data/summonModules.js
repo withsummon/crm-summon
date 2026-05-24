@@ -367,8 +367,8 @@ export const summonModules = [
     description:
       'Financial and non-financial covenant tracking, breach detection, alerts, and cure workflows.',
     priority: 'High',
-    status: 'planned',
-    href: '/crm/modules/covenant-monitoring',
+    status: 'available',
+    href: '/crm/lending-risk/covenant-monitoring',
     group: 'Lending & Risk',
     icon: 'alert-triangle',
     features: [
