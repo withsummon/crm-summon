@@ -171,13 +171,12 @@ const routes = [
       {
         path: 'loan-origination-system',
         name: 'Loan Origination System',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Loan Origination System',
-          subtitle: 'Lending',
-          icon: 'dollar-sign',
-          sourcePath: '/app/loans',
-        },
+        component: () => import('@/pages/LoanOrigination.vue'),
+      },
+      {
+        path: 'loan-origination-system/:id',
+        name: 'Loan Application',
+        component: () => import('@/pages/LoanOrigination.vue'),
       },
       {
         path: 'portfolio-monitoring',
