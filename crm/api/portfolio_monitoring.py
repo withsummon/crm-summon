@@ -213,7 +213,22 @@ def ensure_portfolio_tables():
 	for table, statement in PORTFOLIO_TABLES.items():
 		if frappe.db.table_exists(table):
 			continue
-		frappe.db.sql_ddl(statement)
+		try:
+			frappe.db.sql_ddl(statement)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), f"Portfolio - create table {table}")
+
+
+def _crm_data_available() -> bool:
+	return frappe.db.table_exists("CRM Credit Facility")
+
+
+_EMPTY_TREND = lambda: {"labels": [], "os_trend": [], "npl_trend": []}
+_EMPTY_SIGNALS = lambda: {"signals": [], "total": 0, "green": 0, "amber": 0, "red": 0}
+_EMPTY_COVENANTS = lambda: {"breaches": [], "total": 0, "active": 0, "cured": 0}
+_EMPTY_ECL = lambda: {"stage1": 0, "stage2": 0, "stage3": 0, "total_ecl": 0, "accounts": []}
+_EMPTY_WATCHLIST = lambda: {"items": [], "total": 0}
+_EMPTY_ALERTS = lambda: {"alerts": [], "total": 0}
 
 
 def _raw_insert(table, values):
@@ -253,25 +268,32 @@ def _aggregate_exposure_accounts(from_date: str | None = None, to_date: str | No
 	ensure_portfolio_tables()
 	fd, td = _build_period_filter(from_date, to_date)
 
-	rows = frappe.db.sql("""
-		SELECT
-			f.name AS facility_name,
-			f.customer,
-			f.customer AS customer_name,
-			f.facility_type AS product,
-			f.outstanding AS os_amount,
-			f.limit_amount,
-			f.status,
-			f.default_flag,
-			COALESCE(r.risk_grade, 'NR') AS risk_grade,
-			COALESCE(r.watchlist_status, 'No') AS watchlist_status,
-			COALESCE(r.npl_flag, 0) AS npl_flag,
-			COALESCE(f.health, '') AS region
-		FROM `tabCRM Credit Facility` f
-		LEFT JOIN `tabCRM Risk Profile` r ON r.customer = f.customer
-		WHERE f.status IN ('Active', 'Watchlist', 'Restructured')
-		AND f.outstanding > 0
-	""", as_dict=True)
+	if not frappe.db.table_exists("CRM Credit Facility"):
+		return []
+
+	try:
+		rows = frappe.db.sql("""
+			SELECT
+				f.name AS facility_name,
+				f.customer,
+				f.customer AS customer_name,
+				f.facility_type AS product,
+				f.outstanding AS os_amount,
+				f.limit_amount,
+				f.status,
+				f.default_flag,
+				COALESCE(r.risk_grade, 'NR') AS risk_grade,
+				COALESCE(r.watchlist_status, 'No') AS watchlist_status,
+				COALESCE(r.npl_flag, 0) AS npl_flag,
+				COALESCE(f.health, '') AS region
+			FROM `tabCRM Credit Facility` f
+			LEFT JOIN `tabCRM Risk Profile` r ON r.customer = f.customer
+			WHERE f.status IN ('Active', 'Watchlist', 'Restructured')
+			AND f.outstanding > 0
+		""", as_dict=True)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Portfolio - aggregate exposure accounts")
+		return []
 
 	accounts = []
 	for row in rows:
@@ -302,10 +324,11 @@ def _aggregate_exposure_accounts(from_date: str | None = None, to_date: str | No
 def _sync_exposure_accounts(from_date=None, to_date=None):
 	"""Sync exposure accounts table from live CRM data."""
 	ensure_portfolio_tables()
-	frappe.db.sql("DELETE FROM `tabCRM Exposure Account`")
 	accounts = _aggregate_exposure_accounts(from_date, to_date)
-	for acc in accounts:
-		_raw_insert("CRM Exposure Account", acc)
+	if frappe.db.table_exists("CRM Exposure Account"):
+		frappe.db.sql("DELETE FROM `tabCRM Exposure Account`")
+		for acc in accounts:
+			_raw_insert("CRM Exposure Account", acc)
 	return accounts
 
 
@@ -382,6 +405,8 @@ def _grade_to_letter(avg: float) -> str:
 @frappe.whitelist()
 def get_trend_chart(from_date: str | None = None, to_date: str | None = None) -> dict:
 	"""Return 12-month trend data for OS and NPL ratio."""
+	if not _crm_data_available():
+		return _EMPTY_TREND()
 	fd, td = _build_period_filter(from_date, to_date)
 	months = []
 	d = datetime.strptime(fd, "%Y-%m-%d")
@@ -661,8 +686,13 @@ def get_concentration_matrix(from_date: str | None = None) -> dict:
 @frappe.whitelist()
 def get_ews_signals(from_date: str | None = None) -> dict:
 	"""Return EWS signals list."""
+	if not _crm_data_available():
+		return _EMPTY_SIGNALS()
 	ensure_portfolio_tables()
 	fd, _ = _build_period_filter(from_date, None)
+
+	if not frappe.db.table_exists("CRM EWS Signal"):
+		return _EMPTY_SIGNALS()
 
 	signals = frappe.db.sql("""
 		SELECT * FROM `tabCRM EWS Signal`
@@ -712,8 +742,13 @@ def acknowledge_ews_signal(signal_id: str, action_notes: str | None = None) -> d
 @frappe.whitelist()
 def get_covenant_breaches(from_date: str | None = None) -> dict:
 	"""Return covenant test results with breach/compliant status."""
+	if not _crm_data_available():
+		return _EMPTY_COVENANTS()
 	ensure_portfolio_tables()
 	fd, _ = _build_period_filter(from_date, None)
+
+	if not frappe.db.table_exists("CRM Covenant Test Result"):
+		return _EMPTY_COVENANTS()
 
 	covenants = frappe.db.sql("""
 		SELECT * FROM `tabCRM Covenant Test Result`
@@ -904,8 +939,13 @@ def get_ecl_summary(from_date: str | None = None) -> dict:
 @frappe.whitelist()
 def get_watchlist(from_date: str | None = None) -> dict:
 	"""Return watchlist cases."""
+	if not _crm_data_available():
+		return _EMPTY_WATCHLIST()
 	ensure_portfolio_tables()
 	fd, _ = _build_period_filter(from_date, None)
+
+	if not frappe.db.table_exists("CRM Watchlist Case"):
+		return _EMPTY_WATCHLIST()
 
 	watchlist = frappe.db.sql("""
 		SELECT * FROM `tabCRM Watchlist Case`
@@ -1028,7 +1068,11 @@ def run_portfolio_simulation(scenario_json: str | None = None) -> dict:
 @frappe.whitelist()
 def get_ai_portfolio_alerts(from_date: str | None = None) -> dict:
 	"""Return AI-generated portfolio alerts."""
+	if not _crm_data_available():
+		return _EMPTY_ALERTS()
 	ensure_portfolio_tables()
+	if not frappe.db.table_exists("CRM Portfolio Alert"):
+		return _EMPTY_ALERTS()
 	alerts = frappe.db.sql(
 		"SELECT * FROM `tabCRM Portfolio Alert` ORDER BY FIELD(severity, 'Red', 'Amber', 'Green'), creation DESC LIMIT 20",
 		as_dict=True,

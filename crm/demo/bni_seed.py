@@ -273,6 +273,34 @@ def _ensure_master_data():
 						except Exception:
 							pass
 
+	# Create CRM Lead Status records needed by seed_leads
+	if frappe.db.exists("DocType", "CRM Lead Status"):
+		for ls in ("Hot", "Warm", "Cold"):
+			if not frappe.db.exists("CRM Lead Status", ls):
+				try:
+					_type = "Ongoing" if ls in ("Hot", "Warm") else "Open"
+					frappe.get_doc({
+						"doctype": "CRM Lead Status",
+						"lead_status": ls,
+						"type": _type,
+						"color": "red" if ls == "Hot" else ("orange" if ls == "Warm" else "blue"),
+					}).insert(ignore_permissions=True)
+				except Exception:
+					pass
+
+	# Create CRM Lead Source record for BNI Referral
+	if frappe.db.exists("DocType", "CRM Lead Source"):
+		if not frappe.db.exists("CRM Lead Source", "BNI Referral"):
+			try:
+				frappe.get_doc({
+					"doctype": "CRM Lead Source",
+					"source_name": "BNI Referral",
+					"source_group": "Referral",
+					"is_active": 1,
+				}).insert(ignore_permissions=True)
+			except Exception:
+				pass
+
 	if groups_created or territories_created or industries_created:
 		print(f"  [MASTER] Created {groups_created} groups, {territories_created} territories, {industries_created} industries")
 
@@ -508,17 +536,18 @@ def seed_leads():
 	if not frappe.db.table_exists("CRM Lead"):
 		return 0
 	count = 0
-	for name, industry, desc, facility, amount, status in BNI_LEADS:
-		existing = frappe.db.exists("CRM Lead", {"company_name": name})
+	for _i, (name, industry, desc, facility, amount, status) in enumerate(BNI_LEADS, start=1):
+		existing = frappe.db.exists("CRM Lead", {"organization": name})
 		if existing:
 			continue
 		try:
 			lead = frappe.get_doc({
 				"doctype": "CRM Lead",
-				"company_name": name,
+				"first_name": f"Lead {_i}",
+				"organization": name,
 				"industry": industry,
-				"website": f"https://www.{name.lower().replace(' ', '').replace('pt', '').replace('tbk', '').strip()}.com",
-				"lead_source": "BNI Referral",
+				"website": f"https://www.{name.lower().replace(' ', '').replace('pt', '').replace('tbk', '').strip()}.com" if "pt" in name.lower() else "",
+				"source": "BNI Referral",
 				"status": status,
 				"notes": desc + f" | Potensi fasilitas: {facility} Rp{amount/1_000_000_000:.0f} Miliar",
 			})

@@ -147,9 +147,31 @@
                 <input v-model="newApp.npwp" class="form-input" placeholder="XX.XXX.XXX.X-XXX.XXX" />
               </FieldGroup>
             </div>
-            <FieldGroup :label="__('Purpose / Tujuan Kredit')" class="col-span-2">
-              <textarea v-model="newApp.purpose" rows="3" class="form-input" :placeholder="__('Describe the purpose of the credit facility...')" />
-            </FieldGroup>
+            <!-- File Upload for Financial Spread -->
+            <div class="mt-6 rounded-lg border border-dashed border-teal-200 bg-teal-50/40 p-4">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h4 class="font-semibold text-sm text-teal-800">{{ __('Upload Financial Statements (Optional)') }}</h4>
+                  <p class="mt-1 text-xs text-teal-600">{{ __('Upload PDF / Excel to auto-fill the financial spread. Data will be imported when the application is created.') }}</p>
+                  <div v-if="newApp.spread_file_url" class="mt-2 flex items-center gap-2 text-xs text-teal-700">
+                    <FeatherIcon name="check-circle" class="h-4 w-4" />
+                    <span>{{ __('File uploaded:') }} {{ newApp.spread_file_name || newApp.spread_file_url }}</span>
+                  </div>
+                </div>
+                <FileUploader
+                  :upload-args="{ doctype: 'CRM Credit Application', private: true }"
+                  @success="onSpreadFileUploaded"
+                >
+                  <template #default="{ openFileSelector, uploading }">
+                    <Button variant="outline" size="sm" :loading="uploading" :label="newApp.spread_file_url ? __('Replace File') : __('Choose File')" @click="openFileSelector">
+                      <template #prefix>
+                        <FeatherIcon :name="newApp.spread_file_url ? 'refresh-cw' : 'upload-cloud'" class="h-4 w-4" />
+                      </template>
+                    </Button>
+                  </template>
+                </FileUploader>
+              </div>
+            </div>
           </div>
 
           <!-- Tab: Facility & Limit -->
@@ -385,7 +407,7 @@
 </template>
 
 <script setup>
-import { Badge, Button, Dialog, FeatherIcon, call, createResource, toast, usePageMeta } from 'frappe-ui'
+import { Badge, Button, Dialog, FeatherIcon, FileUploader, call, createResource, toast, usePageMeta } from 'frappe-ui'
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -477,6 +499,8 @@ function defaultApplication() {
     der: null,
     auditor: '',
     audit_status: '',
+    spread_file_url: '',
+    spread_file_name: '',
     // Analyst tab
     relationship_manager: '',
     analyst: '',
@@ -489,6 +513,13 @@ function defaultApplication() {
 }
 
 const newApp = reactive(defaultApplication())
+
+function onSpreadFileUploaded(file) {
+  if (file?.file_url) {
+    newApp.spread_file_url = file.file_url
+    newApp.spread_file_name = file.filename || file.file_url.split('/').pop()
+  }
+}
 
 async function createApplication() {
   if (!newApp.borrower_name && !newApp.borrower) {
@@ -516,6 +547,20 @@ async function createApplication() {
 
     const row = await call('crm.api.credit.create_credit_application', { payload })
     toast.success(__('Credit application created'))
+
+    // If a spread file was uploaded, import it immediately
+    if (newApp.spread_file_url) {
+      try {
+        await call('crm.api.credit_analysis.import_statement_file', {
+          application_id: row.name,
+          file_url: newApp.spread_file_url,
+        })
+      } catch (importError) {
+        // File import failed but the application was created — still navigate
+        console.warn('Spread import failed:', importError)
+      }
+    }
+
     showCreateDialog.value = false
     await applications.fetch()
     router.push({ name: 'Credit Analysis Detail', params: { applicationId: row.name } })

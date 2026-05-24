@@ -440,6 +440,11 @@
               <SimpleTable class="mt-4" :headers="['Source', 'Target', 'Status', 'Old IDs']" :rows="mergeAudits" :columns="['source_customer', 'target_customer', 'status', 'old_ids']" />
             </Panel>
           </div>
+
+          <!-- Chat Tab -->
+          <div v-else-if="activeTab === 'chat'" class="h-full flex flex-col" style="min-height: 500px;">
+            <ChatPanel doctype="Customer" :docname="selectedCustomerName" class="flex h-full flex-col rounded-lg border border-slate-200 bg-white overflow-hidden" />
+          </div>
         </div>
       </div>
     </div>
@@ -521,6 +526,7 @@ import { Button, FeatherIcon, Badge, Dialog, usePageMeta, createListResource, cr
 import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DOMPurify from 'dompurify'
+import ChatPanel from '@/components/ChatPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -563,9 +569,10 @@ const tabs = [
   { key: 'ownership', label: 'Ownership' },
   { key: 'financing', label: 'Financing' },
   { key: 'documents', label: 'Documents & Comms' },
-  { key: 'risk', label: 'Risk & Transactions' },
-  { key: 'statements', label: 'Statements & Visits' },
-  { key: 'engagement', label: 'Engagement & Merge' },
+  { key: 'risk', label: 'Risk' },
+  { key: 'statements', label: 'Statements & Visit' },
+  { key: 'engagement', label: 'Engagement' },
+  { key: 'chat', label: 'Chat' },
 ]
 
 const customersResource = createListResource({

@@ -12,18 +12,11 @@
       </div>
     </template>
 
-    <template v-else-if="noProfile">
-      <div class="flex flex-1 flex-col items-center justify-center gap-3 p-6">
-        <FeatherIcon name="message-square" class="h-10 w-10 text-crm-muted/40" />
-        <p class="text-sm text-crm-muted">{{ __('No ClefinCode Chat profile linked to this contact') }}</p>
-      </div>
-    </template>
-
-    <template v-else-if="!channel">
+    <template v-else-if="!loadedConversation">
       <div class="flex flex-1 flex-col items-center justify-center gap-4 p-6">
         <FeatherIcon name="message-square" class="h-10 w-10 text-crm-muted/40" />
-        <p class="text-sm text-crm-muted">{{ __('No active chat channel') }}</p>
-        <Button label="Start Chat" variant="solid" :loading="creating" @click="ensureChannel">
+        <p class="text-sm text-crm-muted">{{ __('No active chat channel for this record') }}</p>
+        <Button label="Start Chat" variant="solid" :loading="creating" @click="startChat">
           <template #prefix><FeatherIcon name="plus" class="h-4 w-4" /></template>
         </Button>
       </div>
@@ -32,48 +25,37 @@
     <template v-else>
       <div class="flex items-center justify-between border-b border-crm-border px-4 py-2">
         <div class="min-w-0 text-xs font-semibold text-crm-muted truncate">
-          {{ channel.channel_name || channel.name }}
+          {{ conversation?.conversation?.subject || conversation?.conversation?.name }}
         </div>
         <Button :label="__('Open Omnichannel')" size="sm" variant="outline" @click="openOmnichannel">
           <template #prefix><FeatherIcon name="external-link" class="h-3.5 w-3.5" /></template>
         </Button>
       </div>
+
       <div class="flex-1 overflow-y-auto px-4 py-3" ref="messagesContainer" @scroll="onScroll">
         <div v-if="messagesLoading" class="flex items-center justify-center py-8">
           <div class="h-6 w-6 animate-spin rounded-full border-3 border-crm-teal border-t-transparent" />
         </div>
 
-        <div v-if="typingUsers.length" class="mb-2 text-xs text-crm-muted italic px-1">
-          {{ typingUsers.join(', ') }} {{ __('typing...') }}
-        </div>
-
         <div v-for="msg in messages" :key="msg.name" class="mb-3 flex flex-col" :class="isMine(msg) ? 'items-end' : 'items-start'">
           <div class="max-w-[80%] rounded-xl px-3 py-2 text-sm" :class="isMine(msg) ? 'bg-crm-teal text-white rounded-br-sm' : 'bg-gray-100 text-crm-text rounded-bl-sm'">
-            <template v-if="msg.is_media || msg.is_document || msg.is_voice_clip">
-              <div v-if="msg.is_media" class="mb-1">
-                <img :src="msg.attachment || msg.content" class="max-h-48 rounded-lg object-cover cursor-pointer" @click="previewFile(msg)" />
-              </div>
-              <div v-else-if="msg.is_document" class="flex items-center gap-2 rounded-lg bg-white/20 p-2">
+            <template v-if="msg.message_type === 'Image' && msg.attachment">
+              <img :src="msg.attachment" class="max-h-48 rounded-lg object-cover cursor-pointer mb-1" @click="previewFile(msg)" />
+            </template>
+            <template v-else-if="msg.message_type === 'Document' && msg.attachment">
+              <div class="flex items-center gap-2 rounded-lg bg-white/20 p-2">
                 <FeatherIcon name="file" class="h-5 w-5 shrink-0" />
-                <a :href="msg.attachment" target="_blank" class="truncate text-sm underline">{{ msg.file_name || msg.attachment?.split('/').pop() || 'Document' }}</a>
-              </div>
-              <div v-else-if="msg.is_voice_clip" class="flex items-center gap-2">
-                <FeatherIcon name="headphones" class="h-5 w-5 shrink-0" />
-                <audio :src="msg.attachment" controls class="h-8 max-w-[200px]" />
+                <a :href="msg.attachment" target="_blank" class="truncate text-sm underline">{{ msg.attachment?.split('/').pop() || 'Document' }}</a>
               </div>
             </template>
-            <p v-if="msg.content && !msg.is_media" class="whitespace-pre-wrap break-words">{{ msg.content }}</p>
+            <p v-if="msg.content" class="whitespace-pre-wrap break-words">{{ msg.content }}</p>
             <div class="mt-1 flex items-center gap-1">
-              <span class="text-[10px]" :class="isMine(msg) ? 'text-white/70' : 'text-crm-muted'">{{ formatTime(msg.send_date || msg.creation) }}</span>
-              <span v-if="isMine(msg)" class="inline-flex">
-                <FeatherIcon v-if="msg.read_by_recipient" name="check-circle" class="h-3 w-3 text-blue-300" />
-                <FeatherIcon v-else name="check" class="h-3 w-3 text-white/60" />
-              </span>
+              <span class="text-[10px]" :class="isMine(msg) ? 'text-white/70' : 'text-crm-muted'">{{ formatTime(msg.sent_or_received_on || msg.creation) }}</span>
             </div>
           </div>
         </div>
 
-        <div v-if="messages.length === 0 && !messagesLoading" class="flex items-center justify-center py-8">
+        <div v-if="!messages.length && !messagesLoading" class="flex items-center justify-center py-8">
           <p class="text-xs text-crm-muted">{{ __('No messages yet') }}</p>
         </div>
       </div>
@@ -90,7 +72,6 @@
             :placeholder="__('Type a message...')"
             class="min-w-0 flex-1 rounded-lg border border-crm-border bg-white px-3 py-2 text-sm outline-none transition-colors placeholder:text-crm-muted focus:border-crm-teal"
             @keydown.enter="send"
-            @input="onTyping"
           />
           <Button :label="__('Send')" variant="solid" :loading="sending" :disabled="!newMessage.trim() && !uploadingFile" @click="send" />
         </div>
@@ -109,10 +90,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button, FeatherIcon, call } from 'frappe-ui'
-import { globalStore } from '@/stores/global'
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -125,192 +105,91 @@ const sending = ref(false)
 const creating = ref(false)
 const uploadingFile = ref(false)
 const error = ref('')
-const noProfile = ref(false)
-const channel = ref(null)
+const conversation = ref(null)
 const messages = ref([])
 const newMessage = ref('')
 const attachedFile = ref(null)
-const typingUsers = ref([])
 const messagesContainer = ref(null)
 const fileInput = ref(null)
+let conversationId = null
 let pollTimer = null
-let timeoutTimer = null
-let typingTimer = null
-let typingTimeout = null
-const { $socket } = globalStore()
-const router = useRouter()
+
+const loadedConversation = computed(() => !!conversation.value?.conversation)
 
 function openOmnichannel() {
   router.push({ name: 'Omnichannel Communication' })
 }
 
 async function init() {
-  clearTimeout(timeoutTimer)
   loading.value = true
   error.value = ''
-  noProfile.value = false
-  channel.value = null
+  conversation.value = null
   messages.value = []
   newMessage.value = ''
   attachedFile.value = null
-  typingUsers.value = []
   stopPolling()
-  teardownSocket()
-
-  timeoutTimer = setTimeout(() => {
-    loading.value = false
-    error.value = 'Chat service timed out'
-  }, 15000)
+  conversationId = null
 
   try {
-    const res = await call('crm.api.chat.resolve_record_channels', {
-      doctype: props.doctype,
-      docname: props.docname,
+    const res = await call('crm.api.omnichannel.get_conversations', {
+      channel: 'In-App',
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+      limit: 1,
     })
-    clearTimeout(timeoutTimer)
-
-    if (!res || !res.profile) {
-      if (res && res.contact && !res.profile) {
-        noProfile.value = true
-      } else {
-        error.value = 'No profile found'
-      }
-      return
-    }
-
-    if (res.channels && res.channels.length) {
-      channel.value = res.channels[0]
-      setupSocket()
-      await fetchMessages()
-      markAsRead()
+    if (res?.rows?.length) {
+      conversationId = res.rows[0].name
+      await loadConversation()
+      startPolling()
     }
   } catch (err) {
-    clearTimeout(timeoutTimer)
-    console.error('[ChatPanel] init error:', err)
     error.value = err.messages?.[0] || err.message || 'Failed to load chat'
   } finally {
-    clearTimeout(timeoutTimer)
     loading.value = false
   }
 }
 
-function setupSocket() {
-  if (!$socket || !channel.value) return
-  const ch = channel.value.name
-  $socket.on(ch, handleSocketEvent)
-  $socket.on('new_chat_notification', handleNotification)
-}
-
-function teardownSocket() {
-  if (!$socket) return
-  if (channel.value) {
-    $socket.off(channel.value.name, handleSocketEvent)
-  }
-  $socket.off('new_chat_notification', handleNotification)
-}
-
-function handleSocketEvent(data) {
-  if (!data) return
-  if (data.realtime_type === 'send_message') {
-    fetchMessages()
-    markAsRead()
-  } else if (data.realtime_type === 'typing') {
-    handleTypingEvent(data)
-  }
-}
-
-function handleNotification(data) {
-  if (data && data.channel === channel.value?.name) {
-    fetchMessages()
-  }
-}
-
-function handleTypingEvent(data) {
-  const currentUser = window.frappe?.session?.user || ''
-  if (!data.user || data.user === currentUser) return
-
-  if (data.is_typing === 'true') {
-    if (!typingUsers.value.includes(data.first_name || data.user)) {
-      typingUsers.value.push(data.first_name || data.user)
-    }
-  } else {
-    const name = data.first_name || data.user
-    typingUsers.value = typingUsers.value.filter(u => u !== name)
-  }
-}
-
-function onTyping() {
-  if (!channel.value) return
-  const api = 'clefincode_chat.api.api_1_3_4.api.set_typing'
-  call(api, {
-    user: window.frappe?.session?.user || '',
-    room: channel.value.name,
-    is_typing: 'true',
-  }).catch(() => {})
-
-  clearTimeout(typingTimeout)
-  typingTimeout = setTimeout(() => {
-    call(api, {
-      user: window.frappe?.session?.user || '',
-      room: channel.value.name,
-      is_typing: 'false',
-    }).catch(() => {})
-  }, 3000)
-}
-
-function markAsRead() {
-  if (!channel.value) return
-  call('clefincode_chat.api.api_1_3_4.api.mark_messsages_as_read', {
-    user: window.frappe?.session?.user || '',
-    channel: channel.value.name,
-  }).catch(() => {})
-}
-
-async function ensureChannel() {
-  creating.value = true
-  try {
-    const res = await call('crm.api.chat.ensure_channel', {
-      doctype: props.doctype,
-      docname: props.docname,
-    })
-    if (res && res.channel) {
-      channel.value = res.channel
-      setupSocket()
-      await fetchMessages()
-      markAsRead()
-    } else {
-      error.value = 'Could not create chat channel'
-    }
-  } catch (err) {
-    console.error('[ChatPanel] ensureChannel error:', err)
-    error.value = err.messages?.[0] || err.message || 'Failed to create channel'
-  } finally {
-    creating.value = false
-  }
-}
-
-async function fetchMessages() {
-  if (!channel.value) return
-  const prevLen = messages.value.length
+async function loadConversation() {
+  if (!conversationId) return
   messagesLoading.value = true
   try {
-    const res = await call('crm.api.chat.get_messages', {
-      doctype: props.doctype,
-      docname: props.docname,
-      limit: 50,
-      offset: 0,
+    const res = await call('crm.api.omnichannel.get_conversation', {
+      conversation_id: conversationId,
     })
-    if (res && res.messages) {
-      messages.value = res.messages
-      if (prevLen === 0 || res.messages.length > prevLen) {
-        await nextTick()
-        scrollToBottom()
-      }
+    if (res) {
+      conversation.value = res
+      messages.value = res.messages || []
+      await nextTick()
+      scrollToBottom()
     }
   } catch (err) {
-    console.error('[ChatPanel] fetchMessages error:', err)
+    console.error('[ChatPanel] loadConversation error:', err)
   } finally {
     messagesLoading.value = false
+  }
+}
+
+async function startChat() {
+  creating.value = true
+  try {
+    const res = await call('crm.api.omnichannel.create_or_get_conversation', {
+      reference_doctype: props.doctype,
+      reference_name: props.docname,
+    })
+    if (res?.conversation) {
+      conversationId = res.conversation.name
+      conversation.value = res
+      messages.value = res.messages || []
+      startPolling()
+      await nextTick()
+      scrollToBottom()
+    } else {
+      error.value = 'Could not create chat'
+    }
+  } catch (err) {
+    error.value = err.messages?.[0] || err.message || 'Failed to start chat'
+  } finally {
+    creating.value = false
   }
 }
 
@@ -332,7 +211,6 @@ async function uploadFile(e) {
       attachedFile.value = {
         file_url: data.message.file_url,
         file_name: data.message.file_name,
-        file_id: data.message.name,
       }
     }
   } catch (err) {
@@ -345,35 +223,18 @@ async function uploadFile(e) {
 
 async function send() {
   const content = newMessage.value.trim()
-  const file = attachedFile.value
-  if (!content && !file) return
+  if (!content && !attachedFile.value) return
+  if (!conversationId) return
   sending.value = true
-
   try {
-    const args = {
-      content: content || (file ? file.file_name : ''),
-      user: window.frappe?.session?.user || '',
-      room: channel.value.name,
-      email: window.frappe?.session?.user || '',
-      message_type: '',
-    }
-    if (file) {
-      args.attachment = file.file_url
-      args.file_id = file.file_id
-      const ext = file.file_name?.split('.').pop()?.toLowerCase()
-      const imgExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']
-      args.is_media = imgExts.includes(ext) ? 1 : 0
-      const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
-      if (!args.is_media && docExts.includes(ext)) {
-        args.is_document = 1
-      }
-    }
-
-    await call('clefincode_chat.api.api_1_3_4.api.send', args)
+    await call('crm.api.omnichannel.send_message', {
+      conversation_id: conversationId,
+      content: content,
+      attachments: attachedFile.value ? [attachedFile.value.file_url] : undefined,
+    })
     newMessage.value = ''
     attachedFile.value = null
-    await fetchMessages()
-    markAsRead()
+    await loadConversation()
   } catch (err) {
     console.error('[ChatPanel] send error:', err)
   } finally {
@@ -382,15 +243,11 @@ async function send() {
 }
 
 function previewFile(msg) {
-  if (msg.attachment) {
-    window.open(msg.attachment, '_blank')
-  }
+  if (msg.attachment) window.open(msg.attachment, '_blank')
 }
 
 function isMine(msg) {
-  if (!msg) return false
-  const user = window.frappe?.session?.user || ''
-  return msg.sender === user || msg.owner === user
+  return msg.from_party === (window.frappe?.session?.user || '')
 }
 
 function formatTime(dateStr) {
@@ -408,34 +265,26 @@ function scrollToBottom() {
 }
 
 function onScroll() {
-  if (!channel.value) return
   const el = messagesContainer.value
   if (el && el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
-    markAsRead()
+    // Could mark as read here
   }
 }
 
 function startPolling() {
   stopPolling()
-  pollTimer = setInterval(fetchMessages, 15000)
+  pollTimer = setInterval(loadConversation, 15000)
 }
 
 function stopPolling() {
-  if (pollTimer) {
-    clearInterval(pollTimer)
-    pollTimer = null
-  }
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
 }
 
 function cleanup() {
   stopPolling()
-  clearTimeout(timeoutTimer)
-  clearTimeout(typingTimeout)
-  teardownSocket()
 }
 
 watch(() => props.docname, () => { cleanup(); init() })
-
 onMounted(() => { init() })
 onBeforeUnmount(() => { cleanup() })
 </script>

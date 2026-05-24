@@ -26,21 +26,29 @@
 
       <div class="omni-side-section">
         <div class="omni-side-title">{{ __('Bulk Actions') }}</div>
-        <button class="omni-side-action" :disabled="!selectedIds.length" @click="bulkAction('tag')">
+        <button class="omni-side-action" :disabled="bulkLoading" @click="bulkAction('tag')">
           <FeatherIcon name="tag" class="h-4 w-4" />
           {{ __('Tag') }}
         </button>
-        <button class="omni-side-action" :disabled="!selectedIds.length" @click="bulkAction('assign')">
+        <button class="omni-side-action" :disabled="bulkLoading" @click="bulkAction('assign')">
           <FeatherIcon name="user-check" class="h-4 w-4" />
           {{ __('Assign to me') }}
         </button>
-        <button class="omni-side-action" :disabled="!selectedIds.length" @click="bulkAction('close')">
+        <button class="omni-side-action" :disabled="bulkLoading" @click="bulkAction('close')">
           <FeatherIcon name="check-circle" class="h-4 w-4" />
           {{ __('Close') }}
         </button>
-        <button class="omni-side-action" :disabled="!selectedIds.length" @click="bulkAction('archive')">
+        <button class="omni-side-action" :disabled="bulkLoading" @click="bulkAction('archive')">
           <FeatherIcon name="archive" class="h-4 w-4" />
           {{ __('Archive') }}
+        </button>
+      </div>
+
+      <div class="omni-side-section" style="margin-top: auto; border-top: 1px solid #e6ecef; padding-top: 12px;">
+        <div class="omni-side-title">{{ __('Tools') }}</div>
+        <button class="omni-side-action" @click="openWhatsAppWeb">
+          <FeatherIcon name="message-circle" class="h-4 w-4" />
+          {{ __('WhatsApp Web') }}
         </button>
       </div>
     </aside>
@@ -66,13 +74,96 @@
           <option value="unread">{{ __('Unread') }}</option>
           <option value="priority">{{ __('Priority') }}</option>
         </select>
+        <button v-if="selectedChannel === 'In-App'" class="omni-new-chat" @click="showNewChat = true">
+          <FeatherIcon name="edit" class="h-4 w-4" />
+          {{ __('New Chat') }}
+        </button>
       </div>
+
+      <!-- New Chat Dialog -->
+      <Dialog v-model="showNewChat" :options="{ title: __('Start In-App Chat') }">
+        <template #body-content>
+          <div class="space-y-3 pt-3">
+            <div class="relative">
+              <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input v-model="userSearch" :placeholder="__('Search users...')" @keyup="searchUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+            </div>
+            <div v-if="userSearchLoading" class="flex justify-center py-4">
+              <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+            </div>
+            <div v-else-if="!userResults.length && userSearch" class="text-center py-4 text-sm text-slate-400">
+              {{ __('No users found') }}
+            </div>
+            <div v-else class="space-y-1 max-h-60 overflow-y-auto">
+              <button v-for="u in userResults" :key="u.name" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 text-left" @click="startChat(u)">
+                <div v-if="u.user_image" class="h-8 w-8 rounded-full bg-cover bg-center" :style="{ backgroundImage: `url(${u.user_image})` }" />
+                <div v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                  {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-slate-800 truncate">{{ u.full_name || u.name }}</div>
+                  <div class="text-xs text-slate-400 truncate">{{ u.email }}</div>
+                </div>
+              </button>
+            </div>
+            <div v-if="!userSearch" class="text-center py-4 text-sm text-slate-400">
+              {{ __('Type to search users') }}
+            </div>
+          </div>
+        </template>
+      </Dialog>
+
+      <!-- Tag Dialog -->
+      <Dialog v-model="showTagDialog" :options="{ title: __('Assign / Tag Conversations') }">
+        <template #body-content>
+          <div class="space-y-4 pt-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Assign to User') }}</label>
+              <div class="relative mt-1">
+                <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input v-model="tagUserSearch" :placeholder="__('Search users...')" @keyup="searchTagUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+              </div>
+              <div v-if="tagUserSearchLoading" class="flex justify-center py-3">
+                <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+              </div>
+              <div v-else-if="tagUserResults.length" class="mt-2 space-y-1 max-h-48 overflow-y-auto border border-slate-100 rounded-lg">
+                <button v-for="u in tagUserResults" :key="u.name" class="flex w-full items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50 text-left border-b border-slate-50 last:border-0" @click="assignToUser(u)">
+                  <div v-if="u.user_image" class="h-7 w-7 rounded-full bg-cover bg-center shrink-0" :style="{ backgroundImage: `url(${u.user_image})` }" />
+                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                    {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium text-slate-800 truncate text-xs">{{ u.full_name || u.name }}</div>
+                    <div class="text-xs text-slate-400 truncate">{{ u.email }}</div>
+                  </div>
+                  <FeatherIcon name="user-check" class="h-4 w-4 text-teal-500 shrink-0" />
+                </button>
+              </div>
+              <div v-else-if="tagUserSearch && !tagUserSearchLoading" class="text-center py-3 text-sm text-slate-400">
+                {{ __('No users found') }}
+              </div>
+            </div>
+            <div class="border-t border-slate-100 pt-3">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Add Text Tag') }}</label>
+              <div class="flex gap-2 mt-1">
+                <input v-model="tagName" :placeholder="__('Tag name...')" class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" @keydown.enter="confirmTag" />
+                <Button variant="solid" :label="__('Add')" :disabled="!tagName.trim()" :loading="bulkLoading" @click="confirmTag" />
+              </div>
+            </div>
+          </div>
+        </template>
+        <template #actions>
+          <Button variant="outline" :label="__('Close')" @click="showTagDialog = false" />
+        </template>
+      </Dialog>
 
       <div v-if="loading" class="omni-state">{{ __('Loading conversations...') }}</div>
       <div v-else-if="!conversations.length" class="omni-empty">
         <FeatherIcon name="inbox" class="h-8 w-8" />
-        <strong>{{ __('Belum ada percakapan.') }}</strong>
-        <span>{{ __('Hubungkan channel atau tunggu inbound message.') }}</span>
+        <strong v-if="selectedChannel === 'In-App'">{{ __('Belum ada percakapan.') }}</strong>
+        <strong v-else>{{ __('Belum ada percakapan.') }}</strong>
+        <span v-if="selectedChannel === 'In-App'">{{ __('Klik "New Chat" untuk memulai percakapan dengan pengguna lain.') }}</span>
+        <span v-else>{{ __('Hubungkan channel atau tunggu inbound message.') }}</span>
       </div>
       <div v-else class="omni-list">
         <label v-for="row in conversations" :key="row.name" :class="['omni-row', selectedConversationId === row.name ? 'active' : '']">
@@ -160,8 +251,9 @@
                     {{ template.template_name || template.name }}
                   </option>
                 </select>
-                <button class="omni-secondary" @click="generateSuggestions">
-                  <FeatherIcon name="sparkles" class="h-4 w-4" />
+                <button class="omni-secondary" :disabled="suggestionsLoading" @click="generateSuggestions">
+                  <FeatherIcon v-if="suggestionsLoading" name="loader" class="h-4 w-4 animate-spin" />
+                  <FeatherIcon v-else name="sparkles" class="h-4 w-4" />
                   {{ __('AI Suggestions') }}
                 </button>
                 <button class="omni-secondary" @click="showInternalNote = !showInternalNote">
@@ -169,9 +261,10 @@
                   {{ __('Internal Note') }}
                 </button>
               </div>
-              <div v-if="suggestions.length" class="omni-suggestions">
+              <div v-if="suggestions.length && !suggestionsLoading" class="omni-suggestions">
                 <button v-for="item in suggestions" :key="item" @click="composer = item">{{ item }}</button>
               </div>
+              <div v-if="suggestionsLoading" class="omni-suggestions-loading">{{ __('Generating suggestions...') }}</div>
               <textarea v-model="composer" :placeholder="showInternalNote ? __('Write an internal note') : __('Type a reply')" />
               <div class="omni-composer-actions">
                 <FileUploader
@@ -237,7 +330,7 @@
 </template>
 
 <script setup>
-import { call, FeatherIcon, FileUploader, toast } from 'frappe-ui'
+import { call, Dialog, FeatherIcon, FileUploader, toast } from 'frappe-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -261,12 +354,29 @@ const conversations = ref([])
 const counts = ref({ all: 0, whatsapp: 0, email: 0, sms: 0, in_app: 0, voice: 0 })
 const selectedIds = ref([])
 const selectedConversationId = ref('')
+const bulkLoading = ref(false)
 const detail = ref(null)
 const templates = ref([])
 const selectedTemplate = ref('')
 const composer = ref('')
 const suggestions = ref([])
 const showInternalNote = ref(false)
+const suggestionsLoading = ref(false)
+
+// New In-App Chat
+const showNewChat = ref(false)
+const userSearch = ref('')
+const userSearchLoading = ref(false)
+const userResults = ref([])
+let userSearchTimer = null
+
+// Tag dialog
+const showTagDialog = ref(false)
+const tagName = ref('')
+const tagUserSearch = ref('')
+const tagUserSearchLoading = ref(false)
+const tagUserResults = ref([])
+let tagUserSearchTimer = null
 
 const activeTabLabel = computed(() => channelTabs.find((item) => item.key === selectedChannel.value)?.label || __('All'))
 const providerReady = computed(() => detail.value?.provider_status?.status === 'Active')
@@ -361,17 +471,52 @@ async function onAttachmentUploaded(file) {
 }
 
 async function bulkAction(action) {
-  let value = null
-  if (action === 'tag') value = window.prompt(__('Tag name'))
-  if (action === 'assign') value = window.frappe?.session?.user
-  await call('crm.api.omnichannel.bulk_update_conversations', {
-    conversation_ids: selectedIds.value,
-    action,
-    value,
-  })
-  selectedIds.value = []
-  await loadConversations()
-  if (selectedConversationId.value) await loadConversation(selectedConversationId.value)
+  let ids = selectedIds.value
+  if (!ids.length && selectedConversationId.value) ids = [selectedConversationId.value]
+  if (!ids.length) { toast.error(__('Select conversations first')); return }
+  if (action === 'tag') { tagName.value = ''; showTagDialog.value = true; return }
+  bulkLoading.value = true
+  try {
+    let value = null
+    if (action === 'assign') value = window.frappe?.session?.user
+    const result = await call('crm.api.omnichannel.bulk_update_conversations', {
+      conversation_ids: ids,
+      action,
+      value,
+    })
+    toast.success(result?.updated?.length ? `${result.updated.length} ${__('updated')}` : __('Action completed'))
+    selectedIds.value = []
+    await loadConversations()
+    if (selectedConversationId.value) await loadConversation(selectedConversationId.value)
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Bulk action failed'))
+  } finally {
+    bulkLoading.value = false
+  }
+}
+
+async function confirmTag() {
+  if (!tagName.value.trim()) return
+  showTagDialog.value = false
+  let ids = selectedIds.value
+  if (!ids.length && selectedConversationId.value) ids = [selectedConversationId.value]
+  bulkLoading.value = true
+  try {
+    const result = await call('crm.api.omnichannel.bulk_update_conversations', {
+      conversation_ids: ids,
+      action: 'tag',
+      value: tagName.value.trim(),
+    })
+    toast.success(result?.updated?.length ? `${result.updated.length} ${__('updated')}` : __('Action completed'))
+    selectedIds.value = []
+    tagName.value = ''
+    await loadConversations()
+    if (selectedConversationId.value) await loadConversation(selectedConversationId.value)
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Tag action failed'))
+  } finally {
+    bulkLoading.value = false
+  }
 }
 
 async function assignToMe() {
@@ -386,6 +531,79 @@ async function archiveSelected() {
   detail.value = null
 }
 
+function openWhatsAppWeb() {
+  window.open('https://web.whatsapp.com', '_blank', 'noopener,noreferrer')
+}
+
+async function searchUsers() {
+  clearTimeout(userSearchTimer)
+  if (!userSearch.value.trim()) { userResults.value = []; return }
+  userSearchTimer = setTimeout(async () => {
+    userSearchLoading.value = true
+    try {
+      userResults.value = await call('crm.api.omnichannel.search_users', { query: userSearch.value })
+    } catch { userResults.value = []
+    } finally { userSearchLoading.value = false }
+  }, 300)
+}
+
+async function startChat(user) {
+  showNewChat.value = false
+  userSearch.value = ''
+  userResults.value = []
+  try {
+    const res = await call('crm.api.omnichannel.start_inapp_chat', {
+      user_email: user.name,
+      subject: `Chat with ${user.full_name || user.name}`,
+    })
+    if (res.conversation_id) {
+      selectedChannel.value = 'In-App'
+      await loadConversations()
+      selectedConversationId.value = res.conversation_id
+      await loadConversation(res.conversation_id)
+      toast.success(__('Chat started'))
+    }
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to start chat'))
+  }
+}
+
+async function searchTagUsers() {
+  clearTimeout(tagUserSearchTimer)
+  if (!tagUserSearch.value.trim()) { tagUserResults.value = []; return }
+  tagUserSearchTimer = setTimeout(async () => {
+    tagUserSearchLoading.value = true
+    try {
+      tagUserResults.value = await call('crm.api.omnichannel.search_users', { query: tagUserSearch.value })
+    } catch { tagUserResults.value = []
+    } finally { tagUserSearchLoading.value = false }
+  }, 300)
+}
+
+async function assignToUser(user) {
+  let ids = selectedIds.value
+  if (!ids.length && selectedConversationId.value) ids = [selectedConversationId.value]
+  bulkLoading.value = true
+  try {
+    const result = await call('crm.api.omnichannel.bulk_update_conversations', {
+      conversation_ids: ids,
+      action: 'assign',
+      value: user.name,
+    })
+    toast.success(result?.updated?.length ? `${result.updated.length} ${__('assigned to')} ${user.full_name || user.name}` : __('Action completed'))
+    selectedIds.value = []
+    tagUserSearch.value = ''
+    tagUserResults.value = []
+    showTagDialog.value = false
+    await loadConversations()
+    if (selectedConversationId.value) await loadConversation(selectedConversationId.value)
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Assign failed'))
+  } finally {
+    bulkLoading.value = false
+  }
+}
+
 async function evaluateRouting() {
   const response = await call('crm.api.omnichannel.evaluate_routing', {
     conversation_id: selectedConversationId.value,
@@ -395,13 +613,24 @@ async function evaluateRouting() {
 }
 
 async function generateSuggestions() {
-  const response = await call('crm.api.omnichannel.generate_reply_suggestions', {
-    conversation_id: selectedConversationId.value,
-    tone: 'Formal',
-  })
-  suggestions.value = response?.suggestions || []
-  if (response?.status === 'Provider Not Configured') {
-    toast.error(__('AI Provider Not Configured'))
+  if (suggestionsLoading.value) return
+  suggestionsLoading.value = true
+  suggestions.value = []
+  try {
+    const response = await call('crm.api.omnichannel.generate_reply_suggestions', {
+      conversation_id: selectedConversationId.value,
+      tone: 'Formal',
+    })
+    suggestions.value = response?.suggestions || []
+    if (response?.status === 'Provider Not Configured') {
+      toast.error(__('AI Provider Not Configured'))
+    } else if (response?.status === 'Fallback') {
+      toast.success(__('Template suggestions ready'))
+    }
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to generate suggestions'))
+  } finally {
+    suggestionsLoading.value = false
   }
 }
 

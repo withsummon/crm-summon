@@ -378,6 +378,8 @@ def get_conversations(
 	tag: str | None = None,
 	sort: str = "recent",
 	unread_only: bool = False,
+	reference_doctype: str | None = None,
+	reference_name: str | None = None,
 	limit: int = 50,
 	offset: int = 0,
 ):
@@ -392,6 +394,10 @@ def get_conversations(
 		filters["status"] = ["!=", "Archived"]
 	if assigned_to:
 		filters["assigned_to"] = assigned_to
+	if reference_doctype:
+		filters["reference_doctype"] = reference_doctype
+	if reference_name:
+		filters["reference_name"] = reference_name
 	if unread_only in (True, "true", "1", 1):
 		filters["unread_count"] = [">", 0]
 	if tag:
@@ -758,6 +764,34 @@ def save_template(payload):
 def generate_reply_suggestions(conversation_id: str, tone: str = "Formal"):
 	detail = get_conversation(conversation_id)
 	provider = {"status": "Provider Not Configured"}
+
+	def _template_suggestions():
+		last_msg = (detail.get("messages") or [None])[-1]
+		last_content = (last_msg.get("content") or "").lower() if last_msg else ""
+		if any(w in last_content for w in ["price", "cost", "rate", "biaya", "bunga", "tarif", "berapa"]):
+			return [
+				"Terima kasih atas pertanyaan Anda. Kami akan menyampaikan informasi pricing yang kompetitif sesuai kebutuhan Anda.",
+				"Untuk detail pricing, kami sarankan diskusi lebih lanjut dengan relationship manager kami.",
+				"Kami dapat mengirimkan proposal penawaran khusus untuk Anda. Apakah berminat?",
+			]
+		if any(w in last_content for w in ["status", "progress", "update", "dimana", "kapan", "proses"]):
+			return [
+				"Terima kasih atas kesabarannya. Saat ini aplikasi Anda sedang dalam proses review.",
+				"Kami akan mengupdate status aplikasi Anda dalam 1-2 hari kerja.",
+				"Silakan hubungi kami kembali jika tidak ada perkembangan dalam 3 hari.",
+			]
+		if any(w in last_content for w in ["complaint", "keluhan", "masalah", "error", "gagal", "rusak"]):
+			return [
+				"Kami mohon maaf atas ketidaknyamanan yang Anda alami. Tim kami akan segera menindaklanjuti.",
+				"Kami mencatat keluhan Anda dan akan memprioritaskan penyelesaiannya.",
+				"Terima kasih atas laporannya. Kami akan menghubungi Anda dalam 1x24 jam.",
+			]
+		return [
+			"Terima kasih telah menghubungi BNI. Ada yang bisa kami bantu lebih lanjut?",
+			"Kami akan menindaklanjuti permintaan Anda dan menghubungi kembali segera.",
+			"Silakan informasikan jika ada kebutuhan lain yang dapat kami bantu.",
+		]
+
 	try:
 		prompt = (
 			f"Generate 3 {tone} reply suggestions for this customer conversation. "
@@ -772,7 +806,7 @@ def generate_reply_suggestions(conversation_id: str, tone: str = "Formal"):
 		options = [item for item in options if item][:3]
 		return {"status": "Generated", "tone": tone, "suggestions": options or [text], "provider_status": {"status": "Active"}}
 	except Exception:
-		return {"status": "Provider Not Configured", "tone": tone, "suggestions": [], "provider_status": provider}
+		return {"status": "Fallback", "tone": tone, "suggestions": _template_suggestions(), "provider_status": provider}
 
 
 @frappe.whitelist()
@@ -902,9 +936,104 @@ def export_archive(filters=None):
 	return {"status": "Exported", "format": "json", "rows": rows}
 
 
+@frappe.whitelist()
+def search_users(query: str = "") -> list[dict]:
+	"""Search Frappe users for in-app chat."""
+	filters = {"enabled": 1}
+	if query:
+		filters["full_name"] = ["like", f"%{query}%"]
+	users = frappe.get_all("User", filters=filters, fields=["name", "full_name", "user_image", "email"], limit_page_length=20)
+	return users
+
+
+@frappe.whitelist()
+def start_inapp_chat(user_email: str, subject: str | None = None) -> dict:
+	"""Create or get an in-app conversation between current user and another user."""
+	current = frappe.session.user
+	if current == "Guest":
+		frappe.throw(_("Authentication required"))
+	if user_email == current:
+		frappe.throw(_("Cannot start a chat with yourself"))
+	# Check if a conversation already exists
+	existing = frappe.db.get_all(
+		CONVERSATION,
+		filters={
+			"channel": "In-App",
+			"reference_doctype": "User",
+			"reference_name": user_email,
+			"assigned_to": current,
+			"status": ["!=", "Archived"],
+		},
+		limit=1,
+	)
+	if existing:
+		return {"conversation_id": existing[0].name, "created": False}
+	other = frappe.db.get_value("User", user_email, "full_name")
+	conv = frappe.get_doc({
+		"doctype": CONVERSATION,
+		"subject": subject or f"Chat with {other or user_email}",
+		"channel": "In-App",
+		"status": "Open",
+		"reference_doctype": "User",
+		"reference_name": user_email,
+		"assigned_to": current,
+	})
+	conv.insert(ignore_permissions=True)
+	# Add a system message
+	frappe.get_doc({
+		"doctype": "CRM Omnichannel Message",
+		"conversation": conv.name,
+		"channel": "In-App",
+		"direction": "Internal",
+		"message_type": "System",
+		"status": "Sent",
+		"content": _("Chat started by {0} with {1}").format(
+			frappe.db.get_value("User", current, "full_name") or current,
+			other or user_email,
+		),
+		"from_party": current,
+	}).insert(ignore_permissions=True)
+	return {"conversation_id": conv.name, "created": True}
+
+
 def sync_whatsapp_message(doc, method: str | None = None):
 	if not _ready():
 		return
+
+
+@frappe.whitelist()
+def create_or_get_conversation(
+	reference_doctype: str,
+	reference_name: str,
+	subject: str | None = None,
+) -> dict:
+	"""Find or create an In-App conversation for a doctype record."""
+	if not _ready():
+		frappe.throw(_("Omnichannel workspace is not migrated yet"))
+	existing = frappe.db.get_all(
+		CONVERSATION,
+		filters={
+			"channel": "In-App",
+			"reference_doctype": reference_doctype,
+			"reference_name": reference_name,
+			"status": ["!=", "Archived"],
+		},
+		limit=1,
+	)
+	if existing:
+		return get_conversation(existing[0].name)
+	display = frappe.db.get_value(reference_doctype, reference_name, "customer_name") or reference_name
+	conv = frappe.get_doc({
+		"doctype": CONVERSATION,
+		"subject": subject or f"In-App Chat - {display}",
+		"channel": "In-App",
+		"status": "Open",
+		"reference_doctype": reference_doctype,
+		"reference_name": reference_name,
+		"assigned_to": frappe.session.user,
+	})
+	conv.insert(ignore_permissions=True)
+	return get_conversation(conv.name)
 	reference_doctype = getattr(doc, "reference_doctype", None)
 	reference_name = getattr(doc, "reference_name", None)
 	upsert_inbound_message(
