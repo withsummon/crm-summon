@@ -201,6 +201,21 @@ const routes = [
           sourcePath: '/app/item',
         },
       },
+      {
+        path: 'collections',
+        name: 'Collections',
+        component: () => import('@/pages/Collections.vue'),
+      },
+      {
+        path: 'committee-approval',
+        name: 'Committee Approval',
+        component: () => import('@/pages/CommitteeApproval.vue'),
+      },
+      {
+        path: 'covenant-monitoring',
+        name: 'Covenant Monitoring',
+        component: () => import('@/pages/CovenantMonitoring.vue'),
+      },
     ],
   },
   // ─── Operations ──────────────────────────────────────────
@@ -231,13 +246,7 @@ const routes = [
       {
         path: 'partner-vendor-management',
         name: 'Partner & Vendor Management',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Partner & Vendor Management',
-          subtitle: 'Supplier',
-          icon: 'truck',
-          sourcePath: '/app/supplier',
-        },
+        component: () => import('@/pages/PartnerVendorManagement.vue'),
       },
       {
         path: 'notification-center',
@@ -267,8 +276,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Admin Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Admin & Platform' },
+        component: () => import('@/pages/AdminPlatform.vue'),
       },
       {
         path: 'workflow-engine',
@@ -304,13 +312,13 @@ const routes = [
       {
         path: 'rules-engine',
         name: 'Rules Engine',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Rules Engine',
-          subtitle: 'Assignment Rule',
-          icon: 'filter',
-          sourcePath: '/app/assignment-rule',
-        },
+        component: () => import('@/modules/admin/pages/RulesEngine.vue'),
+      },
+      {
+        path: 'rules-engine/:ruleId',
+        name: 'Rule Detail',
+        component: () => import('@/modules/admin/pages/RulesEngine.vue'),
+        props: true,
       },
       // RBAC Routes
       {
