@@ -31,6 +31,8 @@ STRUCTURED_DOCTYPES = {
 	"CRM Financial Statement": ["name", "customer", "statement_type", "metric", "year", "amount", "auditor", "notes", "modified"],
 	"CRM Site Visit": ["name", "customer", "visit_date", "notes", "report_pdf", "photo_attachment", "modified"],
 	"CRM AI Insight": ["name", "customer", "insight_type", "title", "confidence_score", "status", "suggested_action", "notes", "modified"],
+	"CRM Credit Spread Line": ["name", "application", "customer", "statement_type", "metric_key", "metric_label", "year", "amount", "adjusted_amount", "notes", "modified"],
+	"CRM Credit Analysis Artifact": ["name", "application", "customer", "artifact_type", "title", "status", "payload_json", "modified"],
 }
 
 
@@ -314,8 +316,38 @@ def retrieve_sources(query, customer=None, limit=8):
 	return results
 
 
+def is_conversational_query(query):
+	q = re.sub(r"[^\w\s]", "", (query or "").strip().lower())
+	greetings = {
+		"hello", "helo", "hi", "halo", "hey", "hallo", "hy", "helow", "hellow",
+		"apa kabar", "apa kabarnya", "how are you", "who are you",
+		"siapa kamu", "siapa anda", "siapa", "kamu siapa", "anda siapa",
+		"selamat pagi", "selamat siang", "selamat sore", "selamat malam",
+		"pagi", "siang", "sore", "malam",
+		"good morning", "good afternoon", "good evening", "good night",
+		"terima kasih", "terimakasih", "thank you", "thanks", "tengkyu", "makasih",
+		"test", "testing", "ping", "p", "assalamualaikum", "kum", "wr", "wb"
+	}
+	if q in greetings:
+		return True
+	words = [w for w in q.split() if w]
+	if len(words) <= 2 and all(any(g in w for g in greetings) or len(w) <= 3 for w in words):
+		return True
+	return False
+
+
 def query_rag(query, agent_key=None, customer=None):
 	settings = get_ai_settings()
+	from frappe.utils import flt
+
+	if is_conversational_query(query):
+		return {
+			"context": "User greeted the assistant or initiated a generic conversation. Respond politely in Indonesian/English, introduce yourself as the BNI CRM AI Agent Co-pilot, and ask how you can help with BNI CRM Core, credit analysis, portfolio monitoring, or omnichannel communications today.",
+			"sources": [{"title": "Conversational Greeting", "excerpt": "General greeting/conversation bypass."}],
+			"confidence": 1.0,
+			"passes_guardrail": True,
+		}
+
 	sources = retrieve_sources(query, customer=customer)
 	if not sources:
 		reindex_structured_data(scope="customer_360" if customer else "crm", docname=customer, agent_key=agent_key)
@@ -323,9 +355,13 @@ def query_rag(query, agent_key=None, customer=None):
 
 	context = "\n\n".join(f"[{idx + 1}] {source['title']}\n{source['excerpt']}" for idx, source in enumerate(sources))
 	confidence = min(0.95, 0.2 + (len(sources) * 0.1))
+	
+	threshold = flt(settings.guardrail_confidence_threshold)
+	passes = len(sources) > 0 and confidence >= threshold
+
 	return {
 		"context": context,
 		"sources": sources,
 		"confidence": confidence,
-		"passes_guardrail": confidence >= settings.guardrail_confidence_threshold,
+		"passes_guardrail": passes,
 	}

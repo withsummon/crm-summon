@@ -33,8 +33,10 @@ def get_ai_settings():
 		settings.kimi_api_key = doc.get_password("kimi_api_key") or doc.get_password("moonshot_api_key")
 		settings.rag_storage_path = doc.get("rag_storage_path") or ""
 		settings.local_embedding_model = doc.get("local_embedding_model") or "BAAI/bge-m3"
-		settings.guardrail_confidence_threshold = float(doc.get("guardrail_confidence_threshold") or 0.45)
-		settings.daily_cost_limit_usd = float(doc.get("daily_cost_limit_usd") or 25)
+		val = doc.get("guardrail_confidence_threshold")
+		settings.guardrail_confidence_threshold = float(val) if (val is not None and val != "") else 0.45
+		cost_limit = doc.get("daily_cost_limit_usd")
+		settings.daily_cost_limit_usd = float(cost_limit) if (cost_limit is not None and cost_limit != "") else 25.0
 		settings.thinking_mode = doc.get("kimi_thinking_mode") or "disabled"
 	except Exception:
 		pass

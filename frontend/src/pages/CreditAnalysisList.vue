@@ -159,7 +159,7 @@
                   </div>
                 </div>
                 <FileUploader
-                  :upload-args="{ doctype: 'CRM Credit Application', private: true }"
+                  :upload-args="{ private: true }"
                   @success="onSpreadFileUploaded"
                 >
                   <template #default="{ openFileSelector, uploading }">

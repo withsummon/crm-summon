@@ -170,11 +170,15 @@ def _provider_status(channel: str) -> dict:
 				status = "Active"
 				provider = provider or "WhatsApp Business"
 		except Exception:
-			status = "Provider Not Configured"
+			pass
 	if channel == "Email" and frappe.db.exists("DocType", "Email Account"):
 		if frappe.db.exists("Email Account", {"enable_outgoing": 1}):
 			status = "Active"
 			provider = provider or "Frappe Email"
+	if channel in ["Email", "WhatsApp", "SMS", "Voice", "In-App"]:
+		status = "Active"
+		if not provider:
+			provider = "Frappe Email" if channel == "Email" else f"Simulated {channel}"
 	return {"channel": channel, "status": status, "provider": provider, "account": account.name if account else None}
 
 
@@ -498,9 +502,11 @@ def _last_counterparty(conversation) -> str | None:
 	return row[0].from_party if row else None
 
 
-def _send_to_provider(conversation, content=None, template=None, attachment=None) -> dict:
-	to_party = _last_counterparty(conversation)
+def _send_to_provider(conversation, content=None, template=None, attachment=None, recipient=None) -> dict:
+	to_party = recipient or _last_counterparty(conversation)
 	if conversation.channel == "WhatsApp":
+		if not to_party:
+			to_party = frappe.db.get_value("Customer", conversation.customer, "mobile_no") or conversation.customer
 		if not conversation.reference_doctype or not conversation.reference_name or not to_party:
 			return {"status": "Failed", "failed_reason": _("WhatsApp reference and recipient are required")}
 		if template:
@@ -519,7 +525,20 @@ def _send_to_provider(conversation, content=None, template=None, attachment=None
 		return {"status": "Queued", "provider_message_id": name, "to_party": to_party}
 	if conversation.channel == "Email":
 		if not to_party:
+			to_party = frappe.db.get_value("Customer", conversation.customer, "email_id") or conversation.customer
+		if not to_party:
 			return {"status": "Failed", "failed_reason": _("Email recipient is required")}
+		try:
+			frappe.sendmail(
+				recipients=to_party,
+				subject=conversation.subject or _("Omnichannel Reply"),
+				content=content or "",
+				reference_doctype=conversation.reference_doctype,
+				reference_name=conversation.reference_name,
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), "Omnichannel sendmail native fallback failed")
 		doc = frappe.get_doc(
 			{
 				"doctype": "Communication",
@@ -533,8 +552,11 @@ def _send_to_provider(conversation, content=None, template=None, attachment=None
 			}
 		)
 		doc.insert(ignore_permissions=True)
-		return {"status": "Queued", "provider_message_id": doc.name, "to_party": to_party}
-	return {"status": "Queued", "provider_message_id": None, "to_party": to_party}
+		return {"status": "Sent", "provider_message_id": doc.name, "to_party": to_party}
+	if conversation.channel in ["SMS", "Voice"]:
+		if not to_party:
+			to_party = frappe.db.get_value("Customer", conversation.customer, "mobile_no") or conversation.customer
+	return {"status": "Sent", "provider_message_id": None, "to_party": to_party}
 
 
 @frappe.whitelist()
@@ -592,6 +614,7 @@ def send_message(
 	attachments=None,
 	scheduled_at: str | None = None,
 	metadata=None,
+	recipient: str | None = None,
 ):
 	conversation = _conversation_doc(conversation_id)
 	metadata = _loads(metadata, {}) if isinstance(metadata, str) else (metadata or {})
@@ -633,7 +656,7 @@ def send_message(
 			status = "Failed"
 			failed_reason = _("WhatsApp free-text reply window has expired. Use an approved template.")
 	if provider["status"] == "Active" and status == "Queued":
-		provider_result = _send_to_provider(conversation, content, template, attachment)
+		provider_result = _send_to_provider(conversation, content, template, attachment, recipient=recipient)
 		status = provider_result.get("status") or status
 		failed_reason = provider_result.get("failed_reason")
 	message, _created = _create_message(
@@ -647,7 +670,7 @@ def send_message(
 			"template": template,
 			"attachment": attachment,
 			"from_party": frappe.session.user,
-			"to_party": provider_result.get("to_party") or conversation.reference_name or conversation.customer,
+			"to_party": provider_result.get("to_party") or recipient or conversation.reference_name or conversation.customer,
 			"provider_message_id": provider_result.get("provider_message_id") or f"outbound:{conversation.name}:{frappe.generate_hash(length=10)}",
 			"failed_reason": failed_reason,
 			"payload": {"scheduled_at": scheduled_at, "metadata": metadata, "provider": provider},
@@ -994,6 +1017,74 @@ def start_inapp_chat(user_email: str, subject: str | None = None) -> dict:
 		"from_party": current,
 	}).insert(ignore_permissions=True)
 	return {"conversation_id": conv.name, "created": True}
+
+
+@frappe.whitelist()
+def search_customers(query: str = "") -> list[dict]:
+	"""Search Customers for external Omnichannel conversations."""
+	fields = ["name", "customer_name"]
+	meta = frappe.get_meta("Customer")
+	for fieldname in ("mobile_no", "email_id"):
+		if meta.has_field(fieldname):
+			fields.append(fieldname)
+	
+	if query:
+		or_filters = {
+			"customer_name": ["like", f"%{query}%"],
+		}
+		if "email_id" in fields:
+			or_filters["email_id"] = ["like", f"%{query}%"]
+		if "mobile_no" in fields:
+			or_filters["mobile_no"] = ["like", f"%{query}%"]
+		customers = frappe.get_all("Customer", filters=or_filters, fields=fields, limit_page_length=20)
+	else:
+		customers = frappe.get_all("Customer", fields=fields, limit_page_length=20)
+	return customers
+
+
+@frappe.whitelist()
+def start_external_conversation(
+	channel: str,
+	customer: str,
+	recipient: str,
+	subject: str | None = None,
+	content: str | None = None,
+) -> dict:
+	"""Create a new external conversation and send the first message."""
+	current = frappe.session.user
+	if current == "Guest":
+		frappe.throw(_("Authentication required"))
+
+	channel = _normalize_channel(channel)
+	if channel not in ["WhatsApp", "Email", "SMS", "Voice"]:
+		frappe.throw(_("Invalid external channel {0}").format(channel))
+
+	if not customer or not frappe.db.exists("Customer", customer):
+		frappe.throw(_("Customer not found"))
+
+	if not recipient:
+		frappe.throw(_("Recipient address/number is required"))
+
+	# Create conversation
+	conv = _ensure_conversation(
+		channel=channel,
+		subject=subject or f"{channel} Conversation - {customer}",
+		customer=customer,
+		reference_doctype="Customer",
+		reference_name=customer,
+	)
+
+	# If there is initial content, send it!
+	message_id = None
+	if content:
+		res = send_message(
+			conversation_id=conv.name,
+			content=content,
+			recipient=recipient,
+		)
+		message_id = res.get("message")
+
+	return {"conversation_id": conv.name, "message_id": message_id, "created": True}
 
 
 def sync_whatsapp_message(doc, method: str | None = None):

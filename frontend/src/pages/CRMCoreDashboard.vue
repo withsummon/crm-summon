@@ -116,7 +116,18 @@
                   <line v-for="yl in yLabels" :key="'g'+yl.label" :x1="chartLeft" :y1="yl.y" :x2="svgW - 10" :y2="yl.y" class="grid-ln" />
                   <rect v-for="(bar, i) in chartBars" :key="bar.label" :x="bar.x" :y="bar.y" :width="bw" :height="bar.h" rx="5" :class="['bar', { hl: hoveredBar === i || (hoveredBar === null && i === defaultHighlight) }]" @mouseenter="hoveredBar = i" @mouseleave="hoveredBar = null" />
                   <line v-if="activeBar" :x1="activeBar.x + bw / 2" :y1="chartTop" :x2="activeBar.x + bw / 2" :y2="chartBottom" class="active-line" />
-                  <text v-for="(bar, i) in chartBars" :key="'x'+i" :x="bar.x + bw / 2" :y="chartBottom + 16" text-anchor="middle" class="x-label" :class="{ hl: i === defaultHighlight }">{{ bar.label }}</text>
+                  <text
+                    v-for="(bar, i) in chartBars"
+                    :key="'x'+i"
+                    :x="bar.x + bw / 2"
+                    :y="chartBottom + 12"
+                    text-anchor="end"
+                    :transform="`rotate(-30, ${bar.x + bw / 2}, ${chartBottom + 12})`"
+                    class="x-label animate-fade-in"
+                    :class="{ hl: i === defaultHighlight }"
+                  >
+                    {{ truncateLabel(bar.label, 12) }}
+                  </text>
                 </svg>
                 <div v-if="activeBar" class="bni-tooltip" :style="{ left: tooltipLeft }">
                   <strong>{{ activeBar.label }}</strong>
@@ -276,6 +287,11 @@ import Sortable from 'sortablejs'
 import html2pdf from 'html2pdf.js'
 
 const router = useRouter()
+
+function truncateLabel(str, length = 12) {
+  if (!str) return ''
+  return str.length > length ? str.slice(0, length) + '...' : str
+}
 
 // ─── Widget Configuration (draggable + toggleable) ─────────
 const defaultWidgets = [
@@ -646,9 +662,9 @@ const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
 // ─── Chart Dimensions ─────────────────────────────────────
 const svgW = 720
-const svgH = 260
+const svgH = 300
 const chartLeft = 42
-const chartBottom = 230
+const chartBottom = 200
 const chartTop = 20
 const chartH = chartBottom - chartTop
 const bw = 36
@@ -1312,7 +1328,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
 /* ─── Chart ──────────────────────────────────────────── */
 .bni-chart-wrap {
   position: relative;
-  height: 260px;
+  height: 300px;
 }
 .bni-rev-svg {
   width: 100%;

@@ -99,7 +99,7 @@
         </div>
 
         <div class="pt-2">
-          <Button @click="save" :loading="settings.save.loading">
+          <Button @click="save" :loading="saving">
             {{ __('Save Settings') }}
           </Button>
         </div>
@@ -110,10 +110,11 @@
 
 <script setup>
 import { getSettings } from '@/stores/settings'
-import { Button, toast } from 'frappe-ui'
+import { Button, toast, call } from 'frappe-ui'
 import { computed, ref, watch } from 'vue'
 
 const { _settings: settings } = getSettings()
+const saving = ref(false)
 
 const PROVIDER_MODELS = {
   Kimi: [
@@ -142,17 +143,17 @@ const PROVIDER_MODELS = {
 }
 
 const localProvider = ref(settings.doc?.ai_provider || 'Kimi')
-const localModel = ref(settings.doc?.ai_model || '')
+const localModel = ref(settings.doc?.kimi_model || '')
 const localCustomModel = ref('')
 const localApiKey = ref('')
-const localApiBase = ref(settings.doc?.ai_api_base || '')
+const localApiBase = ref(settings.doc?.kimi_base_url || '')
 
 // watch for settings doc to be loaded
 watch(() => settings.doc, (doc) => {
   if (doc) {
     localProvider.value = doc.ai_provider || 'Kimi'
-    localModel.value = doc.ai_model || (PROVIDER_MODELS[doc.ai_provider || 'Kimi']?.[0]?.value || '')
-    localApiBase.value = doc.ai_api_base || ''
+    localModel.value = doc.kimi_model || (PROVIDER_MODELS[doc.ai_provider || 'Kimi']?.[0]?.value || '')
+    localApiBase.value = doc.kimi_base_url || ''
   }
 }, { immediate: true })
 
@@ -179,34 +180,24 @@ watch(localProvider, (newProvider) => {
   localModel.value = models[0]?.value || ''
 })
 
-function save() {
+async function save() {
   const effectiveModelVal = localModel.value === '__custom__' ? localCustomModel.value : localModel.value
 
-  // Update doc fields
-  settings.doc.ai_provider = localProvider.value
-  settings.doc.ai_model = effectiveModelVal
-  settings.doc.ai_api_base = localApiBase.value
-
-  // Map API key to the right field based on provider
-  if (localApiKey.value) {
-    if (localProvider.value === 'Kimi') {
-      settings.doc.kimi_api_key = localApiKey.value
-    } else if (localProvider.value === 'Gemini') {
-      settings.doc.gemini_api_key = localApiKey.value
-    } else {
-      // Generic: store in a universal field
-      settings.doc.ai_api_key = localApiKey.value
-    }
+  saving.value = true
+  try {
+    await call('crm.api.ai_agent_center.save_ai_settings', {
+      provider: localProvider.value,
+      model: effectiveModelVal,
+      base_url: localApiBase.value,
+      api_key: localApiKey.value || null
+    })
+    toast.success(__('AI Settings saved successfully'))
+    localApiKey.value = '' // Clear for security
+    await settings.reload() // Reload the settings store
+  } catch (e) {
+    toast.error(e?.message || __('Failed to save settings'))
+  } finally {
+    saving.value = false
   }
-
-  settings.save.submit(null, {
-    onSuccess: () => {
-      toast.success(__('AI Settings saved successfully'))
-      localApiKey.value = '' // Clear for security
-    },
-    onError: (e) => {
-      toast.error(e.message || __('Failed to save settings'))
-    }
-  })
 }
 </script>

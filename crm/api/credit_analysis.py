@@ -1548,7 +1548,22 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 	workspace = _workspace_payload(application.name)
 	if not errors:
 		saved = save_spreading(application.name, rows, status="Imported")
-		workspace = saved["workspace"]
+		
+		# Auto generate AI Executive Summary, Memo and Recommendation!
+		try:
+			generate_credit_summary(application.name)
+		except Exception:
+			pass
+		try:
+			generate_credit_memo(application.name)
+		except Exception:
+			pass
+		try:
+			generate_credit_recommendation(application.name)
+		except Exception:
+			pass
+
+		workspace = _workspace_payload(application.name)
 
 	artifact = {
 		"status": status,
@@ -1681,6 +1696,14 @@ def generate_credit_summary(application_id: str):
 	)
 	payload = {"summary": response["response"], "sources": response.get("sources") or [], "confidence": response.get("confidence"), "model": response.get("model")}
 	_replace_artifact(application.name, application.get("borrower"), "executive_summary", "AI Executive Summary", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
+	
+	# Also update the credit_memo's summary_bullets!
+	bullets = [line.strip("- ").strip("* ").strip() for line in response["response"].split("\n") if line.strip()]
+	if bullets:
+		memo = workspace.get("memo") or {}
+		memo["summary_bullets"] = bullets[:5]
+		_replace_artifact(application.name, application.get("borrower"), "credit_memo", "AI Credit Memo Draft", memo, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
+
 	frappe.db.commit()
 	return payload
 

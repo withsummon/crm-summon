@@ -74,16 +74,17 @@
           <option value="unread">{{ __('Unread') }}</option>
           <option value="priority">{{ __('Priority') }}</option>
         </select>
-        <button v-if="selectedChannel === 'In-App'" class="omni-new-chat" @click="showNewChat = true">
+        <button v-if="selectedChannel !== 'All'" class="omni-new-chat" @click="showNewChat = true">
           <FeatherIcon name="edit" class="h-4 w-4" />
           {{ __('New Chat') }}
         </button>
       </div>
 
       <!-- New Chat Dialog -->
-      <Dialog v-model="showNewChat" :options="{ title: __('Start In-App Chat') }">
+      <Dialog v-model="showNewChat" :options="{ title: dialogTitle }">
         <template #body-content>
-          <div class="space-y-3 pt-3">
+          <!-- For In-App Chat (Existing Search Users) -->
+          <div v-if="selectedChannel === 'In-App'" class="space-y-3 pt-3">
             <div class="relative">
               <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input v-model="userSearch" :placeholder="__('Search users...')" @keyup="searchUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
@@ -108,6 +109,89 @@
             </div>
             <div v-if="!userSearch" class="text-center py-4 text-sm text-slate-400">
               {{ __('Type to search users') }}
+            </div>
+          </div>
+
+          <!-- For External Channels (Email, SMS, WhatsApp, Voice) -->
+          <div v-else class="space-y-4 pt-3">
+            <!-- Customer Search Input -->
+            <div class="relative">
+              <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input v-model="customerSearch" :placeholder="__('Search customers...')" @keyup="searchCustomers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+            </div>
+            
+            <div v-if="customerSearchLoading" class="flex justify-center py-4">
+              <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+            </div>
+            
+            <div v-else-if="!customerResults.length && customerSearch" class="text-center py-4 text-sm text-slate-400">
+              {{ __('No customers found') }}
+            </div>
+            
+            <div v-else-if="customerResults.length && !selectedNewChatCustomer" class="space-y-1 max-h-40 overflow-y-auto border border-slate-100 rounded-lg p-1 bg-slate-50/50">
+              <button v-for="c in customerResults" :key="c.name" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-white text-left transition-colors border border-transparent hover:border-slate-100" @click="selectNewChatCustomer(c)">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700 shrink-0">
+                  {{ (c.customer_name || c.name).charAt(0).toUpperCase() }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium text-slate-800 truncate">{{ c.customer_name || c.name }}</div>
+                  <div class="text-xs text-slate-400 truncate">
+                    <span v-if="selectedChannel === 'Email'">{{ c.email_id || __('No email') }}</span>
+                    <span v-else>{{ c.mobile_no || __('No phone') }}</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Customer Selected form composition -->
+            <div v-if="selectedNewChatCustomer" class="space-y-3 p-3 bg-slate-50/50 border border-slate-100 rounded-xl transition-all duration-200">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div class="flex items-center gap-2">
+                  <div class="h-2 w-2 rounded-full bg-teal-500" />
+                  <span class="text-xs font-semibold text-slate-700">{{ selectedNewChatCustomer.customer_name }}</span>
+                </div>
+                <button @click="selectedNewChatCustomer = null" class="text-xs text-slate-400 hover:text-teal-600 font-medium">
+                  {{ __('Change') }}
+                </button>
+              </div>
+
+              <!-- Recipient address or phone -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  <span v-if="selectedChannel === 'Email'">{{ __('To Email') }}</span>
+                  <span v-else>{{ __('To Number') }}</span>
+                </label>
+                <input v-model="newChatRecipient" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" :placeholder="selectedChannel === 'Email' ? 'email@example.com' : '+628...'" />
+              </div>
+
+              <!-- Subject for Email -->
+              <div v-if="selectedChannel === 'Email'" class="space-y-1">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Subject') }}</label>
+                <input v-model="newChatSubject" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" :placeholder="__('Email subject...')" />
+              </div>
+
+              <!-- First Message -->
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('First Message') }}</label>
+                <textarea v-model="newChatFirstMessage" rows="3" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 resize-none" :placeholder="__('Type your first message...')" />
+              </div>
+
+              <!-- Action button inside Dialog body or actions slot -->
+              <div class="pt-2 flex justify-end">
+                <button
+                  class="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
+                  :disabled="newChatLoading || !newChatRecipient || !newChatFirstMessage"
+                  @click="startExternalChat"
+                >
+                  <FeatherIcon v-if="newChatLoading" name="loader" class="h-4 w-4 animate-spin" />
+                  <FeatherIcon v-else name="send" class="h-4 w-4" />
+                  {{ __('Start Conversation') }}
+                </button>
+              </div>
+            </div>
+            
+            <div v-if="!customerSearch && !selectedNewChatCustomer" class="text-center py-4 text-sm text-slate-400">
+              {{ __('Type to search customers') }}
             </div>
           </div>
         </template>
@@ -370,6 +454,17 @@ const userSearchLoading = ref(false)
 const userResults = ref([])
 let userSearchTimer = null
 
+// New External Customer Chat
+const customerSearch = ref('')
+const customerSearchLoading = ref(false)
+const customerResults = ref([])
+const selectedNewChatCustomer = ref(null)
+const newChatRecipient = ref('')
+const newChatSubject = ref('')
+const newChatFirstMessage = ref('')
+const newChatLoading = ref(false)
+let customerSearchTimer = null
+
 // Tag dialog
 const showTagDialog = ref(false)
 const tagName = ref('')
@@ -377,6 +472,13 @@ const tagUserSearch = ref('')
 const tagUserSearchLoading = ref(false)
 const tagUserResults = ref([])
 let tagUserSearchTimer = null
+
+const dialogTitle = computed(() => {
+  if (selectedChannel.value === 'In-App') {
+    return __('Start In-App Chat')
+  }
+  return __(`Start ${selectedChannel.value} Conversation`)
+})
 
 const activeTabLabel = computed(() => channelTabs.find((item) => item.key === selectedChannel.value)?.label || __('All'))
 const providerReady = computed(() => detail.value?.provider_status?.status === 'Active')
@@ -395,6 +497,19 @@ onMounted(loadConversations)
 watch(selectedConversationId, async (name) => {
   if (!name) return
   await loadConversation(name)
+})
+
+watch(showNewChat, (val) => {
+  if (!val) {
+    userSearch.value = ''
+    userResults.value = []
+    customerSearch.value = ''
+    customerResults.value = []
+    selectedNewChatCustomer.value = null
+    newChatRecipient.value = ''
+    newChatSubject.value = ''
+    newChatFirstMessage.value = ''
+  }
 })
 
 async function loadConversations() {
@@ -663,6 +778,58 @@ function formatCurrency(value) {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(number)
+}
+
+async function searchCustomers() {
+  clearTimeout(customerSearchTimer)
+  if (!customerSearch.value.trim()) { customerResults.value = []; return }
+  customerSearchTimer = setTimeout(async () => {
+    customerSearchLoading.value = true
+    try {
+      customerResults.value = await call('crm.api.omnichannel.search_customers', { query: customerSearch.value })
+    } catch { 
+      customerResults.value = []
+    } finally { 
+      customerSearchLoading.value = false 
+    }
+  }, 300)
+}
+
+function selectNewChatCustomer(customer) {
+  selectedNewChatCustomer.value = customer
+  if (selectedChannel.value === 'Email') {
+    newChatRecipient.value = customer.email_id || ''
+  } else {
+    newChatRecipient.value = customer.mobile_no || ''
+  }
+  newChatSubject.value = ''
+  newChatFirstMessage.value = ''
+}
+
+async function startExternalChat() {
+  if (!selectedNewChatCustomer.value || !newChatRecipient.value || !newChatFirstMessage.value) return
+  newChatLoading.value = true
+  try {
+    const res = await call('crm.api.omnichannel.start_external_conversation', {
+      channel: selectedChannel.value,
+      customer: selectedNewChatCustomer.value.name,
+      recipient: newChatRecipient.value,
+      subject: newChatSubject.value || `${selectedChannel.value} Conversation with ${selectedNewChatCustomer.value.customer_name}`,
+      content: newChatFirstMessage.value,
+    })
+    
+    if (res.conversation_id) {
+      showNewChat.value = false
+      await loadConversations()
+      selectedConversationId.value = res.conversation_id
+      await loadConversation(res.conversation_id)
+      toast.success(__('Conversation started successfully'))
+    }
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to start conversation'))
+  } finally {
+    newChatLoading.value = false
+  }
 }
 </script>
 

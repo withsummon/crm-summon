@@ -600,3 +600,20 @@ def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 @frappe.whitelist()
 def reindex_rag(scope=None, docname=None):
 	return reindex_structured_data(scope=scope, docname=docname)
+
+
+@frappe.whitelist()
+def save_ai_settings(provider, model, base_url=None, api_key=None):
+	settings = frappe.get_doc("FCRM Settings", "FCRM Settings")
+	settings.ai_provider = provider
+	settings.kimi_model = model
+	if base_url is not None:
+		settings.kimi_base_url = base_url
+	if api_key:
+		if provider == "Gemini":
+			settings.gemini_api_key = api_key
+		else:
+			settings.kimi_api_key = api_key
+	settings.save(ignore_permissions=True)
+	frappe.db.commit()
+	return settings.as_dict()

@@ -555,6 +555,16 @@ def create_credit_application(payload=None):
 			
 			# Recalculate workspace parameters
 			workspace = _workspace_payload(application.get("name"), persist_artifacts=True)
+			
+			# Auto generate AI Executive Summary, Memo and Recommendation!
+			try:
+				from crm.api.credit_analysis import generate_credit_summary, generate_credit_memo, generate_credit_recommendation
+				generate_credit_summary(application.get("name"))
+				generate_credit_memo(application.get("name"))
+				generate_credit_recommendation(application.get("name"))
+			except Exception:
+				pass
+
 			_replace_artifact(
 				application.get("name"),
 				borrower,
