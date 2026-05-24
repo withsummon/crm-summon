@@ -91,7 +91,6 @@
               </template>
             </Button>
             <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
-            <Button variant="outline" :loading="busy" :label="__('Refresh Proof')" @click="refreshProof" />
             <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
               <template #prefix>
                 <FeatherIcon name="check-circle" class="h-4 w-4" />
@@ -131,14 +130,36 @@
                   <h3 class="font-bold text-slate-800">{{ __('Financial Spreading - PSAK Template') }}</h3>
                   <p class="text-xs text-slate-500 mt-1">{{ __('Editable 3-5 year PL/BS/CF rows with original and adjusted amounts.') }}</p>
                 </div>
-                <Button variant="outline" size="sm" :loading="busy" :label="__('AI Extract PDF')" @click="extractPdf">
-                  <template #prefix>
-                    <FeatherIcon name="zap" class="h-4 w-4" />
+                <FileUploader
+                  :upload-args="{ doctype: 'CRM Credit Application', docname: selectedApp.name, private: true }"
+                  :validate-file="validateStatementFile"
+                  @success="onStatementUploaded"
+                >
+                  <template #default="{ openFileSelector, uploading }">
+                    <Button variant="outline" size="sm" :loading="busy || uploading" :label="__('Import PDF / Excel')" @click="openFileSelector">
+                      <template #prefix>
+                        <FeatherIcon name="upload-cloud" class="h-4 w-4" />
+                      </template>
+                    </Button>
                   </template>
-                </Button>
+                </FileUploader>
+              </div>
+              <div v-if="importResult" class="mx-4 mt-4 rounded-lg border px-4 py-3 text-sm" :class="importResult.errors?.length ? 'border-red-200 bg-red-50 text-red-700' : 'border-teal-200 bg-teal-50 text-teal-700'">
+                <div class="font-semibold">
+                  {{ importResult.errors?.length ? __('Import failed') : __('Import completed') }}
+                  <span v-if="!importResult.errors?.length">- {{ importResult.row_count }} {{ __('rows') }}</span>
+                </div>
+                <ul v-if="importResult.errors?.length" class="mt-2 list-disc pl-5">
+                  <li v-for="error in importResult.errors" :key="error">{{ error }}</li>
+                </ul>
+              </div>
+              <div v-if="!spreadRows.length" class="mx-4 my-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                <FeatherIcon name="file-plus" class="mx-auto h-8 w-8 text-slate-400" />
+                <h3 class="mt-3 text-sm font-bold text-slate-800">{{ __('Belum ada financial statement') }}</h3>
+                <p class="mt-1 text-sm text-slate-500">{{ __('Upload PDF, Excel, atau CSV untuk mengisi spreading, ratio, DSCR, dan memo dengan data real.') }}</p>
               </div>
               <div class="overflow-x-auto">
-                <table class="w-full text-sm min-w-[980px]">
+                <table v-if="spreadRows.length" class="w-full text-sm min-w-[980px]">
                   <thead>
                     <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
                       <th class="py-3 px-4 text-left font-bold">{{ __('Statement') }}</th>
@@ -192,10 +213,10 @@
                 <Badge :label="extraction.status || __('Pending')" :theme="extraction.status === 'Extracted' ? 'green' : 'teal'" />
               </div>
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <MetricCard :label="__('Parser')" :value="extraction.parser || 'RAGAnything + Kimi K2.6'" icon="cpu" />
+                <MetricCard :label="__('Parser')" :value="extraction.parser || __('Not imported')" icon="cpu" />
                 <MetricCard :label="__('Cells')" :value="String(extraction.cell_count || spreadRows.length)" icon="grid" />
                 <MetricCard :label="__('Low Confidence')" :value="String((extraction.low_confidence || []).length)" icon="alert-triangle" />
-                <MetricCard :label="__('File')" :value="extraction.file_url || __('Demo Adapter')" icon="paperclip" />
+                <MetricCard :label="__('File')" :value="extraction.file_url || __('No file imported')" icon="paperclip" />
               </div>
             </section>
 
@@ -390,7 +411,7 @@
                   <Button variant="outline" size="sm" :loading="busy" :label="__('Refresh')" @click="refreshBureau" />
                 </div>
                 <div class="mt-4 space-y-3 text-sm">
-                  <InfoRow :label="__('Source')" :value="bureau.source || bureau.provider || __('Demo Adapter')" />
+                  <InfoRow :label="__('Source')" :value="bureau.source || bureau.provider || __('Provider Not Configured')" />
                   <InfoRow :label="__('Score')" :value="String(bureau.score || '-')" />
                   <InfoRow :label="__('Exposure')" :value="formatCurrency(bureau.external_exposure || selectedApp.requested_amount * 0.18)" />
                   <InfoRow :label="__('Status')" :value="bureau.status || __('Manual Upload / Provider Not Configured')" />
@@ -555,7 +576,7 @@
 </template>
 
 <script setup>
-import { Button, FeatherIcon, Badge, usePageMeta, toast, createResource, call } from 'frappe-ui'
+import { Button, FeatherIcon, Badge, FileUploader, usePageMeta, toast, createResource, call } from 'frappe-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -587,6 +608,7 @@ const selectedApp = ref(null)
 const activeTab = ref('spreading')
 const memoContent = ref('')
 const spreadRows = ref([])
+const importResult = ref(null)
 const busy = ref(false)
 const route = useRoute()
 const router = useRouter()
@@ -678,6 +700,7 @@ const spreadMatrix = computed(() => {
 function selectApp(app) {
   selectedApp.value = app
   activeTab.value = 'spreading'
+  importResult.value = null
   analysis.fetch()
 }
 
@@ -767,15 +790,28 @@ async function saveCurrentSpreading() {
   )
 }
 
-async function extractPdf() {
-  const fileUrl = window.prompt(__('Enter uploaded financial PDF file URL'), '/private/files/bni-uat-financial-statement.pdf')
-  if (!fileUrl) return
+function validateStatementFile(file) {
+  const extn = String(file?.name || '').split('.').pop()?.toLowerCase()
+  if (!['pdf', 'xlsx', 'xls', 'csv'].includes(extn)) {
+    return __('Only PDF, Excel, and CSV files are allowed')
+  }
+}
+
+async function onStatementUploaded(file) {
+  if (!file?.file_url) return
   await runAction(
-    () => call('crm.api.credit_analysis.extract_statement_pdf', {
+    async () => {
+      const result = await call('crm.api.credit_analysis.import_statement_file', {
       application_id: selectedApp.value.name,
-      file_url: fileUrl,
-    }),
-    __('AI extraction review generated'),
+        file_url: file.file_url,
+      })
+      importResult.value = result
+      if (result?.errors?.length) {
+        throw new Error(result.errors.join('\n'))
+      }
+      return result
+    },
+    __('Financial statement imported'),
   )
 }
 
@@ -828,11 +864,7 @@ async function submitApproval() {
 }
 
 async function exportMemo() {
-  await runAction(() => call('crm.api.credit_analysis.export_credit_memo_pdf', { application_id: selectedApp.value.name, watermark: 'BNI UAT' }), __('Memo export queued'))
-}
-
-async function refreshProof() {
-  await runAction(() => call('crm.api.credit_analysis.create_uat_demo_pack', { application_id: selectedApp.value.name }), __('UAT proof pack refreshed'))
+  await runAction(() => call('crm.api.credit_analysis.export_credit_memo_pdf', { application_id: selectedApp.value.name, watermark: 'Internal' }), __('Memo export queued'))
 }
 
 onMounted(() => {

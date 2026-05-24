@@ -161,7 +161,7 @@ export const summonModules = [
     description:
       'Unified inbox for WhatsApp, email, SMS, in-app messaging, templates, AI replies, and routing.',
     priority: 'Medium',
-    status: 'partial',
+    status: 'available',
     href: '/crm/channels-portal/omnichannel-communication',
     routeName: 'Omnichannel Communication',
     group: 'Channels & Portal',
@@ -172,6 +172,8 @@ export const summonModules = [
       'Email Conversations',
       'In-App Chat',
       'Message Templates',
+      'SLA & Routing',
+      'Customer Context',
     ],
   },
   {

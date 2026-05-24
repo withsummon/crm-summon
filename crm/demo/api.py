@@ -36,6 +36,17 @@ def create_demo_data(_args: dict | None = None):
 	rebackdate_demo_leads(lead_names, demo_users)
 
 	deal_data = create_demo_deals(lead_names, demo_users)
+
+	# Seed portfolio monitoring demo data
+	try:
+		from crm.demo.portfolio import seed_portfolio_credit_facilities, seed_portfolio_risk_profiles, seed_portfolio_demo_data
+
+		seed_portfolio_credit_facilities()
+		seed_portfolio_risk_profiles()
+		seed_portfolio_demo_data()
+	except Exception as e:
+		frappe.log_error(f"Portfolio demo seeding failed: {e}")
+
 	frappe.db.set_default(DEMO_LEADS_KEY, json.dumps(lead_names))
 	frappe.db.set_default(DEMO_NOTES_KEY, json.dumps(note_names))
 	frappe.db.set_default(DEMO_TASKS_KEY, json.dumps(task_names))
@@ -68,6 +79,15 @@ def clear_demo_data():
 	call_log_names = json.loads(frappe.db.get_default(DEMO_CALL_LOGS_KEY) or "[]")
 	activity_data = json.loads(frappe.db.get_default(DEMO_ACTIVITIES_KEY) or "{}")
 	deal_data = json.loads(frappe.db.get_default(DEMO_DEALS_KEY) or "{}")
+
+	# Clear portfolio demo data
+	try:
+		from crm.demo.portfolio import clear_portfolio_demo_data
+
+		clear_portfolio_demo_data()
+	except Exception as e:
+		frappe.log_error(f"Portfolio demo clear failed: {e}")
+
 	delete_demo_deals(deal_data, lead_names)
 	delete_demo_activities(activity_data)
 	delete_demo_notes(note_names)

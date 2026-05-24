@@ -801,13 +801,27 @@ def permission_query_conditions(user: str | None = None):
 
 
 @frappe.whitelist()
-def has_permission(doctype: str, docname: str, ptype: str = "read") -> bool:
-    """Check if user has specific permission on a document."""
-    user = frappe.session.user
+def has_permission(
+    doctype: str | None = None,
+    docname: str | None = None,
+    ptype: str | None = "read",
+    doc=None,
+    user: str | None = None,
+    debug: bool = False,
+) -> bool:
+    """Check if user has specific permission on a document.
+    Called either via the API (doctype+docname) or by Frappe's permission
+    system (doc)."""
+    if doc is not None:
+        if not isinstance(doc, str):
+            doctype = doc.doctype
+            docname = doc.name
+    if not doctype or not docname:
+        return True
+    user = user or frappe.session.user
     if user == "Administrator":
         return True
-
-    return frappe.has_permission(doctype, ptype, doc=docname)
+    return frappe.has_permission(doctype, ptype or "read", doc=docname)
 
 
 def expire_jit_requests():

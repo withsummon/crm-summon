@@ -1,11 +1,20 @@
+import csv
 import json
 import math
+import os
+import re
 import uuid
+import zipfile
 from copy import deepcopy
+from urllib.parse import quote_plus
+from xml.etree import ElementTree as ET
 
 import frappe
 from frappe import _
 from frappe.utils import cstr, flt, now_datetime, nowdate
+
+
+XML_NS = {"a": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
 
 CREDIT_ANALYSIS_TABLES = {
@@ -410,24 +419,6 @@ def _get_application(application_id):
 		)
 		if row:
 			return frappe._dict(row)
-	if str(application_id).startswith("DEMO"):
-		return frappe._dict(
-			{
-				"name": application_id,
-				"borrower": None,
-				"borrower_name": "BNI UAT Credit Demo",
-				"borrower_type": "Company",
-				"status": "In Progress",
-				"facility_type": "Working Capital",
-				"requested_amount": 5_000_000_000,
-				"employer_name": "PT Bank Negara Indonesia Tbk",
-				"public_company_ticker": "BBNI",
-				"industry": "Financial Services",
-				"kbli": "6419",
-				"risk_grade": "B+",
-				"purpose": "BNI UAT demonstration credit analysis workspace.",
-			}
-		)
 	frappe.throw(_("Credit application not found"))
 
 
@@ -571,8 +562,6 @@ def _spread_rows(application):
 				}
 				for row in financials
 			]
-	if str(application.name).startswith("DEMO"):
-		return _default_spreading(application)
 	return []
 
 
@@ -603,6 +592,317 @@ def _metric_key(value):
 	if value in aliases:
 		return aliases[value]
 	return value.replace("&", "and").replace("/", " ").replace("-", " ").replace(" ", "_")
+
+
+def _statement_type(value):
+	value = cstr(value).strip()
+	if not value:
+		return "P&L"
+	value_map = {
+		"pl": "P&L",
+		"p&l": "P&L",
+		"profit and loss": "P&L",
+		"income statement": "P&L",
+		"balance sheet": "Balance Sheet",
+		"bs": "Balance Sheet",
+		"cash flow": "Cash Flow",
+		"cf": "Cash Flow",
+	}
+	return value_map.get(value.lower(), value)
+
+
+def _template_metric_labels():
+	labels = {}
+	for statement_type, metrics in STATEMENT_TEMPLATES.items():
+		for key, label in metrics:
+			labels[_metric_key(key)] = {"statement_type": statement_type, "metric_label": label}
+			labels[_metric_key(label)] = {"statement_type": statement_type, "metric_label": label, "metric_key": key}
+	return labels
+
+
+def _normalize_header(value):
+	return re.sub(r"[^a-z0-9]+", "_", cstr(value).strip().lower()).strip("_")
+
+
+def _coerce_amount(value):
+	if value in (None, ""):
+		return 0
+	if isinstance(value, (int, float)):
+		return flt(value)
+	text = cstr(value).strip()
+	if not text:
+		return 0
+	text = text.replace("IDR", "").replace("Rp", "").replace("rp", "").strip()
+	text = text.replace(".", "").replace(",", ".") if re.search(r"\d+\.\d{3}", text) else text.replace(",", "")
+	text = re.sub(r"[^0-9.\-]", "", text)
+	return flt(text)
+
+
+def _column_to_index(ref):
+	column = "".join(ch for ch in cstr(ref).upper() if ch.isalpha())
+	value = 0
+	for ch in column:
+		value = value * 26 + ord(ch) - 64
+	return max(value - 1, 0)
+
+
+def _resolve_file_path(file_url):
+	file_url = cstr(file_url).strip()
+	if not file_url:
+		frappe.throw(_("File URL is required"))
+	if file_url.startswith(("http://", "https://")):
+		frappe.throw(_("Use an uploaded Frappe file, not an external URL."))
+	file_path = frappe.get_site_path(file_url.lstrip("/"))
+	if not os.path.exists(file_path):
+		frappe.throw(_("File not found: {0}").format(file_url))
+	return file_path
+
+
+def _infer_file_type(file_url, file_type=None):
+	if file_type:
+		return cstr(file_type).strip(".").lower()
+	ext = os.path.splitext(cstr(file_url).split("?")[0])[1].strip(".").lower()
+	if ext == "xls":
+		return "xlsx"
+	return ext
+
+
+def _iter_xlsx_rows_with_openpyxl(file_path):
+	import openpyxl
+
+	workbook = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+	worksheet = workbook.active
+	rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
+	workbook.close()
+	return rows
+
+
+def _iter_xlsx_rows_from_xml(file_path):
+	with zipfile.ZipFile(file_path) as archive:
+		shared_strings = []
+		if "xl/sharedStrings.xml" in archive.namelist():
+			root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
+			for item in root.findall(".//a:si", XML_NS):
+				shared_strings.append("".join(node.text or "" for node in item.findall(".//a:t", XML_NS)))
+
+		root = ET.fromstring(archive.read("xl/worksheets/sheet1.xml"))
+		rows = []
+		max_columns = 0
+		for row in root.findall(".//a:sheetData/a:row", XML_NS):
+			values = {}
+			for cell in row.findall("a:c", XML_NS):
+				ref = cell.attrib.get("r", "")
+				index = _column_to_index(ref)
+				cell_type = cell.attrib.get("t")
+				if cell_type == "inlineStr":
+					text = "".join(t.text or "" for t in cell.iterfind(".//a:t", XML_NS))
+				else:
+					value_node = cell.find("a:v", XML_NS)
+					text = value_node.text if value_node is not None else ""
+					if cell_type == "s" and text:
+						text = shared_strings[int(text)]
+				values[index] = text
+				max_columns = max(max_columns, index + 1)
+			rows.append(values)
+	if not max_columns:
+		return []
+	normalized = []
+	for row in rows:
+		out = [None] * max_columns
+		for index, value in row.items():
+			out[index] = value
+		normalized.append(out)
+	return normalized
+
+
+def _load_tabular_rows(file_path, file_type):
+	if file_type == "csv":
+		with open(file_path, encoding="utf-8-sig", newline="") as handle:
+			return [list(row) for row in csv.reader(handle)]
+	try:
+		return _iter_xlsx_rows_with_openpyxl(file_path)
+	except Exception:
+		return _iter_xlsx_rows_from_xml(file_path)
+
+
+def _rows_from_tabular_file(application, file_url, file_path, file_type):
+	raw_rows = _load_tabular_rows(file_path, file_type)
+	raw_rows = [row for row in raw_rows if any(cstr(cell).strip() for cell in row)]
+	if not raw_rows:
+		return [], [], [_("No rows found in uploaded file.")]
+
+	headers = [_normalize_header(value) for value in raw_rows[0]]
+	header_map = {header: idx for idx, header in enumerate(headers) if header}
+	aliases = {
+		"statement_type": {"statement_type", "statement", "type", "laporan"},
+		"metric_key": {"metric_key", "key", "line_item_key"},
+		"metric_label": {"metric_label", "metric", "line_item", "label", "item"},
+		"year": {"year", "tahun", "period", "periode"},
+		"amount": {"amount", "original_amount", "nilai", "value"},
+		"adjusted_amount": {"adjusted_amount", "adjusted", "normalized_amount"},
+		"notes": {"notes", "note", "catatan"},
+	}
+	columns = {}
+	for target, options in aliases.items():
+		for option in options:
+			if option in header_map:
+				columns[target] = header_map[option]
+				break
+	required = {"statement_type", "metric_label", "year", "amount"}
+	missing = sorted(required - set(columns))
+	if missing:
+		return [], [], [_("Missing required columns: {0}").format(", ".join(missing))]
+
+	template_labels = _template_metric_labels()
+	rows = []
+	errors = []
+	seen = set()
+	for row_number, raw in enumerate(raw_rows[1:], start=2):
+		def cell(field):
+			index = columns.get(field)
+			return raw[index] if index is not None and index < len(raw) else None
+
+		metric_label = cstr(cell("metric_label")).strip()
+		metric_key = _metric_key(cell("metric_key") or metric_label)
+		statement_type = _statement_type(cell("statement_type"))
+		try:
+			year = int(flt(cell("year")))
+		except Exception:
+			year = 0
+		if not metric_label or not year:
+			errors.append(_("Row {0}: metric label and year are required.").format(row_number))
+			continue
+		duplicate_key = (statement_type, metric_key, year)
+		if duplicate_key in seen:
+			errors.append(_("Row {0}: duplicate metric/year {1}/{2}.").format(row_number, metric_key, year))
+			continue
+		seen.add(duplicate_key)
+		template = template_labels.get(metric_key) or template_labels.get(_metric_key(metric_label)) or {}
+		rows.append(
+			{
+				"application": application.name,
+				"customer": application.get("borrower"),
+				"statement_type": template.get("statement_type") or statement_type,
+				"metric_key": template.get("metric_key") or metric_key,
+				"metric_label": template.get("metric_label") or metric_label,
+				"year": year,
+				"amount": _coerce_amount(cell("amount")),
+				"adjusted_amount": _coerce_amount(cell("adjusted_amount")) if "adjusted_amount" in columns else _coerce_amount(cell("amount")),
+				"confidence": 1,
+				"source": file_url,
+				"notes": cstr(cell("notes")).strip(),
+			}
+		)
+
+	years = sorted({row["year"] for row in rows})
+	if rows and not 3 <= len(years) <= 5:
+		errors.append(_("Import must contain 3 to 5 financial years; found {0}.").format(len(years)))
+	return rows, [], errors
+
+
+def _extract_json_array(text):
+	text = cstr(text).strip()
+	if not text:
+		return []
+	try:
+		data = json.loads(text)
+	except Exception:
+		match = re.search(r"```(?:json)?\s*(.*?)```", text, flags=re.S)
+		if match:
+			data = json.loads(match.group(1))
+		else:
+			start = text.find("[")
+			end = text.rfind("]")
+			if start == -1 or end == -1:
+				raise
+			data = json.loads(text[start : end + 1])
+	if isinstance(data, dict):
+		data = data.get("rows") or data.get("spreading") or []
+	return data if isinstance(data, list) else []
+
+
+def _extract_pdf_text(file_path):
+	for module_name in ("pypdf", "PyPDF2"):
+		try:
+			module = __import__(module_name)
+			reader = module.PdfReader(file_path)
+			return "\n".join(page.extract_text() or "" for page in reader.pages)
+		except Exception:
+			continue
+	return ""
+
+
+def _rows_from_pdf_file(application, file_url, file_path):
+	from crm.ai.kimi import call_kimi_chat, get_ai_settings
+
+	settings = get_ai_settings()
+	api_key = cstr(settings.kimi_api_key).strip()
+	if not api_key or "******" in api_key:
+		return [], [], [_("Kimi/Moonshot API key is not configured in FCRM Settings.")]
+
+	text = _extract_pdf_text(file_path)
+	if not text.strip():
+		return [], [], [_("PDF text extraction is unavailable or returned no text. Configure OCR/RAGAnything runtime for scanned PDFs.")]
+
+	metrics = []
+	for statement_type, items in STATEMENT_TEMPLATES.items():
+		for key, label in items:
+			metrics.append({"statement_type": statement_type, "metric_key": key, "metric_label": label})
+	prompt = f"""
+Extract financial spreading rows from this uploaded credit analysis PDF.
+Return only a JSON array. Each object must contain statement_type, metric_key, metric_label, year, amount, adjusted_amount, confidence, notes.
+Use only these metric keys and labels:
+{json.dumps(metrics, ensure_ascii=False)}
+
+PDF text:
+{text[:24000]}
+"""
+	response = call_kimi_chat(
+		[
+			{"role": "system", "content": "You extract Indonesian banking financial statement tables into structured JSON."},
+			{"role": "user", "content": prompt},
+		],
+		thinking_mode=settings.thinking_mode,
+	)
+	raw_rows = _extract_json_array(response.content)
+	rows = []
+	low_confidence = []
+	errors = []
+	template_labels = _template_metric_labels()
+	for idx, raw in enumerate(raw_rows, start=1):
+		metric_label = cstr(raw.get("metric_label") or raw.get("metric") or raw.get("metric_key")).strip()
+		metric_key = _metric_key(raw.get("metric_key") or metric_label)
+		template = template_labels.get(metric_key) or template_labels.get(_metric_key(metric_label)) or {}
+		year = int(flt(raw.get("year")))
+		if not metric_label or not year:
+			errors.append(_("Extracted PDF row {0}: metric and year are required.").format(idx))
+			continue
+		confidence = flt(raw.get("confidence") or 0.7)
+		row = {
+			"application": application.name,
+			"customer": application.get("borrower"),
+			"statement_type": template.get("statement_type") or _statement_type(raw.get("statement_type")),
+			"metric_key": template.get("metric_key") or metric_key,
+			"metric_label": template.get("metric_label") or metric_label,
+			"year": year,
+			"amount": _coerce_amount(raw.get("amount")),
+			"adjusted_amount": _coerce_amount(raw.get("adjusted_amount") if raw.get("adjusted_amount") not in (None, "") else raw.get("amount")),
+			"confidence": confidence,
+			"source": file_url,
+			"notes": cstr(raw.get("notes")).strip(),
+		}
+		rows.append(row)
+		if confidence < 0.8:
+			low_confidence.append(
+				{
+					"metric_key": row["metric_key"],
+					"metric_label": row["metric_label"],
+					"year": row["year"],
+					"confidence": confidence,
+					"status": "Needs Review",
+				}
+			)
+	return rows, low_confidence, errors
 
 
 def _spread_map(rows):
@@ -720,6 +1020,8 @@ def _calculate_ratios_from_rows(rows, kbli=None):
 def _calculate_dscr_from_rows(rows, requested_amount=0, tenor_years=5, annual_rate=0.11):
 	data = _spread_map(rows)
 	years = sorted(data)[-int(tenor_years or 5) :]
+	if not years:
+		return {"formula": "(EBITDA - Tax) / (Principal + Interest)", "items": [], "min_dscr": None, "status": "Missing"}
 	principal = _safe_div(flt(requested_amount), len(years) or 1)
 	items = []
 	for year in years:
@@ -771,6 +1073,8 @@ def _trend_projection(rows, metric_key="revenue"):
 
 def _scenario(rows, drivers=None):
 	drivers = drivers or {}
+	if not _spread_map(rows):
+		return []
 	cases = [
 		("Best", flt(drivers.get("best_revenue_growth") or 0.12), flt(drivers.get("best_margin_delta") or 0.03), flt(drivers.get("best_rate_delta") or -0.01)),
 		("Base", flt(drivers.get("base_revenue_growth") or 0.04), flt(drivers.get("base_margin_delta") or 0), flt(drivers.get("base_rate_delta") or 0)),
@@ -803,6 +1107,8 @@ def _scenario(rows, drivers=None):
 
 
 def _sensitivity(rows, x_range=None, y_range=None):
+	if not _spread_map(rows):
+		return {"x_axis": "Revenue Growth", "y_axis": "EBITDA Margin Delta", "x_range": x_range or [], "y_range": y_range or [], "matrix": []}
 	x_range = x_range or [-0.2, -0.1, 0, 0.1, 0.2]
 	y_range = y_range or [-0.03, -0.015, 0, 0.015, 0.03]
 	base = _scenario(rows)[1]
@@ -819,6 +1125,8 @@ def _sensitivity(rows, x_range=None, y_range=None):
 def _cashflow_projection(rows, requested_amount=0, years=5, drivers=None):
 	drivers = drivers or {}
 	data = _spread_map(rows)
+	if not data:
+		return {"drivers": drivers, "items": [], "status": "Missing"}
 	latest_year = max(data) if data else now_datetime().year - 1
 	v = data.get(latest_year, {})
 	growth = flt(drivers.get("growth") or 0.06)
@@ -871,13 +1179,22 @@ def _collaterals(customer, requested_amount=0):
 
 
 def _risk_grade(application, ratios, dscr, bureau, collateral):
+	if not ratios and not (dscr or {}).get("items"):
+		return {
+			"score": 0,
+			"grade": "Unscored",
+			"weights": {"financial": 420, "repayment": 220, "collateral": 160, "trend": 120, "qualitative": 80},
+			"breakdown": {"financial": 0, "repayment": 0, "collateral": 0, "trend": 0, "qualitative": 0},
+			"override": _artifact(application.name, "risk_grade_override", {}),
+			"audit_trail": [_("Risk grade pending until financial spreading is imported or saved.")],
+		}
 	latest = {}
 	for ratio in ratios:
 		if ratio["year"] >= latest.get(ratio["key"], {}).get("year", 0):
 			latest[ratio["key"]] = ratio
 	weights = {"financial": 420, "repayment": 220, "collateral": 160, "trend": 120, "qualitative": 80}
 	financial_score = min(1, (_safe_div(latest.get("current_ratio", {}).get("value"), 1.2) + _safe_div(dscr.get("min_dscr"), 1.2) + _safe_div(latest.get("interest_coverage", {}).get("value"), 2)) / 3)
-	bureau_score = min(1, _safe_div((bureau or {}).get("score") or 700, 800))
+	bureau_score = min(1, _safe_div((bureau or {}).get("score"), 800)) if (bureau or {}).get("score") else 0
 	collateral_score = 0.75
 	if collateral:
 		avg_ltv = sum(row.get("computed_ltv_percent", 0) for row in collateral) / len(collateral)
@@ -945,16 +1262,13 @@ def _peers(application, ratios):
 			"current_ratio": (latest.get("current_ratio") or {}).get("value") or flt(application.get("current_ratio")),
 			"debt_to_equity": (latest.get("debt_to_equity") or {}).get("value") or flt(application.get("der")),
 			"net_margin": (latest.get("net_margin") or {}).get("value") or fallback_margin,
-		},
-		{"name": "Peer Alpha", "type": "Peer", "current_ratio": 1.42, "debt_to_equity": 1.65, "net_margin": 0.09},
-		{"name": "Peer Beta", "type": "Peer", "current_ratio": 1.25, "debt_to_equity": 2.2, "net_margin": 0.07},
-		{"name": "Peer Gamma", "type": "Peer", "current_ratio": 1.7, "debt_to_equity": 1.35, "net_margin": 0.12},
+		}
 	]
 	rankings = {}
 	for key in ("current_ratio", "debt_to_equity", "net_margin"):
 		reverse = key != "debt_to_equity"
 		rankings[key] = sorted(peers, key=lambda row: row[key], reverse=reverse)
-	return {"peers": peers, "rankings": rankings, "summary": _("Borrower is benchmarked against three seeded industry peers for UAT demonstration.")}
+	return {"peers": peers, "rankings": rankings, "summary": _("No external peer dataset is configured; showing borrower ratios only.")}
 
 
 def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=None):
@@ -963,7 +1277,7 @@ def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=No
 	summary = [
 		f"{borrower} requests {application.get('facility_type') or 'credit facility'} of IDR {round(flt(application.get('requested_amount')), 0):,.0f}.",
 		f"Latest risk grade is {risk_grade['grade']} with score {risk_grade['score']} / 1000.",
-		f"Minimum DSCR is {dscr['min_dscr']}, status {dscr['status']}.",
+		f"Minimum DSCR is {dscr.get('min_dscr') if dscr.get('min_dscr') is not None else 'not available'}, status {dscr.get('status') or 'Missing'}.",
 		f"Financial spreading covers {len(set(row['year'] for row in rows))} years across PL/BS/CF.",
 		f"Recommendation is {recommendation['decision']} with {recommendation['confidence']}% confidence.",
 	]
@@ -997,7 +1311,8 @@ def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=No
 
 
 def _recommendation_payload(risk_grade, dscr):
-	decision = "Approve" if risk_grade["score"] >= 760 and dscr["min_dscr"] >= 1.25 else "Refer" if risk_grade["score"] >= 620 and dscr["min_dscr"] >= 1.05 else "Reject"
+	min_dscr = flt((dscr or {}).get("min_dscr"))
+	decision = "Approve" if risk_grade["score"] >= 760 and min_dscr >= 1.25 else "Refer" if risk_grade["score"] >= 620 and min_dscr >= 1.05 else "Reject"
 	confidence = 88 if decision == "Approve" else 74 if decision == "Refer" else 68
 	conditions = [
 		"Maintain DSCR covenant above 1.20x.",
@@ -1010,7 +1325,7 @@ def _recommendation_payload(risk_grade, dscr):
 		"confidence": confidence,
 		"conditions": conditions,
 		"risk_factors": risk_factors,
-		"reasoning": f"Decision is based on score {risk_grade['score']} and minimum DSCR {dscr['min_dscr']}.",
+		"reasoning": f"Decision is based on score {risk_grade['score']} and minimum DSCR {min_dscr}.",
 		"citations": ["ratio_snapshot", "dscr", "risk_grade", "collateral", "bureau"],
 	}
 
@@ -1061,7 +1376,7 @@ def _workspace_payload(application_id, persist_artifacts=False):
 			("approval_route", "Approval Route", approval),
 			("memo_export", "Memo Export", export),
 		):
-			_replace_artifact(application.name, customer, artifact_type, title, payload, source="BNI UAT Demo Adapter")
+			_replace_artifact(application.name, customer, artifact_type, title, payload, source="Credit Analysis Engine")
 
 	proof = _build_proof(application.name)
 	return {
@@ -1092,36 +1407,23 @@ def _workspace_payload(application_id, persist_artifacts=False):
 
 
 def _default_extraction(application, rows):
-	low_confidence = [
-		{
-			"metric_key": row["metric_key"],
-			"metric_label": row["metric_label"],
-			"year": row["year"],
-			"confidence": 0.62,
-			"status": "Needs Review",
-		}
-		for row in rows[:3]
-	]
 	return {
-		"status": "Demo Adapter",
+		"status": "Pending",
 		"file_url": "",
-		"parser": "RAGAnything + Kimi K2.6",
+		"parser": "",
 		"cell_count": len(rows),
-		"low_confidence": low_confidence,
-		"message": _("Upload a PDF to replace the seeded extraction review."),
+		"low_confidence": [],
+		"message": _("Upload a PDF, XLSX, or CSV financial statement to populate spreading."),
 	}
 
 
 def _default_news(application):
 	return {
-		"status": "Demo Adapter",
-		"sentiment_score": 72,
-		"adverse_flags": ["No unresolved adverse event in seeded proof pack."],
-		"sources": [
-			{"title": "OJK SLIK public reference", "url": "https://idebku.ojk.go.id/"},
-			{"title": "PEFINDO rating report reference", "url": "https://www.pefindo.com/id/rating-action-reports/rating-report"},
-		],
-		"summary": f"Seeded sentiment scan for {application.get('borrower_name') or application.name}; replace with configured news adapter for live monitoring.",
+		"status": "Not Scanned",
+		"sentiment_score": 0,
+		"adverse_flags": [],
+		"sources": [],
+		"summary": _("Run news scan to fetch Google News RSS sources."),
 	}
 
 
@@ -1177,7 +1479,7 @@ def _default_export(application):
 	return {
 		"status": "Ready",
 		"format": "PDF",
-		"watermark": "BNI UAT",
+		"watermark": "Internal",
 		"sections": ["Cover Page", "Table of Contents", "Charts", "Financial Tables", "Recommendation"],
 		"email_distribution": "Draft Queue",
 		"message": _("PDF renderer/email adapter can process this export payload."),
@@ -1193,10 +1495,12 @@ def get_credit_workspace(application_id: str):
 def save_spreading(application_id: str, rows=None, status: str = "Draft"):
 	application = _get_application(application_id)
 	rows = _json_loads(rows, rows) if isinstance(rows, str) else rows
-	rows = rows or _default_spreading(application)
+	rows = rows or []
 	ensure_credit_analysis_tables()
 	frappe.db.sql("DELETE FROM `tabCRM Credit Spread Line` WHERE application=%s", (application.name,))
 	for row in rows:
+		if not row.get("year") or not (row.get("metric_key") or row.get("metric_label")):
+			continue
 		_insert(
 			"CRM Credit Spread Line",
 			{
@@ -1221,21 +1525,76 @@ def save_spreading(application_id: str, rows=None, status: str = "Draft"):
 
 
 @frappe.whitelist()
-def extract_statement_pdf(application_id: str, file_url: str | None = None):
+def import_statement_file(application_id: str, file_url: str | None = None, file_type: str | None = None):
 	application = _get_application(application_id)
 	if not file_url:
-		frappe.throw(_("Financial statement PDF is required for extraction."))
-	rows = _default_spreading(application)
-	for idx, row in enumerate(rows):
-		row["source"] = file_url
-		row["confidence"] = 0.62 if idx < 5 else 0.91
-		row["notes"] = "Extracted by RAGAnything + Kimi K2.6 review workflow."
-	saved = save_spreading(application.name, rows, status="Extracted")
-	extraction = _default_extraction(application, rows)
-	extraction.update({"status": "Extracted", "file_url": file_url, "cell_count": len(rows)})
-	_replace_artifact(application.name, application.get("borrower"), "extraction", "AI Extraction from PDF", extraction, source="RAGAnything + Kimi K2.6", confidence=0.84)
+		frappe.throw(_("Financial statement file is required for import."))
+	file_type = _infer_file_type(file_url, file_type)
+	file_path = _resolve_file_path(file_url)
+	low_confidence = []
+	errors = []
+	rows = []
+	parser = ""
+	if file_type in {"csv", "xlsx"}:
+		parser = "Structured spreadsheet parser"
+		rows, low_confidence, errors = _rows_from_tabular_file(application, file_url, file_path, file_type)
+	elif file_type == "pdf":
+		parser = "PDF text extraction + Kimi"
+		rows, low_confidence, errors = _rows_from_pdf_file(application, file_url, file_path)
+	else:
+		errors = [_("Unsupported file type: {0}. Upload PDF, XLSX, XLS, or CSV.").format(file_type or "unknown")]
+
+	status = "Failed" if errors else "Imported"
+	workspace = _workspace_payload(application.name)
+	if not errors:
+		saved = save_spreading(application.name, rows, status="Imported")
+		workspace = saved["workspace"]
+
+	artifact = {
+		"status": status,
+		"import_type": file_type,
+		"file_url": file_url,
+		"file_name": os.path.basename(file_path),
+		"parser": parser,
+		"row_count": len(rows),
+		"low_confidence": low_confidence,
+		"errors": errors,
+		"imported_on": str(now_datetime()),
+	}
+	_replace_artifact(
+		application.name,
+		application.get("borrower"),
+		"statement_import",
+		"Financial Statement Import",
+		artifact,
+		status="Failed" if errors else "Completed",
+		source=parser or "Statement Import",
+		confidence=0 if errors else 1,
+	)
+	_replace_artifact(
+		application.name,
+		application.get("borrower"),
+		"extraction",
+		"AI Extraction from PDF" if file_type == "pdf" else "Structured Statement Import",
+		artifact,
+		status="Failed" if errors else "Completed",
+		source=parser or "Statement Import",
+		confidence=0 if errors else 1,
+	)
 	frappe.db.commit()
-	return {"extraction": extraction, "workspace": saved["workspace"]}
+	return {
+		"status": status,
+		"import_type": file_type,
+		"row_count": len(rows),
+		"low_confidence": low_confidence,
+		"errors": errors,
+		"workspace": workspace,
+	}
+
+
+@frappe.whitelist()
+def extract_statement_pdf(application_id: str, file_url: str | None = None):
+	return import_statement_file(application_id, file_url, file_type="pdf")
 
 
 @frappe.whitelist()
@@ -1375,7 +1734,7 @@ def submit_memo_for_approval(application_id: str):
 
 
 @frappe.whitelist()
-def export_credit_memo_pdf(application_id: str, watermark: str = "BNI UAT", email_recipients=None):
+def export_credit_memo_pdf(application_id: str, watermark: str = "Internal", email_recipients=None):
 	application = _get_application(application_id)
 	email_recipients = _json_loads(email_recipients, []) if isinstance(email_recipients, str) else email_recipients or []
 	payload = _default_export(application)
@@ -1393,17 +1752,32 @@ def export_credit_memo_pdf(application_id: str, watermark: str = "BNI UAT", emai
 
 
 @frappe.whitelist()
-def refresh_bureau_report(application_id: str, provider: str = "Demo Adapter"):
+def refresh_bureau_report(application_id: str, provider: str = "Manual Upload"):
 	application = _get_application(application_id)
-	payload = {
-		"status": "Demo Adapter" if provider == "Demo Adapter" else "Provider Not Configured",
-		"provider": provider,
-		"score": 760,
-		"history": [{"month": nowdate(), "kol_status": "KOL-1", "exposure": flt(application.get("requested_amount")) * 0.18}],
-		"adverse_flags": [],
-		"refreshed_on": str(now_datetime()),
-		"sources": ["SLIK/OJK Manual Upload", "PEFINDO adapter placeholder"],
-	}
+	latest = _latest_bureau(application.get("borrower"))
+	if latest:
+		payload = {
+			"status": "Manual Upload",
+			"provider": latest.get("source") or provider,
+			"score": latest.get("score"),
+			"kol_status": latest.get("kol_status"),
+			"external_exposure": latest.get("external_exposure"),
+			"history": [{"month": latest.get("report_date") or nowdate(), "kol_status": latest.get("kol_status"), "exposure": latest.get("external_exposure")}],
+			"adverse_flags": [latest.get("notes")] if latest.get("notes") else [],
+			"refreshed_on": str(now_datetime()),
+			"sources": [latest.get("source") or "CRM Bureau Report"],
+		}
+	else:
+		payload = {
+			"status": "Provider Not Configured",
+			"provider": provider,
+			"score": None,
+			"history": [],
+			"adverse_flags": [],
+			"refreshed_on": str(now_datetime()),
+			"sources": [],
+			"message": _("Upload a CRM Bureau Report or configure a SLIK/PEFINDO provider."),
+		}
 	_replace_artifact(application.name, application.get("borrower"), "bureau_report", "Credit Bureau Integration", payload, source=provider, confidence=0.9)
 	frappe.db.commit()
 	return payload
@@ -1412,9 +1786,62 @@ def refresh_bureau_report(application_id: str, provider: str = "Demo Adapter"):
 @frappe.whitelist()
 def scan_news_sentiment(application_id: str):
 	application = _get_application(application_id)
-	payload = _default_news(application)
-	payload.update({"scanned_on": str(now_datetime())})
-	_replace_artifact(application.name, application.get("borrower"), "news_sentiment", "News & Sentiment Scan", payload, source="News Adapter / AI Agent Center", confidence=0.72)
+	query_parts = [
+		application.get("borrower_name") or _customer_name(application.get("borrower")) or application.name,
+		application.get("public_company_ticker"),
+		application.get("industry") or application.get("kbli"),
+	]
+	query = " ".join(cstr(part).strip() for part in query_parts if cstr(part).strip())
+	url = f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=id&gl=ID&ceid=ID:id"
+	sources = []
+	errors = []
+	try:
+		import requests
+
+		response = requests.get(url, timeout=10)
+		response.raise_for_status()
+		root = ET.fromstring(response.content)
+		for item in root.findall(".//item")[:10]:
+			title = cstr(item.findtext("title"))
+			link = cstr(item.findtext("link"))
+			published = cstr(item.findtext("pubDate"))
+			description = cstr(item.findtext("description"))
+			source_node = item.find("source")
+			source_name = cstr(source_node.text) if source_node is not None else ""
+			sources.append(
+				{
+					"title": title,
+					"source": source_name,
+					"url": link,
+					"published": published,
+					"snippet": re.sub(r"<[^>]+>", "", description)[:500],
+				}
+			)
+	except Exception as exc:
+		errors.append(cstr(exc)[:300])
+
+	negative_terms = {"pailit", "gagal bayar", "default", "fraud", "korupsi", "kasus", "sanksi", "gugatan", "restrukturisasi", "phk"}
+	adverse_flags = []
+	for source in sources:
+		text = f"{source.get('title')} {source.get('snippet')}".lower()
+		matches = sorted(term for term in negative_terms if term in text)
+		if matches:
+			adverse_flags.append({"title": source.get("title"), "terms": matches, "url": source.get("url")})
+	sentiment_score = max(0, 75 - (len(adverse_flags) * 15)) if sources else 0
+	summary = _("Google News RSS returned {0} source(s) for {1}.").format(len(sources), query)
+	if adverse_flags:
+		summary += " " + _("Adverse terms were found in {0} source(s).").format(len(adverse_flags))
+	payload = {
+		"status": "Scanned" if not errors else "Failed",
+		"query": query,
+		"sentiment_score": sentiment_score,
+		"adverse_flags": adverse_flags,
+		"sources": sources,
+		"summary": summary,
+		"errors": errors,
+		"scanned_on": str(now_datetime()),
+	}
+	_replace_artifact(application.name, application.get("borrower"), "news_sentiment", "News & Sentiment Scan", payload, status="Completed" if not errors else "Failed", source="Google News RSS", confidence=0.72 if sources else 0)
 	frappe.db.commit()
 	return payload
 

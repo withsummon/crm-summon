@@ -58,6 +58,50 @@ def _get_chat_profile_by_contact(contact: str) -> str | None:
     return profiles[0].name if profiles else None
 
 
+def _create_chat_profile_for_contact(contact_name: str) -> str | None:
+    contact = frappe.db.get_value("Contact", contact_name,
+        ["first_name", "email_id", "mobile_no"], as_dict=True)
+    if not contact:
+        return None
+    contact_details = []
+    if contact.email_id:
+        contact_details.append({
+            "doctype": "ClefinCode Chat Profile Contact Details",
+            "contact_info": contact.email_id,
+            "type": "Chat",
+            "verified": 1,
+            "default": 1,
+        })
+        contact_details.append({
+            "doctype": "ClefinCode Chat Profile Contact Details",
+            "contact_info": contact.email_id,
+            "type": "Email",
+            "verified": 1,
+            "default": 0,
+        })
+    if contact.mobile_no:
+        contact_details.append({
+            "doctype": "ClefinCode Chat Profile Contact Details",
+            "contact_info": contact.mobile_no,
+            "type": "WhatsApp",
+            "verified": 1,
+            "default": 0,
+        })
+    try:
+        profile = frappe.get_doc({
+            "doctype": "ClefinCode Chat Profile",
+            "contact": contact_name,
+            "full_name": contact.first_name or "Unknown",
+            "contact_details": contact_details,
+        })
+        profile.insert(ignore_permissions=True)
+        return profile.name
+    except Exception:
+        frappe.log_error(frappe.get_traceback(),
+            f"CRM Chat - create profile for {contact_name}")
+        return None
+
+
 def _get_channels_for_profile(profile_id: str) -> list[dict]:
     channels = frappe.db.sql("""
         SELECT DISTINCT ch.name, ch.channel_name, ch.chat_status, ch.platform,
@@ -90,20 +134,24 @@ def _get_or_create_contact_for_lead(lead_docname: str) -> str | None:
             {"mobile_no": lead.mobile_no}, "name")
         if contact_name:
             return contact_name
-    if not contact_name and lead.mobile_no:
-        contact_name = frappe.db.get_value("Contact",
-            {"mobile_no": lead.mobile_no}, "name")
-        if contact_name:
-            return contact_name
-    contact = frappe.get_doc({
-        "doctype": "Contact",
-        "first_name": lead.lead_name or "Unknown",
-        "email_id": lead.email or "",
-        "mobile_no": lead.mobile_no or "",
-        "phone": lead.phone or "",
-    })
-    contact.insert(ignore_permissions=True)
-    return contact.name
+    try:
+        contact = frappe.get_doc({
+            "doctype": "Contact",
+            "name": f"Lead-Contact-{lead_docname}",
+            "first_name": lead.lead_name or "Unknown",
+            "email_id": lead.email or "",
+            "mobile_no": lead.mobile_no or "",
+            "phone": lead.phone or "",
+        })
+        contact.insert(ignore_permissions=True)
+        _create_chat_profile_for_contact(contact.name)
+        return contact.name
+    except frappe.DuplicateEntryError:
+        existing = frappe.db.get_value("Contact",
+            f"Lead-Contact-{lead_docname}", "name")
+        if existing:
+            _create_chat_profile_for_contact(existing)
+        return existing if existing else None
 
 
 @frappe.whitelist()
@@ -115,6 +163,8 @@ def resolve_record_channels(doctype: str, docname: str) -> dict:
         if not contact:
             return {"channels": [], "contact": None, "profile": None}
     profile = _get_chat_profile_by_contact(contact)
+    if not profile:
+        profile = _create_chat_profile_for_contact(contact)
     if not profile:
         return {"channels": [], "contact": contact, "profile": None}
     channels = _get_channels_for_profile(profile)

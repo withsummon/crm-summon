@@ -170,8 +170,8 @@ doc_events = {
 		"on_update": ["crm.api.todo.on_update"],
 	},
 	"Communication": {
-		"after_insert": ["crm.utils.on_communication_insert"],
-		"on_update": ["crm.utils.on_communication_update"],
+		"after_insert": ["crm.utils.on_communication_insert", "crm.api.omnichannel.sync_communication"],
+		"on_update": ["crm.utils.on_communication_update", "crm.api.omnichannel.sync_communication"],
 	},
 	"Comment": {
 		"after_insert": ["crm.utils.on_comment_insert"],
@@ -179,7 +179,16 @@ doc_events = {
 	},
 	"WhatsApp Message": {
 		"validate": ["crm.api.whatsapp.validate"],
-		"on_update": ["crm.api.whatsapp.on_update"],
+		"after_insert": ["crm.api.omnichannel.sync_whatsapp_message"],
+		"on_update": ["crm.api.whatsapp.on_update", "crm.api.omnichannel.sync_whatsapp_message"],
+	},
+	"CRM Customer Communication": {
+		"after_insert": ["crm.api.omnichannel.sync_customer_communication"],
+		"on_update": ["crm.api.omnichannel.sync_customer_communication"],
+	},
+	"CRM Call Log": {
+		"after_insert": ["crm.api.omnichannel.sync_call_log"],
+		"on_update": ["crm.api.omnichannel.sync_call_log"],
 	},
 	"CRM Deal": {
 		"on_update": [
@@ -212,7 +221,10 @@ doc_events = {
 
 scheduler_events = {
 	"all": ["crm.api.event.trigger_offset_event_notifications"],
-	"hourly": ["crm.api.event.trigger_hourly_event_notifications"],
+	"hourly": [
+		"crm.api.event.trigger_hourly_event_notifications",
+		"crm.api.omnichannel.process_sla_breaches",
+	],
 	"daily": [
 		"crm.api.event.trigger_daily_event_notifications",
 		"crm.api.lead_management.process_lead_aging",

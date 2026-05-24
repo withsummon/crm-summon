@@ -6,8 +6,9 @@
  "engine": "InnoDB",
  "field_order": [
   "defaults_tab",
-  "restore_defaults",
-  "restore_demo_data",
+   "restore_defaults",
+   "core_capital",
+   "restore_demo_data",
   "enable_forecasting",
   "auto_update_expected_deal_value",
   "update_timestamp_on_new_communication",
@@ -46,13 +47,20 @@
   "dropdown_items"
  ],
  "fields": [
-  {
-   "fieldname": "restore_defaults",
-   "fieldtype": "Button",
-   "label": "Restore Defaults"
-  },
-  {
-   "fieldname": "dropdown_items",
+   {
+    "fieldname": "restore_defaults",
+    "fieldtype": "Button",
+    "label": "Restore Defaults"
+   },
+   {
+    "default": "12500000000000",
+    "fieldname": "core_capital",
+    "fieldtype": "Currency",
+    "label": "Core Capital (BMPK Base)",
+    "description": "Bank's core capital base for Single Borrower Limit (SBL/BMPK) regulatory calculations."
+   },
+   {
+    "fieldname": "dropdown_items",
    "fieldtype": "Table",
    "options": "CRM Dropdown Item"
   },

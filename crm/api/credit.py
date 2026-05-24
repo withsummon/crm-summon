@@ -519,84 +519,39 @@ def create_credit_application(payload=None):
 
 		ensure_credit_analysis_tables()
 		
-		# 3. Create spreading lines if user entered financials in the form
+		# 3. Create spreading lines only for financial values explicitly entered in the form.
 		if payload.get("financial_year"):
 			year = int(payload.get("financial_year"))
-			
-			all_metrics = {
-				"P&L": [
-					("revenue", "Pendapatan / Sales"),
-					("cogs", "Beban Pokok Penjualan"),
-					("gross_profit", "Laba Kotor"),
-					("operating_expense", "Beban Operasional"),
-					("ebitda", "EBITDA"),
-					("interest_expense", "Beban Bunga"),
-					("tax", "Pajak"),
-					("net_income", "Laba Bersih"),
-				],
-				"Balance Sheet": [
-					("cash", "Kas dan Setara Kas"),
-					("receivables", "Piutang Usaha"),
-					("inventory", "Persediaan"),
-					("current_assets", "Aset Lancar"),
-					("total_assets", "Total Aset"),
-					("payables", "Utang Usaha"),
-					("current_liabilities", "Liabilitas Jangka Pendek"),
-					("debt", "Pinjaman Berbunga"),
-					("total_liabilities", "Total Liabilitas"),
-					("equity", "Ekuitas"),
-				],
-				"Cash Flow": [
-					("operating_cf", "Arus Kas Operasi"),
-					("capex", "Belanja Modal"),
-					("financing_cf", "Arus Kas Pendanaan"),
-					("period_cf", "Arus Kas Periode Berjalan"),
-					("ending_cash", "Kas Akhir Periode"),
-				]
-			}
-			
-			user_vals = {
-				"revenue": flt(payload.get("revenue")),
-				"ebitda": flt(payload.get("ebitda")),
-				"net_income": flt(payload.get("net_profit")),
-				"total_assets": flt(payload.get("total_assets")),
-				"total_liabilities": flt(payload.get("total_liabilities")),
-				"equity": flt(payload.get("equity")),
-			}
-			
-			# Derive current assets and current liabilities
-			current_ratio = flt(payload.get("current_ratio"))
-			current_liabilities = flt(payload.get("total_liabilities"))
-			current_assets = current_liabilities * current_ratio if current_ratio else flt(payload.get("total_assets"))
-			
-			der = flt(payload.get("der"))
-			equity = flt(payload.get("equity"))
-			debt = equity * der if der else 0.0
-			
-			user_vals["current_assets"] = current_assets
-			user_vals["current_liabilities"] = current_liabilities
-			user_vals["debt"] = debt
-			
-			# Insert all metrics for this year
-			for statement_type, metrics in all_metrics.items():
-				for metric_key, metric_label in metrics:
-					amount = user_vals.get(metric_key, 0.0)
-					_insert(
-						"CRM Credit Spread Line",
-						{
-							"application": application.get("name"),
-							"customer": borrower,
-							"statement_type": statement_type,
-							"metric_key": metric_key,
-							"metric_label": metric_label,
-							"year": year,
-							"amount": amount,
-							"adjusted_amount": amount,
-							"confidence": 1.0,
-							"source": "User Input",
-							"notes": f"Initial form input for FY {year}",
-						}
-					)
+			input_metrics = [
+				("P&L", "revenue", "Pendapatan / Sales", "revenue"),
+				("P&L", "ebitda", "EBITDA", "ebitda"),
+				("P&L", "net_income", "Laba Bersih", "net_profit"),
+				("Balance Sheet", "total_assets", "Total Aset", "total_assets"),
+				("Balance Sheet", "total_liabilities", "Total Liabilitas", "total_liabilities"),
+				("Balance Sheet", "equity", "Ekuitas", "equity"),
+			]
+			inserted_rows = 0
+			for statement_type, metric_key, metric_label, payload_key in input_metrics:
+				if payload.get(payload_key) in (None, ""):
+					continue
+				amount = flt(payload.get(payload_key))
+				_insert(
+					"CRM Credit Spread Line",
+					{
+						"application": application.get("name"),
+						"customer": borrower,
+						"statement_type": statement_type,
+						"metric_key": metric_key,
+						"metric_label": metric_label,
+						"year": year,
+						"amount": amount,
+						"adjusted_amount": amount,
+						"confidence": 1.0,
+						"source": "User Input",
+						"notes": f"Initial form input for FY {year}",
+					}
+				)
+				inserted_rows += 1
 			
 			# Recalculate workspace parameters
 			workspace = _workspace_payload(application.get("name"), persist_artifacts=True)
@@ -607,7 +562,7 @@ def create_credit_application(payload=None):
 				"Financial Spreading",
 				{
 					"status": "Draft",
-					"row_count": len(all_metrics["P&L"]) + len(all_metrics["Balance Sheet"]) + len(all_metrics["Cash Flow"]),
+					"row_count": inserted_rows,
 					"balance_checks": workspace["balance_checks"]
 				},
 				status="Draft",
@@ -741,6 +696,8 @@ def _normalize_application(row):
 		"risk_grade": row.get("risk_grade") or "",
 		"purpose": row.get("purpose") or "",
 		"public_snapshot": row.get("public_snapshot"),
+		"creation": row.get("creation"),
+		"modified": row.get("modified"),
 	}
 
 
@@ -748,7 +705,7 @@ def _normalize_application(row):
 def get_credit_application_queue():
 	"""Return credit applications for the Credit Analysis queue."""
 	if not _doctype_ready("CRM Credit Application"):
-		return _demo_credit_applications()
+		return []
 
 	rows = frappe.get_all(
 		"CRM Credit Application",
@@ -767,11 +724,13 @@ def get_credit_application_queue():
 			"risk_grade",
 			"purpose",
 			"public_snapshot",
+			"creation",
+			"modified",
 		],
 		order_by="modified desc",
 		limit=100,
 	)
-	return [_normalize_application(row) for row in rows] or _demo_credit_applications()
+	return [_normalize_application(row) for row in rows]
 
 
 def _get_public_snapshot(ticker: str | None = None, snapshot_name: str | None = None):

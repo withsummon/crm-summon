@@ -2,7 +2,13 @@ import time
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase, UnitTestCase
+try:
+	from frappe.tests import IntegrationTestCase, UnitTestCase
+except ImportError:
+	from frappe.tests.utils import FrappeTestCase
+
+	IntegrationTestCase = FrappeTestCase
+	UnitTestCase = FrappeTestCase
 
 from crm.utils import (
 	_get_communication_status,
