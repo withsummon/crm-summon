@@ -285,13 +285,7 @@ const routes = [
       {
         path: 'api-integration-center',
         name: 'API & Integration Center',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'API & Integration Center',
-          subtitle: 'Integrations',
-          icon: 'link',
-          sourcePath: '/app/integrations',
-        },
+        component: () => import('@/pages/APIIntegrationCenter.vue'),
       },
       {
         path: 'rules-engine',
