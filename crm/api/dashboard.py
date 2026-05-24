@@ -9,6 +9,7 @@ from frappe.utils import cstr, flt
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
+from crm.api.lead_management import get_lead_funnel
 from crm.utils import sales_user_only
 
 
