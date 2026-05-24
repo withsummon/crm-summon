@@ -313,6 +313,11 @@ const routes = [
       },
       // RBAC Routes
       {
+        path: 'rbac',
+        name: 'RBAC Admin',
+        component: () => import('@/modules/rbac/pages/RBACAdmin.vue'),
+      },
+      {
         path: 'users',
         name: 'User List',
         component: () => import('@/modules/rbac/pages/UserList.vue'),
@@ -337,6 +342,36 @@ const routes = [
         path: 'user-permissions',
         name: 'User Permissions',
         component: () => import('@/modules/rbac/pages/UserPermissions.vue'),
+      },
+      {
+        path: 'branches',
+        name: 'RBAC Branches',
+        component: () => import('@/modules/rbac/pages/BranchManagement.vue'),
+      },
+      {
+        path: 'approval-matrix',
+        name: 'RBAC Approval Matrix',
+        component: () => import('@/modules/rbac/pages/ApprovalMatrix.vue'),
+      },
+      {
+        path: 'field-permissions',
+        name: 'RBAC Field Permissions',
+        component: () => import('@/modules/rbac/pages/FieldPermissions.vue'),
+      },
+      {
+        path: 'delegations',
+        name: 'RBAC Delegations',
+        component: () => import('@/modules/rbac/pages/Delegations.vue'),
+      },
+      {
+        path: 'sod-rules',
+        name: 'RBAC SoD',
+        component: () => import('@/modules/rbac/pages/SoDRules.vue'),
+      },
+      {
+        path: 'jit-requests',
+        name: 'RBAC JIT',
+        component: () => import('@/modules/rbac/pages/JITRequests.vue'),
       },
       {
         path: 'audit-trail',

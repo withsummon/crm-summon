@@ -237,7 +237,8 @@ export const summonModules = [
       'Granular permissions, approval rights, branch restrictions, and data visibility rules.',
     priority: 'High',
     status: 'available',
-    routeName: 'User List',
+    routeName: 'RBAC Admin',
+    href: '/crm/admin-platform/rbac',
     group: 'Admin & Platform',
     icon: 'shield',
     features: [

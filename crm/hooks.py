@@ -130,13 +130,23 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# "Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# "Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"CRM Lead": "crm.api.rbac.permission_query_conditions",
+	"CRM Deal": "crm.api.rbac.permission_query_conditions",
+	"CRM Credit Application": "crm.api.rbac.permission_query_conditions",
+	"CRM Credit Facility": "crm.api.rbac.permission_query_conditions",
+	"CRM Organization": "crm.api.rbac.permission_query_conditions",
+	"Contact": "crm.api.rbac.permission_query_conditions",
+}
+
+has_permission = {
+	"CRM Lead": "crm.api.rbac.has_permission",
+	"CRM Deal": "crm.api.rbac.has_permission",
+	"CRM Credit Application": "crm.api.rbac.has_permission",
+	"CRM Credit Facility": "crm.api.rbac.has_permission",
+	"CRM Organization": "crm.api.rbac.has_permission",
+	"Contact": "crm.api.rbac.has_permission",
+}
 
 # DocType Class
 # ---------------
@@ -175,10 +185,25 @@ doc_events = {
 		"on_update": [
 			"crm.fcrm.doctype.erpnext_crm_settings.erpnext_crm_settings.create_customer_in_erpnext"
 		],
+		"validate": ["crm.api.rbac.validate_sod_on_save"],
 	},
 	"User": {
 		"before_validate": ["crm.api.live_demo.validate_user"],
 		"validate_reset_password": ["crm.api.live_demo.validate_reset_password"],
+	},
+	"FCRM User Branch": {
+		"after_insert": ["crm.api.rbac.on_user_branch_after_insert"],
+		"on_trash": ["crm.api.rbac.on_user_branch_on_trash"],
+	},
+	# RBAC SoD enforcement
+	"CRM Lead": {
+		"validate": ["crm.api.rbac.validate_sod_on_save"],
+	},
+	"CRM Credit Application": {
+		"validate": ["crm.api.rbac.validate_sod_on_save"],
+	},
+	"CRM Credit Facility": {
+		"validate": ["crm.api.rbac.validate_sod_on_save"],
 	},
 }
 
@@ -203,6 +228,10 @@ scheduler_events = {
 		"0 * * * *": ["crm.api.lead_management.process_idle_reassignments"],
 	},
 }
+
+# RBAC Scheduled Tasks
+scheduler_events["hourly"].append("crm.api.rbac.expire_jit_requests")
+scheduler_events["daily"].append("crm.api.rbac.expire_delegations")
 
 # Testing
 # -------
@@ -276,6 +305,7 @@ ignore_links_on_delete = ["Failed Lead Sync Log"]
 after_migrate = [
 	"crm.fcrm.doctype.fcrm_settings.fcrm_settings.after_migrate",
 	"crm.api.whatsapp.add_roles",
+	"crm.api.rbac.seed_default_roles",
 ]
 
 standard_dropdown_items = [

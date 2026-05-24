@@ -151,7 +151,8 @@
           :columns="columns"
           :options="{ selectable: false, showTooltip: false }"
         />
-        <EmptyState v-if="!rows.length" :icon="tab.icon" name="Deals" />
+        <EmptyState v-if="tab.label === 'Deals' && !rows.length" :icon="tab.icon" name="Deals" />
+        <ChatPanel v-if="tab.label === 'Chat'" doctype="Contact" :docname="contact.doc.name" class="flex h-full flex-col" />
       </template>
     </Tabs>
   </div>
@@ -178,6 +179,8 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import CameraIcon from '@/components/Icons/CameraIcon.vue'
 import DealsIcon from '@/components/Icons/DealsIcon.vue'
+import ChatIcon from '@/components/Icons/ChatIcon.vue'
+import ChatPanel from '@/components/ChatPanel.vue'
 import DealsListView from '@/components/ListViews/DealsListView.vue'
 import CustomActions from '@/components/CustomActions.vue'
 import {
@@ -301,6 +304,10 @@ const tabs = [
     label: 'Deals',
     icon: DealsIcon,
     count: computed(() => deals.data?.length),
+  },
+  {
+    label: 'Chat',
+    icon: ChatIcon,
   },
 ]
 

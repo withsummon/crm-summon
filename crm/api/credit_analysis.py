@@ -1113,13 +1113,49 @@ def _default_news(application):
 
 def _default_approval(application, risk_grade):
 	amount = flt(application.get("requested_amount"))
-	level = "Credit Committee" if amount >= 5_000_000_000 or risk_grade.get("grade") in {"C", "D", "E"} else "Branch Credit Manager"
+	grade = (risk_grade or {}).get("grade", "")
+	level = "Credit Committee" if amount >= 5_000_000_000 or grade in {"C", "D", "E"} else "Branch Credit Manager"
+
+	# Check RBAC Approval Matrix for more precise routing
+	try:
+		matrix_rules = frappe.db.get_all(
+			"FCRM Approval Matrix",
+			filters={
+				"enabled": 1,
+				"document_type": "CRM Credit Application",
+				"approval_type": "Credit",
+				"min_amount": ["<=", amount],
+				"max_amount": [">=", amount],
+			},
+			fields=["approver_role", "approver_user", "approval_sequence", "approval_type"],
+			order_by="approval_sequence asc",
+		)
+		if matrix_rules:
+			approvers = []
+			for rule in matrix_rules:
+				role = rule.get("approver_role") or ""
+				if role and role not in approvers:
+					approvers.append(role)
+			if approvers:
+				level = approvers[0]
+				return {
+					"status": "Draft",
+					"route": level,
+					"approvers": approvers,
+					"notifications": "Queued",
+					"tracking": [{"status": "Draft", "timestamp": str(now_datetime()), "owner": frappe.session.user}],
+					"source": "FCRM Approval Matrix",
+				}
+	except Exception:
+		pass
+
 	return {
 		"status": "Draft",
 		"route": level,
 		"approvers": [level, "Risk Reviewer"],
 		"notifications": "Queued",
 		"tracking": [{"status": "Draft", "timestamp": str(now_datetime()), "owner": frappe.session.user}],
+		"source": "Default Logic",
 	}
 
 
