@@ -405,6 +405,7 @@ def create_customer_360_customer(customer_name: str, customer_type: str = "Compa
 
 
 @frappe.whitelist()
+@frappe.whitelist()
 def create_credit_application(payload=None):
 	payload = frappe._dict(_json_loads(payload) if isinstance(payload, str) else payload or {})
 	borrower = payload.get("borrower")
@@ -426,38 +427,204 @@ def create_credit_application(payload=None):
 	if flt(payload.get("requested_amount")) <= 0:
 		frappe.throw(_("Requested amount must be greater than zero."))
 
-	application = create_or_update_customer360_record(
-		"CRM Credit Application",
-		{
-			"borrower": borrower,
-			"borrower_name": borrower_name,
-			"borrower_type": borrower_type,
-			"status": payload.get("status") or "Draft",
-			"facility_type": payload.get("facility_type"),
-			"requested_amount": flt(payload.get("requested_amount")),
-			"employer_name": payload.get("employer_name"),
-			"public_company_ticker": cstr(payload.get("public_company_ticker")).upper(),
-			"industry": payload.get("industry"),
-			"kbli": payload.get("kbli"),
-			"risk_grade": payload.get("risk_grade"),
-			"purpose": payload.get("purpose"),
-		},
-	)
+	app_fields = {
+		"borrower": borrower,
+		"borrower_name": borrower_name,
+		"borrower_type": borrower_type,
+		"status": payload.get("status") or "Draft",
+		"facility_type": payload.get("facility_type"),
+		"requested_amount": flt(payload.get("requested_amount")),
+		"employer_name": payload.get("employer_name"),
+		"public_company_ticker": cstr(payload.get("public_company_ticker")).upper(),
+		"industry": payload.get("industry"),
+		"kbli": payload.get("kbli"),
+		"risk_grade": payload.get("risk_grade"),
+		"purpose": payload.get("purpose"),
+		# Facility Fields
+		"credit_limit": flt(payload.get("credit_limit")),
+		"plafond": flt(payload.get("plafond")),
+		"tenor_months": int(payload.get("tenor_months") or 0),
+		"interest_rate": flt(payload.get("interest_rate")),
+		"repayment_scheme": payload.get("repayment_scheme"),
+		"submission_date": payload.get("submission_date"),
+		# Collateral Fields
+		"collateral_type": payload.get("collateral_type"),
+		"collateral_value": flt(payload.get("collateral_value")),
+		"ltv_percent": flt(payload.get("ltv_percent")),
+		"coverage_ratio": flt(payload.get("coverage_ratio")),
+		"collateral_description": payload.get("collateral_description"),
+		# Financial Summary Fields
+		"financial_year": int(payload.get("financial_year") or 0),
+		"revenue": flt(payload.get("revenue")),
+		"ebitda": flt(payload.get("ebitda")),
+		"net_profit": flt(payload.get("net_profit")),
+		"total_assets": flt(payload.get("total_assets")),
+		"total_liabilities": flt(payload.get("total_liabilities")),
+		"equity": flt(payload.get("equity")),
+		"der": flt(payload.get("der")),
+		"current_ratio": flt(payload.get("current_ratio")),
+		"auditor": payload.get("auditor"),
+		"audit_status": payload.get("audit_status"),
+		# Analyst Fields
+		"relationship_manager": payload.get("relationship_manager"),
+		"analyst": payload.get("analyst"),
+		"branch": payload.get("branch"),
+		"segment": payload.get("segment"),
+		"priority": payload.get("priority"),
+		"target_date": payload.get("target_date"),
+		"internal_notes": payload.get("internal_notes"),
+		"npwp": payload.get("npwp"),
+	}
+
+	application = create_or_update_customer360_record("CRM Credit Application", app_fields)
+
+	# Auto-populate linked records
+	if borrower:
+		# 1. Create linked Collateral record if user filled it
+		if payload.get("collateral_type") and flt(payload.get("collateral_value")) > 0:
+			try:
+				collateral_doc = frappe.get_doc({
+					"doctype": "CRM Collateral",
+					"customer": borrower,
+					"asset": f"{payload.get('collateral_type')} - {borrower_name}",
+					"collateral_type": payload.get("collateral_type"),
+					"collateral_value": flt(payload.get("collateral_value")),
+					"ltv_percent": flt(payload.get("ltv_percent")),
+					"status": "Active",
+					"notes": payload.get("collateral_description") or ""
+				})
+				collateral_doc.insert()
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), "Credit Application Collateral Init Failed")
+
+		# 2. Create linked Credit Facility record if user filled it
+		if payload.get("facility_type") and flt(payload.get("credit_limit")) > 0:
+			try:
+				facility_doc = frappe.get_doc({
+					"doctype": "CRM Credit Facility",
+					"customer": borrower,
+					"facility_type": payload.get("facility_type"),
+					"limit_amount": flt(payload.get("credit_limit")),
+					"outstanding": flt(payload.get("requested_amount")),
+					"status": "Active",
+					"notes": f"Tenor: {payload.get('tenor_months')} months, Rate: {payload.get('interest_rate')}%, Scheme: {payload.get('repayment_scheme')}"
+				})
+				facility_doc.insert()
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), "Credit Application Facility Init Failed")
+
+	# Initialize spreading workspace / data
 	try:
-		from crm.api.credit_analysis import ensure_credit_analysis_tables, _replace_artifact
+		from crm.api.credit_analysis import ensure_credit_analysis_tables, _replace_artifact, _insert, _workspace_payload
 
 		ensure_credit_analysis_tables()
-		# Initialize an empty workspace artifact (no demo data)
-		_replace_artifact(
-			application.get("name"),
-			borrower,
-			"spreading_status",
-			"Financial Spreading",
-			{"status": "Draft", "row_count": 0, "balance_checks": [], "message": "No financial data yet. Upload a PDF or enter data manually in the Financial Spreading tab."},
-			status="Draft",
-		)
+		
+		# 3. Create spreading lines if user entered financials in the form
+		if payload.get("financial_year"):
+			year = int(payload.get("financial_year"))
+			
+			all_metrics = {
+				"P&L": [
+					("revenue", "Pendapatan / Sales"),
+					("cogs", "Beban Pokok Penjualan"),
+					("gross_profit", "Laba Kotor"),
+					("operating_expense", "Beban Operasional"),
+					("ebitda", "EBITDA"),
+					("interest_expense", "Beban Bunga"),
+					("tax", "Pajak"),
+					("net_income", "Laba Bersih"),
+				],
+				"Balance Sheet": [
+					("cash", "Kas dan Setara Kas"),
+					("receivables", "Piutang Usaha"),
+					("inventory", "Persediaan"),
+					("current_assets", "Aset Lancar"),
+					("total_assets", "Total Aset"),
+					("payables", "Utang Usaha"),
+					("current_liabilities", "Liabilitas Jangka Pendek"),
+					("debt", "Pinjaman Berbunga"),
+					("total_liabilities", "Total Liabilitas"),
+					("equity", "Ekuitas"),
+				],
+				"Cash Flow": [
+					("operating_cf", "Arus Kas Operasi"),
+					("capex", "Belanja Modal"),
+					("financing_cf", "Arus Kas Pendanaan"),
+					("period_cf", "Arus Kas Periode Berjalan"),
+					("ending_cash", "Kas Akhir Periode"),
+				]
+			}
+			
+			user_vals = {
+				"revenue": flt(payload.get("revenue")),
+				"ebitda": flt(payload.get("ebitda")),
+				"net_income": flt(payload.get("net_profit")),
+				"total_assets": flt(payload.get("total_assets")),
+				"total_liabilities": flt(payload.get("total_liabilities")),
+				"equity": flt(payload.get("equity")),
+			}
+			
+			# Derive current assets and current liabilities
+			current_ratio = flt(payload.get("current_ratio"))
+			current_liabilities = flt(payload.get("total_liabilities"))
+			current_assets = current_liabilities * current_ratio if current_ratio else flt(payload.get("total_assets"))
+			
+			der = flt(payload.get("der"))
+			equity = flt(payload.get("equity"))
+			debt = equity * der if der else 0.0
+			
+			user_vals["current_assets"] = current_assets
+			user_vals["current_liabilities"] = current_liabilities
+			user_vals["debt"] = debt
+			
+			# Insert all metrics for this year
+			for statement_type, metrics in all_metrics.items():
+				for metric_key, metric_label in metrics:
+					amount = user_vals.get(metric_key, 0.0)
+					_insert(
+						"CRM Credit Spread Line",
+						{
+							"application": application.get("name"),
+							"customer": borrower,
+							"statement_type": statement_type,
+							"metric_key": metric_key,
+							"metric_label": metric_label,
+							"year": year,
+							"amount": amount,
+							"adjusted_amount": amount,
+							"confidence": 1.0,
+							"source": "User Input",
+							"notes": f"Initial form input for FY {year}",
+						}
+					)
+			
+			# Recalculate workspace parameters
+			workspace = _workspace_payload(application.get("name"), persist_artifacts=True)
+			_replace_artifact(
+				application.get("name"),
+				borrower,
+				"spreading_status",
+				"Financial Spreading",
+				{
+					"status": "Draft",
+					"row_count": len(all_metrics["P&L"]) + len(all_metrics["Balance Sheet"]) + len(all_metrics["Cash Flow"]),
+					"balance_checks": workspace["balance_checks"]
+				},
+				status="Draft",
+			)
+		else:
+			# Initialize an empty workspace artifact (no demo data)
+			_replace_artifact(
+				application.get("name"),
+				borrower,
+				"spreading_status",
+				"Financial Spreading",
+				{"status": "Draft", "row_count": 0, "balance_checks": [], "message": "No financial data yet. Upload a PDF or enter data manually in the Financial Spreading tab."},
+				status="Draft",
+			)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "Credit Application Workspace Init Failed")
+	
 	frappe.db.commit()
 	return application
 

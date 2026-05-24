@@ -510,18 +510,8 @@ async function createApplication() {
   creatingApplication.value = true
   try {
     const payload = {
-      borrower: newApp.borrower || '',
-      borrower_name: newApp.borrower_name,
-      borrower_type: newApp.borrower_type,
-      status: newApp.status || 'Draft',
-      facility_type: newApp.facility_type,
-      requested_amount: newApp.requested_amount,
-      employer_name: newApp.employer_name || '',
-      public_company_ticker: (newApp.public_company_ticker || '').toUpperCase(),
-      industry: newApp.industry || '',
-      kbli: newApp.kbli || '',
-      risk_grade: newApp.risk_grade || '',
-      purpose: newApp.purpose || '',
+      ...newApp,
+      public_company_ticker: (newApp.public_company_ticker || '').toUpperCase()
     }
 
     const row = await call('crm.api.credit.create_credit_application', { payload })
