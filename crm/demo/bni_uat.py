@@ -6,6 +6,7 @@ from frappe import _
 from frappe.utils import add_days, nowdate
 
 from crm.api.credit import create_customer_360_customer, create_or_update_customer360_record
+from crm.api.credit_analysis import create_uat_demo_pack, delete_credit_analysis_artifacts
 from crm.api.lead_gen import DEFAULT_IMPORT_OPTIONS, _build_workbook_payload_from_path, _bundled_workbook_path, _import_rows
 
 
@@ -90,6 +91,24 @@ def _create_customer_records(customer, sample_row, index, records):
 		},
 	)
 	_append_record(records, "CRM Credit Facility", facility.get("name"))
+
+	collateral = create_or_update_customer360_record(
+		"CRM Collateral",
+		{
+			"customer": customer_name,
+			"asset": f"{display_name} receivables and fixed asset pledge",
+			"collateral_type": "Receivables / Fixed Asset",
+			"status": "Active",
+			"collateral_value": 8500000000 + (index * 650000000),
+			"linked_facility": facility.get("name"),
+			"ltv_percent": 62 + (index * 4),
+			"expiry_date": add_days(nowdate(), 365),
+			"insurance_expiry": add_days(nowdate(), 330),
+			"reappraisal_status": "Not Required" if index == 0 else "Due",
+			"notes": "Seeded collateral for Credit Analysis UAT proof.",
+		},
+	)
+	_append_record(records, "CRM Collateral", collateral.get("name"))
 
 	bureau = create_or_update_customer360_record(
 		"CRM Bureau Report",
@@ -262,6 +281,9 @@ def _create_customer_records(customer, sample_row, index, records):
 	)
 	_append_record(records, "FCRM Note", note.get("name"))
 
+	demo_pack = create_uat_demo_pack(application.get("name"))
+	records.setdefault("CRM Credit UAT Proof", []).append(demo_pack.get("application"))
+
 
 @frappe.whitelist()
 def create_bni_uat_seed():
@@ -312,7 +334,10 @@ def clear_bni_uat_seed():
 	if not records:
 		return {"cleared": False, "message": _("No BNI UAT seed data found.")}
 
+	delete_credit_analysis_artifacts(records.get("CRM Credit Application", []))
+
 	delete_order = [
+		"CRM Collateral",
 		"CRM Credit Application",
 		"CRM Bureau Report",
 		"CRM Credit Facility",

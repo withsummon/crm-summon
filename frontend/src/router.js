@@ -12,7 +12,7 @@ const requiresCrmRole = (route) => {
   
   const flatCrmRoutes = [
     'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
-    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Desk'
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center', 'AI Desk'
   ]
   if (flatCrmRoutes.includes(route.name)) return true
   
@@ -149,8 +149,13 @@ const routes = [
       },
       {
         path: 'ai-desk',
-        name: 'AI Desk',
-        component: () => import('@/pages/AIDesk.vue'),
+        redirect: { name: 'AI Agent Center' },
+      },
+      {
+        path: 'ai-agent-center',
+        name: 'AI Agent Center',
+        alias: 'ai-agent',
+        component: () => import('@/pages/AIAgentCenter.vue'),
       },
     ],
   },
@@ -429,7 +434,8 @@ const routes = [
   { path: '/tasks', redirect: '/crm-core/tasks' },
   { path: '/calendar', redirect: '/crm-core/calendar' },
   { path: '/call-logs', redirect: '/crm-core/call-logs' },
-  { path: '/ai-desk', redirect: '/crm-core/ai-desk' },
+  { path: '/ai-desk', redirect: '/crm-core/ai-agent-center' },
+  { path: '/ai-agent-center', redirect: '/crm-core/ai-agent-center' },
   // Drive legacy CRM redirects now land on the iframe-based Document Management page.
   { path: '/drive', redirect: '/operations/document-management' },
   { path: '/drive/:pathMatch(.*)*', redirect: '/operations/document-management' },
@@ -453,10 +459,25 @@ let router = createRouter({
 router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
-  const { isLoggedIn } = sessionStore()
+  const session = sessionStore()
+  const loggedIn = session.isLoggedIn
   const { users, isCrmUser } = usersStore()
 
-  if (isLoggedIn && !users.fetched) {
+  // Send state to backend for console debugging
+  try {
+    fetch('/api/method/crm.www.crm.debug_log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Frappe-CSRF-Token': window.csrf_token || ''
+      },
+      body: JSON.stringify({
+        message: `GUARD EVAL: to=${to.name} (${to.fullPath}), from=${from.name} (${from.fullPath}), loggedIn=${loggedIn}, session.user=${session.user}, window.user=${window.user}, cookie_user_id=${(document.cookie.match(/user_id=([^;]+)/) || [])[1]}`
+      })
+    }).catch(() => {})
+  } catch (e) {}
+
+  if (loggedIn && !users.fetched) {
     try {
       await users.promise
     } catch (error) {
@@ -470,16 +491,16 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.name === 'Not Permitted') {
     next()
-  } else if (isLoggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
+  } else if (loggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
     next({ name: 'Not Permitted' })
-  } else if (to.name === 'CRM Dispatcher' && isLoggedIn) {
+  } else if (to.name === 'CRM Dispatcher' && loggedIn) {
     const { views, getDefaultView } = viewsStore()
     await views.promise
 
     let defaultView = getDefaultView()
     if (!defaultView) {
       if (!isCrmUser()) {
-        next({ name: 'Home' })
+        next({ name: 'Not Permitted' })
       } else {
         next({ name: 'CRM Core Dashboard' })
       }
@@ -498,7 +519,7 @@ router.beforeEach(async (to, from, next) => {
     } else {
       next({ name: route_name, params: { viewType: type } })
     }
-  } else if (!isLoggedIn) {
+  } else if (!loggedIn) {
     window.location.href = `/login?redirect-to=${encodeURIComponent(`/crm${to.fullPath}`)}`
     next(false)
   } else if (to.matched.length === 0) {
@@ -520,7 +541,8 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name) &&
     !to.query?.view
   ) {
-    const { views, standardViews, getDefaultView } = viewsStore()
+    const viewsStoreInstance = viewsStore()
+    const { views, getDefaultView } = viewsStoreInstance
     await views.promise
 
     const viewType = to.params?.viewType ?? ''
@@ -554,7 +576,8 @@ router.beforeEach(async (to, from, next) => {
       }
 
       for (const viewType of standardViewTypes) {
-        const standardView = standardViews.value?.[doctype + ' ' + viewType]
+        const standardViews = viewsStoreInstance.standardViews
+        const standardView = (standardViews?.[doctype + ' ' + viewType]) || (standardViews?.value?.[doctype + ' ' + viewType])
         if (standardView?.is_default) {
           defaultViewType = viewType
           break

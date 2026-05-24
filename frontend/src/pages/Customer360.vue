@@ -140,10 +140,23 @@
                   class="w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-teal-400"
                 />
                 <div class="mt-3 flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
-                  <span>{{ __('5-bullet summary generated from persisted Customer 360 records') }}</span>
+                  <span>{{ __('RAG summary generated from indexed Customer 360 records and documents') }}</span>
                   <div class="flex gap-2">
+                    <select v-model="summaryLength" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 focus:outline-none focus:border-teal-500">
+                      <option>TL;DR</option>
+                      <option>Standard</option>
+                      <option>Detailed</option>
+                    </select>
                     <Button variant="subtle" size="sm" :label="__('Refresh')" @click="reloadCustomer360" />
+                    <Button variant="outline" size="sm" :label="__('Generate with RAG')" :loading="isGeneratingSummary" @click="generateCustomerSummary" />
                     <Button variant="solid" size="sm" :label="__('Save Summary')" @click="saveCustomerSummary" />
+                  </div>
+                </div>
+                <div v-if="summarySources.length" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div v-for="source in summarySources" :key="source.id" class="rounded-lg border border-teal-100 bg-white p-3">
+                    <div class="text-xs font-bold text-slate-800 truncate">{{ source.title }}</div>
+                    <div class="mt-1 text-[11px] text-slate-500">{{ source.doctype }} · {{ source.docname }}</div>
+                    <p class="mt-2 line-clamp-3 text-xs leading-5 text-slate-600">{{ source.excerpt }}</p>
                   </div>
                 </div>
               </Panel>
@@ -502,6 +515,9 @@ const showProfileEdit = ref(false)
 const showDynamicForm = ref(false)
 const showExportDialog = ref(false)
 const summaryText = ref('')
+const summaryLength = ref('Standard')
+const summarySources = ref([])
+const isGeneratingSummary = ref(false)
 const globalResults = ref([])
 const recentSearches = ref(JSON.parse(localStorage.getItem('customer360RecentSearches') || '[]'))
 const graphFilter = ref('All')
@@ -633,7 +649,7 @@ const formConfigs = computed(() => ({
   creditApplication: {
     title: __('New Credit Application'),
     doctype: 'CRM Credit Application',
-    defaults: { borrower: selectedCustomerName.value, borrower_type: 'Individual', status: 'Draft' },
+    defaults: { borrower: selectedCustomerName.value, borrower_type: selectedCustomer.value?.customer_type || 'Company', status: 'Draft' },
     fields: [field('facility_type', 'Facility Type'), field('requested_amount', 'Requested Amount', 'number'), field('employer_name', 'Employer / Affiliation'), field('public_company_ticker', 'PT Tbk Ticker'), field('purpose', 'Purpose', 'textarea')],
   },
   kyc: {
@@ -832,6 +848,26 @@ async function saveCustomerSummary() {
   await call('crm.api.credit.save_customer_summary', { customer: selectedCustomerName.value, summary: summaryText.value })
   toast.success(__('Summary saved'))
   reloadCustomer360()
+}
+
+async function generateCustomerSummary() {
+  if (!selectedCustomerName.value) return
+  isGeneratingSummary.value = true
+  try {
+    const response = await call('crm.api.ai_agent_center.generate_summary', {
+      scope: 'Customer',
+      docname: selectedCustomerName.value,
+      length: summaryLength.value,
+    })
+    summaryText.value = response.response || ''
+    summarySources.value = response.sources || []
+    toast.success(__('RAG summary generated'))
+    reloadCustomer360()
+  } catch (error) {
+    toast.error(error?.messages?.[0] || __('Could not generate RAG summary'))
+  } finally {
+    isGeneratingSummary.value = false
+  }
 }
 
 async function addCustomer() {

@@ -22,6 +22,9 @@ CREDIT_DOCTYPES = {
 	"CRM KYC Review",
 	"CRM Relationship",
 	"CRM Financial Statement",
+	"CRM Credit Spread Line",
+	"CRM Credit Analysis Artifact",
+	"CRM Credit UAT Evidence",
 	"CRM Site Visit",
 	"CRM Bank Account",
 	"CRM Customer Document",
@@ -401,6 +404,55 @@ def create_customer_360_customer(customer_name: str, customer_type: str = "Compa
 	return frappe.get_doc(doc).insert().as_dict()
 
 
+@frappe.whitelist()
+def create_credit_application(payload=None):
+	payload = frappe._dict(_json_loads(payload) if isinstance(payload, str) else payload or {})
+	borrower = payload.get("borrower")
+	borrower_name = cstr(payload.get("borrower_name")).strip()
+	borrower_type = payload.get("borrower_type") or "Company"
+
+	if borrower and not frappe.db.exists("Customer", borrower):
+		frappe.throw(_("Borrower customer not found."))
+	if not borrower:
+		if not borrower_name:
+			frappe.throw(_("Borrower name is required."))
+		customer = create_customer_360_customer(borrower_name, customer_type=borrower_type)
+		borrower = customer.get("name")
+	else:
+		borrower_name = borrower_name or _get_customer_label(borrower)
+
+	if not payload.get("facility_type"):
+		frappe.throw(_("Facility type is required."))
+	if flt(payload.get("requested_amount")) <= 0:
+		frappe.throw(_("Requested amount must be greater than zero."))
+
+	application = create_or_update_customer360_record(
+		"CRM Credit Application",
+		{
+			"borrower": borrower,
+			"borrower_name": borrower_name,
+			"borrower_type": borrower_type,
+			"status": payload.get("status") or "Draft",
+			"facility_type": payload.get("facility_type"),
+			"requested_amount": flt(payload.get("requested_amount")),
+			"employer_name": payload.get("employer_name"),
+			"public_company_ticker": cstr(payload.get("public_company_ticker")).upper(),
+			"industry": payload.get("industry"),
+			"kbli": payload.get("kbli"),
+			"risk_grade": payload.get("risk_grade"),
+			"purpose": payload.get("purpose"),
+		},
+	)
+	try:
+		from crm.api.credit_analysis import save_spreading
+
+		save_spreading(application.get("name"), status="Draft")
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Credit Application Workspace Init Failed")
+	frappe.db.commit()
+	return application
+
+
 def _first_leaf_value(doctype: str, value_field: str):
 	if not frappe.db.table_exists(doctype):
 		return None
@@ -518,7 +570,7 @@ def _normalize_application(row):
 
 @frappe.whitelist()
 def get_credit_application_queue():
-	"""Return individual credit applications for the Credit Analysis queue."""
+	"""Return credit applications for the Credit Analysis queue."""
 	if not _doctype_ready("CRM Credit Application"):
 		return _demo_credit_applications()
 
@@ -540,7 +592,6 @@ def get_credit_application_queue():
 			"purpose",
 			"public_snapshot",
 		],
-		filters={"borrower_type": "Individual"},
 		order_by="modified desc",
 		limit=100,
 	)
@@ -614,7 +665,7 @@ def get_credit_analysis(application_id: str):
 	if not app:
 		frappe.throw(_("Credit application not found"))
 
-	return {
+	payload = {
 		"application": app,
 		"public_snapshot": _get_public_snapshot(app.get("public_company_ticker"), app.get("public_snapshot")),
 		"bureau": _latest_bureau_report(app.get("borrower")),
@@ -627,6 +678,20 @@ def get_credit_analysis(application_id: str):
 			"sources": PUBLIC_SOURCE_URLS,
 		},
 	}
+	try:
+		from crm.api.credit_analysis import get_credit_workspace
+
+		workspace = get_credit_workspace.__wrapped__(application_id)
+		payload.update(workspace)
+		payload["legacy"] = {
+			"financials": payload.get("financials") or [],
+			"facilities": payload.get("facilities") or [],
+			"collaterals": payload.get("collaterals") or [],
+			"bureau": payload.get("bureau"),
+		}
+	except Exception:
+		pass
+	return payload
 
 
 @frappe.whitelist()

@@ -16,7 +16,7 @@
             {{ __('AI Provider') }}
           </div>
           <div class="text-p-sm text-ink-gray-5 mb-2">
-            {{ __('Choose which AI service to use for the AI Desk.') }}
+            {{ __('Choose which AI service to use for the AI Agent Center.') }}
           </div>
           <select
             v-model="settings.doc.ai_provider"

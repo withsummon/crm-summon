@@ -36,12 +36,17 @@ export const usersStore = defineStore('crm-users', () => {
     if (!email || email === 'sessionUser') {
       email = session.user
     }
+    if (typeof email === 'string') {
+      if (email.startsWith('"') && email.endsWith('"')) {
+        email = email.slice(1, -1)
+      }
+    }
     if (!usersByName[email]) {
       usersByName[email] = {
         name: email,
         email: email,
-        full_name: email.split('@')[0],
-        first_name: email.split('@')[0],
+        full_name: email ? email.split('@')[0] : '',
+        first_name: email ? email.split('@')[0] : '',
         last_name: '',
         user_image: null,
         role: null,
@@ -80,7 +85,15 @@ export const usersStore = defineStore('crm-users', () => {
 
   const isCrmUser = (user) => {
     user = user || session.user
-    return users.data.crmUsers?.find((u) => u.name === user)
+    if (!user) return false
+    if (typeof user === 'string') {
+      if (user.startsWith('"') && user.endsWith('"')) {
+        user = user.slice(1, -1)
+      }
+    }
+    if (user === 'Administrator') return true
+    if (getUser(user)?.role === 'System Manager') return true
+    return !!users.data.crmUsers?.find((u) => u.name === user)
   }
 
   return {

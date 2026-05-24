@@ -5,7 +5,7 @@
         <div>
           <h1 class="text-2xl font-bold text-slate-900">{{ __('Credit Analysis') }}</h1>
           <p class="mt-1 text-sm text-slate-500">
-            {{ __('Individual credit application table. Click a row to open the analysis workspace.') }}
+            {{ __('Credit application table. Click a row to open the analysis workspace.') }}
           </p>
         </div>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -18,6 +18,11 @@
             />
             <FeatherIcon name="search" class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           </div>
+          <Button variant="solid" :label="__('New Credit Application')" @click="showCreateDialog = true">
+            <template #prefix>
+              <FeatherIcon name="plus" class="h-4 w-4" />
+            </template>
+          </Button>
           <Button variant="outline" :loading="applications.loading" :label="__('Refresh')" @click="applications.fetch()" />
         </div>
       </div>
@@ -64,7 +69,7 @@
                     </div>
                     <div class="min-w-0">
                       <div class="truncate font-bold text-slate-800">{{ row.borrower_name || row.borrower || row.name }}</div>
-                      <div class="text-xs text-slate-500">{{ __('Individual borrower') }}</div>
+                      <div class="text-xs text-slate-500">{{ row.borrower_type || __('Borrower') }}</div>
                     </div>
                   </div>
                 </td>
@@ -90,17 +95,84 @@
         </div>
       </div>
     </div>
+
+    <Dialog v-model="showCreateDialog" :options="{ title: __('New Credit Application') }">
+      <template #body-content>
+        <div class="grid grid-cols-1 gap-4 pt-3 md:grid-cols-2">
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Existing Customer ID') }}</span>
+            <input v-model="newApplication.borrower" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" :placeholder="__('Optional')" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Borrower Name') }}</span>
+            <input v-model="newApplication.borrower_name" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Borrower Type') }}</span>
+            <select v-model="newApplication.borrower_type" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500">
+              <option value="Company">{{ __('Company') }}</option>
+              <option value="Individual">{{ __('Individual') }}</option>
+            </select>
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Facility Type') }}</span>
+            <input v-model="newApplication.facility_type" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Requested Amount') }}</span>
+            <input v-model.number="newApplication.requested_amount" type="number" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Status') }}</span>
+            <select v-model="newApplication.status" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500">
+              <option value="Draft">{{ __('Draft') }}</option>
+              <option value="In Progress">{{ __('In Progress') }}</option>
+              <option value="Pending Review">{{ __('Pending Review') }}</option>
+            </select>
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Industry') }}</span>
+            <input v-model="newApplication.industry" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('KBLI') }}</span>
+            <input v-model="newApplication.kbli" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Employer / Affiliation') }}</span>
+            <input v-model="newApplication.employer_name" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-xs font-semibold text-slate-600">{{ __('PT Tbk Ticker') }}</span>
+            <input v-model="newApplication.public_company_ticker" class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm uppercase outline-none focus:border-teal-500" />
+          </label>
+          <label class="space-y-1 md:col-span-2">
+            <span class="text-xs font-semibold text-slate-600">{{ __('Purpose') }}</span>
+            <textarea v-model="newApplication.purpose" rows="3" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500" />
+          </label>
+        </div>
+      </template>
+      <template #actions>
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" :label="__('Cancel')" @click="showCreateDialog = false" />
+          <Button variant="solid" :label="__('Create & Open')" :loading="creatingApplication" @click="createApplication" />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { Badge, Button, FeatherIcon, createResource, usePageMeta } from 'frappe-ui'
-import { computed, h, ref, watch } from 'vue'
+import { Badge, Button, Dialog, FeatherIcon, call, createResource, toast, usePageMeta } from 'frappe-ui'
+import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const query = ref('')
+const showCreateDialog = ref(false)
+const creatingApplication = ref(false)
 let searchTimer = null
+const newApplication = reactive(defaultApplication())
 
 const applications = createResource({
   url: 'crm.api.credit.get_credit_analysis_table',
@@ -116,6 +188,42 @@ const withTicker = computed(() => rows.value.filter((row) => row.public_company_
 
 function openApplication(row) {
   router.push({ name: 'Credit Analysis Detail', params: { applicationId: row.name } })
+}
+
+function defaultApplication() {
+  return {
+    borrower: '',
+    borrower_name: '',
+    borrower_type: 'Company',
+    status: 'Draft',
+    facility_type: 'Working Capital',
+    requested_amount: 5000000000,
+    industry: 'Financial Services',
+    kbli: '6419',
+    employer_name: '',
+    public_company_ticker: '',
+    purpose: '',
+  }
+}
+
+function resetApplicationForm() {
+  Object.assign(newApplication, defaultApplication())
+}
+
+async function createApplication() {
+  creatingApplication.value = true
+  try {
+    const row = await call('crm.api.credit.create_credit_application', { payload: { ...newApplication } })
+    toast.success(__('Credit application created'))
+    showCreateDialog.value = false
+    resetApplicationForm()
+    await applications.fetch()
+    router.push({ name: 'Credit Analysis Detail', params: { applicationId: row.name } })
+  } catch (error) {
+    toast.error(error?.messages?.[0] || error.message || __('Could not create credit application'))
+  } finally {
+    creatingApplication.value = false
+  }
 }
 
 function statusCount(status) {

@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "application", "customer", "artifact_type", "title", "status", "column_break_meta", "source", "confidence", "payload_json"],
+ "fields": [
+  {"default": "CRM-CAA-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-CAA-.YYYY.-"},
+  {"fieldname": "application", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Credit Application", "options": "CRM Credit Application", "reqd": 1},
+  {"fieldname": "customer", "fieldtype": "Link", "in_standard_filter": 1, "label": "Customer", "options": "Customer"},
+  {"fieldname": "artifact_type", "fieldtype": "Data", "in_list_view": 1, "in_standard_filter": 1, "label": "Artifact Type", "reqd": 1},
+  {"fieldname": "title", "fieldtype": "Data", "in_list_view": 1, "label": "Title"},
+  {"default": "Completed", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Draft\nCompleted\nSubmitted\nQueued\nFailed"},
+  {"fieldname": "column_break_meta", "fieldtype": "Column Break"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source"},
+  {"fieldname": "confidence", "fieldtype": "Percent", "label": "Confidence"},
+  {"fieldname": "payload_json", "fieldtype": "Long Text", "label": "Payload JSON"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Credit Analysis Artifact",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales User", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

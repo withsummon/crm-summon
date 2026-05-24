@@ -57,7 +57,7 @@ import FrappeCloudIcon from '@/components/Icons/FrappeCloudIcon.vue'
 import { sessionStore } from '@/stores/session'
 import { usersStore } from '@/stores/users'
 import { getSettings } from '@/stores/settings'
-import { showSettings, isMobileView } from '@/composables/settings'
+import { showSettings, activeSettingsPage, isMobileView } from '@/composables/settings'
 import { showAboutModal } from '@/composables/modals'
 import { confirmLoginToFrappeCloud } from '@/composables/frappecloud'
 import { Dropdown } from 'frappe-ui'
@@ -133,7 +133,10 @@ function getStandardItem(item) {
       return {
         icon: item.icon,
         label: __(item.label),
-        onClick: () => (showSettings.value = true),
+        onClick: () => {
+          activeSettingsPage.value = 'AI Settings'
+          showSettings.value = true
+        },
         condition: () => !isMobileView.value,
       }
     case 'login_to_fc':
