@@ -93,6 +93,7 @@ export default defineConfig(async ({ mode }) => {
       host: '0.0.0.0',
       port: devServerPort,
       strictPort: true,
+      allowedHosts: 'olympics-patient-wasabi.ngrok-free.dev',
       fs: {
         allow: [path.resolve(__dirname, '..')],
       },
