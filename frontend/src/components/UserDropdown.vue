@@ -26,7 +26,7 @@
           <div
             class="text-base font-medium leading-none text-crm-text truncate"
           >
-            {{ __(brand.name || 'Summon') }}
+            {{ __(brand.name || 'BNI CRM') }}
           </div>
           <div class="mt-1 text-sm leading-none text-crm-muted truncate">
             {{ user.full_name }}
@@ -141,7 +141,7 @@ function getStandardItem(item) {
         icon: h(FrappeCloudIcon),
         label: __(item.label),
         onClick: () => confirmLoginToFrappeCloud(),
-        condition: () => false, // Hidden for Summon branding
+        condition: () => false, // Hidden for BNI teal branding
       }
     case 'about':
       return {

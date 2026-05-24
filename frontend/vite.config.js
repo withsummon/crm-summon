@@ -39,11 +39,11 @@ export default defineConfig(async ({ mode }) => {
         },
         manifest: {
           display: 'standalone',
-          name: 'Summon',
-          short_name: 'Summon',
+          name: 'BNI CRM',
+          short_name: 'BNI CRM',
           start_url: '/crm',
           description:
-            'Modern & 100% Open-source CRM tool to supercharge your sales operations',
+            'BNI teal CRM workspace for lead generation and customer 360',
           icons: [
             {
               src: '/assets/crm/manifest/manifest-icon-192.maskable.png',

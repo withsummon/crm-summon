@@ -517,7 +517,7 @@ const routeCustomer = computed(() => String(route.params.customer || ''))
 
 const newCustomer = reactive({ customer_name: '', customer_type: 'Company' })
 const profileForm = reactive({ customer_name: '', customer_type: 'Company', tax_id: '', website: '' })
-const exportForm = reactive({ scope: 'Full Profile', watermark: 'SUMMON BNI Confidential', password: '' })
+const exportForm = reactive({ scope: 'Full Profile', watermark: 'BNI CRM Confidential', password: '' })
 const mergeForm = reactive({ target: '', field_map_json: '{}' })
 const dynamicForm = reactive({ key: '', title: '', doctype: '', doc: {}, fields: [] })
 

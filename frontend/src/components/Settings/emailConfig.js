@@ -78,7 +78,7 @@ export const popularProviderFields = [
 export const customProviderFields = [
   ...fixedFields,
   {
-    label: __('Summon Mail Site'),
+    label: __('BNI Mail Site'),
     name: 'frappe_mail_site',
     type: 'text',
     placeholder: 'https://frappemail.com',

@@ -1,11 +1,11 @@
 app_name = "crm"
-app_title = "Summon"
-app_publisher = "Summon"
-app_description = "Supercharge your sales operations with Summon CRM"
+app_title = "BNI CRM"
+app_publisher = "BNI"
+app_description = "BNI teal CRM workspace for lead generation and customer 360"
 app_email = "hello@withsummon.com"
 app_license = "AGPLv3"
 app_icon_url = "/assets/crm/images/logo.svg"
-app_icon_title = "Summon"
+app_icon_title = "BNI CRM"
 app_icon_route = "/crm"
 
 # Apps
@@ -16,7 +16,7 @@ add_to_apps_screen = [
 	{
 		"name": "crm",
 		"logo": "/assets/crm/images/logo.svg",
-		"title": "Summon",
+		"title": "BNI CRM",
 		"route": "/crm",
 		"has_permission": "crm.api.check_app_permission",
 	}
@@ -295,7 +295,7 @@ standard_dropdown_items = [
 	},
 	{
 		"name1": "login_to_fc",
-		"label": "Login to Summon Cloud",
+		"label": "Login to BNI Cloud Workspace",
 		"type": "Route",
 		"route": "#",
 		"is_standard": 1,

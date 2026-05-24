@@ -73,19 +73,19 @@
         </article>
       </section>
 
-      <!-- ═══ MAIN GRID: REVENUE + CALENDAR ═══ -->
+      <!-- ═══ MAIN GRID: COMPANY BREAKDOWN + CALENDAR ═══ -->
       <section class="bni-main-grid">
-        <!-- Revenue Card -->
+        <!-- Company Breakdown Card -->
         <article class="bni-card bni-revenue-card">
           <div class="bni-rev-header">
             <div class="bni-rev-left">
-              <h2>{{ __('Pendapatan') }}</h2>
+              <h2>{{ __('Top Bank / Company') }}</h2>
               <div class="bni-rev-total">
-                <strong>{{ formatRupiah(displayRevenue.total) }}</strong>
-                <span :class="['bni-badge-change', displayRevenue.change >= 0 ? 'up' : 'down']">
-                  {{ displayRevenue.change >= 0 ? '↑' : '↓' }} {{ Math.abs(displayRevenue.change) }}%
+                <strong>{{ formatCount(chartSummary.total) }} {{ __('leads') }}</strong>
+                <span :class="['bni-badge-change', chartSummary.change >= 0 ? 'up' : 'down']">
+                  {{ chartSummary.change >= 0 ? '↑' : '↓' }} {{ Math.abs(chartSummary.change) }}%
                 </span>
-                <span class="bni-vs">{{ __('vs bulan lalu') }}</span>
+                <span class="bni-vs">{{ __('vs periode sebelumnya') }}</span>
               </div>
             </div>
             <div class="bni-rev-periods">
@@ -139,8 +139,8 @@
               class="bni-tooltip"
               :style="{ left: tooltipLeft }"
             >
-              <strong>{{ activeBar.label }} 2025</strong>
-              <span>{{ formatRupiah(activeBar.value) }} <em class="t-up">↑ 2%</em></span>
+              <strong>{{ activeBar.label }}</strong>
+              <span>{{ formatCount(activeBar.value) }} {{ __('leads') }}</span>
             </div>
           </div>
         </article>
@@ -216,64 +216,66 @@
           </div>
         </article>
 
-        <!-- Cabang / Wilayah -->
+        <!-- Bank Breakdown -->
         <article class="bni-card">
           <div class="bni-card-head">
-            <h2>{{ __('Cabang / Wilayah') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="grid" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-map-wrap">
-            <div :id="mapId" class="bni-map-container"></div>
-            <div class="bni-map-zoom">
-              <button @click="mapZoomIn">+</button>
-              <button @click="mapZoomOut">−</button>
-            </div>
-          </div>
-        </article>
-
-        <!-- Top Cabang -->
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>{{ __('Top Cabang') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
+            <h2>{{ __('Bank Breakdown') }}</h2>
+            <button class="bni-dots"><FeatherIcon name="building-2" class="h-4 w-4" /></button>
           </div>
           <div class="bni-rank-list">
-            <div v-for="(b, i) in displayBranches" :key="b.name" class="bni-rank-row">
-              <span class="bni-rank-num">{{ i + 1 }}</span>
-              <span class="bni-rank-name">{{ b.name }}</span>
-              <strong class="bni-rank-pct">{{ b.percent }}%</strong>
+            <div v-for="(company, index) in displayCompanies" :key="company.label" class="bni-rank-row">
+              <span class="bni-rank-num">{{ index + 1 }}</span>
+              <span class="bni-rank-name">{{ company.label }}</span>
+              <strong class="bni-rank-pct">{{ company.count }}</strong>
             </div>
           </div>
           <button class="bni-see-all">
-            {{ __('Lihat semua') }}
+            {{ __('Most active organizations') }}
             <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
           </button>
         </article>
 
-        <!-- Tingkat Retensi -->
+        <!-- PIC Ownership -->
         <article class="bni-card">
           <div class="bni-card-head">
-            <h2>{{ __('Tingkat Retensi') }}</h2>
+            <h2>{{ __('PIC Ownership') }}</h2>
             <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
           </div>
-          <div class="bni-ret-header">
-            <strong class="bni-ret-val">95%</strong>
-            <span class="bni-badge-change up">↑ 12%</span>
-            <span class="bni-vs">{{ __('vs bulan lalu') }}</span>
+          <div class="bni-rank-list">
+            <div v-for="(owner, i) in displayPicOwnership" :key="owner.label" class="bni-rank-row">
+              <span class="bni-rank-num">{{ i + 1 }}</span>
+              <span class="bni-rank-name">{{ owner.label }}</span>
+              <strong class="bni-rank-pct">{{ owner.count }}</strong>
+            </div>
           </div>
-          <div class="bni-ret-legend">
-            <span><i class="dot-ukm"></i> UKM</span>
-            <span><i class="dot-kor"></i> {{ __('Korporasi') }}</span>
-            <span><i class="dot-kon"></i> {{ __('Konsumer') }}</span>
+          <button class="bni-see-all">
+            {{ __('Lead referrers / PIC') }}
+            <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
+          </button>
+        </article>
+
+        <!-- Follow-up Load -->
+        <article class="bni-card">
+          <div class="bni-card-head">
+            <h2>{{ __('Follow-up Load') }}</h2>
+            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
           </div>
-          <div class="bni-ret-chart">
-            <div v-for="m in retentionMonths" :key="m.label" class="bni-ret-col">
-              <div class="bni-ret-bars">
-                <span class="r-ukm" :style="{ height: `${m.ukm}%` }"></span>
-                <span class="r-kor" :style="{ height: `${m.korporasi}%` }"></span>
-                <span class="r-kon" :style="{ height: `${m.konsumer}%` }"></span>
+          <div class="bni-lead-bars">
+            <div v-for="item in displayFollowUpLoad" :key="item.label" class="bni-lb-row">
+              <span class="bni-lb-label">{{ item.label }}</span>
+              <div class="bni-lb-track">
+                <div class="bni-lb-fill" :style="{ width: `${item.percent}%` }"></div>
               </div>
-              <small :class="{ bold: m.label === 'Sep' }">{{ m.label }}</small>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-center">
+              <div class="text-xl font-bold text-emerald-700">{{ followUpSummary.completed }}</div>
+              <div class="text-xs text-emerald-700">{{ __('Completed') }}</div>
+            </div>
+            <div class="rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-3 text-center">
+              <div class="text-xl font-bold text-cyan-700">{{ followUpSummary.pending }}</div>
+              <div class="text-xs text-cyan-700">{{ __('Pending') }}</div>
             </div>
           </div>
         </article>
@@ -284,149 +286,13 @@
 
 <script setup>
 import { FeatherIcon, createResource, usePageMeta } from 'frappe-ui'
-import { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-
-// Static URL imports for Leaflet marker assets (so Vite bundles them correctly)
-import leafletIconUrl from 'leaflet/dist/images/marker-icon.png?url'
-import leafletIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png?url'
-import leafletShadowUrl from 'leaflet/dist/images/marker-shadow.png?url'
+import { computed, ref, watch } from 'vue'
 
 // ─── Reactive State ───────────────────────────────────────
 const aiSearch = ref('')
 const activeRevenuePeriod = ref('1T')
 const hoveredBar = ref(null)
 const activeLeadTab = ref('Status')
-
-// ─── Leaflet Map Setup ─────────────────────────────────────
-const mapId = `cabang-map-${Math.random().toString(36).slice(2)}`
-let L = null
-let mapInstance = null
-let markersLayer = null
-
-const territoryCoords = {
-  'Jakarta': [-6.2088, 106.8456],
-  'Surabaya': [-7.2575, 112.7521],
-  'Bandung': [-6.9175, 107.6191],
-  'Medan': [3.5952, 98.6722],
-  'Makassar': [-5.1477, 119.4327],
-  'Semarang': [-6.9667, 110.4167],
-  'Yogyakarta': [-7.7956, 110.3695],
-  'Palembang': [-2.9761, 104.7754],
-  'Denpasar': [-8.6705, 115.2126],
-  'Balikpapan': [-1.2654, 116.8312],
-  'Manado': [1.4748, 124.8428],
-  'Jayapura': [-2.5489, 140.7181],
-  'Sumatera': [-0.5897, 101.3431],
-  'Jawa': [-7.2754, 110.0044],
-  'Kalimantan': [-1.2692, 114.3315],
-  'Sulawesi': [-1.9022, 120.1219],
-  'Papua': [-4.2699, 138.0803],
-  'Default': [-2.5, 118.0]
-}
-
-function getCoordsForTerritory(name) {
-  if (!name) return territoryCoords.Default
-  const normalized = name.toLowerCase().trim()
-  for (const [key, coords] of Object.entries(territoryCoords)) {
-    if (normalized.includes(key.toLowerCase()) || key.toLowerCase().includes(normalized)) {
-      return coords
-    }
-  }
-  return [
-    -2.5 + (Math.random() - 0.5) * 4,
-    118.0 + (Math.random() - 0.5) * 10
-  ]
-}
-
-async function initMap() {
-  if (mapInstance) return
-
-  await import('leaflet/dist/leaflet.css')
-  const leafletModule = await import('leaflet')
-  L = leafletModule.default ?? leafletModule
-
-  delete L.Icon.Default.prototype._getIconUrl
-  L.Icon.Default.mergeOptions({
-    iconUrl: leafletIconUrl,
-    iconRetinaUrl: leafletIconRetinaUrl,
-    shadowUrl: leafletShadowUrl,
-  })
-
-  const container = document.getElementById(mapId)
-  if (!container) return
-
-  mapInstance = L.map(mapId, {
-    zoomControl: false,
-    attributionControl: false
-  }).setView([-2.5, 118.0], 4.5)
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 18
-  }).addTo(mapInstance)
-
-  markersLayer = L.featureGroup().addTo(mapInstance)
-  renderMapMarkers()
-}
-
-function renderMapMarkers() {
-  if (!L || !markersLayer || !mapInstance) return
-  markersLayer.clearLayers()
-
-  const regions = data.value.regions || []
-  if (regions.length === 0) {
-    const fallbackList = [
-      { region: 'Jakarta', customers: 240, percent: 24 },
-      { region: 'Surabaya', customers: 180, percent: 18 },
-      { region: 'Bandung', customers: 120, percent: 12 },
-      { region: 'Medan', customers: 100, percent: 10 },
-      { region: 'Makassar', customers: 80, percent: 8 }
-    ]
-    fallbackList.forEach(r => addRegionMarker(r))
-  } else {
-    regions.forEach(r => addRegionMarker(r))
-  }
-}
-
-function addRegionMarker(region) {
-  const name = region.region || region.name || 'Wilayah'
-  const coords = getCoordsForTerritory(name)
-  const customersStr = region.customers ? `${region.customers} Customers` : `${region.count || 0} Leads`
-  const pctStr = region.percent ? ` (${region.percent}%)` : ''
-
-  const marker = L.circleMarker(coords, {
-    radius: 7 + (region.percent ? Math.min(region.percent / 5, 8) : 2),
-    fillColor: '#008c95',
-    color: '#ffffff',
-    weight: 2,
-    opacity: 1,
-    fillOpacity: 0.85
-  })
-  
-  marker.bindPopup(`
-    <div style="font-family: Inter, sans-serif; font-size: 11px; color: #101828; line-height: 1.4;">
-      <strong style="color: #008c95; font-size: 12px; display: block; margin-bottom: 2px;">${name}</strong>
-      <span>${customersStr}${pctStr}</span>
-    </div>
-  `)
-
-  markersLayer.addLayer(marker)
-}
-
-function mapZoomIn() {
-  if (mapInstance) mapInstance.zoomIn()
-}
-
-function mapZoomOut() {
-  if (mapInstance) mapInstance.zoomOut()
-}
-
-function destroyMap() {
-  if (mapInstance) {
-    mapInstance.remove()
-    mapInstance = null
-    markersLayer = null
-  }
-}
 
 // ─── Dynamic Calendar Setup ──────────────────────────────
 const currentAnchorDate = ref(new Date())
@@ -539,15 +405,7 @@ const chartTop = 20
 const chartH = chartBottom - chartTop
 const bw = 36
 const barGap = 55
-const defaultHighlight = 8 // Nov index
-
-const yLabels = [
-  { label: '40M', y: chartTop },
-  { label: '30M', y: chartTop + chartH * 0.25 },
-  { label: '20M', y: chartTop + chartH * 0.5 },
-  { label: '10M', y: chartTop + chartH * 0.75 },
-  { label: '0M', y: chartBottom },
-]
+const defaultHighlight = 0
 
 // ─── API ──────────────────────────────────────────────────
 const toDate = computed(() => new Date().toISOString().slice(0, 10))
@@ -568,10 +426,10 @@ const data = computed(() => dashboard.data || {})
 
 // ─── Metrics ──────────────────────────────────────────────
 const fallbackMetrics = [
-  { label: 'Leads', value: 129, icon: 'users', change: 2, caption: 'vs minggu lalu', suffix: '' },
-  { label: 'CLV', value: 14, icon: 'clock', change: -4, caption: 'vs minggu lalu', suffix: ' hari' },
-  { label: 'Conversion Rate', value: 24, icon: 'trending-up', change: 2, caption: 'vs minggu lalu', suffix: '%' },
-  { label: 'Pendapatan', value: 0, icon: 'dollar-sign', change: -4, caption: 'vs bulan lalu', suffix: '', displayOverride: 'Rp1,4 M' },
+  { label: 'Imported Leads', value: 129, icon: 'users', change: 2, caption: 'vs periode sebelumnya', suffix: '' },
+  { label: 'Active Banks', value: 12, icon: 'building-2', change: 4, caption: 'company coverage', suffix: '' },
+  { label: 'Pending Follow-up', value: 18, icon: 'check-square', change: -4, caption: 'task backlog', suffix: '' },
+  { label: 'Active PIC', value: 9, icon: 'user-check', change: 7, caption: 'referrer / PIC mapped', suffix: '' },
 ]
 
 const displayMetrics = computed(() => {
@@ -594,49 +452,44 @@ const displayMetrics = computed(() => {
 })
 
 function fmtMetric(m) {
-  if (m.format === 'currency') return fmtCur(m.value)
   return `${Number(m.value || 0).toLocaleString('id-ID')}${m.suffix || ''}`
 }
-function fmtCur(v) {
-  const a = Number(v || 0)
-  if (a >= 1e12) return `Rp${(a/1e12).toFixed(1)}T`
-  if (a >= 1e9) return `Rp${(a/1e9).toFixed(1)}B`
-  if (a >= 1e6) return `Rp${(a/1e6).toFixed(1)}M`
-  return new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(a)
-}
 
-// ─── Revenue ──────────────────────────────────────────────
+// ─── Company Breakdown Chart ──────────────────────────────
 const fallbackRevenueMonths = [
-  { label: 'Mar', value: 5200000000 },
-  { label: 'Apr', value: 8100000000 },
-  { label: 'Mei', value: 6500000000 },
-  { label: 'Jun', value: 4800000000 },
-  { label: 'Jul', value: 7200000000 },
-  { label: 'Agu', value: 9500000000 },
-  { label: 'Sep', value: 12800000000 },
-  { label: 'Okt', value: 16500000000 },
-  { label: 'Nov', value: 18202000000 },
-  { label: 'Des', value: 25000000000 },
-  { label: 'Jan', value: 30500000000 },
-  { label: 'Feb', value: 38000000000 },
+  { label: 'CIMB', value: 32 },
+  { label: 'ANZ', value: 31 },
+  { label: 'BRI', value: 19 },
+  { label: 'BNI', value: 19 },
+  { label: 'BTPN', value: 17 },
+  { label: 'Danamon', value: 11 },
 ]
 
-const displayRevenue = computed(() => ({
-  total: data.value.revenue?.total || 32209000000,
-  change: data.value.revenue?.change ?? 22,
+const chartSummary = computed(() => ({
+  total: data.value.revenue?.total || 0,
+  change: data.value.revenue?.change ?? 0,
 }))
 
 const revenueMonths = computed(() =>
   data.value.revenue?.months?.length ? data.value.revenue.months : fallbackRevenueMonths
 )
 
-const maxRev = computed(() => Math.max(...revenueMonths.value.map(m => m.value), 1))
+const maxRev = computed(() => Math.max(...revenueMonths.value.map(m => Number(m.value || m.count || 0)), 1))
+
+const yLabels = computed(() => {
+  const maxValue = maxRev.value || 1
+  return [1, 0.75, 0.5, 0.25, 0].map((ratio) => ({
+    label: formatCount(Math.round(maxValue * ratio)),
+    y: chartTop + (chartH * (1 - ratio)),
+  }))
+})
 
 const chartBars = computed(() =>
   revenueMonths.value.map((m, i) => {
-    const pct = m.value / maxRev.value
+    const value = Number(m.value || m.count || 0)
+    const pct = value / maxRev.value
     const h = Math.max(pct * chartH, 4)
-    return { label: m.label, value: m.value, x: chartLeft + 10 + i * barGap, y: chartBottom - h, h }
+    return { label: m.label, value, x: chartLeft + 10 + i * barGap, y: chartBottom - h, h }
   })
 )
 
@@ -650,8 +503,8 @@ const tooltipLeft = computed(() => {
   return `${((activeBar.value.x + bw / 2) / svgW) * 100}%`
 })
 
-function formatRupiah(v) {
-  return 'Rp' + Number(v || 0).toLocaleString('id-ID')
+function formatCount(v) {
+  return Number(v || 0).toLocaleString('id-ID')
 }
 
 // ─── Lead Management ─────────────────────────────────────
@@ -686,7 +539,7 @@ const displayLeadBars = computed(() => {
   return fallbackLeads[activeLeadTab.value] || []
 })
 
-// ─── Branches ─────────────────────────────────────────────
+// ─── Supporting Lists ─────────────────────────────────────
 const fallbackBranches = [
   { name: 'Jakarta', percent: 24 },
   { name: 'Surabaya', percent: 18 },
@@ -694,26 +547,34 @@ const fallbackBranches = [
   { name: 'Medan', percent: 10 },
 ]
 
-const displayBranches = computed(() => {
-  if (data.value.top_branches?.length) {
-    return data.value.top_branches.map(b => ({ name: b.branch || b.name, percent: b.percent }))
-  }
-  return fallbackBranches
-})
+const displayCompanies = computed(() => data.value.lead_gen?.company_breakdown?.length
+  ? data.value.lead_gen.company_breakdown
+  : fallbackBranches.map(item => ({ label: item.name, count: item.percent, percent: item.percent }))
+)
 
-// ─── Retention ────────────────────────────────────────────
-const retentionMonths = computed(() => {
-  if (data.value.retention?.months?.length) return data.value.retention.months
+const displayPicOwnership = computed(() => data.value.lead_gen?.pic_ownership?.length
+  ? data.value.lead_gen.pic_ownership
+  : [
+      { label: 'Unassigned', count: 12, percent: 40 },
+      { label: 'RM Jakarta', count: 9, percent: 30 },
+      { label: 'RM Bandung', count: 6, percent: 20 },
+    ]
+)
+
+const displayFollowUpLoad = computed(() => {
+  const rows = data.value.lead_gen?.follow_up_load?.status_rows
+  if (rows?.length) return rows
   return [
-    { label: 'Jun', ukm: 22, korporasi: 18, konsumer: 12 },
-    { label: 'Jul', ukm: 32, korporasi: 25, konsumer: 18 },
-    { label: 'Agu', ukm: 28, korporasi: 22, konsumer: 15 },
-    { label: 'Sep', ukm: 42, korporasi: 34, konsumer: 25 },
-    { label: 'Okt', ukm: 48, korporasi: 38, konsumer: 28 },
-    { label: 'Nov', ukm: 52, korporasi: 42, konsumer: 30 },
-    { label: 'Des', ukm: 78, korporasi: 58, konsumer: 42 },
+    { label: 'Todo', count: 14, percent: 58 },
+    { label: 'In Progress', count: 7, percent: 29 },
+    { label: 'Done', count: 3, percent: 13 },
   ]
 })
+
+const followUpSummary = computed(() => ({
+  pending: data.value.lead_gen?.follow_up_load?.pending ?? 21,
+  completed: data.value.lead_gen?.follow_up_load?.completed ?? 3,
+}))
 
 // ─── Last Updated ─────────────────────────────────────────
 const lastUpdated = computed(() => {
@@ -726,24 +587,6 @@ const lastUpdated = computed(() => {
 // ─── Lifecycle ────────────────────────────────────────────
 watch(activeRevenuePeriod, () => dashboard.fetch())
 usePageMeta(() => ({ title: __('Dashboard') }))
-
-onMounted(() => {
-  nextTick(() => {
-    initMap()
-  })
-})
-
-onBeforeUnmount(() => {
-  destroyMap()
-})
-
-watch(
-  () => data.value.regions,
-  () => {
-    renderMapMarkers()
-  },
-  { deep: true }
-)
 </script>
 
 <style scoped>
@@ -1342,7 +1185,7 @@ watch(
 /* ═══ BOTTOM GRID ═══════════════════════════════════════ */
 .bni-bottom-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1.1fr 0.9fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 

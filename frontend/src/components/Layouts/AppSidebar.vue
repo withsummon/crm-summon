@@ -170,7 +170,7 @@
       :afterSkipAll="() => capture('onboarding_steps_skipped')"
       :afterReset="(step) => capture('onboarding_step_reset_' + step)"
       :afterResetAll="() => capture('onboarding_steps_reset')"
-      docsLink="https://docs.withsummon.com"
+      docsLink="/crm"
     />
     <IntermediateStepModal
       v-model="showIntermediateModal"
@@ -709,7 +709,7 @@ const articles = ref([
     ],
   },
   {
-    title: __('Summon mobile'),
+    title: __('BNI CRM mobile'),
     opened: false,
     subArticles: [
       { name: 'mobile-app-installation', title: __('Mobile App Installation') },

@@ -1,10 +1,11 @@
 import json
+from collections import Counter
 
 import frappe
 from frappe import _
 from frappe.query_builder import Case, DocType
 from frappe.query_builder.functions import Avg, Coalesce, Count, Date, DateFormat, IfNull, Sum
-from frappe.utils import flt
+from frappe.utils import cstr, flt
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
@@ -65,7 +66,7 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 @frappe.whitelist()
 @sales_user_only
 def get_bni_crm_dashboard(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""Return real-data dashboard payload for the BNI CRM visual dashboard."""
+	"""Return lead-gen-centric dashboard payload for the BNI teal CRM workspace."""
 	if not from_date or not to_date:
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())
@@ -74,6 +75,7 @@ def get_bni_crm_dashboard(from_date: str | None = None, to_date: str | None = No
 	if "Sales User" in roles and "Sales Manager" not in roles and "System Manager" not in roles:
 		user = frappe.session.user
 
+	lead_gen = _lead_gen_dashboard(from_date, to_date, user)
 	lead_count = _count_doctype("CRM Lead", from_date, to_date, "lead_owner", user)
 	prev_lead_count = _count_doctype(
 		"CRM Lead",
@@ -82,33 +84,139 @@ def get_bni_crm_dashboard(from_date: str | None = None, to_date: str | None = No
 		"lead_owner",
 		user,
 	)
-	avg_cycle_days = _average_cycle_days(from_date, to_date, user)
-	conversion_rate = _conversion_rate(from_date, to_date, user)
-	revenue_total = _won_revenue(from_date, to_date, user)
-	prev_revenue = _won_revenue(
-		frappe.utils.add_months(from_date, -1),
+	company_count = lead_gen["overview"]["active_banks"]
+	prev_company_count = _count_distinct_lead_field(
+		"organization",
+		frappe.utils.add_days(from_date, -max(frappe.utils.date_diff(to_date, from_date), 1)),
 		frappe.utils.add_days(from_date, -1),
 		user,
+	)
+	pending_followups = lead_gen["follow_up_load"]["pending"]
+	prev_followups = _count_lead_tasks(
+		frappe.utils.add_days(from_date, -max(frappe.utils.date_diff(to_date, from_date), 1)),
+		frappe.utils.add_days(from_date, -1),
+		user,
+		statuses=("Todo", "Backlog", "In Progress"),
+	)
+	active_pics = lead_gen["overview"]["active_pics"]
+	prev_pics = _count_distinct_lead_field(
+		"referrer",
+		frappe.utils.add_days(from_date, -max(frappe.utils.date_diff(to_date, from_date), 1)),
+		frappe.utils.add_days(from_date, -1),
+		user,
+		extra_filters=[["referrer", "!=", ""]],
 	)
 
 	return {
 		"last_updated": frappe.utils.now(),
 		"metrics": [
-			{"label": "Leads", "value": lead_count, "change": _pct_delta(lead_count, prev_lead_count), "caption": "vs minggu lalu", "icon": "users"},
-			{"label": "CLV", "value": round(avg_cycle_days), "suffix": " hari", "change": 0, "caption": "vs minggu lalu", "icon": "clock", "negative_is_better": True},
-			{"label": "Conversion Rate", "value": round(conversion_rate), "suffix": "%", "change": 0, "caption": "vs minggu lalu", "icon": "trending-up"},
-			{"label": "Pendapatan", "value": revenue_total, "format": "currency", "change": _pct_delta(revenue_total, prev_revenue), "caption": "vs bulan lalu", "icon": "banknote"},
+			{"label": "Imported Leads", "value": lead_count, "change": _pct_delta(lead_count, prev_lead_count), "caption": "vs periode sebelumnya", "icon": "users"},
+			{"label": "Active Banks", "value": company_count, "change": _pct_delta(company_count, prev_company_count), "caption": "company coverage", "icon": "building-2"},
+			{"label": "Pending Follow-up", "value": pending_followups, "change": _pct_delta(pending_followups, prev_followups), "caption": "task backlog", "icon": "check-square"},
+			{"label": "Active PIC", "value": active_pics, "change": _pct_delta(active_pics, prev_pics), "caption": "referrer / PIC mapped", "icon": "user-check"},
 		],
 		"revenue": {
-			"total": revenue_total,
-			"change": _pct_delta(revenue_total, prev_revenue),
-			"months": _monthly_revenue(user),
+			"total": lead_count,
+			"change": _pct_delta(lead_count, prev_lead_count),
+			"months": lead_gen["company_breakdown"][:12],
 		},
 		"calendar": _dashboard_events(from_date, to_date),
 		"lead_management": _lead_management(from_date, to_date, user),
-		"regions": _region_rows(from_date, to_date, user),
-		"top_branches": _top_branch_rows(from_date, to_date, user),
-		"retention": _retention_rows(from_date, to_date),
+		"lead_gen": lead_gen,
+		"regions": [{"region": row["label"], "customers": row["count"], "percent": row["percent"]} for row in lead_gen["company_breakdown"][:6]],
+		"top_branches": [{"branch": row["label"], "percent": row["percent"], "customers": row["count"]} for row in lead_gen["company_breakdown"][:4]],
+		"retention": {"months": lead_gen["status_funnel"]["trend"], "segments": lead_gen["follow_up_load"]["status_rows"]},
+	}
+
+
+def _count_distinct_lead_field(fieldname: str, from_date, to_date, user: str | None = None, extra_filters=None):
+	if not _table_exists("CRM Lead") or not _meta_has_field("CRM Lead", fieldname):
+		return 0
+	filters = _date_range_filter(from_date, to_date)
+	if user and _meta_has_field("CRM Lead", "lead_owner"):
+		filters.append(["lead_owner", "=", user])
+	for filter_row in extra_filters or []:
+		filters.append(filter_row)
+	try:
+		rows = frappe.get_all("CRM Lead", fields=[fieldname], filters=filters, limit=0)
+	except Exception:
+		return 0
+	values = {cstr(row.get(fieldname)).strip() for row in rows if cstr(row.get(fieldname)).strip()}
+	return len(values)
+
+
+def _count_lead_tasks(from_date, to_date, user: str | None = None, statuses=None):
+	if not _table_exists("CRM Task"):
+		return 0
+	filters = [
+		["creation", ">=", from_date],
+		["creation", "<", frappe.utils.add_days(to_date, 1)],
+		["reference_doctype", "=", "CRM Lead"],
+	]
+	if statuses:
+		filters.append(["status", "in", list(statuses)])
+	if user and _meta_has_field("CRM Task", "assigned_to"):
+		filters.append(["assigned_to", "=", user])
+	try:
+		return frappe.db.count("CRM Task", filters=filters)
+	except Exception:
+		return 0
+
+
+def _lead_task_rows(from_date, to_date, user: str | None = None):
+	if not _table_exists("CRM Task"):
+		return []
+	filters = [
+		["creation", ">=", from_date],
+		["creation", "<", frappe.utils.add_days(to_date, 1)],
+		["reference_doctype", "=", "CRM Lead"],
+	]
+	if user and _meta_has_field("CRM Task", "assigned_to"):
+		filters.append(["assigned_to", "=", user])
+	try:
+		return frappe.get_all(
+			"CRM Task",
+			fields=["name", "title", "status", "assigned_to", "due_date"],
+			filters=filters,
+			order_by="modified desc",
+			limit=100,
+		)
+	except Exception:
+		return []
+
+
+def _lead_gen_dashboard(from_date, to_date, user: str | None = None):
+	company_breakdown = _group_count("CRM Lead", "organization", from_date, to_date, user, "lead_owner", limit=12)
+	pic_ownership = _group_count("CRM Lead", "referrer", from_date, to_date, user, "lead_owner", limit=8)
+	funnel = get_lead_funnel(from_date, to_date, user)
+	task_rows = _lead_task_rows(from_date, to_date, user)
+	task_status_counts = Counter(row.get("status") or _("Unassigned") for row in task_rows)
+
+	return {
+		"overview": {
+			"active_banks": len(company_breakdown),
+			"active_pics": len(pic_ownership),
+			"converted": funnel.get("converted", 0),
+			"conversion_rate": funnel.get("conversion_rate", 0),
+		},
+		"company_breakdown": company_breakdown,
+		"pic_ownership": pic_ownership,
+		"follow_up_load": {
+			"pending": sum(task_status_counts.get(status, 0) for status in ("Todo", "Backlog", "In Progress")),
+			"completed": task_status_counts.get("Done", 0),
+			"status_rows": [
+				{"label": label, "count": count, "percent": round((count / (len(task_rows) or 1)) * 100)}
+				for label, count in task_status_counts.items()
+			],
+			"tasks": task_rows[:10],
+		},
+		"status_funnel": {
+			"rows": funnel.get("stages", []),
+			"trend": [
+				{"label": row.get("status") or _("Unassigned"), "value": row.get("count", 0)}
+				for row in funnel.get("stages", [])[:7]
+			],
+		},
 	}
 
 

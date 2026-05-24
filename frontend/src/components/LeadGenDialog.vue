@@ -18,7 +18,7 @@
               {{ __('Upload Excel File') }}
             </h3>
             <p class="mt-1 text-sm text-ink-gray-5">
-              {{ __('Upload a .xlsx file with lead data. Expected columns: Company, Name, Email, Phone, Position, Industry, Status') }}
+              {{ __('Upload the BNI lead workbook. We will validate the column mapping, warn on dirty rows, and optionally create follow-up tasks and notes.') }}
             </p>
           </div>
           <FileUploader
@@ -48,10 +48,78 @@
                 {{ __('Preview Import Data') }}
               </h3>
               <p class="text-sm text-ink-gray-5">
-                {{ __('Found {0} rows in the file. Showing first 10 rows.', [previewData.total_rows]) }}
+                {{ __('Found {0} non-empty rows. {1} rows are import-ready. Showing the first 10.', [previewData.total_rows, previewData.normalized_row_count]) }}
               </p>
             </div>
             <Badge :label="fileName" variant="subtle" theme="gray" />
+          </div>
+
+          <div class="grid gap-4 lg:grid-cols-[1.3fr,0.7fr]">
+            <div class="rounded-lg border bg-surface-gray-1 p-4">
+              <div class="mb-3">
+                <h4 class="text-sm font-semibold text-ink-gray-8">{{ __('Detected Column Mapping') }}</h4>
+                <p class="mt-1 text-xs text-ink-gray-5">{{ __('Mapped workbook columns that will be used during import.') }}</p>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-2">
+                <div
+                  v-for="column in previewData.column_mapping"
+                  :key="column.field"
+                  class="rounded-md border px-3 py-2"
+                  :class="column.mapped ? 'border-cyan-200 bg-cyan-50/60' : 'border-amber-200 bg-amber-50/60'"
+                >
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-ink-gray-5">{{ column.label }}</div>
+                  <div class="mt-1 text-sm font-medium text-ink-gray-8">
+                    {{ column.mapped ? column.header : __('Not detected') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-lg border bg-white p-4">
+              <div class="mb-3">
+                <h4 class="text-sm font-semibold text-ink-gray-8">{{ __('Import Options') }}</h4>
+                <p class="mt-1 text-xs text-ink-gray-5">{{ __('Defaults applied to imported leads and follow-up automation.') }}</p>
+              </div>
+              <div class="space-y-3">
+                <label class="block">
+                  <span class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Default Source') }}</span>
+                  <input
+                    v-model="importOptions.default_source"
+                    type="text"
+                    class="w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label class="block">
+                  <span class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Default Channel') }}</span>
+                  <input
+                    v-model="importOptions.default_channel"
+                    type="text"
+                    class="w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label class="flex items-start gap-2 rounded-md border border-outline-gray-2 px-3 py-2 text-sm text-ink-gray-7">
+                  <input v-model="importOptions.create_follow_up_tasks" type="checkbox" class="mt-0.5" />
+                  <span>{{ __('Create CRM follow-up tasks from DATE / FEEDBACK / FOLLOW UP workbook context') }}</span>
+                </label>
+                <label class="flex items-start gap-2 rounded-md border border-outline-gray-2 px-3 py-2 text-sm text-ink-gray-7">
+                  <input v-model="importOptions.create_notes" type="checkbox" class="mt-0.5" />
+                  <span>{{ __('Attach workbook context as CRM notes on each created lead') }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="previewData.warnings.length" class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <div class="mb-2 flex items-center gap-2 text-amber-800">
+              <FeatherIcon name="alert-triangle" class="h-4 w-4" />
+              <h4 class="text-sm font-semibold">{{ __('Workbook Warnings') }}</h4>
+            </div>
+            <div class="space-y-2 text-xs text-amber-900">
+              <div v-for="(warning, idx) in previewData.warnings" :key="idx" class="flex items-start justify-between gap-3">
+                <span>{{ warning.message }}</span>
+                <Badge :label="String(warning.count)" theme="gray" variant="subtle" />
+              </div>
+            </div>
           </div>
 
           <!-- Preview Table -->
@@ -139,6 +207,25 @@
             </div>
           </div>
 
+          <div v-if="importResult.warnings.length" class="rounded-lg border bg-amber-50 p-3">
+            <p class="mb-2 text-xs font-medium text-amber-700">{{ __('Warnings') }}</p>
+            <div v-for="(warning, idx) in importResult.warnings" :key="`warning-${idx}`" class="flex items-start justify-between gap-3 text-xs text-amber-700">
+              <span>{{ warning.message }}</span>
+              <span class="rounded bg-white/70 px-2 py-0.5 font-semibold">{{ warning.count }}</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border bg-cyan-50 p-3 text-center">
+              <div class="text-2xl font-bold text-cyan-700">{{ importResult.follow_ups_created }}</div>
+              <div class="text-xs text-cyan-700">{{ __('Follow-up Tasks') }}</div>
+            </div>
+            <div class="rounded-lg border bg-slate-50 p-3 text-center">
+              <div class="text-2xl font-bold text-slate-700">{{ importResult.notes_created }}</div>
+              <div class="text-xs text-slate-600">{{ __('Workbook Notes') }}</div>
+            </div>
+          </div>
+
           <!-- Error details -->
           <div
             v-if="importResult.errors.length"
@@ -205,8 +292,31 @@ const emit = defineEmits(['imported'])
 const step = ref('upload') // upload, preview, importing, results
 const fileUrl = ref('')
 const fileName = ref('')
-const previewData = ref({ headers: [], rows: [], total_rows: 0 })
-const importResult = ref({ created: 0, skipped: 0, errors: [], total: 0 })
+const previewData = ref({
+  headers: [],
+  rows: [],
+  total_rows: 0,
+  normalized_row_count: 0,
+  empty_row_count: 0,
+  column_mapping: [],
+  warnings: [],
+  default_options: {},
+})
+const importOptions = ref({
+  default_source: 'BNI Lead Workbook',
+  default_channel: 'Excel Import',
+  create_follow_up_tasks: true,
+  create_notes: true,
+})
+const importResult = ref({
+  created: 0,
+  skipped: 0,
+  errors: [],
+  warnings: [],
+  total: 0,
+  follow_ups_created: 0,
+  notes_created: 0,
+})
 
 async function onFileUploaded(file) {
   if (!file || !file.file_url) {
@@ -222,6 +332,12 @@ async function onFileUploaded(file) {
       file_url: file.file_url,
     })
     previewData.value = result
+    importOptions.value = {
+      default_source: result.default_options?.default_source || 'BNI Lead Workbook',
+      default_channel: result.default_options?.default_channel || 'Excel Import',
+      create_follow_up_tasks: Boolean(result.default_options?.create_follow_up_tasks ?? true),
+      create_notes: Boolean(result.default_options?.create_notes ?? true),
+    }
     step.value = 'preview'
   } catch (e) {
     console.error('Preview error:', e)
@@ -234,6 +350,7 @@ async function doImport() {
   try {
     const result = await call('crm.api.lead_gen.import_leads_from_excel', {
       file_url: fileUrl.value,
+      options: importOptions.value,
     })
     importResult.value = result
     step.value = 'results'
@@ -243,7 +360,10 @@ async function doImport() {
       created: 0,
       skipped: 0,
       errors: [{ row: 0, error: e.message || 'Unknown error' }],
+      warnings: [],
       total: 0,
+      follow_ups_created: 0,
+      notes_created: 0,
     }
     step.value = 'results'
   }
@@ -252,6 +372,16 @@ async function doImport() {
 function onDone() {
   showDialog.value = false
   step.value = 'upload'
+  previewData.value = {
+    headers: [],
+    rows: [],
+    total_rows: 0,
+    normalized_row_count: 0,
+    empty_row_count: 0,
+    column_mapping: [],
+    warnings: [],
+    default_options: {},
+  }
   if (importResult.value.created > 0) {
     emit('imported')
   }

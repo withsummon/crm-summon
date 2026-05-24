@@ -1,17 +1,15 @@
-/* Summon CRM - Login Page Branding Override */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* BNI CRM - Login Page Branding Override */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-/* Apply Poppins globally on login page */
 .for-login,
 .for-login body,
 .for-login .page-card,
 .for-login input,
 .for-login button,
 .for-login .btn {
-  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Hide default Frappe app logo */
 .page-card .login-content .login-image,
 .page-card .login-content img.login-image,
 img.app-logo,
@@ -19,22 +17,19 @@ img.app-logo,
   display: none !important;
 }
 
-/* Summon logo above the login form - using icon.svg */
 .for-login .page-card-head::before,
 .page-card .login-content::before {
   content: '';
   display: block;
   width: 72px;
   height: 67px;
-  background-image: url("data:image/svg+xml,%3Csvg width='45' height='42' viewBox='0 0 45 42' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='45' height='42' rx='10' fill='%230A0A0A'/%3E%3Cpath d='M19.7566 15.3106C20.0273 17.2374 18.097 18.7297 16.2794 17.9989L10.0134 15.4794C8.19317 14.7476 7.85121 12.3357 9.39812 11.1398L14.7308 7.01716C16.2778 5.82125 18.5523 6.73905 18.8234 8.66857L19.7566 15.3106Z' fill='white'/%3E%3Cpath d='M26.7799 18.0529C24.9291 18.6974 23.0711 17.1148 23.4337 15.2027L24.6837 8.61205C25.0467 6.69806 27.3621 5.88955 28.8502 7.15713L33.9797 11.5262C35.4679 12.7938 35.012 15.1861 33.1594 15.8313L26.7799 18.0529Z' fill='white'/%3E%3Cpath d='M26.6331 25.1441C25.4548 23.5844 26.4255 21.3328 28.3765 21.1005L35.0894 20.301C37.0321 20.0696 38.491 22.0156 37.7184 23.8076L35.0599 29.9737C34.2873 31.7658 31.861 32.0638 30.6876 30.5107L26.6331 25.1441Z' fill='white'/%3E%3Cpath d='M19.3871 27.6546C20.3969 25.9905 22.8263 26.0343 23.7744 27.7338L27.048 33.6015C28.0019 35.3114 26.7423 37.4123 24.7844 37.377L18.0244 37.2551C16.0665 37.2198 14.8847 35.0748 15.9007 33.4004L19.3871 27.6546Z' fill='white'/%3E%3Cpath d='M15.3006 21.6134C17.1602 22.2459 17.6353 24.6543 16.1532 25.9353L11.0561 30.3413C9.58232 31.6152 7.27603 30.8182 6.89851 28.9045L5.60016 22.3231C5.22264 20.4094 7.05596 18.809 8.9051 19.438L15.3006 21.6134Z' fill='white'/%3E%3C/svg%3E");
+  background-image: url('/assets/crm/images/logo.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   margin: 0 auto 16px auto;
-  border-radius: 14px;
 }
 
-/* Override the login title text */
 .page-card .login-content .login-image + h4,
 .for-login .page-card-head h4,
 .page-card-head > h4 {
@@ -44,15 +39,14 @@ img.app-logo,
 
 .for-login .page-card-head h4::after,
 .page-card-head > h4::after {
-  content: 'Login to Summon';
+  content: 'Login to BNI CRM';
   font-size: 1.25rem;
   line-height: 1.75rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #0f172a;
   display: block;
 }
 
-/* Override navbar brand logo and text */
 .navbar .navbar-brand .app-logo {
   display: none !important;
 }
@@ -62,15 +56,13 @@ img.app-logo,
   display: inline-block;
   width: 32px;
   height: 30px;
-  background-image: url("data:image/svg+xml,%3Csvg width='45' height='42' viewBox='0 0 45 42' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='45' height='42' rx='10' fill='%230A0A0A'/%3E%3Cpath d='M19.7566 15.3106C20.0273 17.2374 18.097 18.7297 16.2794 17.9989L10.0134 15.4794C8.19317 14.7476 7.85121 12.3357 9.39812 11.1398L14.7308 7.01716C16.2778 5.82125 18.5523 6.73905 18.8234 8.66857L19.7566 15.3106Z' fill='white'/%3E%3Cpath d='M26.7799 18.0529C24.9291 18.6974 23.0711 17.1148 23.4337 15.2027L24.6837 8.61205C25.0467 6.69806 27.3621 5.88955 28.8502 7.15713L33.9797 11.5262C35.4679 12.7938 35.012 15.1861 33.1594 15.8313L26.7799 18.0529Z' fill='white'/%3E%3Cpath d='M26.6331 25.1441C25.4548 23.5844 26.4255 21.3328 28.3765 21.1005L35.0894 20.301C37.0321 20.0696 38.491 22.0156 37.7184 23.8076L35.0599 29.9737C34.2873 31.7658 31.861 32.0638 30.6876 30.5107L26.6331 25.1441Z' fill='white'/%3E%3Cpath d='M19.3871 27.6546C20.3969 25.9905 22.8263 26.0343 23.7744 27.7338L27.048 33.6015C28.0019 35.3114 26.7423 37.4123 24.7844 37.377L18.0244 37.2551C16.0665 37.2198 14.8847 35.0748 15.9007 33.4004L19.3871 27.6546Z' fill='white'/%3E%3Cpath d='M15.3006 21.6134C17.1602 22.2459 17.6353 24.6543 16.1532 25.9353L11.0561 30.3413C9.58232 31.6152 7.27603 30.8182 6.89851 28.9045L5.60016 22.3231C5.22264 20.4094 7.05596 18.809 8.9051 19.438L15.3006 21.6134Z' fill='white'/%3E%3C/svg%3E");
+  background-image: url('/assets/crm/images/logo.svg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   margin-right: 8px;
-  border-radius: 6px;
 }
 
-/* Hide original brand text and show "Summon" */
 .navbar .navbar-brand {
   display: flex !important;
   align-items: center !important;
@@ -78,32 +70,30 @@ img.app-logo,
 }
 
 .navbar .navbar-brand::after {
-  content: 'Summon';
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
+  content: 'BNI CRM';
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-/* Style the login button with dark brand color */
 .for-login .btn-primary,
 .login-content .btn-primary {
-  background-color: #0A0A0A !important;
-  border-color: #0A0A0A !important;
+  background: linear-gradient(135deg, #008c95, #00a7b0) !important;
+  border-color: #008c95 !important;
 }
 
 .for-login .btn-primary:hover,
 .login-content .btn-primary:hover {
-  background-color: #1a1a1a !important;
-  border-color: #1a1a1a !important;
+  background: linear-gradient(135deg, #00747c, #008c95) !important;
+  border-color: #00747c !important;
 }
 
-/* Style links on login page */
 .for-login a,
 .login-content a {
-  color: #0A0A0A !important;
+  color: #008c95 !important;
 }
 
 .for-login a:hover,
 .login-content a:hover {
-  color: #333 !important;
+  color: #00747c !important;
 }
