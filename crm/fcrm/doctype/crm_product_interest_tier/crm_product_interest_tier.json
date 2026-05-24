@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "creation": "2026-05-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "tenor_from",
+  "tenor_to",
+  "segment",
+  "rate_type",
+  "rate_pct",
+  "risk_premium_pct",
+  "promo_start",
+  "promo_end"
+ ],
+ "fields": [
+  {"fieldname": "tenor_from", "fieldtype": "Int", "label": "Tenor From (months)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "tenor_to", "fieldtype": "Int", "label": "Tenor To (months)", "in_list_view": 1, "columns": 1},
+  {"fieldname": "segment", "fieldtype": "Data", "label": "Segment", "in_list_view": 1, "columns": 2},
+  {"fieldname": "rate_type", "fieldtype": "Select", "label": "Rate Type", "options": "Flat\nEffective\nAnnuity\nReducing", "default": "Effective", "in_list_view": 1, "columns": 2},
+  {"fieldname": "rate_pct", "fieldtype": "Percent", "label": "Rate %", "in_list_view": 1, "columns": 1, "reqd": 1},
+  {"fieldname": "risk_premium_pct", "fieldtype": "Percent", "label": "Risk Premium %", "columns": 1},
+  {"fieldname": "promo_start", "fieldtype": "Date", "label": "Promo Start"},
+  {"fieldname": "promo_end", "fieldtype": "Date", "label": "Promo End"}
+ ],
+ "links": [],
+ "modified": "2026-05-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Product Interest Tier",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": [],
+ "translated_doctype": 1
+}
