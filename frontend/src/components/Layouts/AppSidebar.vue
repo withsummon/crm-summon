@@ -410,8 +410,7 @@ function getIcon(routeName, icon) {
 // onboarding - disabled, always mark as completed
 const { user } = sessionStore()
 const { users, isManager } = usersStore()
-const { setUp } = useOnboarding('frappecrm')
-const isOnboardingStepsCompleted = computed(() => true)
+const { setUp, isOnboardingStepsCompleted } = useOnboarding('frappecrm')
 
 async function getFirstLead() {
   let firstLead = localStorage.getItem('firstLead' + user)
@@ -625,6 +624,7 @@ onMounted(async () => {
   })
 
   setUp(filteredSteps)
+  isOnboardingStepsCompleted.value = true
 })
 
 // help center

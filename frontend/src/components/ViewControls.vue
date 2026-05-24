@@ -374,7 +374,7 @@ const viewUpdated = ref(false)
 const showViewModal = ref(false)
 
 function getViewType() {
-  let viewType = route.params.viewType || 'list'
+  let viewType = route.params.viewType || 'kanban'
   let types = {
     list: {
       name: 'list',
@@ -459,7 +459,7 @@ watch(updatedPageCount, (value) => {
 function getParams() {
   let _view = getView(route.query.view, route.params.viewType, props.doctype)
   const view_name = _view?.name || ''
-  const view_type = _view?.type || route.params.viewType || 'list'
+  const view_type = _view?.type || route.params.viewType || 'kanban'
   const filters = (_view?.filters && JSON.parse(_view.filters)) || {}
   const order_by = _view?.order_by || 'modified desc'
   const group_by_field = _view?.group_by_field || 'owner'
@@ -525,7 +525,7 @@ list.value = createResource({
       default_filters: props.filters,
       view: {
         custom_view_name: cv?.name || '',
-        view_type: cv?.type || route.params.viewType || 'list',
+        view_type: cv?.type || route.params.viewType || 'kanban',
         group_by_field: params?.view?.group_by_field || 'owner',
       },
       column_field: data.column_field,
@@ -597,7 +597,7 @@ if (allowedViews.includes('list')) {
     icon: markRaw(ListIcon),
     onClick() {
       viewUpdated.value = false
-      router.push({ name: route.name, params: { viewType: 'list' } })
+    router.push({ name: route.name, params: { viewType: 'kanban' } })
     },
   })
 }
