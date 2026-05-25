@@ -18,3 +18,11 @@ class CRMCreditApplication(Document):
 				"Cancelled": "Closed",
 			}
 			self.status = status_aliases.get(self.status, self.status)
+
+		# Auto-initiate visual credit flow execution on first save
+		if not self.credit_flow_execution:
+			from crm.utils.credit_flow_engine import start_flow_execution
+			try:
+				start_flow_execution(self.name)
+			except Exception:
+				pass

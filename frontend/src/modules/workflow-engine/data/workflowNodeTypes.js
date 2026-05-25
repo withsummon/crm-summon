@@ -1,8 +1,8 @@
 /**
- * Credit Flow Node Type Definitions
+ * Workflow Node Type Definitions
  *
- * Single source of truth for all 13 node types in the Credit Flow Designer.
- * Used by CreditNodePalette, CreditFlowCanvas, CreditNodeRenderer, and NodePropertyPanel.
+ * Single source of truth for all 13 node types in the Workflow Designer.
+ * Used by WorkflowNodePalette, WorkflowCanvas, WorkflowNodeRenderer, and NodePropertyPanel.
  */
 
 // ─── Color Palette ──────────────────────────────────────────
@@ -95,7 +95,7 @@ export const NODE_TYPES = {
     icon: 'play-circle',
     color: 'emerald',
     category: 'Flow Control',
-    description: 'Entry point of the credit application process',
+    description: 'Entry point of Workflow Engine',
     maxInstances: 1,
     handles: {
       inputs: [],

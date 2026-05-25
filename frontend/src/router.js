@@ -218,32 +218,40 @@ const routes = [
         name: 'Covenant Monitoring',
         component: () => import('@/pages/CovenantMonitoring.vue'),
       },
-      // ─── Credit Flow Designer ──────────────────────────────
+      // ─── Workflow Engine ───────────────────────────────────
       {
-        path: 'credit-flow-designer',
-        name: 'Credit Flow Designer',
+        path: 'workflow-engine',
+        name: 'Workflow List',
         component: () =>
-          import('@/modules/credit-flow/pages/CreditFlowList.vue'),
+          import('@/modules/workflow-engine/pages/WorkflowList.vue'),
       },
       {
-        path: 'credit-flow-designer/new',
-        name: 'Credit Flow New',
+        path: 'workflow-engine/new',
+        name: 'Workflow New',
         component: () =>
-          import('@/modules/credit-flow/pages/CreditFlowDesigner.vue'),
+          import('@/modules/workflow-engine/pages/WorkflowDesigner.vue'),
       },
       {
-        path: 'credit-flow-designer/:flowId',
-        name: 'Credit Flow Detail',
+        path: 'workflow-engine/:flowId',
+        name: 'Workflow Detail',
         component: () =>
-          import('@/modules/credit-flow/pages/CreditFlowDesigner.vue'),
+          import('@/modules/workflow-engine/pages/WorkflowDesigner.vue'),
         props: true,
       },
       {
-        path: 'credit-flow-designer/:flowId/monitor',
-        name: 'Credit Flow Monitor',
+        path: 'workflow-engine/:flowId/monitor',
+        name: 'Workflow Monitor',
         component: () =>
-          import('@/modules/credit-flow/pages/CreditFlowMonitor.vue'),
+          import('@/modules/workflow-engine/pages/WorkflowMonitor.vue'),
         props: true,
+      },
+      // Legacy redirect
+      {
+        path: 'credit-flow-designer/:pathMatch(.*)*',
+        redirect: to => {
+          const sub = to.params.pathMatch ? '/' + (Array.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch) : ''
+          return `/lending-risk/workflow-engine${sub}`
+        },
       },
     ],
   },
@@ -297,12 +305,11 @@ const routes = [
       },
       {
         path: 'workflow-engine',
-        name: 'Workflow Engine',
-        component: () => import('@/modules/admin/pages/WorkflowEngine.vue'),
+        redirect: { name: 'Workflow List' },
       },
       {
         path: 'workflow',
-        redirect: { name: 'Workflow Engine' },
+        redirect: { name: 'Workflow List' },
       },
       {
         path: 'reporting-bi',

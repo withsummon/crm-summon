@@ -71,7 +71,7 @@
         </p>
       </div>
 
-      <div v-else class="flex-1 flex flex-col overflow-hidden">
+      <div v-else class="flex-1 flex flex-col overflow-y-auto">
         <div class="bg-white border-b border-slate-200 p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6 shrink-0 shadow-sm">
           <div class="flex items-center gap-4 min-w-0">
             <div class="w-16 h-16 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-teal-600/10 shrink-0">
@@ -96,9 +96,18 @@
             <Button v-if="routeCustomer" variant="outline" :label="__('Back to List')" @click="goToCustomerList">
               <template #prefix><FeatherIcon name="arrow-left" class="h-4 w-4" /></template>
             </Button>
-            <Button variant="solid" :label="__('New Application')" @click="openForm('creditApplication')">
-              <template #prefix><FeatherIcon name="file-plus" class="h-4 w-4" /></template>
-            </Button>
+            <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-black"
+                :class="dataQuality.score >= 80 ? 'border-green-200 bg-green-50 text-green-700' : dataQuality.score >= 60 ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-red-200 bg-red-50 text-red-700'"
+              >
+                {{ dataQuality.score || 0 }}
+              </div>
+              <div class="text-left min-w-0">
+                <div class="text-[11px] font-semibold text-slate-700 leading-tight">{{ __('Data Quality') }}</div>
+                <div class="text-[10px] text-slate-500 leading-tight">{{ (dataQuality.missing_required_fields || []).length }} missing</div>
+              </div>
+            </div>
             <Button variant="outline" :label="__('Communicate')" @click="openForm('communication')" />
             <Button variant="outline" :label="__('Export Profile')" @click="showExportDialog = true" />
             <Button variant="outline" :label="__('Edit')" @click="showProfileEdit = true" />
@@ -114,60 +123,7 @@
           <StatCard :label="__('Missed Payments')" :value="String(summary.missed_payments || 0)" :detail="`${summary.transactions || 0} transactions`" icon="repeat" tone="red" />
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 px-6 pt-4 shrink-0">
-          <Panel :title="__('Data Quality')" icon="check-square">
-            <div class="flex items-center gap-4">
-              <div
-                class="flex h-16 w-16 items-center justify-center rounded-full border-4 text-lg font-black"
-                :class="dataQuality.score >= 80 ? 'border-green-200 bg-green-50 text-green-700' : dataQuality.score >= 60 ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-red-200 bg-red-50 text-red-700'"
-              >
-                {{ dataQuality.score || 0 }}
-              </div>
-              <div class="min-w-0">
-                <div class="text-sm font-semibold text-slate-700">{{ dataQualityStatus }}</div>
-                <div class="mt-1 text-xs text-slate-500">{{ (dataQuality.missing_required_fields || []).length }} missing fields · {{ (dataQuality.warnings || []).length }} warnings</div>
-              </div>
-            </div>
-            <div v-if="(dataQuality.missing_required_fields || []).length" class="mt-3 flex flex-wrap gap-1.5">
-              <Badge v-for="field in dataQuality.missing_required_fields.slice(0, 4)" :key="field.field" :label="field.label" theme="orange" variant="subtle" />
-            </div>
-          </Panel>
 
-          <Panel :title="__('External Adapter Status')" icon="link">
-            <div class="grid grid-cols-1 gap-2">
-              <button
-                v-for="adapter in externalAdapters.slice(0, 4)"
-                :key="adapter.key"
-                class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-left hover:border-teal-200 hover:bg-white"
-                @click="checkAdapter(adapter.key)"
-              >
-                <span class="min-w-0">
-                  <span class="block truncate text-xs font-bold text-slate-700">{{ adapter.label }}</span>
-                  <span class="block truncate text-[11px] text-slate-500">{{ adapter.message }}</span>
-                </span>
-                <Badge :label="adapter.status" theme="gray" variant="subtle" />
-              </button>
-            </div>
-          </Panel>
-
-          <Panel :title="__('Next Best Actions')" icon="zap">
-            <div class="space-y-2">
-              <button
-                v-for="action in nextActions.slice(0, 4)"
-                :key="`${action.action_key}-${action.title}`"
-                class="flex w-full items-start gap-2 rounded-lg border border-slate-100 bg-white px-3 py-2 text-left hover:border-teal-200 hover:bg-teal-50/40"
-                @click="runNextAction(action)"
-              >
-                <Badge :label="action.priority || 'P1'" :theme="action.priority === 'P0' ? 'red' : 'orange'" variant="subtle" />
-                <span class="min-w-0">
-                  <span class="block truncate text-xs font-bold text-slate-700">{{ action.title }}</span>
-                  <span class="block truncate text-[11px] text-slate-500">{{ action.source }}</span>
-                </span>
-              </button>
-              <div v-if="!nextActions.length" class="text-sm text-slate-400">{{ __('No immediate action required') }}</div>
-            </div>
-          </Panel>
-        </div>
 
         <div class="px-6 pt-4 shrink-0">
           <div class="flex border-b border-slate-200 gap-6 overflow-x-auto">
@@ -183,7 +139,7 @@
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 min-h-0">
+        <div class="p-6">
           <div v-if="customer360.loading" class="text-sm text-slate-500">{{ __('Loading customer profile...') }}</div>
 
           <div v-else-if="activeTab === 'overview'" class="space-y-6">
@@ -347,7 +303,7 @@
                 <Button size="sm" variant="outline" :label="__('Export PDF')" @click="showExportDialog = true" />
               </template>
               <div class="mb-3 max-w-xs">
-                <FormInput v-model="productFilter" label="Filter Product Type" />
+                <FormSelect v-model="productFilter" label="Filter Product Type" :options="productTypeOptions" />
               </div>
               <SimpleTable :headers="['Facility', 'Product', 'Status', 'Repayment', 'Default']" :rows="filteredFacilities" :columns="['facility_type', 'product_type', 'status', 'repayment_behavior', 'default_flag']" :edit="(row) => openForm('facility', row)" />
             </Panel>
@@ -496,7 +452,7 @@
           </div>
 
           <!-- Chat Tab -->
-          <div v-else-if="activeTab === 'chat'" class="h-full flex flex-col" style="min-height: 500px;">
+          <div v-else-if="activeTab === 'chat'" class="min-h-[500px] flex flex-col">
             <ChatPanel doctype="Customer" :docname="selectedCustomerName" class="flex h-full flex-col rounded-lg border border-slate-200 bg-white overflow-hidden" />
           </div>
         </div>
@@ -612,7 +568,7 @@ const activityFilter = ref('all')
 const graphFilter = ref('All')
 const graphZoom = ref(1)
 const timelineFilter = ref('All')
-const productFilter = ref('')
+const productFilter = ref('All')
 const documentSearch = ref('')
 const communicationFilter = ref('All')
 const transactionFrom = ref('')
@@ -944,10 +900,14 @@ const summary = computed(() => data.value.summary || {})
 const kyc = computed(() => data.value.kyc || null)
 const facilities = computed(() => data.value.facilities || [])
 const activeFacilities = computed(() => facilities.value.filter((row) => row.status === 'Active'))
+const productTypeOptions = computed(() => {
+  const types = new Set(facilities.value.map((row) => row.product_type).filter(Boolean))
+  return ['All', ...Array.from(types).sort()]
+})
 const filteredFacilities = computed(() => {
-  const query = productFilter.value.toLowerCase()
-  if (!query) return facilities.value
-  return facilities.value.filter((row) => String(row.product_type || row.facility_type || '').toLowerCase().includes(query))
+  const filter = productFilter.value
+  if (filter === 'All') return facilities.value
+  return facilities.value.filter((row) => row.product_type === filter)
 })
 const collaterals = computed(() => data.value.collaterals || [])
 const bureauReports = computed(() => data.value.bureau_reports || [])

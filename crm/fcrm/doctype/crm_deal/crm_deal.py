@@ -101,6 +101,13 @@ class CRMDeal(Document):
 				self.share_with_agent(self.deal_owner)
 			self.assign_agent(self.deal_owner)
 
+		# Auto-initiate visual workflow flow execution on creation
+		from crm.utils.workflow_engine import start_flow_execution
+		try:
+			start_flow_execution(self.name)
+		except Exception:
+			pass
+
 	def before_save(self):
 		self.apply_sla()
 

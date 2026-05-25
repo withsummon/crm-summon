@@ -1169,9 +1169,20 @@ def reindex_rag(scope=None, docname=None):
 
 @frappe.whitelist()
 def save_ai_settings(provider, model, base_url=None, api_key=None):
+	VALID_PROVIDERS = {"Kimi", "OpenAI", "Anthropic", "Gemini", "Custom"}
+	if provider not in VALID_PROVIDERS:
+		frappe.throw(_("Invalid AI provider: {0}. Must be one of: {1}").format(provider, ", ".join(sorted(VALID_PROVIDERS))))
+
+	raw = (model or "").strip()
+	if not raw:
+		frappe.throw(_("Model name cannot be empty."))
+	if raw != model:
+		frappe.throw(_("Model name contains leading or trailing whitespace."))
+	normalized = normalize_kimi_model(raw)
+
 	settings = frappe.get_doc("FCRM Settings", "FCRM Settings")
 	settings.ai_provider = provider
-	settings.kimi_model = normalize_kimi_model(model)
+	settings.kimi_model = normalized
 	if base_url is not None:
 		settings.kimi_base_url = (base_url or "https://api.moonshot.ai/v1").rstrip("/")
 	if api_key:

@@ -1,0 +1,185 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "flow",
+  "flow_version",
+  "document_type",
+  "application",
+  "status",
+  "column_break_node",
+  "current_node",
+  "current_node_type",
+  "current_node_label",
+  "started_at",
+  "completed_at",
+  "section_break_json",
+  "flow_version_json",
+  "completed_nodes",
+  "skipped_nodes",
+  "execution_data"
+ ],
+ "fields": [
+  {
+   "default": "CRM-WFE-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "CRM-WFE-.YYYY.-"
+  },
+  {
+   "fieldname": "flow",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Parent Flow",
+   "options": "CRM Workflow",
+   "reqd": 1
+  },
+  {
+   "fieldname": "flow_version",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Flow Version",
+   "reqd": 1
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "application",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Document ID",
+   "options": "document_type",
+   "reqd": 1
+  },
+  {
+   "default": "Running",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Running\nPaused\nCompleted\nFailed\nCancelled"
+  },
+  {
+   "fieldname": "column_break_node",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_node",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Current Node ID"
+  },
+  {
+   "fieldname": "current_node_type",
+   "fieldtype": "Data",
+   "label": "Current Node Type"
+  },
+  {
+   "fieldname": "current_node_label",
+   "fieldtype": "Data",
+   "label": "Current Node Label"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At"
+  },
+  {
+   "fieldname": "section_break_json",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "flow_version_json",
+   "fieldtype": "Long Text",
+   "label": "Frozen Version JSON"
+  },
+  {
+   "fieldname": "completed_nodes",
+   "fieldtype": "Long Text",
+   "label": "Completed Nodes JSON"
+  },
+  {
+   "fieldname": "skipped_nodes",
+   "fieldtype": "Long Text",
+   "label": "Skipped Nodes JSON"
+  },
+  {
+   "fieldname": "execution_data",
+   "fieldtype": "Long Text",
+   "label": "Execution Data JSON"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Workflow Execution",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "Sales User",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "application",
+ "track_changes": 1
+}

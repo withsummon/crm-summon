@@ -284,37 +284,28 @@ def score_lead(lead):
 		for rule in model_doc.rules:
 			if _evaluate_rule(doc, rule):
 				score += cint(rule.weight)
+		score = min(score, 100)
+		band = _score_band(score)
+		confidence = 85
 	else:
-		default_weights = {
-			"email": 15,
-			"mobile_no": 15,
-			"organization": 10,
-			"job_title": 10,
-			"source": 10,
-			"campaign": 10,
-			"annual_revenue": 15,
-			"npwp": 15,
-		}
-		for fieldname, weight in default_weights.items():
-			if doc.get(fieldname):
-				score += weight
+		band = ""
+		confidence = 0
 
-	score = min(score, 100)
 	doc.db_set(
 		{
 			"lead_score": score,
-			"lead_score_band": _score_band(score),
+			"lead_score_band": band,
 			"lead_quality_probability": score,
-			"lead_quality_confidence": 85 if model else 60,
+			"lead_quality_confidence": confidence,
 		},
 		update_modified=False,
 	)
 	return {
 		"lead": lead,
 		"score": score,
-		"band": _score_band(score),
+		"band": band,
 		"probability": score,
-		"confidence": 85 if model else 60,
+		"confidence": confidence,
 	}
 
 

@@ -90,12 +90,45 @@
                 <FeatherIcon name="arrow-left" class="h-4 w-4" />
               </template>
             </Button>
-            <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
-            <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
-              <template #prefix>
-                <FeatherIcon name="check-circle" class="h-4 w-4" />
-              </template>
-            </Button>
+            
+            <!-- Dynamic Credit Flow Action Bar -->
+            <template v-if="currentFlowState.data?.ok && currentFlowState.data.available_actions?.length">
+              <Button
+                v-for="act in currentFlowState.data.available_actions"
+                :key="act"
+                :variant="act === 'submit' || act === 'approve' ? 'solid' : 'outline'"
+                :theme="act === 'reject' ? 'red' : 'teal'"
+                :label="labelizeAction(act)"
+                :loading="busy"
+                @click="handleFlowAction(act)"
+              />
+            </template>
+            
+            <!-- Fallback Static Buttons -->
+            <template v-else>
+              <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
+              <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
+                <template #prefix>
+                  <FeatherIcon name="check-circle" class="h-4 w-4" />
+                </template>
+              </Button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Visual Journey Progress Banner -->
+        <div v-if="currentFlowState.data?.ok && currentFlowState.data.execution_id" class="bg-teal-50/60 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between gap-4 shrink-0 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700">{{ __('Visual Journey Stage:') }}</span>
+            <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold">
+              {{ currentFlowState.data.current_node_label || currentFlowState.data.current_node }}
+            </span>
+            <span class="text-slate-400 font-medium">({{ currentFlowState.data.current_node_type }})</span>
+          </div>
+
+          <div v-if="currentFlowState.data.sla_deadline" class="text-slate-500 flex items-center gap-1.5">
+            <FeatherIcon name="clock" class="h-3.5 w-3.5 text-slate-400" />
+            <span>{{ __('SLA Deadline:') }} {{ currentFlowState.data.sla_deadline.split(' ')[1] || currentFlowState.data.sla_deadline }}</span>
           </div>
         </div>
 
@@ -645,6 +678,15 @@ const queue = createResource({
   },
 })
 
+// Dynamic Visual Flow Execution State resource
+const currentFlowState = createResource({
+  url: 'crm.api.credit_flow_execution.get_current_state',
+  makeParams() {
+    return { application_id: selectedApp.value?.name }
+  },
+  auto: false
+})
+
 const analysis = createResource({
   url: 'crm.api.credit.get_credit_analysis',
   makeParams() {
@@ -727,6 +769,9 @@ function selectApp(app) {
   activeTab.value = 'spreading'
   importResult.value = null
   analysis.fetch()
+  if (app && app.name) {
+    currentFlowState.submit()
+  }
 }
 
 function loadRouteApplication() {
@@ -886,6 +931,37 @@ async function generateRecommendation() {
 
 async function submitApproval() {
   await runAction(() => call('crm.api.credit_analysis.submit_memo_for_approval', { application_id: selectedApp.value.name }), __('Memo submitted to approval route'))
+}
+
+function labelizeAction(action) {
+  if (action === 'submit') return __('Submit Memo')
+  if (action === 'save_draft') return __('Save Draft')
+  if (action === 'approve') return __('Approve')
+  if (action === 'reject') return __('Reject')
+  if (action === 'return') return __('Return to RM')
+  return action.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+async function handleFlowAction(action) {
+  busy.value = true
+  try {
+    const res = await call('crm.api.credit_flow_execution.submit_action', {
+      application_id: selectedApp.value.name,
+      action_name: action
+    })
+    if (res && res.ok === false) {
+      toast.error(res.message || __('Action execution failed.'))
+    } else {
+      toast.success(__('Action applied successfully.'))
+      // Refresh state
+      queue.fetch()
+      currentFlowState.submit()
+    }
+  } catch (e) {
+    toast.error(e.message || __('Action failed.'))
+  } finally {
+    busy.value = false
+  }
 }
 
 function downloadBlob(blob, filename) {

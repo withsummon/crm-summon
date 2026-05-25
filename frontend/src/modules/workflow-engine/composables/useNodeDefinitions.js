@@ -18,7 +18,7 @@ import {
   getNodeInputHandles,
   getDefaultNodeConfig,
   getNodesByCategory,
-} from '../data/creditFlowNodeTypes'
+} from '../data/workflowNodeTypes'
 
 export function useNodeDefinitions() {
   // All node types as a flat array

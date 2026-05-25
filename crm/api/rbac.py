@@ -774,30 +774,36 @@ def get_permission_summary():
 
 @frappe.whitelist()
 def permission_query_conditions(user: str | None = None):
-    """Hook for Frappe's permission_query_conditions to enforce branch isolation."""
-    if not user:
-        user = frappe.session.user
-    if user == "Administrator":
-        return ""
+	"""Hook for Frappe's permission_query_conditions to enforce branch isolation."""
+	if not user:
+		user = frappe.session.user
+	if user == "Administrator":
+		return ""
 
-    fcrm_roles = get_user_fcrm_roles(user)
-    if not fcrm_roles:
-        return ""
+	fcrm_roles = get_user_fcrm_roles(user)
+	if not fcrm_roles:
+		return ""
 
-    if any(r in ("FCRM Super Admin", "FCRM Director") for r in fcrm_roles):
-        return ""
+	if any(r in ("FCRM Super Admin", "FCRM Director") for r in fcrm_roles):
+		return ""
 
-    branches = get_user_branches(user)
-    if not branches:
-        return "1=0"
+	branches = get_user_branches(user)
+	if not branches:
+		return "1=0"
 
-    branch_names = [frappe.db.escape(b["branch"]) for b in branches]
-    return f"""
-        `tabCRM Lead`.`custom_branch` in ({','.join(branch_names)})
-        or `tabCRM Deal`.`custom_branch` in ({','.join(branch_names)})
-        or `tabCRM Credit Application`.`branch` in ({','.join(branch_names)})
-        or `tabCRM Credit Facility`.`branch` in ({','.join(branch_names)})
-    """
+	branch_names = [frappe.db.escape(b["branch"]) for b in branches]
+	clauses = []
+	for dt, field in [
+		("CRM Lead", "custom_branch"),
+		("CRM Deal", "custom_branch"),
+		("CRM Credit Application", "branch"),
+		("CRM Credit Facility", "branch"),
+		("CRM Organization", "custom_branch"),
+		("CRM Customer 360", "custom_branch"),
+		("Contact", "custom_branch"),
+	]:
+		clauses.append(f"`tab{dt}`.`{field}` in ({','.join(branch_names)})")
+	return " or ".join(clauses)
 
 
 @frappe.whitelist()

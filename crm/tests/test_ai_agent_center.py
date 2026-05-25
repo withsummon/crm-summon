@@ -4,8 +4,9 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import frappe
+import requests
 
-from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, normalize_kimi_model, stream_kimi_chat_events
+from crm.ai.kimi import DEFAULT_KIMI_MODEL, MAX_RETRIES, _request_with_retry, call_kimi_chat, normalize_kimi_model, stream_kimi_chat_events
 from crm.api.ai_agent_center import (
 	AGENTS,
 	OUTPUT_PROFILES,
@@ -14,6 +15,7 @@ from crm.api.ai_agent_center import (
 	get_rag_status,
 	query_agent,
 	query_agent_stream,
+	save_ai_settings,
 	_parse_structured_response,
 )
 
@@ -55,14 +57,14 @@ class TestAIAgentCenter(TestCase):
 			}
 		)
 
-		with patch("crm.ai.kimi.get_ai_settings", return_value=settings), patch("crm.ai.kimi.requests.post", return_value=Response()) as post:
+		with patch("crm.ai.kimi.get_ai_settings", return_value=settings), patch("crm.ai.kimi._request_with_retry", return_value=Response()) as req:
 			result = call_kimi_chat([{"role": "user", "content": "hello"}])
 
 		self.assertEqual(result.content, "ok")
-		payload = json.loads(post.call_args.kwargs["data"])
+		payload = json.loads(req.call_args.kwargs["data"])
 		self.assertEqual(payload["model"], DEFAULT_KIMI_MODEL)
 		self.assertEqual(payload["thinking"], {"type": "disabled"})
-		self.assertEqual(post.call_args.args[0], "https://api.moonshot.ai/v1/chat/completions")
+		self.assertEqual(req.call_args.args[1], "https://api.moonshot.ai/v1/chat/completions")
 
 	def test_legacy_kimi_model_alias_maps_to_kimi_26(self):
 		self.assertEqual(normalize_kimi_model("kimi-k2"), DEFAULT_KIMI_MODEL)
@@ -87,13 +89,13 @@ class TestAIAgentCenter(TestCase):
 			}
 		)
 
-		with patch("crm.ai.kimi.get_ai_settings", return_value=settings), patch("crm.ai.kimi.requests.post", return_value=Response()) as post:
+		with patch("crm.ai.kimi.get_ai_settings", return_value=settings), patch("crm.ai.kimi._request_with_retry", return_value=Response()) as req:
 			events = list(stream_kimi_chat_events([{"role": "user", "content": "hello"}]))
 
 		self.assertEqual("".join(event.delta for event in events if event.event == "delta"), "hello")
 		self.assertEqual(events[-1].event, "done")
 		self.assertEqual(events[-1].total_tokens, 4)
-		self.assertTrue(json.loads(post.call_args.kwargs["data"])["stream"])
+		self.assertTrue(json.loads(req.call_args.kwargs["data"])["stream"])
 
 	def test_stream_endpoint_returns_event_stream_response(self):
 		response = query_agent_stream.__wrapped__("general", "hello")
@@ -223,3 +225,75 @@ class TestAIAgentCenter(TestCase):
 				frappe.db.sql("DELETE FROM `tabCRM AI Audit Log` WHERE prompt=%s", ("summarize the application",))
 				frappe.db.sql("DELETE FROM `tabCRM AI Session` WHERE name=%s", (created_session,))
 				frappe.db.commit()
+
+	def test_request_with_retry_succeeds_on_first_attempt(self):
+		class Response:
+			status_code = 200
+			text = "ok"
+
+		with patch("crm.ai.kimi.requests.Session.request", return_value=Response()) as req:
+			result = _request_with_retry("POST", "https://example.com/api", headers={}, data="{}", timeout=10)
+
+		self.assertEqual(result.status_code, 200)
+		req.assert_called_once()
+
+	def test_request_with_retry_fails_after_max_retries(self):
+		class Response:
+			status_code = 503
+			text = "Service Unavailable"
+
+		responses = [Response() for _ in range(MAX_RETRIES + 1)]
+		call_count = [0]
+
+		def side_effect(*args, **kwargs):
+			call_count[0] += 1
+			return responses[call_count[0] - 1]
+
+		with (
+			patch("crm.ai.kimi.requests.Session.request", side_effect=side_effect),
+			patch("crm.ai.kimi.frappe.log_error"),
+			patch("crm.ai.kimi.time.sleep"),
+		):
+			result = _request_with_retry("POST", "https://example.com/api", headers={}, data="{}", timeout=10)
+
+		self.assertEqual(result.status_code, 503)
+		self.assertEqual(call_count[0], MAX_RETRIES + 1)
+
+	def test_request_with_retry_raises_on_connection_error(self):
+		def side_effect(*args, **kwargs):
+			raise requests.ConnectionError("Connection refused")
+
+		with (
+			patch("crm.ai.kimi.requests.Session.request", side_effect=side_effect),
+			patch("crm.ai.kimi.frappe.log_error"),
+			patch("crm.ai.kimi.time.sleep"),
+		):
+			with self.assertRaises(frappe.ValidationError) as ctx:
+				_request_with_retry("POST", "https://example.com/api", headers={}, data="{}", timeout=10)
+
+		self.assertIn("Connection refused", str(ctx.exception))
+
+	def test_save_ai_settings_rejects_empty_model(self):
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			save_ai_settings.__wrapped__("Kimi", "")
+		self.assertIn("cannot be empty", str(ctx.exception).lower())
+
+	def test_save_ai_settings_rejects_whitespace_model(self):
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			save_ai_settings.__wrapped__("Kimi", "  kimi-k2.6  ")
+		self.assertIn("whitespace", str(ctx.exception).lower())
+
+	def test_save_ai_settings_rejects_invalid_provider(self):
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			save_ai_settings.__wrapped__("InvalidProvider", "kimi-k2.6")
+		self.assertIn("invalid", str(ctx.exception).lower())
+
+	def test_save_ai_settings_accepts_valid_input(self):
+		settings = frappe._dict({"ai_provider": "Kimi", "kimi_model": DEFAULT_KIMI_MODEL, "kimi_base_url": "https://api.moonshot.ai/v1", "save": lambda **kwargs: None, "as_dict": lambda: settings})
+
+		with (
+			patch("crm.api.ai_agent_center.frappe.get_doc", return_value=settings),
+			patch.object(frappe.db, "commit"),
+		):
+			result = save_ai_settings.__wrapped__("Kimi", "kimi-k2.6", base_url="https://api.moonshot.ai/v1")
+			self.assertEqual(result["kimi_model"], DEFAULT_KIMI_MODEL)

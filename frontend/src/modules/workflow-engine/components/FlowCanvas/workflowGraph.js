@@ -1,7 +1,7 @@
 /**
- * Credit Flow Graph Validation Utilities
+ * Workflow Graph Validation Utilities
  *
- * Extends the pattern from workflowGraph.js with credit-flow-specific rules:
+ * Extends the pattern from workflowGraph.js with workflow-engine-specific rules:
  * - Exactly one StartNode required
  * - At least one EndNode required
  * - All nodes must be connected
@@ -27,7 +27,7 @@ export function normalizeConnection(connection) {
 /**
  * Generate a deterministic edge ID from a connection
  */
-export function getCreditFlowEdgeId(connection) {
+export function getWorkflowEdgeId(connection) {
   const edge = normalizeConnection(connection)
   return `${edge.source}:${edge.sourceHandle}->${edge.target}:${edge.targetHandle}`
 }
