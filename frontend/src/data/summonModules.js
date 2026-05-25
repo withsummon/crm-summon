@@ -182,8 +182,9 @@ export const summonModules = [
     description:
       'Aging buckets, delinquency tracking, PTP management, AI prioritization, visit scheduling, and legal escalation.',
     priority: 'High',
-    status: 'planned',
-    href: '/crm/modules/collections',
+    status: 'available',
+    href: '/crm/lending-risk/collections',
+    routeName: 'Collections',
     group: 'Lending & Risk',
     icon: 'repeat',
     features: [
@@ -331,13 +332,13 @@ export const summonModules = [
     label: 'Rules Engine',
     sheet: '21_RulesEngine',
     description:
-      'Configurable IF-THEN rules, decision trees, auto-routing, and exception handling.',
+      'Centralized business rules configuration with visual IF-THEN builder, decision trees, simulation sandbox, and approval workflows.',
     priority: 'High',
     status: 'available',
     href: '/crm/admin-platform/rules-engine',
     routeName: 'Rules Engine',
     group: 'Admin & Platform',
-    icon: 'filter',
+    icon: 'zap',
     features: [
       'Rule Builder UI',
       'Decision Tree Builder',
@@ -353,7 +354,8 @@ export const summonModules = [
       'Multi-level voting, quorum tracking, committee scheduling, e-signature, and decision recording.',
     priority: 'High',
     status: 'available',
-    href: '/crm/modules/committee-approval',
+    href: '/crm/lending-risk/committee-approval',
+    routeName: 'Committee Approval',
     group: 'Lending & Risk',
     icon: 'users',
     features: [
@@ -372,6 +374,7 @@ export const summonModules = [
     priority: 'High',
     status: 'available',
     href: '/crm/lending-risk/covenant-monitoring',
+    routeName: 'Covenant Monitoring',
     group: 'Lending & Risk',
     icon: 'alert-triangle',
     features: [
@@ -397,8 +400,11 @@ export const summonModules = [
       'Vendor Directory',
       'Vendor Onboarding',
       'Contract Management',
-      'SLA Definition per Vendor',
+      'Service Request Workflow',
+      'SLA Tracking',
       'Performance Scoring',
+      'Compliance Monitoring',
+      'Vendor Portal',
     ],
   },
   {

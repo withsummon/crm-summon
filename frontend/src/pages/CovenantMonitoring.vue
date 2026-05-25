@@ -1,2462 +1,871 @@
 <template>
-  <div class="flex flex-1 flex-col min-h-0 bg-gray-50 font-sans select-none">
-    <LayoutHeader>
-      <template #left-header>
-        <div class="flex min-w-0 items-center gap-3">
-          <div
-            class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700"
-          >
-            <FeatherIcon name="shield" class="h-4 w-4 text-white" />
+  <div class="covenant-monitoring flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-orange-600 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-              {{ __("Covenant Monitoring") }}
-            </h1>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Covenant Monitoring</h1>
+            <p class="text-sm text-gray-500">Financial &amp; non-financial covenant tracking, breach detection, and cure workflows</p>
           </div>
         </div>
-      </template>
-    </LayoutHeader>
-
-    <div class="flex flex-1 min-h-0 overflow-hidden">
-      <!-- ── Left Sidebar ── -->
-      <div class="w-52 bg-white border-r border-gray-200 flex flex-col shrink-0">
-        <div class="p-3 space-y-0.5">
+        <div class="flex gap-2">
           <button
-            v-for="nav in navItems"
-            :key="nav.id"
-            @click="activeNav = nav.id"
-            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all text-left"
-            :class="
-              activeNav === nav.id
-                ? 'bg-teal-50 text-teal-700 font-semibold'
-                : 'text-gray-600 hover:bg-gray-50'
-            "
+            @click="showCovenantModal = true"
+            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
           >
-            <FeatherIcon :name="nav.icon" class="h-3.5 w-3.5 shrink-0" />
-            <span class="truncate">{{ nav.label }}</span>
-            <span
-              v-if="nav.badge"
-              class="ml-auto text-[9px] rounded-full px-1.5 font-bold"
-              :class="nav.badgeColor || 'bg-teal-100 text-teal-700'"
-              >{{ nav.badge }}</span
-            >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            Add Covenant
           </button>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="mt-2 border-t border-gray-100 p-3 space-y-2">
-          <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
-            {{ __("Portfolio Health") }}
-          </p>
-          <div
-            v-for="s in quickStats"
-            :key="s.label"
-            class="flex items-center justify-between"
+          <button
+            @click="runMonitoring"
+            :disabled="isRunning"
+            class="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-60 flex items-center gap-2"
           >
-            <div class="flex items-center gap-1.5">
-              <div class="w-2 h-2 rounded-full" :class="s.dot" />
-              <span class="text-[11px] text-gray-600">{{ s.label }}</span>
-            </div>
-            <span class="text-[11px] font-bold" :class="s.textColor">{{ s.value }}</span>
-          </div>
-          <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden flex mt-1">
-            <div class="h-full bg-green-500 transition-all" :style="{ width: '62%' }" />
-            <div class="h-full bg-amber-400 transition-all" :style="{ width: '24%' }" />
-            <div class="h-full bg-red-500 transition-all" :style="{ width: '14%' }" />
-          </div>
-        </div>
-
-        <div class="mt-auto p-3 border-t border-gray-100">
-          <p class="text-[10px] text-gray-400">
-            {{ __("Last tested") }}:
-            <span class="font-semibold text-gray-600">24 May 08:00</span>
-          </p>
+            <svg v-if="isRunning" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" /></svg>
+            {{ isRunning ? 'Running...' : 'Run Monitoring' }}
+          </button>
         </div>
       </div>
 
-      <!-- ── Main Content ── -->
-      <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <!-- DASHBOARD -->
-        <div
-          v-if="activeNav === 'dashboard'"
-          class="flex-1 overflow-y-auto p-5 space-y-5"
+      <!-- Page Tabs -->
+      <div class="flex gap-1 mt-4">
+        <button
+          v-for="tab in pageTabs"
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          :class="[
+            'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+            activeTab === tab.id
+              ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
+          ]"
         >
-          <!-- Stat cards -->
-          <div class="grid grid-cols-4 gap-4">
-            <div
-              v-for="stat in dashStats"
-              :key="stat.label"
-              class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm cursor-pointer hover:shadow-md transition-all"
-              @click="activeNav = stat.nav"
-            >
-              <div class="flex items-start justify-between mb-3">
-                <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center"
-                  :class="stat.iconBg"
-                >
-                  <FeatherIcon
-                    :name="stat.icon"
-                    class="h-4 w-4"
-                    :class="stat.iconColor"
-                  />
+          {{ tab.label }}
+          <span v-if="tab.badge" :class="['px-1.5 py-0.5 text-xs rounded-full font-semibold', tab.badgeColor || 'bg-orange-600 text-white']">{{ tab.badge }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="flex-1 overflow-auto p-6">
+
+      <!-- ───── TAB: Dashboard ───── -->
+      <div v-if="activeTab === 'dashboard'">
+        <!-- KPI Strip -->
+        <div class="grid grid-cols-5 gap-4 mb-6">
+          <div v-for="kpi in dashKPIs" :key="kpi.label" :class="['rounded-xl p-4 border', kpi.highlight ? 'bg-red-50 border-red-200' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700']">
+            <div class="flex justify-between items-start">
+              <p class="text-xs text-gray-500 mb-1">{{ kpi.label }}</p>
+              <span v-if="kpi.alert" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+            </div>
+            <p class="text-2xl font-bold" :class="kpi.color">{{ kpi.value }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ kpi.sub }}</p>
+          </div>
+        </div>
+
+        <!-- Health Matrix + Alert Feed -->
+        <div class="grid grid-cols-3 gap-6 mb-6">
+          <!-- Covenant Health by Type -->
+          <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Covenant Health Overview</h3>
+            <div class="space-y-3">
+              <div v-for="type in covenantTypes" :key="type.name">
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-700 dark:text-gray-300 font-medium">{{ type.name }}</span>
+                  <div class="flex gap-3 text-xs">
+                    <span class="text-green-600">✓ {{ type.compliant }}</span>
+                    <span class="text-amber-600">⚠ {{ type.warning }}</span>
+                    <span class="text-red-600">✗ {{ type.breached }}</span>
+                  </div>
                 </div>
-                <span
-                  class="text-[10px] font-bold rounded-full px-2 py-0.5"
-                  :class="stat.badgeClass"
-                  >{{ stat.badge }}</span
-                >
+                <div class="flex h-3 rounded-full overflow-hidden gap-0.5">
+                  <div class="bg-green-500 rounded-full" :style="{ width: (type.compliant / type.total * 100) + '%' }"></div>
+                  <div class="bg-amber-400" :style="{ width: (type.warning / type.total * 100) + '%' }"></div>
+                  <div class="bg-red-500" :style="{ width: (type.breached / type.total * 100) + '%' }"></div>
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5">{{ type.total }} total covenants</p>
               </div>
-              <p class="text-2xl font-black text-gray-900 mb-0.5">{{ stat.value }}</p>
-              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                {{ stat.label }}
-              </p>
+            </div>
+            <div class="flex gap-4 mt-4 text-xs text-gray-500">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Compliant</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>Warning Zone</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Breached</span>
             </div>
           </div>
 
-          <!-- Charts row -->
-          <div class="grid grid-cols-3 gap-4">
-            <!-- Breach Trend -->
-            <div
-              class="col-span-2 bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <div>
-                  <h3 class="text-sm font-bold text-gray-800">
-                    {{ __("Breach Trend") }}
-                  </h3>
-                  <p class="text-[10px] text-gray-400">
-                    {{ __("Active breaches by month") }}
-                  </p>
-                </div>
-                <div class="flex items-center gap-3 text-[10px]">
-                  <span class="flex items-center gap-1"
-                    ><span
-                      class="w-2 h-2 rounded-full bg-red-500 inline-block"
-                    />Breach</span
-                  >
-                  <span class="flex items-center gap-1"
-                    ><span
-                      class="w-2 h-2 rounded-full bg-amber-400 inline-block"
-                    />Watch</span
-                  >
-                </div>
-              </div>
-              <svg class="w-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-                <line
-                  v-for="i in 4"
-                  :key="i"
-                  x1="0"
-                  :y1="(100 / 4) * i"
-                  x2="400"
-                  :y2="(100 / 4) * i"
-                  stroke="#f3f4f6"
-                  stroke-width="1"
-                />
-                <!-- Watch bars -->
-                <rect
-                  v-for="(v, i) in watchTrend"
-                  :key="'w' + i"
-                  :x="(400 / watchTrend.length) * i + 4"
-                  :y="100 - (v / 16) * 100"
-                  :width="400 / watchTrend.length - 10"
-                  :height="(v / 16) * 100"
-                  fill="#fbbf24"
-                  rx="2"
-                />
-                <!-- Breach bars -->
-                <rect
-                  v-for="(v, i) in breachTrend"
-                  :key="'b' + i"
-                  :x="(400 / breachTrend.length) * i + 4"
-                  :y="100 - (v / 16) * 100"
-                  :width="400 / breachTrend.length - 10"
-                  :height="(v / 16) * 100"
-                  fill="#ef4444"
-                  rx="2"
-                  opacity="0.8"
-                />
-              </svg>
-              <div class="flex justify-around mt-1">
-                <span
-                  v-for="m in trendMonths"
-                  :key="m"
-                  class="text-[9px] text-gray-400 flex-1 text-center"
-                  >{{ m }}</span
-                >
-              </div>
+          <!-- Live Alert Feed -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Recent Alerts</h3>
+              <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
             </div>
-
-            <!-- Status Donut -->
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-              <h3 class="text-sm font-bold text-gray-800 mb-0.5">
-                {{ __("Covenant Status") }}
-              </h3>
-              <p class="text-[10px] text-gray-400 mb-3">
-                {{ __("All active covenants") }}
-              </p>
-              <div class="flex flex-col items-center">
-                <svg viewBox="0 0 120 120" class="w-28 h-28">
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="42"
-                    fill="none"
-                    stroke="#f3f4f6"
-                    stroke-width="18"
-                  />
-                  <circle
-                    v-for="seg in statusDonut"
-                    :key="seg.label"
-                    cx="60"
-                    cy="60"
-                    r="42"
-                    fill="none"
-                    :stroke="seg.color"
-                    stroke-width="18"
-                    :stroke-dasharray="`${seg.dash} ${donutC}`"
-                    :stroke-dashoffset="seg.offset"
-                  />
-                  <text
-                    x="60"
-                    y="56"
-                    text-anchor="middle"
-                    fill="#1f2937"
-                    font-size="11"
-                    font-weight="700"
-                  >
-                    {{ totalCovenants }}
-                  </text>
-                  <text x="60" y="68" text-anchor="middle" fill="#9ca3af" font-size="7">
-                    Covenants
-                  </text>
-                </svg>
-                <div class="w-full space-y-1 mt-1">
-                  <div
-                    v-for="s in statusBreakdown"
-                    :key="s.label"
-                    class="flex items-center justify-between"
-                  >
-                    <div class="flex items-center gap-1.5">
-                      <div
-                        class="w-2 h-2 rounded-full"
-                        :style="{ background: s.color }"
-                      />
-                      <span class="text-[10px] text-gray-600">{{ s.label }}</span>
-                    </div>
-                    <span class="text-[10px] font-bold" :class="s.textClass">{{
-                      s.count
-                    }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom row -->
-          <div class="grid grid-cols-2 gap-4">
-            <!-- Active Breaches -->
-            <div
-              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <div
-                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
-              >
-                <h3 class="text-sm font-bold text-gray-800">
-                  {{ __("Active Breaches") }}
-                </h3>
-                <button
-                  @click="activeNav = 'breach'"
-                  class="text-[10px] text-teal-600 hover:underline"
-                >
-                  {{ __("View all") }}
-                </button>
-              </div>
-              <div class="divide-y divide-gray-50">
-                <div
-                  v-for="b in activeBreaches.slice(0, 4)"
-                  :key="b.id"
-                  class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                  @click="activeNav = 'breach'"
-                >
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                      <p class="text-xs font-semibold text-gray-800 truncate">
-                        {{ b.covenant }}
-                      </p>
-                      <p class="text-[10px] text-gray-400 truncate">{{ b.facility }}</p>
-                    </div>
-                    <span
-                      class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold"
-                      :class="
-                        b.severity === 'Critical'
-                          ? 'bg-red-100 text-red-700'
-                          : b.severity === 'High'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-amber-100 text-amber-700'
-                      "
-                    >
-                      {{ b.severity }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-3 mt-1.5 text-[10px] text-gray-500">
-                    <span
-                      >Actual:
-                      <span class="font-semibold text-red-600">{{ b.actual }}</span></span
-                    >
-                    <span
-                      >Threshold:
-                      <span class="font-semibold">{{ b.threshold }}</span></span
-                    >
-                    <span class="ml-auto text-[9px] text-gray-400">{{ b.since }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Upcoming Tests -->
-            <div
-              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <div
-                class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
-              >
-                <h3 class="text-sm font-bold text-gray-800">
-                  {{ __("Upcoming Tests") }}
-                </h3>
-                <button
-                  @click="activeNav = 'calendar'"
-                  class="text-[10px] text-teal-600 hover:underline"
-                >
-                  {{ __("Calendar") }}
-                </button>
-              </div>
-              <div class="divide-y divide-gray-50">
-                <div
-                  v-for="t in upcomingTests.slice(0, 5)"
-                  :key="t.id"
-                  class="px-4 py-2.5 flex items-center gap-3"
-                >
-                  <div
-                    class="w-9 h-9 rounded-lg flex flex-col items-center justify-center shrink-0"
-                    :class="
-                      t.urgent
-                        ? 'bg-red-50 border border-red-200'
-                        : 'bg-gray-50 border border-gray-200'
-                    "
-                  >
-                    <p
-                      class="text-[9px] font-semibold"
-                      :class="t.urgent ? 'text-red-500' : 'text-gray-500'"
-                    >
-                      {{ t.month }}
-                    </p>
-                    <p
-                      class="text-sm font-black"
-                      :class="t.urgent ? 'text-red-600' : 'text-gray-700'"
-                    >
-                      {{ t.day }}
-                    </p>
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-[11px] font-semibold text-gray-800 truncate">
-                      {{ t.covenant }}
-                    </p>
-                    <p class="text-[10px] text-gray-400 truncate">{{ t.facility }}</p>
-                  </div>
-                  <span
-                    class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0"
-                    :class="
-                      t.freq === 'Monthly'
-                        ? 'bg-teal-100 text-teal-700'
-                        : t.freq === 'Quarterly'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600'
-                    "
-                  >
-                    {{ t.freq }}
+            <div class="space-y-3 overflow-y-auto max-h-64">
+              <div v-for="alert in recentAlerts" :key="alert.id" :class="['p-3 rounded-lg border text-xs', alert.severity === 'breach' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200']">
+                <div class="flex justify-between items-start mb-1">
+                  <span :class="['font-semibold', alert.severity === 'breach' ? 'text-red-700' : 'text-amber-700']">
+                    {{ alert.severity === 'breach' ? '🔴 BREACH' : '🟡 WARNING' }}
                   </span>
+                  <span class="text-gray-400">{{ alert.time }}</span>
                 </div>
+                <p class="font-medium text-gray-800">{{ alert.borrower }}</p>
+                <p class="text-gray-600 mt-0.5">{{ alert.message }}</p>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- AI Risk Predictor -->
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        <!-- Top Facilities at Risk -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Facilities Under Close Watch</h3>
+          <table class="w-full text-sm">
+            <thead class="border-b border-gray-100 dark:border-gray-700">
+              <tr>
+                <th class="text-left pb-2 text-xs text-gray-500">Borrower</th>
+                <th class="text-left pb-2 text-xs text-gray-500">Facility</th>
+                <th class="text-right pb-2 text-xs text-gray-500">Outstanding</th>
+                <th class="text-left pb-2 text-xs text-gray-500">Covenants</th>
+                <th class="text-left pb-2 text-xs text-gray-500">Risk Level</th>
+                <th class="text-left pb-2 text-xs text-gray-500">Next Review</th>
+                <th class="pb-2"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
+              <tr v-for="f in watchlist" :key="f.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="py-3">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ f.borrower }}</div>
+                  <div class="text-xs text-gray-500">RM: {{ f.rm }}</div>
+                </td>
+                <td class="py-3 text-gray-700 dark:text-gray-300">{{ f.facility }}</td>
+                <td class="py-3 text-right font-semibold text-gray-900 dark:text-white">{{ f.outstanding }}</td>
+                <td class="py-3">
+                  <div class="flex gap-1">
+                    <span v-if="f.breached > 0" class="px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs">{{ f.breached }} breach</span>
+                    <span v-if="f.warning > 0" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">{{ f.warning }} warn</span>
+                    <span v-if="f.compliant > 0" class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">{{ f.compliant }} ok</span>
+                  </div>
+                </td>
+                <td class="py-3"><span :class="riskBadge(f.risk)">{{ f.risk }}</span></td>
+                <td class="py-3 text-gray-500 text-xs">{{ f.nextReview }}</td>
+                <td class="py-3">
+                  <button @click="openFacility(f)" class="px-3 py-1 border border-orange-300 text-orange-600 rounded text-xs hover:bg-orange-50">Review</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ───── TAB: Covenant Library ───── -->
+      <div v-if="activeTab === 'library'">
+        <div class="flex gap-3 mb-5 flex-wrap items-center">
+          <input v-model="librarySearch" type="text" placeholder="Search covenants..." class="flex-1 min-w-52 px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <select v-model="libraryFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="">All Types</option>
+            <option value="financial">Financial</option>
+            <option value="non_financial">Non-Financial</option>
+            <option value="reporting">Reporting</option>
+            <option value="operational">Operational</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div
+            v-for="cov in filteredLibrary"
+            :key="cov.id"
+            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span :class="['px-2 py-0.5 rounded text-xs font-semibold mr-2', typeBadge(cov.type)]">{{ cov.typeLabel }}</span>
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white mt-1">{{ cov.name }}</h3>
+              </div>
+              <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Active</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">{{ cov.description }}</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                <p class="text-gray-400">Threshold</p>
+                <p class="font-semibold text-gray-800 dark:text-white">{{ cov.threshold }}</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                <p class="text-gray-400">Frequency</p>
+                <p class="font-semibold text-gray-800 dark:text-white">{{ cov.frequency }}</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                <p class="text-gray-400">Cure Period</p>
+                <p class="font-semibold text-gray-800 dark:text-white">{{ cov.curePeriod }}</p>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-700 rounded p-2">
+                <p class="text-gray-400">Facilities Using</p>
+                <p class="font-semibold text-orange-600">{{ cov.facilityCount }}</p>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button class="flex-1 py-1.5 border border-gray-300 text-gray-600 rounded text-xs hover:bg-gray-50">Edit</button>
+              <button @click="showCovenantModal = true" class="flex-1 py-1.5 border border-orange-300 text-orange-600 rounded text-xs hover:bg-orange-50">Assign to Facility</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ───── TAB: Monitoring ───── -->
+      <div v-if="activeTab === 'monitoring'">
+        <div class="flex gap-3 mb-5 items-center flex-wrap">
+          <input v-model="monitorSearch" type="text" placeholder="Search borrower or facility..." class="flex-1 min-w-52 px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <select v-model="monitorFilterStatus" class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="">All Status</option>
+            <option value="compliant">Compliant</option>
+            <option value="warning">Warning Zone</option>
+            <option value="breached">Breached</option>
+          </select>
+          <select v-model="monitorFilterType" class="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <option value="">All Types</option>
+            <option value="financial">Financial</option>
+            <option value="non_financial">Non-Financial</option>
+            <option value="reporting">Reporting</option>
+          </select>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <tr>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Borrower / Facility</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Covenant</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Type</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Threshold</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actual</th>
+                <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Headroom</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Next Check</th>
+                <th class="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              <tr
+                v-for="item in filteredMonitoring"
+                :key="item.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              >
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ item.borrower }}</div>
+                  <div class="text-xs text-gray-500">{{ item.facilityId }}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ item.covenant }}</td>
+                <td class="px-4 py-3"><span :class="typeBadge(item.type)">{{ item.typeLabel }}</span></td>
+                <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{{ item.threshold }}</td>
+                <td class="px-4 py-3 text-right font-semibold" :class="item.status === 'breached' ? 'text-red-600' : item.status === 'warning' ? 'text-amber-600' : 'text-gray-900 dark:text-white'">{{ item.actual }}</td>
+                <td class="px-4 py-3 text-right text-xs" :class="item.headroom < 0 ? 'text-red-600 font-semibold' : item.headroom < 10 ? 'text-amber-600' : 'text-green-600'">{{ item.headroom >= 0 ? '+' : '' }}{{ item.headroom }}%</td>
+                <td class="px-4 py-3"><span :class="monitorStatusBadge(item.status)">{{ monitorStatusLabel(item.status) }}</span></td>
+                <td class="px-4 py-3 text-xs text-gray-500">{{ item.nextCheck }}</td>
+                <td class="px-4 py-3">
+                  <button
+                    v-if="item.status === 'breached'"
+                    @click="openBreachDetail(item)"
+                    class="px-3 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700"
+                  >Cure</button>
+                  <button
+                    v-else
+                    @click="openBreachDetail(item)"
+                    class="px-3 py-1 border border-gray-300 text-gray-600 rounded text-xs hover:bg-gray-50"
+                  >Detail</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ───── TAB: Breaches ───── -->
+      <div v-if="activeTab === 'breaches'" class="space-y-4">
+        <!-- Breach Summary -->
+        <div class="grid grid-cols-4 gap-4">
+          <div v-for="s in breachSummary" :key="s.label" :class="['rounded-xl p-4 border', s.red ? 'bg-red-50 border-red-200' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700']">
+            <p class="text-xs text-gray-500 mb-1">{{ s.label }}</p>
+            <p class="text-2xl font-bold" :class="s.color">{{ s.value }}</p>
+          </div>
+        </div>
+
+        <!-- Active Breaches -->
+        <div
+          v-for="breach in activeBreaches"
+          :key="breach.id"
+          class="bg-white dark:bg-gray-800 rounded-xl border-l-4 border-red-500 border border-gray-200 dark:border-gray-700 p-5"
+        >
+          <div class="flex justify-between items-start">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                  <h3 class="font-bold text-gray-900 dark:text-white">{{ breach.borrower }}</h3>
+                  <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">BREACHED</span>
+                  <span v-if="breach.cureExpiry" class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">Cure expires: {{ breach.cureExpiry }}</span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ breach.covenant }}</p>
+                <p class="text-xs text-gray-500 mt-1">Facility: {{ breach.facilityId }} · Detected: {{ breach.detectedDate }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-semibold text-red-600">{{ breach.actual }} vs {{ breach.threshold }}</p>
+              <p class="text-xs text-gray-500">Actual vs Threshold</p>
+            </div>
+          </div>
+
+          <!-- Cure Timeline -->
+          <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
             <div class="flex items-center gap-2 mb-3">
-              <div
-                class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center"
-              >
-                <FeatherIcon name="zap" class="h-3.5 w-3.5 text-purple-600" />
-              </div>
-              <h3 class="text-sm font-bold text-gray-800">
-                {{ __("AI Covenant Risk Predictor") }}
-              </h3>
-              <span
-                class="text-[9px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 font-bold"
-                >BETA</span
-              >
+              <p class="text-xs font-semibold text-gray-600 uppercase">Cure Workflow</p>
+              <span :class="['px-2 py-0.5 rounded text-xs font-semibold', breach.cureStatus === 'pending' ? 'bg-amber-100 text-amber-700' : breach.cureStatus === 'in_progress' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700']">{{ breach.cureStatus.replace('_', ' ') }}</span>
             </div>
-            <div class="grid grid-cols-3 gap-3">
-              <div
-                v-for="pred in aiPredictions"
-                :key="pred.id"
-                class="rounded-xl border p-3 cursor-pointer hover:shadow-sm transition-all"
-                :class="
-                  pred.risk === 'High'
-                    ? 'border-red-200 bg-red-50'
-                    : pred.risk === 'Medium'
-                    ? 'border-amber-200 bg-amber-50'
-                    : 'border-green-200 bg-green-50'
-                "
-              >
-                <div class="flex items-start justify-between mb-2">
-                  <p class="text-[11px] font-semibold text-gray-800">
-                    {{ pred.facility }}
-                  </p>
-                  <span
-                    class="text-[9px] font-bold rounded-full px-1.5 py-0.5"
-                    :class="
-                      pred.risk === 'High'
-                        ? 'bg-red-100 text-red-700'
-                        : pred.risk === 'Medium'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-green-100 text-green-700'
-                    "
-                  >
-                    {{ pred.risk }}
-                  </span>
+            <div class="flex gap-2 items-center">
+              <div v-for="(step, idx) in breach.cureSteps" :key="idx" class="flex items-center gap-2">
+                <div :class="['w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold', step.done ? 'bg-green-500 text-white' : step.active ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500']">
+                  {{ step.done ? '✓' : idx + 1 }}
                 </div>
-                <p class="text-[10px] text-gray-600 mb-2">
-                  {{ pred.covenant }} — {{ pred.msg }}
-                </p>
-                <div class="flex items-center gap-1.5">
-                  <div class="flex-1 h-1.5 bg-white rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full"
-                      :class="
-                        pred.risk === 'High'
-                          ? 'bg-red-400'
-                          : pred.risk === 'Medium'
-                          ? 'bg-amber-400'
-                          : 'bg-green-400'
-                      "
-                      :style="{ width: pred.confidence + '%' }"
-                    />
-                  </div>
-                  <span class="text-[9px] font-bold text-gray-500"
-                    >{{ pred.confidence }}%</span
-                  >
-                </div>
+                <span :class="['text-xs', step.done ? 'text-green-600' : step.active ? 'text-orange-600 font-medium' : 'text-gray-400']">{{ step.label }}</span>
+                <span v-if="idx < breach.cureSteps.length - 1" class="text-gray-300">→</span>
               </div>
             </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2 mt-4">
+            <button @click="openCureModal(breach)" class="px-4 py-1.5 bg-orange-600 text-white rounded text-sm font-medium hover:bg-orange-700">Update Cure Status</button>
+            <button class="px-4 py-1.5 border border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50">Waiver Request</button>
+            <button class="px-4 py-1.5 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50">Escalate</button>
+            <button class="px-4 py-1.5 border border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50">Add Note</button>
           </div>
         </div>
 
-        <!-- COVENANT LIBRARY -->
-        <div
-          v-else-if="activeNav === 'library'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div
-            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
-          >
-            <div class="relative flex-1 max-w-sm">
-              <FeatherIcon
-                name="search"
-                class="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400"
-              />
-              <input
-                v-model="libSearch"
-                type="text"
-                :placeholder="__('Search covenants...')"
-                class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
-              />
-            </div>
-            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-              <button
-                v-for="t in ['All', 'Financial', 'Non-Financial', 'Reporting']"
-                :key="t"
-                @click="libFilter = t"
-                class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
-                :class="
-                  libFilter === t ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
-                "
-              >
-                {{ t }}
-              </button>
-            </div>
-            <button
-              @click="openAddCovenant"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-            >
-              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Covenant") }}
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-5">
-            <div
-              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <table class="w-full text-xs">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50">
-                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Covenant Name") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Type") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Metric") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Frequency") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Facilities") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Tags") }}
-                    </th>
-                    <th class="px-4 py-3 text-right font-semibold text-gray-500">
-                      {{ __("Actions") }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="cov in filteredLibrary"
-                    :key="cov.id"
-                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
-                    @click="selectedCovenant = cov"
-                  >
-                    <td class="px-5 py-3">
-                      <div class="flex items-center gap-2.5">
-                        <div
-                          class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                          :class="
-                            cov.type === 'Financial'
-                              ? 'bg-teal-100'
-                              : cov.type === 'Non-Financial'
-                              ? 'bg-purple-100'
-                              : 'bg-blue-100'
-                          "
-                        >
-                          <FeatherIcon
-                            :name="cov.icon"
-                            class="h-3.5 w-3.5"
-                            :class="
-                              cov.type === 'Financial'
-                                ? 'text-teal-600'
-                                : cov.type === 'Non-Financial'
-                                ? 'text-purple-600'
-                                : 'text-blue-600'
-                            "
-                          />
-                        </div>
-                        <div>
-                          <p class="font-semibold text-gray-800">{{ cov.name }}</p>
-                          <p class="text-[10px] text-gray-400">
-                            {{ cov.template ? "Standard" : "Custom" }}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span
-                        class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                        :class="
-                          cov.type === 'Financial'
-                            ? 'bg-teal-100 text-teal-700'
-                            : cov.type === 'Non-Financial'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-blue-100 text-blue-700'
-                        "
-                      >
-                        {{ cov.type }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 font-mono text-gray-700 text-[11px]">
-                      {{ cov.metric }}
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">{{ cov.frequency }}</td>
-                    <td class="px-4 py-3 font-semibold text-gray-700">
-                      {{ cov.facilities }}
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex flex-wrap gap-1">
-                        <span
-                          v-for="tag in cov.tags"
-                          :key="tag"
-                          class="text-[9px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5"
-                          >{{ tag }}</span
-                        >
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center justify-end gap-1">
-                        <button
-                          @click.stop="openEditCovenant(cov)"
-                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
-                        >
-                          <FeatherIcon name="edit-2" class="h-3 w-3" />
-                        </button>
-                        <button @click.stop="duplicateCovenant(cov)" class="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
-                          <FeatherIcon name="copy" class="h-3 w-3" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+        <!-- Warning Zone -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-semibold text-amber-700 mb-4">⚠ Warning Zone (approaching breach)</h3>
+          <div class="space-y-3">
+            <div v-for="w in warningItems" :key="w.id" class="flex items-center gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ w.borrower }}</p>
+                <p class="text-xs text-gray-500">{{ w.covenant }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-semibold text-amber-600">{{ w.actual }}</p>
+                <p class="text-xs text-gray-400">Threshold: {{ w.threshold }}</p>
+              </div>
+              <div class="w-24">
+                <div class="flex justify-between text-xs mb-0.5">
+                  <span class="text-gray-400">Headroom</span>
+                  <span class="text-amber-600 font-medium">{{ w.headroom }}</span>
+                </div>
+                <div class="h-1.5 bg-gray-200 rounded-full">
+                  <div class="h-full bg-amber-400 rounded-full" :style="{ width: (100 - w.headroomPct) + '%' }"></div>
+                </div>
+              </div>
+              <button @click="openCovenantAlert(w)" class="px-3 py-1 border border-amber-300 text-amber-600 rounded text-xs hover:bg-amber-50 flex-shrink-0">Alert</button>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- TEST ENGINE -->
-        <div
-          v-else-if="activeNav === 'tests'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div
-            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
-          >
-            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-              <button
-                v-for="p in ['Latest', 'This Month', 'Last Quarter']"
-                :key="p"
-                @click="testPeriod = p"
-                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="
-                  testPeriod === p ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
-                "
-              >
-                {{ p }}
-              </button>
-            </div>
-            <span class="text-xs text-gray-400">{{ testResults.length }} tests</span>
-            <button
-              @click="runAllTests"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-            >
-              <FeatherIcon
-                :name="testing ? 'loader' : 'play'"
-                class="h-3.5 w-3.5"
-                :class="testing && 'animate-spin'"
-              />
-              {{ testing ? __("Running...") : __("Run All Tests") }}
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-5">
-            <div
-              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <table class="w-full text-xs">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50">
-                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Covenant") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Facility") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Test Date") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Actual") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Threshold") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Headroom") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Status") }}
-                    </th>
-                    <th class="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="r in testResults"
-                    :key="r.id"
-                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                  >
-                    <td class="px-5 py-3 font-semibold text-gray-800">
-                      {{ r.covenant }}
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">{{ r.facility }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ r.testDate }}</td>
-                    <td
-                      class="px-4 py-3 font-black"
-                      :class="
-                        r.status === 'Breach'
-                          ? 'text-red-600'
-                          : r.status === 'Watch'
-                          ? 'text-amber-600'
-                          : 'text-gray-900'
-                      "
-                    >
-                      {{ r.actual }}
-                    </td>
-                    <td class="px-4 py-3 text-gray-600">{{ r.threshold }}</td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-2">
-                        <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            class="h-full rounded-full"
-                            :class="
-                              r.headroomPct < 10
-                                ? 'bg-red-400'
-                                : r.headroomPct < 25
-                                ? 'bg-amber-400'
-                                : 'bg-green-500'
-                            "
-                            :style="{ width: Math.min(r.headroomPct, 100) + '%' }"
-                          />
-                        </div>
-                        <span
-                          class="text-[10px] font-semibold"
-                          :class="
-                            r.headroomPct < 10
-                              ? 'text-red-500'
-                              : r.headroomPct < 25
-                              ? 'text-amber-600'
-                              : 'text-green-600'
-                          "
-                          >{{ r.headroom }}</span
-                        >
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span
-                        class="rounded-full px-2 py-0.5 text-[9px] font-bold"
-                        :class="
-                          r.status === 'Pass'
-                            ? 'bg-green-100 text-green-700'
-                            : r.status === 'Watch'
-                            ? 'bg-amber-100 text-amber-700'
-                            : r.status === 'Breach'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-600'
-                        "
-                      >
-                        {{ r.status }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3">
-                      <button
-                        v-if="r.status === 'Breach'"
-                        @click="
-                          activeNav = 'cure';
-                          showToast('Cure task created for ' + r.covenant);
-                        "
-                        class="text-[10px] bg-red-600 text-white rounded-lg px-2.5 py-1 font-semibold hover:bg-red-700 transition-colors"
-                      >
-                        {{ __("Cure") }}
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <!-- ───── TAB: Analytics ───── -->
+      <div v-if="activeTab === 'analytics'">
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 mb-1">{{ kpi.label }}</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.value }}</p>
+            <p :class="['text-xs mt-1', kpi.up ? 'text-green-600' : 'text-red-600']">{{ kpi.up ? '↑' : '↓' }} {{ kpi.change }} vs prev quarter</p>
           </div>
         </div>
 
-        <!-- COVENANT CALENDAR -->
-        <div v-else-if="activeNav === 'calendar'" class="flex-1 overflow-y-auto p-5">
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-bold text-gray-800">{{ __("June 2026") }}</h3>
-              <div class="flex items-center gap-2">
-                <button class="p-1.5 rounded hover:bg-gray-100 text-gray-500">
-                  <FeatherIcon name="chevron-left" class="h-4 w-4" />
-                </button>
-                <button class="p-1.5 rounded hover:bg-gray-100 text-gray-500">
-                  <FeatherIcon name="chevron-right" class="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <!-- Calendar grid -->
-            <div class="grid grid-cols-7 gap-1 mb-2">
-              <div
-                v-for="d in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']"
-                :key="d"
-                class="text-center text-[10px] font-semibold text-gray-400 py-1"
-              >
-                {{ d }}
-              </div>
-            </div>
-            <div class="grid grid-cols-7 gap-1">
-              <div
-                v-for="cell in calendarCells"
-                :key="cell.key"
-                class="min-h-[72px] rounded-lg border p-1.5 transition-colors"
-                :class="
-                  cell.day
-                    ? cell.today
-                      ? 'border-teal-400 bg-teal-50'
-                      : 'border-gray-100 hover:bg-gray-50'
-                    : 'border-transparent'
-                "
-              >
-                <p
-                  v-if="cell.day"
-                  class="text-[11px] font-semibold mb-1"
-                  :class="cell.today ? 'text-teal-700' : 'text-gray-700'"
-                >
-                  {{ cell.day }}
-                </p>
-                <div class="space-y-0.5">
-                  <div
-                    v-for="ev in cell.events"
-                    :key="ev.id"
-                    class="text-[9px] rounded px-1 py-0.5 truncate font-semibold cursor-pointer"
-                    :class="
-                      ev.status === 'Breach'
-                        ? 'bg-red-100 text-red-700'
-                        : ev.status === 'Watch'
-                        ? 'bg-amber-100 text-amber-700'
-                        : ev.status === 'Due'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-green-100 text-green-700'
-                    "
-                    @click="showToast(ev.name + ' — ' + ev.status)"
-                  >
-                    {{ ev.name }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Legend -->
-            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-              <div
-                v-for="l in calLegend"
-                :key="l.label"
-                class="flex items-center gap-1.5"
-              >
-                <div class="w-3 h-3 rounded" :class="l.color" />
-                <span class="text-[10px] text-gray-500">{{ l.label }}</span>
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Breach History -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Monthly Breach History</h3>
+            <div class="flex items-end gap-2 h-36">
+              <div v-for="bar in breachHistory" :key="bar.month" class="flex-1 flex flex-col items-center gap-1">
+                <span class="text-xs text-gray-500">{{ bar.count }}</span>
+                <div class="w-full rounded-t" :class="bar.count > 3 ? 'bg-red-500' : bar.count > 1 ? 'bg-amber-400' : 'bg-green-500'" :style="{ height: (bar.count / 8 * 100) + '%', minHeight: '4px' }"></div>
+                <span class="text-xs text-gray-400">{{ bar.month }}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- BREACH & ALERTS -->
-        <div
-          v-else-if="activeNav === 'breach'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div
-            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
-          >
-            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-              <button
-                v-for="s in ['All', 'Critical', 'High', 'Medium']"
-                :key="s"
-                @click="breachFilter = s"
-                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="
-                  breachFilter === s
-                    ? 'bg-white text-teal-700 shadow-sm'
-                    : 'text-gray-500'
-                "
-              >
-                {{ s }}
-              </button>
-            </div>
-            <span class="text-xs text-red-500 font-semibold"
-              >{{ activeBreaches.length }} active breaches</span
-            >
-          </div>
-          <div class="flex-1 overflow-y-auto p-5 space-y-3">
-            <div
-              v-for="b in filteredBreaches"
-              :key="b.id"
-              class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-all"
-              :class="
-                b.severity === 'Critical'
-                  ? 'border-red-300'
-                  : b.severity === 'High'
-                  ? 'border-orange-200'
-                  : 'border-amber-200'
-              "
-            >
-              <div class="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-[9px] font-bold"
-                      :class="
-                        b.severity === 'Critical'
-                          ? 'bg-red-100 text-red-700'
-                          : b.severity === 'High'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-amber-100 text-amber-700'
-                      "
-                    >
-                      {{ b.severity }}
-                    </span>
-                    <span class="text-[10px] text-gray-400">Since {{ b.since }}</span>
-                  </div>
-                  <h4 class="text-sm font-bold text-gray-800">{{ b.covenant }}</h4>
-                  <p class="text-xs text-gray-500">{{ b.facility }}</p>
+          <!-- Breach by Type -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Breaches by Covenant Type</h3>
+            <div class="space-y-3">
+              <div v-for="t in breachByType" :key="t.type">
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-700 dark:text-gray-300">{{ t.type }}</span>
+                  <span class="font-semibold text-gray-900 dark:text-white">{{ t.count }}</span>
                 </div>
-                <div class="text-right shrink-0">
-                  <p class="text-[10px] text-gray-400">Actual vs Threshold</p>
-                  <p class="text-sm font-black text-red-600">
-                    {{ b.actual }} <span class="text-gray-300 font-normal">/</span>
-                    <span class="text-gray-700 font-semibold">{{ b.threshold }}</span>
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button
-                  @click="
-                    activeNav = 'cure';
-                    showToast('Cure task created');
-                  "
-                  class="flex items-center gap-1.5 rounded-lg bg-teal-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-teal-700 transition-colors"
-                >
-                  <FeatherIcon name="check-square" class="h-3 w-3" />{{
-                    __("Create Cure Task")
-                  }}
-                </button>
-                <button
-                  @click="
-                    activeNav = 'waiver';
-                    showToast('Waiver request initiated');
-                  "
-                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
-                >
-                  <FeatherIcon name="file-minus" class="h-3 w-3" />{{
-                    __("Request Waiver")
-                  }}
-                </button>
-                <button
-                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
-                >
-                  <FeatherIcon name="bell" class="h-3 w-3" />{{ __("Notify") }}
-                </button>
-                <span class="ml-auto text-[10px] text-gray-400">RM: {{ b.rm }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CURE WORKFLOW -->
-        <div
-          v-else-if="activeNav === 'cure'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div
-            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
-          >
-            <h3 class="text-sm font-semibold text-gray-800">{{ __("Cure Workflow") }}</h3>
-            <span class="text-[11px] text-gray-400"
-              >{{ cureTasks.length }} {{ __("active tasks") }}</span
-            >
-            <button
-              @click="openAddTask"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-            >
-              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Task") }}
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-5">
-            <div class="grid grid-cols-3 gap-4">
-              <div v-for="col in cureColumns" :key="col.id" class="space-y-3">
-                <div class="flex items-center gap-2 px-1">
-                  <div class="w-2 h-2 rounded-full" :class="col.dot" />
-                  <p class="text-xs font-bold text-gray-700">{{ col.label }}</p>
-                  <span class="ml-auto text-[10px] text-gray-400">{{
-                    cureTasks.filter((t) => t.status === col.id).length
-                  }}</span>
-                </div>
-                <div class="space-y-2">
-                  <div
-                    v-for="task in cureTasks.filter((t) => t.status === col.id)"
-                    :key="task.id"
-                    class="bg-white rounded-xl border border-gray-200 p-3 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                  >
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                      <p class="text-xs font-semibold text-gray-800 leading-tight">
-                        {{ task.title }}
-                      </p>
-                      <span
-                        class="shrink-0 text-[9px] rounded-full px-1.5 py-0.5 font-bold"
-                        :class="
-                          task.priority === 'Critical'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-amber-100 text-amber-700'
-                        "
-                      >
-                        {{ task.priority }}
-                      </span>
-                    </div>
-                    <p class="text-[10px] text-gray-400 mb-2">{{ task.facility }}</p>
-                    <div class="flex items-center gap-2 text-[10px] text-gray-400">
-                      <FeatherIcon name="calendar" class="h-3 w-3" />
-                      <span :class="task.overdue ? 'text-red-500 font-semibold' : ''">{{
-                        task.deadline
-                      }}</span>
-                      <span class="ml-auto">{{ task.owner }}</span>
-                    </div>
-                    <div v-if="task.progress !== undefined" class="mt-2">
-                      <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          class="h-full bg-teal-500 rounded-full"
-                          :style="{ width: task.progress + '%' }"
-                        />
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-1 mt-2">
-                      <button
-                        v-if="task.status !== 'Done'"
-                        @click="advanceCure(task)"
-                        class="text-[10px] text-teal-600 hover:underline font-semibold"
-                      >
-                        {{ task.status === "Open" ? "Start →" : "Mark Done →" }}
-                      </button>
-                    </div>
-                  </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-orange-500 rounded-full" :style="{ width: (t.count / 12 * 100) + '%' }"></div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- WAIVER MANAGEMENT -->
-        <div
-          v-else-if="activeNav === 'waiver'"
-          class="flex-1 flex flex-col overflow-hidden"
-        >
-          <div
-            class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3"
-          >
-            <h3 class="text-sm font-semibold text-gray-800">
-              {{ __("Waiver Management") }}
-            </h3>
-            <span class="text-[11px] text-gray-400"
-              >{{ waivers.length }} {{ __("waivers") }}</span
-            >
-            <button
-              @click="openAddWaiver"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-            >
-              <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("New Waiver") }}
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-5">
-            <div
-              class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              <table class="w-full text-xs">
-                <thead>
-                  <tr class="border-b border-gray-100 bg-gray-50">
-                    <th class="px-5 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Waiver") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Facility") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Requested") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Expiry") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Approver") }}
-                    </th>
-                    <th class="px-4 py-3 text-left font-semibold text-gray-500">
-                      {{ __("Status") }}
-                    </th>
-                    <th class="px-4 py-3 text-right font-semibold text-gray-500">
-                      {{ __("Actions") }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="w in waivers"
-                    :key="w.id"
-                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                  >
-                    <td class="px-5 py-3">
-                      <p class="font-semibold text-gray-800">{{ w.covenant }}</p>
-                      <p class="text-[10px] text-gray-400">{{ w.reason }}</p>
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">{{ w.facility }}</td>
-                    <td class="px-4 py-3 text-gray-500">{{ w.requested }}</td>
-                    <td
-                      class="px-4 py-3"
-                      :class="
-                        w.expiring ? 'text-amber-600 font-semibold' : 'text-gray-500'
-                      "
-                    >
-                      {{ w.expiry }}
-                    </td>
-                    <td class="px-4 py-3 text-gray-500">{{ w.approver }}</td>
-                    <td class="px-4 py-3">
-                      <span
-                        class="rounded-full px-2 py-0.5 text-[9px] font-bold"
-                        :class="
-                          w.status === 'Approved'
-                            ? 'bg-green-100 text-green-700'
-                            : w.status === 'Pending'
-                            ? 'bg-amber-100 text-amber-700'
-                            : w.status === 'Expired'
-                            ? 'bg-gray-100 text-gray-500'
-                            : 'bg-red-100 text-red-700'
-                        "
-                      >
-                        {{ w.status }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center justify-end gap-1.5">
-                        <button
-                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
-                        >
-                          <FeatherIcon name="file-text" class="h-3 w-3" />
-                        </button>
-                        <button
-                          v-if="w.status === 'Pending'"
-                          @click="approveWaiver(w)"
-                          class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[10px] font-semibold hover:bg-teal-700 transition-colors"
-                        >
-                          Approve
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <!-- Cure Success Rate -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Cure Outcome Tracking</h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="text-center p-4 bg-green-50 rounded-xl">
+                <p class="text-3xl font-bold text-green-600">78%</p>
+                <p class="text-xs text-gray-500 mt-1">Cured Within Period</p>
+              </div>
+              <div class="text-center p-4 bg-red-50 rounded-xl">
+                <p class="text-3xl font-bold text-red-600">22%</p>
+                <p class="text-xs text-gray-500 mt-1">Escalated / Waived</p>
+              </div>
+            </div>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Avg Cure Time</span>
+                <span class="font-semibold text-gray-900 dark:text-white">18 days</span>
+              </div>
+              <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Waivers Granted</span>
+                <span class="font-semibold text-gray-900 dark:text-white">3 this quarter</span>
+              </div>
+              <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Escalated to Legal</span>
+                <span class="font-semibold text-red-600">2 this quarter</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- COVENANT REPORTS -->
-        <div v-else-if="activeNav === 'reports'" class="flex-1 overflow-y-auto p-5">
-          <div class="grid grid-cols-2 gap-4">
-            <div
-              v-for="rep in covReports"
-              :key="rep.id"
-              class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:shadow-md transition-all cursor-pointer group"
-              @click="showToast('Opening ' + rep.name)"
-            >
-              <div class="flex items-start justify-between mb-3">
-                <div
-                  class="w-9 h-9 rounded-xl flex items-center justify-center"
-                  :class="rep.colorBg"
-                >
-                  <FeatherIcon :name="rep.icon" class="h-4 w-4" :class="rep.colorText" />
+          <!-- Risk Sector Concentration -->
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Breach by Industry Sector</h3>
+            <div class="space-y-3">
+              <div v-for="sec in sectorBreaches" :key="sec.sector" class="flex items-center gap-3">
+                <span class="text-xs text-gray-500 w-28">{{ sec.sector }}</span>
+                <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full" :class="sec.color" :style="{ width: (sec.count / 5 * 100) + '%' }"></div>
                 </div>
-                <span
-                  class="text-[9px] rounded-full px-2 py-0.5 font-bold"
-                  :class="rep.statusClass"
-                  >{{ rep.status }}</span
-                >
+                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 w-4">{{ sec.count }}</span>
               </div>
-              <h3 class="text-sm font-bold text-gray-800 mb-1">{{ rep.name }}</h3>
-              <p class="text-xs text-gray-400 mb-3">{{ rep.desc }}</p>
-              <div
-                class="flex items-center justify-between pt-2 border-t border-gray-100"
-              >
-                <span class="text-[10px] text-gray-400">{{ rep.period }}</span>
-                <div
-                  class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <button
-                    @click.stop="showToast('Downloading ' + rep.name)"
-                    class="text-[10px] text-teal-600 font-semibold hover:underline"
-                  >
-                    PDF
-                  </button>
-                  <button
-                    @click.stop="showToast('Exporting ' + rep.name)"
-                    class="text-[10px] text-blue-600 font-semibold hover:underline"
-                  >
-                    Excel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SENSITIVITY ANALYSIS -->
-        <div
-          v-else-if="activeNav === 'sensitivity'"
-          class="flex-1 overflow-y-auto p-5 space-y-4"
-        >
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <h3 class="text-sm font-bold text-gray-800 mb-1">
-              {{ __("Breach Headroom Heatmap") }}
-            </h3>
-            <p class="text-[10px] text-gray-400 mb-4">
-              {{
-                __(
-                  "Headroom to threshold breach (%) — Red = at risk, Green = comfortable"
-                )
-              }}
-            </p>
-            <div class="overflow-x-auto">
-              <table class="text-xs w-full">
-                <thead>
-                  <tr class="border-b border-gray-100">
-                    <th
-                      class="px-3 py-2 text-left font-semibold text-gray-500 min-w-[160px]"
-                    >
-                      {{ __("Facility") }}
-                    </th>
-                    <th
-                      v-for="cov in heatmapCovs"
-                      :key="cov"
-                      class="px-3 py-2 text-center font-semibold text-gray-500 min-w-[90px]"
-                    >
-                      {{ cov }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="row in heatmapData"
-                    :key="row.facility"
-                    class="border-b border-gray-50"
-                  >
-                    <td class="px-3 py-2.5 font-semibold text-gray-800">
-                      {{ row.facility }}
-                    </td>
-                    <td
-                      v-for="cov in heatmapCovs"
-                      :key="cov"
-                      class="px-3 py-2.5 text-center"
-                    >
-                      <div
-                        class="inline-flex items-center justify-center w-14 h-8 rounded-lg text-[10px] font-bold"
-                        :class="heatmapColor(row[cov])"
-                      >
-                        {{ row[cov] !== null ? row[cov] + "%" : "-" }}
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-              <span class="text-[10px] font-semibold text-gray-500">{{
-                __("Legend:")
-              }}</span>
-              <div
-                v-for="l in heatLegend"
-                :key="l.label"
-                class="flex items-center gap-1.5"
-              >
-                <div class="w-8 h-4 rounded" :class="l.color" />
-                <span class="text-[10px] text-gray-500">{{ l.label }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <h3 class="text-sm font-bold text-gray-800 mb-3">
-              {{ __("Scenario Simulation") }}
-            </h3>
-            <div class="grid grid-cols-3 gap-4">
-              <div>
-                <label class="text-[10px] font-semibold text-gray-500 mb-1.5 block">{{
-                  __("Simulate Revenue Drop")
-                }}</label>
-                <input
-                  type="range"
-                  v-model="simRevDrop"
-                  min="0"
-                  max="50"
-                  class="w-full accent-teal-600"
-                />
-                <p class="text-[10px] text-gray-500 mt-1">-{{ simRevDrop }}% revenue</p>
-              </div>
-              <div>
-                <label class="text-[10px] font-semibold text-gray-500 mb-1.5 block">{{
-                  __("Debt Service Increase")
-                }}</label>
-                <input
-                  type="range"
-                  v-model="simDebtInc"
-                  min="0"
-                  max="50"
-                  class="w-full accent-teal-600"
-                />
-                <p class="text-[10px] text-gray-500 mt-1">
-                  +{{ simDebtInc }}% debt service
-                </p>
-              </div>
-              <div class="flex items-end">
-                <button
-                  @click="runSim"
-                  class="w-full flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-                >
-                  <FeatherIcon name="play" class="h-3.5 w-3.5" />{{ __("Simulate") }}
-                </button>
-              </div>
-            </div>
-            <div
-              v-if="simResult"
-              class="mt-3 p-3 rounded-lg"
-              :class="
-                simResult.breaches > 0
-                  ? 'bg-red-50 border border-red-200'
-                  : 'bg-green-50 border border-green-200'
-              "
-            >
-              <p
-                class="text-xs font-semibold"
-                :class="simResult.breaches > 0 ? 'text-red-700' : 'text-green-700'"
-              >
-                {{
-                  simResult.breaches > 0
-                    ? `⚠ ${simResult.breaches} covenants would breach under this scenario`
-                    : "✓ No additional breaches under this scenario"
-                }}
-              </p>
-              <p class="text-[10px] text-gray-500 mt-0.5">{{ simResult.detail }}</p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- ───── MODALS ───── -->
+
     <!-- Add Covenant Modal -->
-    <div
-      v-if="showAddCovForm"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      @click.self="showAddCovForm = false"
-    >
-      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-        <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon :name="editingCov ? 'edit-2' : 'shield'" class="h-5 w-5 text-teal-600" />
-          </div>
-          <div>
-            <h3 class="text-base font-bold text-gray-800">{{ editingCov ? 'Edit Covenant' : 'Add Covenant' }}</h3>
-            <p class="text-xs text-gray-400 mt-0.5">{{ editingCov ? editingCov.name : 'Add a new covenant to the library' }}</p>
-          </div>
+    <div v-if="showCovenantModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showCovenantModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white">Add Covenant</h2>
+          <button @click="showCovenantModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
-        <div class="space-y-3">
+        <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant Name <span class="text-red-400">*</span></label>
-            <input v-model="covForm.name" type="text" placeholder="e.g. DSCR Minimum 1.25x" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Covenant Name</label>
+            <input type="text" placeholder="e.g. Minimum DSCR Ratio" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-              <select v-model="covForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+              <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <option>Financial</option>
                 <option>Non-Financial</option>
+                <option>Reporting</option>
                 <option>Operational</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Frequency</label>
-              <select v-model="covForm.frequency" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
-                <option>Monthly</option>
-                <option>Quarterly</option>
-                <option>Semi-Annual</option>
-                <option>Annual</option>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Direction</label>
+              <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option>Minimum (≥ threshold)</option>
+                <option>Maximum (≤ threshold)</option>
+                <option>Exact (= threshold)</option>
               </select>
             </div>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Metric / Threshold</label>
-            <input v-model="covForm.metric" type="text" placeholder="e.g. DSCR ≥ 1.25" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Tags (comma-separated)</label>
-            <input v-model="covForm.tags" type="text" placeholder="e.g. Cash Flow, Core" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
-          </div>
-        </div>
-        <div class="flex gap-2 mt-6">
-          <button @click="showAddCovForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddCovenant" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">{{ editingCov ? 'Save Changes' : 'Add Covenant' }}</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div
-      v-if="showAddTaskForm"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      @click.self="showAddTaskForm = false"
-    >
-      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-        <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon name="check-square" class="h-5 w-5 text-teal-600" />
-          </div>
-          <div>
-            <h3 class="text-base font-bold text-gray-800">Add Cure Task</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Create a new cure workflow task</p>
-          </div>
-        </div>
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Task Title <span class="text-red-400">*</span></label>
-            <input v-model="taskForm.title" type="text" placeholder="e.g. DSCR Improvement Plan" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
-            <input v-model="taskForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Priority</label>
-              <select v-model="taskForm.priority" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
-                <option>Critical</option>
-                <option>High</option>
-                <option>Medium</option>
-              </select>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Threshold Value</label>
+              <input type="text" placeholder="e.g. 1.25x or 60%" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>
-              <input v-model="taskForm.deadline" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monitoring Frequency</label>
+              <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option>Monthly</option>
+                <option>Quarterly</option>
+                <option>Semi-annually</option>
+                <option>Annually</option>
+              </select>
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Assigned To</label>
-            <input v-model="taskForm.owner" type="text" placeholder="e.g. Reza M." class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cure Period (days)</label>
+            <input type="number" value="30" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <textarea rows="2" placeholder="What this covenant monitors..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"></textarea>
           </div>
         </div>
-        <div class="flex gap-2 mt-6">
-          <button @click="showAddTaskForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddTask" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Add Task</button>
+        <div class="flex gap-3 mt-6">
+          <button @click="showCovenantModal = false" class="flex-1 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button @click="saveCovenant" class="flex-1 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">Add Covenant</button>
         </div>
       </div>
     </div>
 
-    <!-- New Waiver Modal -->
-    <div
-      v-if="showAddWaiverForm"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      @click.self="showAddWaiverForm = false"
-    >
-      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
-        <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon name="file-text" class="h-5 w-5 text-teal-600" />
-          </div>
+    <!-- Cure Workflow Modal -->
+    <div v-if="showCureModal && selectedBreach" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showCureModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-5">
           <div>
-            <h3 class="text-base font-bold text-gray-800">New Waiver Request</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Submit a covenant waiver for approval</p>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Update Cure Status</h2>
+            <p class="text-sm text-gray-500">{{ selectedBreach.borrower }} — {{ selectedBreach.covenant }}</p>
           </div>
+          <button @click="showCureModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
-        <div class="space-y-3">
+        <div class="space-y-4">
+          <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm">
+            <p class="font-semibold text-red-800">Breach: {{ selectedBreach.actual }} vs threshold {{ selectedBreach.threshold }}</p>
+            <p class="text-red-600 text-xs mt-0.5">Detected: {{ selectedBreach.detectedDate }}</p>
+          </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant <span class="text-red-400">*</span></label>
-            <select v-model="waiverForm.covenant" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
-              <option value="">Select covenant…</option>
-              <option v-for="c in covenantLibrary" :key="c.id" :value="c.name">{{ c.name }}</option>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cure Action</label>
+            <select class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+              <option>Borrower Notification Sent</option>
+              <option>Remediation Plan Submitted</option>
+              <option>Partial Cure Achieved</option>
+              <option>Full Cure — Covenant Restored</option>
+              <option>Request Waiver</option>
+              <option>Escalate to Legal</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
-            <input v-model="waiverForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Actual Value</label>
+            <input type="text" :placeholder="selectedBreach.actual" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Reason <span class="text-red-400">*</span></label>
-            <input v-model="waiverForm.reason" type="text" placeholder="e.g. Post-pandemic recovery" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Evidence / Supporting Document</label>
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-sm text-gray-400 cursor-pointer hover:border-orange-400 hover:text-orange-500">
+              Click to upload or drag &amp; drop
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Waiver Expiry</label>
-              <input v-model="waiverForm.expiry" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Approver</label>
-              <select v-model="waiverForm.approver" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
-                <option>Risk Committee</option>
-                <option>Credit Head</option>
-                <option>Division Director</option>
-                <option>Risk Officer</option>
-              </select>
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+            <textarea rows="2" placeholder="Cure actions taken..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"></textarea>
           </div>
         </div>
-        <div class="flex gap-2 mt-6">
-          <button @click="showAddWaiverForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddWaiver" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Submit Waiver</button>
+        <div class="flex gap-3 mt-6">
+          <button @click="showCureModal = false" class="flex-1 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button @click="saveCure" class="flex-1 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">Update Status</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facility Detail Modal -->
+    <div v-if="showFacilityModal && selectedFacility" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showFacilityModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-5">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedFacility.borrower }}</h2>
+            <p class="text-sm text-gray-500">{{ selectedFacility.facility }} — {{ selectedFacility.outstanding }}</p>
+          </div>
+          <button @click="showFacilityModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="p-3 rounded-lg text-center" :class="selectedFacility.breached > 0 ? 'bg-red-50' : 'bg-gray-50'">
+            <p class="text-xl font-bold" :class="selectedFacility.breached > 0 ? 'text-red-600' : 'text-gray-700'">{{ selectedFacility.breached }}</p>
+            <p class="text-xs text-gray-500">Breached</p>
+          </div>
+          <div class="p-3 rounded-lg text-center" :class="selectedFacility.warning > 0 ? 'bg-amber-50' : 'bg-gray-50'">
+            <p class="text-xl font-bold" :class="selectedFacility.warning > 0 ? 'text-amber-600' : 'text-gray-700'">{{ selectedFacility.warning }}</p>
+            <p class="text-xs text-gray-500">Warning</p>
+          </div>
+          <div class="p-3 rounded-lg text-center bg-green-50">
+            <p class="text-xl font-bold text-green-600">{{ selectedFacility.compliant }}</p>
+            <p class="text-xs text-gray-500">Compliant</p>
+          </div>
+        </div>
+        <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Risk Level</p>
+        <span :class="riskBadge(selectedFacility.risk)" class="text-sm mb-4 inline-block">{{ selectedFacility.risk }}</span>
+        <div class="flex gap-3 mt-4">
+          <button @click="showFacilityModal = false; activeTab = 'monitoring'" class="flex-1 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium">View Monitoring Detail</button>
+          <button @click="showFacilityModal = false" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600">Close</button>
         </div>
       </div>
     </div>
 
     <!-- Toast -->
-    <transition name="fade">
-      <div
-        v-if="toast"
-        class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2"
-      >
-        <FeatherIcon name="check-circle" class="h-4 w-4 text-teal-400" />{{ toast }}
-      </div>
-    </transition>
+    <div v-if="toast" class="fixed bottom-6 right-6 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium z-50 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+      {{ toast }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import { FeatherIcon } from "frappe-ui";
-import LayoutHeader from "@/components/LayoutHeader.vue";
+import { ref, computed } from 'vue'
 
-// ── Nav ──
-const activeNav = ref("dashboard");
-const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: "bar-chart-2" },
-  { id: "library", label: "Covenant Library", icon: "book-open" },
-  { id: "tests", label: "Test Engine", icon: "cpu" },
-  { id: "calendar", label: "Covenant Calendar", icon: "calendar" },
-  {
-    id: "breach",
-    label: "Breach & Alerts",
-    icon: "alert-triangle",
-    badge: "3",
-    badgeColor: "bg-red-100 text-red-700",
-  },
-  {
-    id: "cure",
-    label: "Cure Workflow",
-    icon: "check-square",
-    badge: "5",
-    badgeColor: "bg-amber-100 text-amber-700",
-  },
-  { id: "waiver", label: "Waiver Management", icon: "file-minus" },
-  { id: "sensitivity", label: "Sensitivity Analysis", icon: "activity" },
-  { id: "reports", label: "Reports", icon: "bar-chart" },
-];
+const activeTab = ref('dashboard')
+const librarySearch = ref('')
+const libraryFilter = ref('')
+const monitorSearch = ref('')
+const monitorFilterStatus = ref('')
+const monitorFilterType = ref('')
+const isRunning = ref(false)
+const showCovenantModal = ref(false)
+const showCureModal = ref(false)
+const showFacilityModal = ref(false)
+const selectedBreach = ref(null)
+const selectedFacility = ref(null)
+const toast = ref('')
 
-const quickStats = [
-  { label: "Pass", value: "26", dot: "bg-green-500", textColor: "text-green-600" },
-  { label: "Watch", value: "10", dot: "bg-amber-400", textColor: "text-amber-600" },
-  { label: "Breach", value: "6", dot: "bg-red-500", textColor: "text-red-600" },
-];
+const pageTabs = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'library', label: 'Covenant Library' },
+  { id: 'monitoring', label: 'Monitoring' },
+  { id: 'breaches', label: 'Breaches', badge: 4, badgeColor: 'bg-red-500 text-white' },
+  { id: 'analytics', label: 'Analytics' },
+]
 
-// ── Dashboard ──
-const dashStats = [
-  {
-    label: "Total Covenants",
-    value: "42",
-    icon: "shield",
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
-    badge: "Active",
-    badgeClass: "bg-teal-100 text-teal-700",
-    nav: "library",
-  },
-  {
-    label: "Pass",
-    value: "26",
-    icon: "check-circle",
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    badge: "62%",
-    badgeClass: "bg-green-100 text-green-700",
-    nav: "tests",
-  },
-  {
-    label: "Watch",
-    value: "10",
-    icon: "eye",
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    badge: "24%",
-    badgeClass: "bg-amber-100 text-amber-700",
-    nav: "tests",
-  },
-  {
-    label: "Breach",
-    value: "6",
-    icon: "alert-octagon",
-    iconBg: "bg-red-100",
-    iconColor: "text-red-600",
-    badge: "Critical",
-    badgeClass: "bg-red-100 text-red-700",
-    nav: "breach",
-  },
-];
+const dashKPIs = [
+  { label: 'Total Covenants', value: '142', sub: 'Across 38 facilities', color: 'text-gray-900 dark:text-white' },
+  { label: 'Compliant', value: '121', sub: '85.2% compliance', color: 'text-green-600' },
+  { label: 'Warning Zone', value: '17', sub: 'Approaching breach', color: 'text-amber-600', alert: true },
+  { label: 'Active Breaches', value: '4', sub: 'Requires cure action', color: 'text-red-600', highlight: true, alert: true },
+  { label: 'Cured This Month', value: '7', sub: 'Successfully resolved', color: 'text-blue-600' },
+]
 
-const trendMonths = ["Dec", "Jan", "Feb", "Mar", "Apr", "May"];
-const watchTrend = [9, 11, 8, 12, 10, 10];
-const breachTrend = [4, 5, 3, 7, 5, 6];
+const covenantTypes = [
+  { name: 'Financial Covenants', total: 62, compliant: 52, warning: 7, breached: 3 },
+  { name: 'Non-Financial Covenants', total: 38, compliant: 34, warning: 3, breached: 1 },
+  { name: 'Reporting Covenants', total: 28, compliant: 26, warning: 2, breached: 0 },
+  { name: 'Operational Covenants', total: 14, compliant: 9, warning: 5, breached: 0 },
+]
 
-// ── Donut ──
-const totalCovenants = 42;
-const donutC = 2 * Math.PI * 42;
-const statusBreakdown = [
-  { label: "Pass", count: 26, color: "#10b981", textClass: "text-green-600" },
-  { label: "Watch", count: 10, color: "#fbbf24", textClass: "text-amber-600" },
-  { label: "Breach", count: 6, color: "#ef4444", textClass: "text-red-600" },
-];
-const statusDonut = computed(() => {
-  let accum = donutC / 4;
-  return statusBreakdown.map((s) => {
-    const dash = (s.count / totalCovenants) * donutC;
-    const result = { ...s, dash, offset: accum };
-    accum -= dash;
-    return result;
-  });
-});
+const recentAlerts = [
+  { id: 1, severity: 'breach', borrower: 'PT Agri Sejahtera', message: 'DSCR 0.92x below minimum 1.25x', time: '2h ago' },
+  { id: 2, severity: 'warning', borrower: 'CV Sukses Makmur', message: 'Debt-to-Equity approaching max 2.5x (current: 2.3x)', time: '5h ago' },
+  { id: 3, severity: 'breach', borrower: 'PT Logistik Prima', message: 'Annual audit report overdue (30+ days)', time: '1d ago' },
+  { id: 4, severity: 'warning', borrower: 'PT Bangun Graha Mandiri', message: 'Interest Coverage Ratio 1.55x, threshold 1.5x — tight', time: '1d ago' },
+  { id: 5, severity: 'breach', borrower: 'Koperasi Citra Abadi', message: 'Minimum Cash Reserve IDR 500M not maintained', time: '2d ago' },
+]
 
-// ── Active Breaches ──
-const activeBreaches = ref([
-  {
-    id: 1,
-    covenant: "DSCR Minimum 1.25x",
-    facility: "PT Maju Bersama — Working Capital Rp 5B",
-    actual: "1.08x",
-    threshold: "≥ 1.25x",
-    severity: "Critical",
-    since: "30 Apr 2026",
-    rm: "Reza M.",
-  },
-  {
-    id: 2,
-    covenant: "DER Maximum 3.0x",
-    facility: "CV Teknik Jaya — Investment Loan Rp 2.5B",
-    actual: "3.42x",
-    threshold: "≤ 3.0x",
-    severity: "High",
-    since: "31 Mar 2026",
-    rm: "Sari D.",
-  },
-  {
-    id: 3,
-    covenant: "Current Ratio 1.0x",
-    facility: "PT Maju Bersama — Working Capital Rp 5B",
-    actual: "0.87x",
-    threshold: "≥ 1.0x",
-    severity: "High",
-    since: "30 Apr 2026",
-    rm: "Reza M.",
-  },
-  {
-    id: 4,
-    covenant: "Insurance Renewal",
-    facility: "Budi Santoso — KPR Rp 800M",
-    actual: "Expired",
-    threshold: "Valid",
-    severity: "Medium",
-    since: "15 May 2026",
-    rm: "Ahmad F.",
-  },
-  {
-    id: 5,
-    covenant: "EBITDA Minimum Rp 2B",
-    facility: "CV Teknik Jaya — Investment Loan Rp 2.5B",
-    actual: "Rp 1.4B",
-    threshold: "≥ Rp 2B",
-    severity: "Critical",
-    since: "31 Mar 2026",
-    rm: "Sari D.",
-  },
-  {
-    id: 6,
-    covenant: "Financial Statement Submission",
-    facility: "PT Maju Bersama — Working Capital Rp 5B",
-    actual: "Overdue 15d",
-    threshold: "Quarterly",
-    severity: "Medium",
-    since: "15 May 2026",
-    rm: "Reza M.",
-  },
-]);
-
-const breachFilter = ref("All");
-const filteredBreaches = computed(() => {
-  if (breachFilter.value === "All") return activeBreaches.value;
-  return activeBreaches.value.filter((b) => b.severity === breachFilter.value);
-});
-
-// ── Upcoming Tests ──
-const upcomingTests = [
-  {
-    id: 1,
-    covenant: "DSCR Monthly Test",
-    facility: "PT Maju Bersama",
-    month: "JUN",
-    day: 1,
-    freq: "Monthly",
-    urgent: true,
-  },
-  {
-    id: 2,
-    covenant: "Financial Statement Q2",
-    facility: "CV Teknik Jaya",
-    month: "JUN",
-    day: 15,
-    freq: "Quarterly",
-    urgent: false,
-  },
-  {
-    id: 3,
-    covenant: "DER Quarterly Test",
-    facility: "All Facilities",
-    month: "JUN",
-    day: 30,
-    freq: "Quarterly",
-    urgent: false,
-  },
-  {
-    id: 4,
-    covenant: "Insurance Validity",
-    facility: "Budi Santoso",
-    month: "JUL",
-    day: 1,
-    freq: "Monthly",
-    urgent: false,
-  },
-  {
-    id: 5,
-    covenant: "EBITDA Review",
-    facility: "CV Teknik Jaya",
-    month: "JUL",
-    day: 15,
-    freq: "Monthly",
-    urgent: false,
-  },
-];
-
-// ── AI Predictions ──
-const aiPredictions = [
-  {
-    id: 1,
-    facility: "PT Maju Bersama",
-    covenant: "DSCR",
-    msg: "Likely to remain in breach — revenue recovery slow",
-    risk: "High",
-    confidence: 82,
-  },
-  {
-    id: 2,
-    facility: "CV Teknik Jaya",
-    covenant: "DER",
-    msg: "Improvement trend — potential cure by Aug 2026",
-    risk: "Medium",
-    confidence: 67,
-  },
-  {
-    id: 3,
-    facility: "Budi Santoso",
-    covenant: "LTV",
-    msg: "Property value stable — no breach risk",
-    risk: "Low",
-    confidence: 91,
-  },
-];
-
-// ── Covenant Library ──
-const libSearch = ref("");
-const libFilter = ref("All");
+const watchlist = [
+  { id: 1, borrower: 'PT Agri Sejahtera', facility: 'KUR Pertanian', outstanding: 'Rp 500M', rm: 'Rina Kartika', breached: 1, warning: 2, compliant: 4, risk: 'Critical', nextReview: '2026-05-30' },
+  { id: 2, borrower: 'PT Logistik Prima', facility: 'Fleet Financing', outstanding: 'Rp 12B', rm: 'Wahyu Prasetyo', breached: 1, warning: 1, compliant: 5, risk: 'High', nextReview: '2026-06-01' },
+  { id: 3, borrower: 'Koperasi Citra Abadi', facility: 'Linkage Syariah', outstanding: 'Rp 3.5B', rm: 'Siti Rahma', breached: 2, warning: 0, compliant: 3, risk: 'Critical', nextReview: '2026-05-28' },
+  { id: 4, borrower: 'CV Sukses Makmur', facility: 'Kredit Investasi', outstanding: 'Rp 3.2B', rm: 'Sari Dewi', breached: 0, warning: 3, compliant: 4, risk: 'Medium', nextReview: '2026-06-15' },
+  { id: 5, borrower: 'PT Bangun Graha Mandiri', facility: 'Property Financing', outstanding: 'Rp 65B', rm: 'Hendra Gunawan', breached: 0, warning: 2, compliant: 8, risk: 'Medium', nextReview: '2026-07-01' },
+]
 
 const covenantLibrary = ref([
-  {
-    id: 1,
-    name: "DSCR Minimum 1.25x",
-    type: "Financial",
-    metric: "DSCR ≥ 1.25",
-    frequency: "Monthly",
-    facilities: 8,
-    tags: ["Cash Flow", "Core"],
-    icon: "trending-up",
-    template: true,
-  },
-  {
-    id: 2,
-    name: "DER Maximum 3.0x",
-    type: "Financial",
-    metric: "DER ≤ 3.0",
-    frequency: "Quarterly",
-    facilities: 12,
-    tags: ["Leverage", "Core"],
-    icon: "bar-chart",
-    template: true,
-  },
-  {
-    id: 3,
-    name: "EBITDA Minimum",
-    type: "Financial",
-    metric: "EBITDA ≥ Target",
-    frequency: "Quarterly",
-    facilities: 6,
-    tags: ["Profitability"],
-    icon: "dollar-sign",
-    template: true,
-  },
-  {
-    id: 4,
-    name: "Current Ratio 1.0x",
-    type: "Financial",
-    metric: "CR ≥ 1.0",
-    frequency: "Monthly",
-    facilities: 9,
-    tags: ["Liquidity"],
-    icon: "activity",
-    template: true,
-  },
-  {
-    id: 5,
-    name: "Insurance Renewal",
-    type: "Non-Financial",
-    metric: "Valid Policy",
-    frequency: "Annual",
-    facilities: 15,
-    tags: ["Insurance", "Affirmative"],
-    icon: "shield",
-    template: true,
-  },
-  {
-    id: 6,
-    name: "Financial Statement",
-    type: "Reporting",
-    metric: "On-time Submission",
-    frequency: "Quarterly",
-    facilities: 20,
-    tags: ["Reporting"],
-    icon: "file-text",
-    template: true,
-  },
-  {
-    id: 7,
-    name: "No Additional Debt",
-    type: "Non-Financial",
-    metric: "Negative Covenant",
-    frequency: "Continuous",
-    facilities: 7,
-    tags: ["Restriction", "Negative"],
-    icon: "minus-circle",
-    template: false,
-  },
-  {
-    id: 8,
-    name: "Asset Disposal Restriction",
-    type: "Non-Financial",
-    metric: "Prior Consent",
-    frequency: "Continuous",
-    facilities: 5,
-    tags: ["Asset", "Negative"],
-    icon: "lock",
-    template: false,
-  },
-]);
+  { id: 1, name: 'Minimum DSCR', type: 'financial', typeLabel: 'Financial', description: 'Debt Service Coverage Ratio must be maintained at minimum 1.25x on a quarterly basis.', threshold: '≥ 1.25x', frequency: 'Quarterly', curePeriod: '30 days', facilityCount: 24 },
+  { id: 2, name: 'Maximum Debt-to-Equity', type: 'financial', typeLabel: 'Financial', description: 'Total debt-to-equity ratio must not exceed 2.5x at any reporting date.', threshold: '≤ 2.5x', frequency: 'Semi-annually', curePeriod: '45 days', facilityCount: 18 },
+  { id: 3, name: 'Minimum Interest Coverage', type: 'financial', typeLabel: 'Financial', description: 'EBIT must cover interest expenses by at least 1.5x.', threshold: '≥ 1.5x', frequency: 'Quarterly', curePeriod: '30 days', facilityCount: 22 },
+  { id: 4, name: 'Annual Audited Financial Statements', type: 'reporting', typeLabel: 'Reporting', description: 'Borrower must submit audited annual financial statements within 120 days of fiscal year-end.', threshold: '120 days after FY-end', frequency: 'Annually', curePeriod: '30 days', facilityCount: 38 },
+  { id: 5, name: 'Quarterly Management Accounts', type: 'reporting', typeLabel: 'Reporting', description: 'Management accounts to be submitted within 45 days of quarter end.', threshold: '45 days after Q-end', frequency: 'Quarterly', curePeriod: '14 days', facilityCount: 30 },
+  { id: 6, name: 'No Additional Indebtedness', type: 'non_financial', typeLabel: 'Non-Financial', description: 'Borrower may not incur additional debt beyond approved limits without prior written consent.', threshold: 'Consent required', frequency: 'Ongoing', curePeriod: 'Immediate', facilityCount: 28 },
+  { id: 7, name: 'Cross-Default Clause', type: 'non_financial', typeLabel: 'Non-Financial', description: 'Default on any other financial obligation triggers default under this facility.', threshold: 'No other defaults', frequency: 'Ongoing', curePeriod: 'Immediate', facilityCount: 35 },
+  { id: 8, name: 'Minimum Cash Reserve', type: 'operational', typeLabel: 'Operational', description: 'Minimum cash balance of IDR 500M must be maintained in designated BNI account.', threshold: '≥ Rp 500M', frequency: 'Monthly', curePeriod: '7 days', facilityCount: 8 },
+])
 
 const filteredLibrary = computed(() => {
-  let list = covenantLibrary.value;
-  if (libFilter.value !== "All") list = list.filter((c) => c.type === libFilter.value);
-  if (libSearch.value) {
-    const q = libSearch.value.toLowerCase();
-    list = list.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.tags.some((t) => t.toLowerCase().includes(q))
-    );
-  }
-  return list;
-});
+  return covenantLibrary.value.filter((c) => {
+    if (libraryFilter.value && c.type !== libraryFilter.value) return false
+    if (librarySearch.value && !c.name.toLowerCase().includes(librarySearch.value.toLowerCase())) return false
+    return true
+  })
+})
 
-const selectedCovenant = ref(null);
+const monitoringItems = ref([
+  { id: 1, borrower: 'PT Maju Bersama Tbk', facilityId: 'FAC-2024-001', covenant: 'Minimum DSCR', type: 'financial', typeLabel: 'Financial', threshold: '≥ 1.25x', actual: '1.82x', headroom: 46, status: 'compliant', nextCheck: 'Jun 30, 2026' },
+  { id: 2, borrower: 'PT Teknologi Nusantara', facilityId: 'FAC-2024-002', covenant: 'Maximum Debt-to-Equity', type: 'financial', typeLabel: 'Financial', threshold: '≤ 2.5x', actual: '1.8x', headroom: 28, status: 'compliant', nextCheck: 'Jun 30, 2026' },
+  { id: 3, borrower: 'PT Agri Sejahtera', facilityId: 'FAC-2024-003', covenant: 'Minimum DSCR', type: 'financial', typeLabel: 'Financial', threshold: '≥ 1.25x', actual: '0.92x', headroom: -26, status: 'breached', nextCheck: 'Immediate' },
+  { id: 4, borrower: 'CV Sukses Makmur', facilityId: 'FAC-2024-004', covenant: 'Maximum Debt-to-Equity', type: 'financial', typeLabel: 'Financial', threshold: '≤ 2.5x', actual: '2.3x', headroom: 8, status: 'warning', nextCheck: 'Jun 15, 2026' },
+  { id: 5, borrower: 'PT Logistik Prima', facilityId: 'FAC-2024-005', covenant: 'Annual Audited Financial Statements', type: 'reporting', typeLabel: 'Reporting', threshold: '120 days', actual: '152 days', headroom: -27, status: 'breached', nextCheck: 'Immediate' },
+  { id: 6, borrower: 'PT Bangun Graha Mandiri', facilityId: 'FAC-2024-006', covenant: 'Minimum Interest Coverage', type: 'financial', typeLabel: 'Financial', threshold: '≥ 1.5x', actual: '1.55x', headroom: 3, status: 'warning', nextCheck: 'Jul 1, 2026' },
+  { id: 7, borrower: 'Koperasi Sejahtera Bersama', facilityId: 'FAC-2024-007', covenant: 'Quarterly Management Accounts', type: 'reporting', typeLabel: 'Reporting', threshold: '45 days', actual: '12 days', headroom: 73, status: 'compliant', nextCheck: 'Jul 15, 2026' },
+  { id: 8, borrower: 'Koperasi Citra Abadi', facilityId: 'FAC-2024-008', covenant: 'Minimum Cash Reserve', type: 'operational', typeLabel: 'Operational', threshold: '≥ Rp 500M', actual: 'Rp 280M', headroom: -44, status: 'breached', nextCheck: 'Immediate' },
+  { id: 9, borrower: 'PT Herbal Nusantara', facilityId: 'FAC-2024-009', covenant: 'No Additional Indebtedness', type: 'non_financial', typeLabel: 'Non-Financial', threshold: 'Consent required', actual: 'Compliant', headroom: 100, status: 'compliant', nextCheck: 'Ongoing' },
+  { id: 10, borrower: 'PT Bangun Graha Mandiri', facilityId: 'FAC-2024-006', covenant: 'Maximum Debt-to-Equity', type: 'financial', typeLabel: 'Financial', threshold: '≤ 2.5x', actual: '2.1x', headroom: 16, status: 'warning', nextCheck: 'Jul 1, 2026' },
+])
 
-// ── Test Engine ──
-const testPeriod = ref("Latest");
-const testing = ref(false);
-
-const testResults = ref([
-  {
-    id: 1,
-    covenant: "DSCR Minimum 1.25x",
-    facility: "PT Maju Bersama",
-    testDate: "31 May 2026",
-    actual: "1.08x",
-    threshold: "≥ 1.25x",
-    headroom: "-14%",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 2,
-    covenant: "DSCR Minimum 1.25x",
-    facility: "CV Teknik Jaya",
-    testDate: "31 May 2026",
-    actual: "1.48x",
-    threshold: "≥ 1.25x",
-    headroom: "+18%",
-    headroomPct: 18,
-    status: "Pass",
-  },
-  {
-    id: 3,
-    covenant: "DER Maximum 3.0x",
-    facility: "PT Maju Bersama",
-    testDate: "31 May 2026",
-    actual: "2.6x",
-    threshold: "≤ 3.0x",
-    headroom: "+13%",
-    headroomPct: 13,
-    status: "Watch",
-  },
-  {
-    id: 4,
-    covenant: "DER Maximum 3.0x",
-    facility: "CV Teknik Jaya",
-    testDate: "31 May 2026",
-    actual: "3.42x",
-    threshold: "≤ 3.0x",
-    headroom: "-14%",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 5,
-    covenant: "EBITDA Minimum Rp 2B",
-    facility: "CV Teknik Jaya",
-    testDate: "31 Mar 2026",
-    actual: "Rp 1.4B",
-    threshold: "≥ Rp 2B",
-    headroom: "-30%",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 6,
-    covenant: "Current Ratio 1.0x",
-    facility: "PT Maju Bersama",
-    testDate: "31 May 2026",
-    actual: "0.87x",
-    threshold: "≥ 1.0x",
-    headroom: "-13%",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 7,
-    covenant: "Current Ratio 1.0x",
-    facility: "CV Teknik Jaya",
-    testDate: "31 May 2026",
-    actual: "1.32x",
-    threshold: "≥ 1.0x",
-    headroom: "+32%",
-    headroomPct: 32,
-    status: "Pass",
-  },
-  {
-    id: 8,
-    covenant: "Insurance Validity",
-    facility: "Budi Santoso",
-    testDate: "24 May 2026",
-    actual: "Expired",
-    threshold: "Valid",
-    headroom: "-",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 9,
-    covenant: "Financial Statement",
-    facility: "PT Maju Bersama",
-    testDate: "15 May 2026",
-    actual: "Overdue 15d",
-    threshold: "On-time",
-    headroom: "-",
-    headroomPct: 0,
-    status: "Breach",
-  },
-  {
-    id: 10,
-    covenant: "LTV Maximum 80%",
-    facility: "Budi Santoso",
-    testDate: "31 May 2026",
-    actual: "68%",
-    threshold: "≤ 80%",
-    headroom: "+15%",
-    headroomPct: 15,
-    status: "Pass",
-  },
-]);
-
-function runAllTests() {
-  testing.value = true;
-  setTimeout(() => {
-    testing.value = false;
-    showToast("All covenant tests completed — 3 breaches detected");
-  }, 2000);
-}
-
-// ── Calendar ──
-const calLegend = [
-  { label: "Due Today", color: "bg-blue-200" },
-  { label: "Breach", color: "bg-red-200" },
-  { label: "Watch", color: "bg-amber-200" },
-  { label: "Pass", color: "bg-green-200" },
-];
-
-const calendarCells = computed(() => {
-  const cells = [];
-  // June 2026 starts on Monday
-  for (let i = 0; i < 5; i++) cells.push({ key: `empty-${i}`, day: null, events: [] });
-  const events = {
-    1: [
-      { id: 1, name: "DSCR Test", status: "Due" },
-      { id: 2, name: "Current Ratio", status: "Breach" },
-    ],
-    5: [{ id: 3, name: "Fin. Statement", status: "Due" }],
-    10: [{ id: 4, name: "DER Review", status: "Watch" }],
-    15: [
-      { id: 5, name: "Q2 Reporting", status: "Due" },
-      { id: 6, name: "Insurance", status: "Watch" },
-    ],
-    20: [{ id: 7, name: "EBITDA Test", status: "Pass" }],
-    25: [{ id: 8, name: "NPL Covenant", status: "Pass" }],
-    30: [
-      { id: 9, name: "DER Quarterly", status: "Due" },
-      { id: 10, name: "DSCR Review", status: "Watch" },
-    ],
-  };
-  for (let d = 1; d <= 30; d++) {
-    cells.push({ key: `day-${d}`, day: d, today: d === 24, events: events[d] || [] });
-  }
-  return cells;
-});
-
-// ── Cure Workflow ──
-const cureTasks = ref([
-  {
-    id: 1,
-    title: "DSCR Improvement Plan — PT Maju Bersama",
-    facility: "PT Maju Bersama",
-    status: "Open",
-    priority: "Critical",
-    deadline: "30 Jun 2026",
-    owner: "Reza M.",
-    progress: 0,
-    overdue: false,
-  },
-  {
-    id: 2,
-    title: "DER Reduction Strategy — CV Teknik Jaya",
-    facility: "CV Teknik Jaya",
-    status: "Open",
-    priority: "Critical",
-    deadline: "30 Jun 2026",
-    owner: "Sari D.",
-    progress: 0,
-    overdue: false,
-  },
-  {
-    id: 3,
-    title: "Insurance Renewal Follow-up",
-    facility: "Budi Santoso",
-    status: "In Progress",
-    priority: "High",
-    deadline: "01 Jun 2026",
-    owner: "Ahmad F.",
-    progress: 60,
-    overdue: false,
-  },
-  {
-    id: 4,
-    title: "Financial Statement Collection",
-    facility: "PT Maju Bersama",
-    status: "In Progress",
-    priority: "High",
-    deadline: "25 May 2026",
-    owner: "Reza M.",
-    progress: 40,
-    overdue: true,
-  },
-  {
-    id: 5,
-    title: "EBITDA Turnaround Meeting",
-    facility: "CV Teknik Jaya",
-    status: "Done",
-    priority: "Critical",
-    deadline: "20 May 2026",
-    owner: "Sari D.",
-    progress: 100,
-    overdue: false,
-  },
-]);
-
-const cureColumns = [
-  { id: "Open", label: "Open", dot: "bg-gray-400" },
-  { id: "In Progress", label: "In Progress", dot: "bg-amber-400" },
-  { id: "Done", label: "Done", dot: "bg-green-500" },
-];
-
-function advanceCure(task) {
-  if (task.status === "Open") {
-    task.status = "In Progress";
-    task.progress = 30;
-  } else if (task.status === "In Progress") {
-    task.status = "Done";
-    task.progress = 100;
-  }
-  showToast(`Task "${task.title.substring(0, 30)}..." updated`);
-}
-
-// ── Waivers ──
-const waivers = ref([
-  {
-    id: 1,
-    covenant: "DSCR Minimum 1.25x",
-    reason: "Post-pandemic recovery",
-    facility: "PT Maju Bersama",
-    requested: "01 May 2026",
-    expiry: "31 Jul 2026",
-    approver: "Risk Committee",
-    status: "Approved",
-    expiring: false,
-  },
-  {
-    id: 2,
-    covenant: "DER Maximum 3.0x",
-    reason: "Refinancing in progress",
-    facility: "CV Teknik Jaya",
-    requested: "10 May 2026",
-    expiry: "30 Jun 2026",
-    approver: "Credit Head",
-    status: "Pending",
-    expiring: false,
-  },
-  {
-    id: 3,
-    covenant: "Financial Statement Q1",
-    reason: "Auditor delay",
-    facility: "PT Maju Bersama",
-    requested: "01 Apr 2026",
-    expiry: "30 Apr 2026",
-    approver: "Branch Head",
-    status: "Expired",
-    expiring: false,
-  },
-  {
-    id: 4,
-    covenant: "EBITDA Minimum",
-    reason: "Seasonal business impact",
-    facility: "CV Teknik Jaya",
-    requested: "15 May 2026",
-    expiry: "30 Jun 2026",
-    approver: "Risk Committee",
-    status: "Pending",
-    expiring: true,
-  },
-]);
-
-function approveWaiver(w) {
-  w.status = "Approved";
-  showToast(`Waiver approved for ${w.covenant}`);
-}
-
-// ── Reports ──
-const covReports = [
-  {
-    id: 1,
-    name: "Monthly Compliance Report",
-    desc: "Pass/Watch/Breach summary with trend analysis",
-    icon: "bar-chart-2",
-    colorBg: "bg-teal-100",
-    colorText: "text-teal-600",
-    period: "May 2026",
-    status: "Ready",
-    statusClass: "bg-green-100 text-green-700",
-  },
-  {
-    id: 2,
-    name: "Breach & Cure Analytics",
-    desc: "Breach aging, cure progress, and resolution rates",
-    icon: "alert-triangle",
-    colorBg: "bg-red-100",
-    colorText: "text-red-600",
-    period: "May 2026",
-    status: "Ready",
-    statusClass: "bg-green-100 text-green-700",
-  },
-  {
-    id: 3,
-    name: "Portfolio Covenant Health",
-    desc: "Facility-level covenant health and portfolio segmentation",
-    icon: "activity",
-    colorBg: "bg-purple-100",
-    colorText: "text-purple-600",
-    period: "Q1 2026",
-    status: "Ready",
-    statusClass: "bg-green-100 text-green-700",
-  },
-  {
-    id: 4,
-    name: "Waiver Summary Report",
-    desc: "Active waivers, approvals, and expiry tracking",
-    icon: "file-minus",
-    colorBg: "bg-amber-100",
-    colorText: "text-amber-600",
-    period: "May 2026",
-    status: "Draft",
-    statusClass: "bg-gray-100 text-gray-600",
-  },
-  {
-    id: 5,
-    name: "AI Risk Prediction Report",
-    desc: "AI-generated breach probability and recommendations",
-    icon: "zap",
-    colorBg: "bg-indigo-100",
-    colorText: "text-indigo-600",
-    period: "May 2026",
-    status: "Ready",
-    statusClass: "bg-green-100 text-green-700",
-  },
-  {
-    id: 6,
-    name: "Regulatory Covenant Report",
-    desc: "OJK/BI required covenant monitoring disclosure",
-    icon: "shield",
-    colorBg: "bg-blue-100",
-    colorText: "text-blue-600",
-    period: "Q1 2026",
-    status: "Generating...",
-    statusClass: "bg-blue-100 text-blue-700",
-  },
-];
-
-// ── Sensitivity / Heatmap ──
-const heatmapCovs = ["DSCR", "DER", "EBITDA", "Curr. Ratio", "LTV"];
-const heatmapData = [
-  {
-    facility: "PT Maju Bersama",
-    DSCR: -14,
-    DER: 13,
-    EBITDA: null,
-    "Curr. Ratio": -13,
-    LTV: null,
-  },
-  {
-    facility: "CV Teknik Jaya",
-    DSCR: 18,
-    DER: -14,
-    EBITDA: -30,
-    "Curr. Ratio": 32,
-    LTV: null,
-  },
-  {
-    facility: "Budi Santoso",
-    DSCR: null,
-    DER: null,
-    EBITDA: null,
-    "Curr. Ratio": null,
-    LTV: 15,
-  },
-  {
-    facility: "PT Karya Utama",
-    DSCR: 35,
-    DER: 28,
-    EBITDA: 22,
-    "Curr. Ratio": 18,
-    LTV: null,
-  },
-  {
-    facility: "CV Mitra Sejati",
-    DSCR: 8,
-    DER: 45,
-    EBITDA: 12,
-    "Curr. Ratio": 6,
-    LTV: null,
-  },
-];
-
-function heatmapColor(val) {
-  if (val === null) return "bg-gray-100 text-gray-400";
-  if (val < 0) return "bg-red-100 text-red-700";
-  if (val < 10) return "bg-amber-100 text-amber-700";
-  if (val < 25) return "bg-yellow-100 text-yellow-700";
-  return "bg-green-100 text-green-700";
-}
-
-const heatLegend = [
-  { label: "Breach (<0%)", color: "bg-red-200" },
-  { label: "Danger (<10%)", color: "bg-amber-200" },
-  { label: "Watch (<25%)", color: "bg-yellow-200" },
-  { label: "Safe (≥25%)", color: "bg-green-200" },
-];
-
-const simRevDrop = ref(10);
-const simDebtInc = ref(10);
-const simResult = ref(null);
-
-function runSim() {
-  const breaches =
-    simRevDrop.value > 20 || simDebtInc.value > 30 ? 2 : simRevDrop.value > 10 ? 1 : 0;
-  simResult.value = {
-    breaches,
-    detail:
-      breaches > 0
-        ? `Under -${simRevDrop.value}% revenue / +${
-            simDebtInc.value
-          }% debt service: DSCR would drop to ${(1.08 - simRevDrop.value * 0.01).toFixed(
-            2
-          )}x, DER would rise to ${(3.42 + simDebtInc.value * 0.02).toFixed(2)}x`
-        : `Under -${simRevDrop.value}% revenue / +${simDebtInc.value}% debt service: all covenants remain within threshold`,
-  };
-  showToast("Simulation complete");
-}
-
-// ── Toast ──
-const toast = ref("");
-let toastTimer = null;
-function showToast(msg) {
-  toast.value = msg;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.value = "";
-  }, 2500);
-}
-
-// ── Add / Edit Covenant ──
-const showAddCovForm = ref(false);
-const editingCov = ref(null);
-const covForm = ref({ name: '', type: 'Financial', frequency: 'Quarterly', metric: '', tags: '' });
-
-function openAddCovenant() {
-  editingCov.value = null;
-  covForm.value = { name: '', type: 'Financial', frequency: 'Quarterly', metric: '', tags: '' };
-  showAddCovForm.value = true;
-}
-
-function openEditCovenant(cov) {
-  editingCov.value = cov;
-  covForm.value = {
-    name: cov.name,
-    type: cov.type,
-    frequency: cov.frequency,
-    metric: cov.metric === '—' ? '' : cov.metric,
-    tags: cov.tags.join(', '),
-  };
-  showAddCovForm.value = true;
-}
-
-function submitAddCovenant() {
-  if (!covForm.value.name.trim()) return;
-  const tags = covForm.value.tags
-    ? covForm.value.tags.split(',').map(t => t.trim()).filter(Boolean)
-    : [];
-  const icon = covForm.value.type === 'Financial' ? 'trending-up'
-    : covForm.value.type === 'Non-Financial' ? 'check-circle'
-    : 'file-text';
-
-  if (editingCov.value) {
-    const idx = covenantLibrary.value.findIndex(c => c.id === editingCov.value.id);
-    if (idx !== -1) {
-      covenantLibrary.value[idx] = {
-        ...covenantLibrary.value[idx],
-        name: covForm.value.name,
-        type: covForm.value.type,
-        frequency: covForm.value.frequency,
-        metric: covForm.value.metric || '—',
-        tags,
-        icon,
-      };
+const filteredMonitoring = computed(() => {
+  return monitoringItems.value.filter((item) => {
+    if (monitorFilterStatus.value && item.status !== monitorFilterStatus.value) return false
+    if (monitorFilterType.value && item.type !== monitorFilterType.value) return false
+    if (monitorSearch.value) {
+      const q = monitorSearch.value.toLowerCase()
+      if (!item.borrower.toLowerCase().includes(q) && !item.facilityId.toLowerCase().includes(q)) return false
     }
-    showToast('Covenant updated');
-  } else {
-    covenantLibrary.value.unshift({
-      id: Date.now(),
-      name: covForm.value.name,
-      type: covForm.value.type,
-      metric: covForm.value.metric || '—',
-      frequency: covForm.value.frequency,
-      facilities: 0,
-      tags,
-      icon,
-      template: false,
-    });
-    showToast('Covenant added to library');
+    return true
+  })
+})
+
+const activeBreaches = ref([
+  {
+    id: 1, borrower: 'PT Agri Sejahtera', facilityId: 'FAC-2024-003', covenant: 'Minimum DSCR', threshold: '≥ 1.25x', actual: '0.92x', detectedDate: '2026-04-30', cureExpiry: '2026-05-30', cureStatus: 'in_progress',
+    cureSteps: [
+      { label: 'Notification', done: true, active: false },
+      { label: 'Remediation Plan', done: true, active: false },
+      { label: 'Cure Action', done: false, active: true },
+      { label: 'Verification', done: false, active: false },
+      { label: 'Resolution', done: false, active: false },
+    ],
+  },
+  {
+    id: 2, borrower: 'PT Logistik Prima', facilityId: 'FAC-2024-005', covenant: 'Annual Audited Financial Statements', threshold: '120 days after FY-end', actual: '152 days', detectedDate: '2026-05-10', cureExpiry: '2026-06-10', cureStatus: 'pending',
+    cureSteps: [
+      { label: 'Notification', done: true, active: false },
+      { label: 'Remediation Plan', done: false, active: true },
+      { label: 'Cure Action', done: false, active: false },
+      { label: 'Verification', done: false, active: false },
+      { label: 'Resolution', done: false, active: false },
+    ],
+  },
+  {
+    id: 3, borrower: 'Koperasi Citra Abadi', facilityId: 'FAC-2024-008', covenant: 'Minimum Cash Reserve', threshold: '≥ Rp 500M', actual: 'Rp 280M', detectedDate: '2026-05-20', cureExpiry: '2026-05-27', cureStatus: 'pending',
+    cureSteps: [
+      { label: 'Notification', done: true, active: false },
+      { label: 'Remediation Plan', done: false, active: true },
+      { label: 'Cure Action', done: false, active: false },
+      { label: 'Verification', done: false, active: false },
+      { label: 'Resolution', done: false, active: false },
+    ],
+  },
+])
+
+const warningItems = [
+  { id: 1, borrower: 'CV Sukses Makmur', covenant: 'Max Debt-to-Equity', actual: '2.3x', threshold: '≤ 2.5x', headroom: '+8%', headroomPct: 8 },
+  { id: 2, borrower: 'PT Bangun Graha Mandiri', covenant: 'Min Interest Coverage', actual: '1.55x', threshold: '≥ 1.5x', headroom: '+3%', headroomPct: 3 },
+  { id: 3, borrower: 'PT Bangun Graha Mandiri', covenant: 'Max Debt-to-Equity', actual: '2.1x', threshold: '≤ 2.5x', headroom: '+16%', headroomPct: 16 },
+  { id: 4, borrower: 'PT Logistik Prima', covenant: 'Min DSCR', actual: '1.32x', threshold: '≥ 1.25x', headroom: '+6%', headroomPct: 6 },
+]
+
+const breachSummary = [
+  { label: 'Total Breaches', value: '4', color: 'text-red-600', red: true },
+  { label: 'Pending Cure', value: '2', color: 'text-amber-600' },
+  { label: 'In Progress', value: '1', color: 'text-blue-600' },
+  { label: 'Cured (MTD)', value: '3', color: 'text-green-600' },
+]
+
+const analyticsKPIs = [
+  { label: 'Compliance Rate', value: '85.2%', up: true, change: '2.1%' },
+  { label: 'Avg Cure Time', value: '18 days', up: true, change: '3d faster' },
+  { label: 'Waiver Rate', value: '4.2%', up: false, change: '1.1%' },
+  { label: 'Breach Frequency', value: '2.1/month', up: true, change: '0.5' },
+]
+
+const breachHistory = [
+  { month: 'Dec', count: 2 },
+  { month: 'Jan', count: 4 },
+  { month: 'Feb', count: 3 },
+  { month: 'Mar', count: 6 },
+  { month: 'Apr', count: 5 },
+  { month: 'May', count: 4 },
+]
+
+const breachByType = [
+  { type: 'Financial', count: 12 },
+  { type: 'Non-Financial', count: 5 },
+  { type: 'Reporting', count: 4 },
+  { type: 'Operational', count: 3 },
+]
+
+const sectorBreaches = [
+  { sector: 'Agriculture', count: 5, color: 'bg-red-500' },
+  { sector: 'Property', count: 4, color: 'bg-orange-500' },
+  { sector: 'Logistics', count: 3, color: 'bg-amber-400' },
+  { sector: 'Manufacturing', count: 2, color: 'bg-yellow-400' },
+  { sector: 'Cooperatives', count: 2, color: 'bg-green-400' },
+  { sector: 'Technology', count: 1, color: 'bg-blue-400' },
+]
+
+function typeBadge(type) {
+  return {
+    financial: 'px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium',
+    non_financial: 'px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium',
+    reporting: 'px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs font-medium',
+    operational: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium',
+  }[type] || 'px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs'
+}
+
+function riskBadge(risk) {
+  return {
+    Critical: 'px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-bold',
+    High: 'px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-semibold',
+    Medium: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium',
+    Low: 'px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs',
+  }[risk] || 'px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs'
+}
+
+function monitorStatusBadge(status) {
+  return {
+    compliant: 'px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium',
+    warning: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium',
+    breached: 'px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold',
+  }[status] || 'px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs'
+}
+
+function monitorStatusLabel(status) {
+  return { compliant: 'Compliant', warning: 'Warning', breached: 'Breached' }[status] || status
+}
+
+function openFacility(f) {
+  selectedFacility.value = f
+  showFacilityModal.value = true
+}
+
+function openBreachDetail(item) {
+  const breach = activeBreaches.value.find((b) => b.borrower === item.borrower)
+  if (breach) {
+    selectedBreach.value = breach
+    showCureModal.value = true
   }
-  showAddCovForm.value = false;
 }
 
-function duplicateCovenant(cov) {
-  covenantLibrary.value.unshift({
-    ...cov,
-    id: Date.now(),
-    name: cov.name + ' (Copy)',
-    template: false,
-  });
-  showToast('Covenant duplicated');
+function openCureModal(breach) {
+  selectedBreach.value = breach
+  showCureModal.value = true
 }
 
-// ── Add Cure Task ──
-const showAddTaskForm = ref(false);
-const taskForm = ref({ title: '', facility: '', priority: 'High', deadline: '', owner: '' });
-
-function openAddTask() {
-  taskForm.value = { title: '', facility: '', priority: 'High', deadline: '', owner: '' };
-  showAddTaskForm.value = true;
+function openCovenantAlert(w) {
+  showToast(`Alert sent to RM for ${w.borrower}`)
 }
 
-function submitAddTask() {
-  if (!taskForm.value.title.trim() || !taskForm.value.facility.trim()) return;
-  const dl = taskForm.value.deadline
-    ? new Date(taskForm.value.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
-  cureTasks.value.unshift({
-    id: Date.now(),
-    title: taskForm.value.title,
-    facility: taskForm.value.facility,
-    status: 'Open',
-    priority: taskForm.value.priority,
-    deadline: dl,
-    owner: taskForm.value.owner || 'Unassigned',
-    progress: 0,
-    overdue: false,
-  });
-  showAddTaskForm.value = false;
-  showToast('Cure task created');
+function saveCovenant() {
+  showCovenantModal.value = false
+  showToast('Covenant added to library')
 }
 
-// ── Add Waiver ──
-const showAddWaiverForm = ref(false);
-const waiverForm = ref({ covenant: '', facility: '', reason: '', expiry: '', approver: 'Risk Committee' });
-
-function openAddWaiver() {
-  waiverForm.value = { covenant: '', facility: '', reason: '', expiry: '', approver: 'Risk Committee' };
-  showAddWaiverForm.value = true;
+function saveCure() {
+  showCureModal.value = false
+  showToast('Cure status updated successfully')
 }
 
-function submitAddWaiver() {
-  if (!waiverForm.value.covenant || !waiverForm.value.facility.trim() || !waiverForm.value.reason.trim()) return;
-  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const exp = waiverForm.value.expiry
-    ? new Date(waiverForm.value.expiry).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '—';
-  waivers.value.unshift({
-    id: Date.now(),
-    covenant: waiverForm.value.covenant,
-    reason: waiverForm.value.reason,
-    facility: waiverForm.value.facility,
-    requested: today,
-    expiry: exp,
-    approver: waiverForm.value.approver,
-    status: 'Pending',
-    expiring: false,
-  });
-  showAddWaiverForm.value = false;
-  showToast('Waiver request submitted');
+function runMonitoring() {
+  isRunning.value = true
+  setTimeout(() => {
+    isRunning.value = false
+    showToast('Monitoring run complete — 142 covenants checked')
+  }, 3000)
+}
+
+function showToast(msg) {
+  toast.value = msg
+  setTimeout(() => { toast.value = '' }, 3000)
 }
 </script>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s, transform 0.3s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
-}
-</style>

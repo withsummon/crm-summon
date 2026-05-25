@@ -35,12 +35,17 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'CRM Core Dashboard' },
+        redirect: { name: 'Executive Dashboard' },
       },
       {
         path: 'dashboard',
         name: 'CRM Core Dashboard',
         component: () => import('@/pages/CRMCoreDashboard.vue'),
+      },
+      {
+        path: 'executive-dashboard',
+        name: 'Executive Dashboard',
+        component: () => import('@/pages/ExecutiveDashboard.vue'),
       },
       {
         path: 'insights-dashboard',
@@ -198,6 +203,21 @@ const routes = [
         name: 'Covenant Monitoring',
         component: () => import('@/pages/CovenantMonitoring.vue'),
       },
+      {
+        path: 'collections',
+        name: 'Collections',
+        component: () => import('@/pages/Collections.vue'),
+      },
+      {
+        path: 'committee-approval',
+        name: 'Committee Approval',
+        component: () => import('@/pages/CommitteeApproval.vue'),
+      },
+      {
+        path: 'covenant-monitoring',
+        name: 'Covenant Monitoring',
+        component: () => import('@/pages/CovenantMonitoring.vue'),
+      },
     ],
   },
   // ─── Operations ──────────────────────────────────────────
@@ -222,13 +242,7 @@ const routes = [
       {
         path: 'partner-vendor-management',
         name: 'Partner & Vendor Management',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Partner & Vendor Management',
-          subtitle: 'Supplier',
-          icon: 'truck',
-          sourcePath: '/app/supplier',
-        },
+        component: () => import('@/pages/PartnerVendorManagement.vue'),
       },
       {
         path: 'notification-center',
@@ -252,8 +266,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Admin Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Admin & Platform' },
+        component: () => import('@/pages/AdminPlatform.vue'),
       },
       {
         path: 'workflow-engine',
@@ -277,13 +290,13 @@ const routes = [
       {
         path: 'rules-engine',
         name: 'Rules Engine',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Rules Engine',
-          subtitle: 'Assignment Rule',
-          icon: 'filter',
-          sourcePath: '/app/assignment-rule',
-        },
+        component: () => import('@/modules/admin/pages/RulesEngine.vue'),
+      },
+      {
+        path: 'rules-engine/:ruleId',
+        name: 'Rule Detail',
+        component: () => import('@/modules/admin/pages/RulesEngine.vue'),
+        props: true,
       },
       // RBAC Routes
       {
@@ -371,7 +384,7 @@ const routes = [
       {
         path: 'omnichannel-communication',
         name: 'Omnichannel Communication',
-        component: () => import('@/pages/OmnichannelWorkspace.vue'),
+        component: () => import('@/pages/OmnichannelCommunication.vue'),
       },
       {
         path: 'customer-portal',
@@ -423,7 +436,7 @@ const routes = [
   // Legacy redirect: /dashboard → /crm-core/dashboard
   {
     path: '/dashboard',
-    redirect: { name: 'CRM Core Dashboard' },
+    redirect: { name: 'Executive Dashboard' },
   },
   // Legacy redirects for old flat routes
   { path: '/leads', redirect: '/crm-core/leads' },
@@ -490,13 +503,13 @@ router.beforeEach(async (to, from, next) => {
       if (!isCrmUser()) {
         next({ name: 'Not Permitted' })
       } else {
-        next({ name: 'CRM Core Dashboard' })
+        next({ name: 'Executive Dashboard' })
       }
       return
     }
 
     let { route_name, type, name, is_standard } = defaultView
-    route_name = route_name || 'CRM Core Dashboard'
+    route_name = route_name || 'Executive Dashboard'
 
     if (name && !is_standard) {
       next({

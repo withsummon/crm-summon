@@ -10,6 +10,7 @@ crm/public/frontend
 crm/www/crm.html
 build
 frontend/coverage
+docs/modules
 
 .vscode
 .github/instructions
