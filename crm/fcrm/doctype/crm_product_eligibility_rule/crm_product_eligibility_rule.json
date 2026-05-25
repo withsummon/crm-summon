@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "creation": "2026-05-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "criterion",
+  "operator",
+  "value",
+  "notes"
+ ],
+ "fields": [
+  {"fieldname": "criterion", "fieldtype": "Select", "label": "Criterion", "options": "Min Age\nMin Income\nMin Vintage Years\nMin Credit Score\nIndustry Whitelist\nIndustry Blacklist\nGeography Whitelist\nGeography Blacklist", "in_list_view": 1, "columns": 3, "reqd": 1},
+  {"fieldname": "operator", "fieldtype": "Select", "label": "Operator", "options": ">=\n<=\n=\nin\nnot in", "default": ">=", "in_list_view": 1, "columns": 1},
+  {"fieldname": "value", "fieldtype": "Data", "label": "Value", "in_list_view": 1, "columns": 4, "reqd": 1},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes", "in_list_view": 1, "columns": 3}
+ ],
+ "links": [],
+ "modified": "2026-05-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Product Eligibility Rule",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": [],
+ "translated_doctype": 1
+}

@@ -10,21 +10,51 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      window['__'] =
+        window['__'] ||
+        function (message, replace) {
+          if (!replace) return message
+          return String(message).replace(/{(\d+)}/g, function (match, number) {
+            return typeof replace[number] !== 'undefined'
+              ? replace[number]
+              : match
+          })
+        }
+
+      if (
+        ['localhost', '127.0.0.1'].includes(window.location.hostname) &&
+        'serviceWorker' in navigator
+      ) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          registrations.forEach(function (registration) {
+            registration.unregister()
+          })
+        })
+        if (window.caches) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (key) {
+              caches.delete(key)
+            })
+          })
+        }
+      }
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="BNI CRM" />
     <meta name="apple-mobile-web-app-status-bar-style" content="white" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" href="/assets/crm/images/bni-logo.png" />
 
     <!-- PWA -->
     <link
       rel="icon"
       type="image/png"
       sizes="196x196"
-      href="/assets/crm/manifest/apple-icon-180.png"
+      href="/assets/crm/images/bni-logo.png"
     />
     <link
       rel="apple-touch-icon"
-      href="/assets/crm/manifest/apple-icon-180.png"
+      href="/assets/crm/images/bni-logo.png"
     />
 
     <link

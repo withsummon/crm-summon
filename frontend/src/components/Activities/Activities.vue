@@ -21,6 +21,9 @@
     <div v-else-if="title == 'Events'" class="h-full activity">
       <EventArea :doctype="doctype" :docname="docname" />
     </div>
+    <div v-else-if="title == 'Chat'" class="flex h-full flex-col">
+      <ChatPanel :doctype="doctype" :docname="docname" class="flex h-full flex-col" />
+    </div>
     <div
       v-else-if="
         activities?.length ||
@@ -461,9 +464,11 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
+import ChatIcon from '@/components/Icons/ChatIcon.vue'
 import EventArea from '@/components/Activities/EventArea.vue'
 import WhatsAppArea from '@/components/Activities/WhatsAppArea.vue'
 import WhatsAppBox from '@/components/Activities/WhatsAppBox.vue'
+import ChatPanel from '@/components/ChatPanel.vue'
 import LoadingIndicator from '@/components/Icons/LoadingIndicator.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
@@ -721,6 +726,8 @@ const emptyText = computed(() => {
     text = 'No Attachments Found'
   } else if (title.value == 'WhatsApp') {
     text = 'No WhatsApp Messages Found'
+  } else if (title.value == 'Chat') {
+    text = 'No Chat Messages Found'
   }
   return text
 })
@@ -747,6 +754,8 @@ const emptyTextDescription = computed(() => {
       'No files have been attached yet. Upload files to see them here.'
   } else if (title.value == 'WhatsApp') {
     description = 'Start a conversation now!'
+  } else if (title.value == 'Chat') {
+    description = 'No ClefinCode Chat history found.'
   }
   return description
 })
@@ -769,6 +778,8 @@ const emptyTextIcon = computed(() => {
     icon = AttachmentIcon
   } else if (title.value == 'WhatsApp') {
     icon = WhatsAppIcon
+  } else if (title.value == 'Chat') {
+    icon = ChatIcon
   }
   return h(icon, { class: 'text-ink-gray-4' })
 })

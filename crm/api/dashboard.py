@@ -9,6 +9,7 @@ from frappe.utils import cstr, flt
 from pypika.functions import Function
 
 from crm.fcrm.doctype.crm_dashboard.crm_dashboard import create_default_manager_dashboard
+from crm.api.lead_management import get_lead_funnel
 from crm.utils import sales_user_only
 
 
@@ -183,6 +184,22 @@ def _lead_task_rows(from_date, to_date, user: str | None = None):
 		)
 	except Exception:
 		return []
+
+
+def get_lead_funnel(from_date, to_date, user: str | None = None):
+	"""Return lead funnel conversion stats."""
+	try:
+		funnel = get_funnel_conversion(from_date, to_date, user)
+		data = funnel.get("data") or []
+		total = data[0]["count"] if data else 0
+		won = next((s["count"] for s in data if s["stage"] == "Won"), 0)
+		return {
+			"converted": won,
+			"total": total,
+			"conversion_rate": round((won / total * 100) if total else 0, 1),
+		}
+	except Exception:
+		return {"converted": 0, "total": 0, "conversion_rate": 0}
 
 
 def _lead_gen_dashboard(from_date, to_date, user: str | None = None):
@@ -429,7 +446,7 @@ def _lead_management(from_date, to_date, user: str | None = None):
 		"channel": _group_count("CRM Lead", "capture_channel", from_date, to_date, user, "lead_owner"),
 		"assignment_load": _group_count("CRM Lead", "lead_owner", from_date, to_date, user, "lead_owner"),
 		"drop_off_reasons": _group_count("CRM Lead", "lost_reason", from_date, to_date, user, "lead_owner"),
-		"qualification": _group_count("CRM Lead", "qualification_status", from_date, to_date, user, "lead_owner")
+		"qualification": _group_count("CRM Lead", "lead_quality_probability", from_date, to_date, user, "lead_owner")
 		or _group_count("CRM Lead", "status", from_date, to_date, user, "lead_owner"),
 		"funnel": {
 			"total": total_leads,

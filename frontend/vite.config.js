@@ -18,6 +18,32 @@ export default defineConfig(async ({ mode }) => {
     headers: {
       Host: backendHost,
     },
+    cookieDomainRewrite: '', // Removes domain attribute so it binds to the actual browser host (localhost or crm.localhost)
+    configure: (proxy, options) => {
+      proxy.on('proxyRes', (proxyRes, req, res) => {
+        if (proxyRes.headers.location) {
+          try {
+            let location = proxyRes.headers.location
+            if (location.startsWith('http://') || location.startsWith('https://')) {
+              const url = new URL(location)
+              if (url.hostname === 'crm.localhost' || url.hostname === '127.0.0.1') {
+                url.host = req.headers.host
+                proxyRes.headers.location = url.toString()
+              }
+            }
+          } catch (e) {
+            console.error('Failed to rewrite location header:', e)
+          }
+        }
+        // Strip Secure flag from cookies in local dev (HTTP)
+        const cookies = proxyRes.headers['set-cookie']
+        if (cookies) {
+          proxyRes.headers['set-cookie'] = cookies.map((cookie) =>
+            cookie.replace(/;\s*Secure/i, ''),
+          )
+        }
+      })
+    },
   }
   const backendRootPostProxy = {
     ...backendProxy,
@@ -46,25 +72,25 @@ export default defineConfig(async ({ mode }) => {
             'BNI teal CRM workspace for lead generation and customer 360',
           icons: [
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/crm/images/bni-logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-192.maskable.png',
+              src: '/assets/crm/images/bni-logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/crm/images/bni-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/manifest/manifest-icon-512.maskable.png',
+              src: '/assets/crm/images/bni-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -93,7 +119,11 @@ export default defineConfig(async ({ mode }) => {
       host: '0.0.0.0',
       port: devServerPort,
       strictPort: true,
-      allowedHosts: true,
+      allowedHosts: [
+        '.ngrok-free.app',
+        '.ngrok-free.dev',
+        '.share.zrok.io',
+      ],
       fs: {
         allow: [path.resolve(__dirname, '..')],
       },

@@ -39,7 +39,7 @@
               <button class="bni-icon-btn" :aria-label="__('Inbox')">
                 <FeatherIcon name="inbox" class="h-4 w-4" />
               </button>
-              <span class="bni-notif-badge">22</span>
+              <span v-if="notifCount > 0" class="bni-notif-badge">{{ notifCount }}</span>
             </span>
             <button class="bni-icon-btn" :aria-label="__('Share')">
               <FeatherIcon name="share-2" class="h-4 w-4" />
@@ -48,208 +48,230 @@
         </template>
       </LayoutHeader>
 
-      <!-- ═══ METRIC CARDS ═══ -->
-      <section class="bni-metric-grid">
-        <article v-for="m in displayMetrics" :key="m.label" class="bni-metric-card">
-          <div class="bni-mc-top">
-            <div class="bni-mc-icon">
-              <FeatherIcon :name="m.icon" class="h-[16px] w-[16px]" />
-            </div>
-            <span class="bni-mc-label">{{ m.label }}</span>
-            <FeatherIcon name="info" class="h-3.5 w-3.5 bni-mc-info" />
-          </div>
-          <div class="bni-mc-body">
-            <div class="bni-mc-bottom">
-              <strong class="bni-mc-value">{{ m.displayValue }}</strong>
-              <span :class="['bni-mc-change', m.isPositive ? 'up' : 'down']">
-                {{ m.isPositive ? '↑' : '↓' }} {{ Math.abs(m.changeNum) }}%
-              </span>
-            </div>
-            <span class="bni-mc-caption">{{ m.caption }}</span>
-          </div>
-        </article>
-      </section>
+      <!-- ═══ CUSTOMIZE MODE TOGGLE ═══ -->
+      <div v-if="showCustomize" class="bni-customize-banner">
+        <FeatherIcon name="move" class="h-4 w-4" />
+        <span>{{ __('Drag handle to reorder. Eye icon to show/hide.') }}</span>
+        <button class="bni-customize-reset" @click="resetWidgets">{{ __('Reset') }}</button>
+        <button class="bni-customize-done" @click="exitCustomize">{{ __('Done') }}</button>
+      </div>
 
-      <!-- ═══ MAIN GRID: COMPANY BREAKDOWN + CALENDAR ═══ -->
-      <section class="bni-main-grid">
-        <!-- Company Breakdown Card -->
-        <article class="bni-card bni-revenue-card">
-          <div class="bni-rev-header">
-            <div class="bni-rev-left">
-              <h2>{{ __('Top Bank / Company') }}</h2>
-              <div class="bni-rev-total">
-                <strong>{{ formatCount(chartSummary.total) }} {{ __('leads') }}</strong>
-                <span :class="['bni-badge-change', chartSummary.change >= 0 ? 'up' : 'down']">
-                  {{ chartSummary.change >= 0 ? '↑' : '↓' }} {{ Math.abs(chartSummary.change) }}%
-                </span>
-                <span class="bni-vs">{{ __('vs periode sebelumnya') }}</span>
-              </div>
-            </div>
-            <div class="bni-rev-periods">
-              <button
-                v-for="p in revenuePeriods"
-                :key="p"
-                :class="{ active: activeRevenuePeriod === p }"
-                @click="activeRevenuePeriod = p"
-              >{{ p }}</button>
-            </div>
+      <!-- ═══ DRAGGABLE WIDGETS ═══ -->
+      <div ref="widgetsContainerRef" class="bni-widgets-container">
+        <div
+          v-for="(element, idx) in widgets"
+          :key="element.key"
+          :data-idx="idx"
+          :class="['bni-widget', 'bni-widget-' + element.key, { 'bni-widget-dimmed': !element.visible, 'bni-customize-active': showCustomize }]"
+          :style="(!element.visible && !showCustomize) ? { display: 'none' } : {}"
+        >
+          <!-- Drag Handle (visible only in customize mode) -->
+          <div v-if="showCustomize" class="bni-widget-header">
+            <span class="bni-drag-handle"><FeatherIcon name="menu" class="h-4 w-4" /></span>
+            <span class="bni-widget-title">{{ element.label }}</span>
+            <button class="bni-widget-toggle" :title="__('Toggle visibility')" @click="toggleWidget(element.key)">
+              <FeatherIcon :name="element.visible ? 'eye' : 'eye-off'" class="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div class="bni-chart-wrap">
-            <svg :viewBox="`0 0 ${svgW} ${svgH}`" preserveAspectRatio="none" class="bni-rev-svg">
-              <!-- Y-axis labels -->
-              <text v-for="yl in yLabels" :key="yl.label" :x="10" :y="yl.y + 4" class="y-label">{{ yl.label }}</text>
-              <!-- Grid lines -->
-              <line v-for="yl in yLabels" :key="'g'+yl.label" :x1="chartLeft" :y1="yl.y" :x2="svgW - 10" :y2="yl.y" class="grid-ln" />
-              <!-- Bars -->
-              <rect
-                v-for="(bar, i) in chartBars"
-                :key="bar.label"
-                :x="bar.x"
-                :y="bar.y"
-                :width="bw"
-                :height="bar.h"
-                rx="5"
-                :class="['bar', { hl: hoveredBar === i || (hoveredBar === null && i === defaultHighlight) }]"
-                @mouseenter="hoveredBar = i"
-                @mouseleave="hoveredBar = null"
-              />
-              <!-- Vertical dashed line for active bar -->
-              <line
-                v-if="activeBar"
-                :x1="activeBar.x + bw/2" y1="15"
-                :x2="activeBar.x + bw/2" :y2="chartBottom"
-                class="dash-ln"
-              />
-              <!-- X labels -->
-              <text
-                v-for="(bar, i) in chartBars"
-                :key="'xl'+bar.label"
-                :x="bar.x + bw/2"
-                :y="svgH - 2"
-                text-anchor="middle"
-                :class="['x-label', { bold: i === defaultHighlight }]"
-              >{{ bar.label }}</text>
-            </svg>
-            <!-- Floating tooltip -->
-            <div
-              v-if="activeBar"
-              class="bni-tooltip"
-              :style="{ left: tooltipLeft }"
-            >
-              <strong>{{ activeBar.label }}</strong>
-              <span>{{ formatCount(activeBar.value) }} {{ __('leads') }}</span>
-            </div>
-          </div>
-        </article>
 
-        <!-- Calendar Card -->
-        <article class="bni-card bni-cal-card">
-          <div class="bni-card-head">
-            <h2>{{ __('Kalender') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-cal-month-nav">
-            <button class="bni-cal-arrow" @click="prevWeek"><FeatherIcon name="chevron-left" class="h-4 w-4" /></button>
-            <strong>{{ currentMonthYearLabel }}</strong>
-            <button class="bni-cal-arrow" @click="nextWeek"><FeatherIcon name="chevron-right" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-cal-daynames">
-            <span v-for="d in dayNames" :key="d">{{ d }}</span>
-          </div>
-          <div class="bni-cal-dates">
-            <span
-              v-for="dt in weekDates"
-              :key="dt.toISOString()"
-              :class="{ active: isDateSelected(dt) }"
-              @click="selectDate(dt)"
-            >{{ dt.getDate() }}</span>
-          </div>
-          <div class="bni-cal-events">
-            <template v-if="filteredEvents.length > 0">
-              <div v-for="evt in filteredEvents" :key="evt.name" class="bni-evt">
-                <div class="bni-evt-body">
-                  <strong>{{ evt.subject }}</strong>
-                  <span class="bni-evt-time">{{ formatEventTime(evt.starts_on, evt.ends_on) }}</span>
+            <!-- METRIC CARDS -->
+            <section v-if="element.key === 'metrics'" class="bni-metric-grid">
+              <article v-for="m in displayMetrics" :key="m.label" class="bni-metric-card">
+                <div class="bni-mc-top">
+                  <div class="bni-mc-icon"><FeatherIcon :name="m.icon" class="h-[16px] w-[16px]" /></div>
+                  <span class="bni-mc-label">{{ m.label }}</span>
+                  <FeatherIcon name="info" class="h-3.5 w-3.5 bni-mc-info" />
                 </div>
-                <div class="bni-evt-foot">
-                  <div class="bni-avatars">
-                    <span style="background:#3aaca8;color:#fff">{{ getEventInitials(evt.subject) }}</span>
+                <div class="bni-mc-body">
+                  <div class="bni-mc-bottom">
+                    <strong class="bni-mc-value">{{ m.displayValue }}</strong>
+                    <span :class="['bni-mc-change', m.isPositive ? 'up' : 'down']">{{ m.isPositive ? '↑' : '↓' }} {{ Math.abs(m.changeNum) }}%</span>
                   </div>
-                  <span class="bni-evt-loc">{{ evt.event_type || 'Di Google Meet' }} ›</span>
+                  <span class="bni-mc-caption">{{ m.caption }}</span>
+                </div>
+              </article>
+            </section>
+
+            <!-- REVENUE CHART -->
+            <article v-if="element.key === 'revenue'" class="bni-card bni-revenue-card">
+              <div class="bni-rev-header">
+                <div class="bni-rev-left">
+                  <h2>{{ __('Top Bank / Company') }}</h2>
+                  <div class="bni-rev-total">
+                    <strong>{{ formatCount(chartSummary.total) }} {{ __('leads') }}</strong>
+                    <span :class="['bni-badge-change', chartSummary.change >= 0 ? 'up' : 'down']">{{ chartSummary.change >= 0 ? '↑' : '↓' }} {{ Math.abs(chartSummary.change) }}%</span>
+                    <span class="bni-vs">{{ __('vs periode sebelumnya') }}</span>
+                  </div>
+                </div>
+                <div class="bni-rev-periods">
+                  <button v-for="p in revenuePeriods" :key="p" :class="{ active: activeRevenuePeriod === p }" @click="activeRevenuePeriod = p">{{ p }}</button>
                 </div>
               </div>
-            </template>
-            <div v-else class="bni-evt-empty">
-              <FeatherIcon name="calendar" class="h-6 w-6 opacity-40 mb-1" />
-              <span>{{ __('Tidak ada agenda hari ini') }}</span>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <!-- ═══ BOTTOM ANALYTICS GRID ═══ -->
-      <section class="bni-bottom-grid">
-        <!-- Manajemen Leads -->
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>{{ __('Manajemen Leads') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-lead-tabs">
-            <button
-              v-for="tab in leadTabs"
-              :key="tab"
-              :class="{ active: activeLeadTab === tab }"
-              @click="activeLeadTab = tab"
-            >{{ tab }}</button>
-          </div>
-          <div class="bni-lead-bars">
-            <div v-for="item in displayLeadBars" :key="item.label" class="bni-lb-row">
-              <span class="bni-lb-label">{{ item.label }}</span>
-              <div class="bni-lb-track">
-                <div class="bni-lb-fill" :style="{ width: `${item.percent}%` }"></div>
+              <div class="bni-chart-wrap">
+                <svg :viewBox="`0 0 ${svgW} ${svgH}`" preserveAspectRatio="none" class="bni-rev-svg">
+                  <text v-for="yl in yLabels" :key="yl.label" :x="10" :y="yl.y + 4" class="y-label">{{ yl.label }}</text>
+                  <line v-for="yl in yLabels" :key="'g'+yl.label" :x1="chartLeft" :y1="yl.y" :x2="svgW - 10" :y2="yl.y" class="grid-ln" />
+                  <rect v-for="(bar, i) in chartBars" :key="bar.label" :x="bar.x" :y="bar.y" :width="bw" :height="bar.h" rx="5" :class="['bar', { hl: hoveredBar === i || (hoveredBar === null && i === defaultHighlight) }]" @mouseenter="hoveredBar = i" @mouseleave="hoveredBar = null" />
+                  <line v-if="activeBar" :x1="activeBar.x + bw / 2" :y1="chartTop" :x2="activeBar.x + bw / 2" :y2="chartBottom" class="active-line" />
+                  <text
+                    v-for="(bar, i) in chartBars"
+                    :key="'x'+i"
+                    :x="bar.x + bw / 2"
+                    :y="chartBottom + 12"
+                    text-anchor="end"
+                    :transform="`rotate(-30, ${bar.x + bw / 2}, ${chartBottom + 12})`"
+                    class="x-label animate-fade-in"
+                    :class="{ hl: i === defaultHighlight }"
+                  >
+                    {{ truncateLabel(bar.label, 12) }}
+                  </text>
+                </svg>
+                <div v-if="activeBar" class="bni-tooltip" :style="{ left: tooltipLeft }">
+                  <strong>{{ activeBar.label }}</strong>
+                  <span>{{ formatCount(activeBar.value) }} leads</span>
+                </div>
               </div>
-            </div>
-          </div>
-        </article>
+            </article>
 
-        <!-- Bank Breakdown -->
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>{{ __('Bank Breakdown') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="building-2" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-rank-list">
-            <div v-for="(company, index) in displayCompanies" :key="company.label" class="bni-rank-row">
-              <span class="bni-rank-num">{{ index + 1 }}</span>
-              <span class="bni-rank-name">{{ company.label }}</span>
-              <strong class="bni-rank-pct">{{ company.count }}</strong>
-            </div>
-          </div>
-          <button class="bni-see-all">
-            {{ __('Most active organizations') }}
-            <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
-          </button>
-        </article>
+            <!-- CALENDAR -->
+            <article v-if="element.key === 'calendar'" class="bni-card bni-cal-card">
+              <div class="bni-card-head">
+                <h2>{{ __('Kalender') }}</h2>
+              </div>
+              <div class="bni-cal-month-nav">
+                <button class="bni-cal-arrow" @click="prevWeek"><FeatherIcon name="chevron-left" class="h-4 w-4" /></button>
+                <strong>{{ currentMonthYearLabel }}</strong>
+                <button class="bni-cal-arrow" @click="nextWeek"><FeatherIcon name="chevron-right" class="h-4 w-4" /></button>
+              </div>
+              <div class="bni-cal-daynames">
+                <span v-for="d in dayNames" :key="d">{{ d }}</span>
+              </div>
+              <div class="bni-cal-dates">
+                <span
+                  v-for="dt in weekDates"
+                  :key="dt.toISOString()"
+                  :class="{ active: isDateSelected(dt) }"
+                  @click="selectDate(dt)"
+                >{{ dt.getDate() }}</span>
+              </div>
+              <div class="bni-cal-events">
+                <template v-if="filteredEvents.length > 0">
+                  <div v-for="evt in filteredEvents" :key="evt.name" class="bni-evt">
+                    <div class="bni-evt-body">
+                      <strong>{{ evt.subject }}</strong>
+                      <span class="bni-evt-time">{{ formatEventTime(evt.starts_on, evt.ends_on) }}</span>
+                    </div>
+                    <div class="bni-evt-foot">
+                      <div class="bni-avatars">
+                        <span style="background:#3aaca8;color:#fff">{{ getEventInitials(evt.subject) }}</span>
+                      </div>
+                      <span class="bni-evt-loc">{{ evt.event_type || 'Di Google Meet' }} ›</span>
+                    </div>
+                  </div>
+                </template>
+                <div v-else class="bni-evt-empty">
+                  <FeatherIcon name="calendar" class="h-6 w-6 opacity-40 mb-1" />
+                  <span>{{ __('Tidak ada agenda hari ini') }}</span>
+                </div>
+              </div>
+            </article>
 
-        <!-- PIC Ownership -->
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>{{ __('PIC Ownership') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
+            <!-- LEAD MANAGEMENT -->
+            <article v-if="element.key === 'leadManagement'" class="bni-card">
+              <div class="bni-card-head"><h2>{{ __('Manajemen Leads') }}</h2></div>
+              <div class="bni-lead-tabs">
+                <button v-for="tab in leadTabs" :key="tab" :class="{ active: activeLeadTab === tab }" @click="activeLeadTab = tab">{{ tab }}</button>
+              </div>
+              <div class="bni-lead-bars">
+                <div v-for="item in displayLeadBars" :key="item.label" class="bni-lb-row">
+                  <span class="bni-lb-label">{{ item.label }}</span>
+                  <div class="bni-lb-track"><div class="bni-lb-fill" :style="{ width: `${item.percent}%` }"></div></div>
+                </div>
+              </div>
+            </article>
+
+            <!-- BANK BREAKDOWN (PIE) -->
+            <article v-if="element.key === 'bankBreakdown'" class="bni-card">
+              <div class="bni-card-head"><h2>{{ __('Bank Breakdown') }}</h2></div>
+              <div class="bni-pie-wrap">
+                <svg viewBox="0 0 100 100" class="bni-pie-svg">
+                  <path v-for="s in pieChartData" :key="s.label" :d="s.path" :fill="s.color" stroke="#fff" stroke-width="1.5" />
+                </svg>
+                <div class="bni-pie-legend">
+                  <div v-for="s in pieChartData.slice(0, 6)" :key="s.label" class="bni-pie-legend-item">
+                    <span class="bni-pie-dot" :style="{ background: s.color }"></span>
+                    <span class="bni-pie-lname">{{ s.label }}</span>
+                    <span class="bni-pie-lpct">{{ s.percentLabel }}</span>
+                  </div>
+                </div>
+              </div>
+              <button class="bni-see-all" @click="goToLeads">{{ __('Most active organizations') }} <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" /></button>
+            </article>
+
+            <!-- PIC OWNERSHIP -->
+            <article v-if="element.key === 'picOwnership'" class="bni-card">
+              <div class="bni-card-head"><h2>{{ __('PIC Ownership') }}</h2></div>
+              <div class="bni-rank-list">
+                <div v-for="(owner, i) in displayPicOwnership" :key="owner.label" class="bni-rank-row">
+                  <span class="bni-rank-num">{{ i + 1 }}</span>
+                  <span class="bni-rank-name">{{ owner.label }}</span>
+                  <strong class="bni-rank-pct">{{ owner.count }}</strong>
+                </div>
+              </div>
+              <button class="bni-see-all" @click="goToLeads">{{ __('Lead referrers / PIC') }} <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" /></button>
+            </article>
+
+            <!-- FOLLOW-UP LOAD -->
+            <article v-if="element.key === 'followUpLoad'" class="bni-card">
+              <div class="bni-card-head"><h2>{{ __('Follow-up Load') }}</h2></div>
+              <div class="bni-lead-bars">
+                <div v-for="item in displayFollowUpLoad" :key="item.label" class="bni-lb-row">
+                  <span class="bni-lb-label">{{ item.label }}</span>
+                  <div class="bni-lb-track"><div class="bni-lb-fill" :style="{ width: `${item.percent}%` }"></div></div>
+                </div>
+              </div>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-center">
+                  <div class="text-xl font-bold text-emerald-700">{{ followUpSummary.completed }}</div>
+                  <div class="text-xs text-emerald-700">{{ __('Completed') }}</div>
+                </div>
+                <div class="rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-3 text-center">
+                  <div class="text-xl font-bold text-cyan-700">{{ followUpSummary.pending }}</div>
+                  <div class="text-xs text-cyan-700">{{ __('Pending') }}</div>
+                </div>
+              </div>
+            </article>
           </div>
-          <div class="bni-rank-list">
-            <div v-for="(owner, i) in displayPicOwnership" :key="owner.label" class="bni-rank-row">
-              <span class="bni-rank-num">{{ i + 1 }}</span>
-              <span class="bni-rank-name">{{ owner.label }}</span>
-              <strong class="bni-rank-pct">{{ owner.count }}</strong>
-            </div>
-          </div>
-          <button class="bni-see-all">
-            {{ __('Lead referrers / PIC') }}
-            <FeatherIcon name="arrow-right" class="h-3.5 w-3.5" />
+      </div>
+      <!-- end v-for widgets -->
+
+    </div>
+
+    <!-- ═══ Import Dialog ═══ -->
+    <Dialog v-model="showImport" :options="{ title: __('Imports'), size: 'sm' }">
+      <template #body-content>
+        <div class="space-y-1 pt-3">
+          <button v-for="opt in importOptions" :key="opt.label" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-slate-50 text-left transition-colors" @click="runImport(opt)">
+            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-teal-600 shrink-0" />
+            <span>{{ opt.label }}</span>
+            <FeatherIcon name="external-link" class="h-3.5 w-3.5 text-slate-300 ml-auto" />
           </button>
-        </article>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- ═══ Export Dialog ═══ -->
+    <Dialog v-model="showExport" :options="{ title: __('Exports'), size: 'sm' }">
+      <template #body-content>
+        <div class="space-y-1 pt-3">
+          <button v-for="opt in exportOptions" :key="opt.label" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-slate-50 text-left transition-colors" @click="runExport(opt)">
+            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-teal-600 shrink-0" />
+            <span>{{ opt.label }}</span>
+            <FeatherIcon name="external-link" class="h-3.5 w-3.5 text-slate-300 ml-auto" />
+          </button>
+        </div>
+      </template>
+    </Dialog>
 
         <!-- Follow-up Load -->
         <article class="bni-card">
@@ -707,9 +729,9 @@ const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
 // ─── Chart Dimensions ─────────────────────────────────────
 const svgW = 720
-const svgH = 260
+const svgH = 300
 const chartLeft = 42
-const chartBottom = 230
+const chartBottom = 200
 const chartTop = 20
 const chartH = chartBottom - chartTop
 const bw = 36
@@ -732,31 +754,17 @@ const dashboard = createResource({
 })
 
 const data = computed(() => dashboard.data || {})
+const hasDashboardData = computed(() => !!dashboard.data && Object.keys(dashboard.data).length > 0)
 
 // ─── Metrics ──────────────────────────────────────────────
-const fallbackMetrics = [
-  { label: 'Imported Leads', value: 129, icon: 'users', change: 2, caption: 'vs periode sebelumnya', suffix: '' },
-  { label: 'Active Banks', value: 12, icon: 'building-2', change: 4, caption: 'company coverage', suffix: '' },
-  { label: 'Pending Follow-up', value: 18, icon: 'check-square', change: -4, caption: 'task backlog', suffix: '' },
-  { label: 'Active PIC', value: 9, icon: 'user-check', change: 7, caption: 'referrer / PIC mapped', suffix: '' },
-]
-
 const displayMetrics = computed(() => {
-  const api = data.value.metrics
-  if (api?.length >= 4) {
-    return api.map(m => ({
-      ...m,
-      icon: m.icon || 'activity',
-      displayValue: fmtMetric(m),
-      changeNum: Number(m.change || 0),
-      isPositive: Number(m.change || 0) >= 0,
-    }))
-  }
-  return fallbackMetrics.map(m => ({
+  const api = data.value.metrics || []
+  return api.map(m => ({
     ...m,
-    displayValue: m.displayOverride || `${m.value}${m.suffix}`,
-    changeNum: m.change,
-    isPositive: m.change >= 0,
+    icon: m.icon || 'activity',
+    displayValue: fmtMetric(m),
+    changeNum: Number(m.change || 0),
+    isPositive: Number(m.change || 0) >= 0,
   }))
 })
 
@@ -765,23 +773,16 @@ function fmtMetric(m) {
 }
 
 // ─── Company Breakdown Chart ──────────────────────────────
-const fallbackRevenueMonths = [
-  { label: 'CIMB', value: 32 },
-  { label: 'ANZ', value: 31 },
-  { label: 'BRI', value: 19 },
-  { label: 'BNI', value: 19 },
-  { label: 'BTPN', value: 17 },
-  { label: 'Danamon', value: 11 },
-]
-
 const chartSummary = computed(() => ({
-  total: data.value.revenue?.total || 0,
+  total: data.value.revenue?.total ?? 0,
   change: data.value.revenue?.change ?? 0,
 }))
 
-const revenueMonths = computed(() =>
-  data.value.revenue?.months?.length ? data.value.revenue.months : fallbackRevenueMonths
-)
+const revenueMonths = computed(() => {
+  const months = data.value.revenue?.months
+  if (Array.isArray(months)) return months
+  return fallbackRevenueMonths
+})
 
 const maxRev = computed(() => Math.max(...revenueMonths.value.map(m => Number(m.value || m.count || 0)), 1))
 
@@ -817,62 +818,36 @@ function formatCount(v) {
 }
 
 // ─── Lead Management ─────────────────────────────────────
-const fallbackLeads = {
-  Status: [
-    { label: 'Kualifikasi', percent: 88 },
-    { label: 'Dihubungi', percent: 65 },
-    { label: 'Prospek', percent: 48 },
-    { label: 'Kalah', percent: 28 },
-    { label: 'Menang', percent: 18 },
-  ],
-  Sumber: [
-    { label: 'Website', percent: 72 },
-    { label: 'Referral', percent: 55 },
-    { label: 'Cold Call', percent: 38 },
-    { label: 'Event', percent: 22 },
-  ],
-  Kualifikasi: [
-    { label: 'Hot', percent: 32 },
-    { label: 'Warm', percent: 55 },
-    { label: 'Cold', percent: 75 },
-  ],
-}
-
 const displayLeadBars = computed(() => {
   const lm = data.value.lead_management
   if (lm) {
     const map = { Status: lm.status, Sumber: lm.source, Kualifikasi: lm.qualification }
     const rows = map[activeLeadTab.value]
-    if (rows?.length) return rows.map(r => ({ label: r.label, percent: r.percent || 0 }))
+    return Array.isArray(rows) ? rows.map(r => ({ label: r.label, percent: r.percent || 0 })) : []
   }
-  return fallbackLeads[activeLeadTab.value] || []
+  return []
 })
 
 // ─── Supporting Lists ─────────────────────────────────────
-const fallbackBranches = [
-  { name: 'Jakarta', percent: 24 },
-  { name: 'Surabaya', percent: 18 },
-  { name: 'Bandung', percent: 12 },
-  { name: 'Medan', percent: 10 },
-]
+const displayCompanies = computed(() => {
+  const rows = data.value.lead_gen?.company_breakdown
+  if (Array.isArray(rows)) return rows
+  return fallbackBranches.map(item => ({ label: item.name, count: item.percent, percent: item.percent }))
+})
 
-const displayCompanies = computed(() => data.value.lead_gen?.company_breakdown?.length
-  ? data.value.lead_gen.company_breakdown
-  : fallbackBranches.map(item => ({ label: item.name, count: item.percent, percent: item.percent }))
-)
-
-const displayPicOwnership = computed(() => data.value.lead_gen?.pic_ownership?.length
-  ? data.value.lead_gen.pic_ownership
-  : [
+const displayPicOwnership = computed(() => {
+  const rows = data.value.lead_gen?.pic_ownership
+  if (Array.isArray(rows)) return rows
+  return [
       { label: 'Unassigned', count: 12, percent: 40 },
       { label: 'RM Jakarta', count: 9, percent: 30 },
       { label: 'RM Bandung', count: 6, percent: 20 },
     ]
-)
+})
 
 const displayFollowUpLoad = computed(() => {
   const rows = data.value.lead_gen?.follow_up_load?.status_rows
-  if (rows?.length) return rows
+  if (Array.isArray(rows)) return rows
   return [
     { label: 'Todo', count: 14, percent: 58 },
     { label: 'In Progress', count: 7, percent: 29 },
@@ -881,16 +856,50 @@ const displayFollowUpLoad = computed(() => {
 })
 
 const followUpSummary = computed(() => ({
-  pending: data.value.lead_gen?.follow_up_load?.pending ?? 21,
-  completed: data.value.lead_gen?.follow_up_load?.completed ?? 3,
+  pending: data.value.lead_gen?.follow_up_load?.pending ?? (hasDashboardData.value ? 0 : 21),
+  completed: data.value.lead_gen?.follow_up_load?.completed ?? (hasDashboardData.value ? 0 : 3),
 }))
 
 // ─── Last Updated ─────────────────────────────────────────
+const notifCount = computed(() => data.value.lead_gen?.overview?.converted ?? 0)
+
 const lastUpdated = computed(() => {
   if (data.value.last_updated) {
     return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date(data.value.last_updated))
   }
   return __('now')
+})
+
+// ─── Navigation ────────────────────────────────────────────
+function goToLeads() { router.push({ name: 'Lead' }) }
+function goToCustomers() { router.push({ name: 'Customer' }) }
+
+// ─── Bank Breakdown Pie Chart ──────────────────────────────
+const pieColors = ['#008c95', '#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#ccfbf1']
+const pieChartData = computed(() => {
+  const items = displayCompanies.value || []
+  const total = items.reduce((s, i) => s + (Number(i.count) || 0), 0) || 1
+  let angle = -90
+  return items.map((item, idx) => {
+    const pct = (Number(item.count) || 0) / total
+    const startAngle = angle
+    const endAngle = angle + pct * 360
+    angle = endAngle
+    const sx = 50 + 40 * Math.cos((startAngle * Math.PI) / 180)
+    const sy = 50 + 40 * Math.sin((startAngle * Math.PI) / 180)
+    const ex = 50 + 40 * Math.cos((endAngle * Math.PI) / 180)
+    const ey = 50 + 40 * Math.sin((endAngle * Math.PI) / 180)
+    const large = pct > 0.5 ? 1 : 0
+    return {
+      ...item,
+      pct,
+      percentLabel: `${(pct * 100).toFixed(1)}%`,
+      path: pct >= 1
+        ? `M 50 50 L 50 10 A 40 40 0 1 1 49.999 10 Z`
+        : `M 50 50 L ${sx.toFixed(1)} ${sy.toFixed(1)} A 40 40 0 ${large} 1 ${ex.toFixed(1)} ${ey.toFixed(1)} Z`,
+      color: pieColors[idx % pieColors.length],
+    }
+  })
 })
 
 // ─── Lifecycle ────────────────────────────────────────────
@@ -1417,7 +1426,6 @@ onUnmounted(() => {
   margin-bottom: 16px;
 }
 .bni-metric-card {
-  height: 104px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1524,12 +1532,137 @@ onUnmounted(() => {
 }
 .bni-dots:hover { background: var(--teal-soft); color: var(--teal); }
 
-/* ═══ MAIN GRID ═════════════════════════════════════════ */
-.bni-main-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
+/* ═══ WIDGETS CONTAINER (draggable) ════════════════════ */
+.bni-widgets-container {
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
+  min-height: 100px;
+}
+.bni-widget {
+  width: 100%;
+}
+.bni-widget-revenue { width: calc(66.666% - 8px); }
+.bni-widget-calendar { width: calc(33.333% - 8px); }
+.bni-widget-leadManagement { width: calc(25% - 12px); }
+.bni-widget-bankBreakdown { width: calc(25% - 12px); }
+.bni-widget-picOwnership { width: calc(25% - 12px); }
+.bni-widget-followUpLoad { width: calc(25% - 12px); }
+@media (max-width: 1000px) {
+  .bni-widget-revenue,
+  .bni-widget-calendar,
+  .bni-widget-leadManagement,
+  .bni-widget-bankBreakdown,
+  .bni-widget-picOwnership,
+  .bni-widget-followUpLoad {
+    width: 100%;
+  }
+}
+.bni-ghost {
+  opacity: 0.3;
+  outline: 2px dashed var(--teal);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+.bni-dragging {
+  opacity: 0.8;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ─── Customize Mode Banner ──────────────────────────── */
+.bni-customize-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
   margin-bottom: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 500;
+}
+.bni-customize-done {
+  margin-left: auto;
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--teal);
+  background: var(--card);
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bni-customize-done:hover {
+  background: var(--teal);
+  color: #fff;
+}
+.bni-customize-reset {
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.bni-customize-reset:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ─── Widget Header (drag handle + title) ────────────── */
+.bni-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  user-select: none;
+}
+.bni-drag-handle {
+  cursor: grab;
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  touch-action: none;
+}
+.bni-drag-handle:hover { color: var(--teal); }
+.bni-widget-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.bni-widget-toggle {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  padding: 2px;
+}
+.bni-widget-toggle:hover { color: var(--teal); }
+
+/* ─── Customize mode: entire widget is draggable ────── */
+.bni-customize-active {
+  cursor: grab;
+  user-select: none;
+}
+.bni-customize-active:active {
+  cursor: grabbing;
+}
+
+/* ─── Hidden widget shown dimmed in customize mode ─── */
+.bni-widget-dimmed {
+  opacity: 0.45;
+  transition: opacity 0.2s;
+}
+.bni-widget-dimmed:hover {
+  opacity: 0.85;
 }
 
 /* ─── Revenue Card ───────────────────────────────────── */
@@ -1600,7 +1733,7 @@ onUnmounted(() => {
 /* ─── Chart ──────────────────────────────────────────── */
 .bni-chart-wrap {
   position: relative;
-  height: 260px;
+  height: 300px;
 }
 .bni-rev-svg {
   width: 100%;
@@ -1807,11 +1940,7 @@ onUnmounted(() => {
 }
 
 /* ═══ BOTTOM GRID ═══════════════════════════════════════ */
-.bni-bottom-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
+/* (replaced by .bni-widgets-container above) */
 
 /* ─── Lead Management ────────────────────────────────── */
 .bni-lead-tabs {
@@ -1868,6 +1997,61 @@ onUnmounted(() => {
   border-radius: 999px;
   background: linear-gradient(90deg, #0e9298, #15b8bd);
   transition: width .4s ease;
+}
+
+/* ─── Pie Chart ────────────────────────────────────────── */
+.bni-pie-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 4px;
+}
+.bni-pie-svg {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+.bni-pie-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.bni-pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.bni-pie-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bni-pie-lname {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+.bni-pie-lpct {
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+/* ─── Drag and Drop ────────────────────────────────────── */
+.bni-drag-handle {
+  touch-action: none;
+}
+.bni-ghost {
+  opacity: 0.4;
+  background: #f0fdfa;
+  border-radius: 8px;
 }
 
 /* ─── Map ────────────────────────────────────────────── */

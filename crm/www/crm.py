@@ -2,6 +2,7 @@
 # GNU GPLv3 License. See license.txt
 
 import frappe
+import frappe.sessions
 from frappe import _
 from frappe.integrations.frappe_providers.frappecloud_billing import is_fc_site
 from frappe.translate import get_messages_for_boot, get_translated_doctypes
@@ -14,12 +15,16 @@ no_cache = 1
 def get_context():
 	from crm.api import check_app_permission
 
+	if frappe.session.user == "Guest":
+		frappe.redirect("/login?redirect-to=/crm")
+
 	if not check_app_permission():
 		frappe.throw(_("You do not have permission to access BNI CRM"), frappe.PermissionError)
 
 	frappe.db.commit()
 	context = frappe._dict()
 	context.boot = get_boot()
+	context.safe_render = False
 	if frappe.session.user != "Guest":
 		capture("active_site", "crm")
 	return context
@@ -29,7 +34,15 @@ def get_context():
 def get_context_for_dev():
 	if not frappe.conf.developer_mode:
 		frappe.throw(_("This method is only meant for developer mode"))
+	print("DEBUG DEV USER:", frappe.session.user)
+	print("DEBUG DEV COOKIES:", frappe.request.cookies)
 	return get_boot()
+
+
+@frappe.whitelist(methods=["POST"], allow_guest=True)
+def debug_log(message):
+	print("FRONTEND DEBUG LOG:", message)
+	return "OK"
 
 
 def get_boot():
@@ -52,6 +65,7 @@ def get_boot():
 				"user": frappe.db.get_value("User", frappe.session.user, "time_zone")
 				or get_system_timezone(),
 			},
+			"user": frappe.session.user,
 		}
 	)
 

@@ -461,6 +461,8 @@ export {
   evaluateExpression,
 } from '@/utils/expressions'
 
+export { formatCurrency } from '@/utils/numberFormat'
+
 export function convertSize(size) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   let unitIndex = 0

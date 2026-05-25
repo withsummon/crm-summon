@@ -9,6 +9,47 @@
         :actions="leadsListView.customListActions"
       />
       <Button
+        v-if="hasSelection"
+        variant="outline"
+        :label="__('Reassign')"
+        @click="openReassignDialog"
+      >
+        <template #prefix><FeatherIcon name="user-check" class="h-4 w-4" /></template>
+      </Button>
+      <Button
+        v-if="hasSelection"
+        variant="outline"
+        :label="__('Close')"
+        @click="openCloseDialog"
+      >
+        <template #prefix><FeatherIcon name="x-circle" class="h-4 w-4" /></template>
+      </Button>
+      <Button
+        v-if="hasSelection"
+        variant="outline"
+        theme="red"
+        :label="__('Delete')"
+        @click="deleteSelectedLeads"
+      >
+        <template #prefix><FeatherIcon name="trash-2" class="h-4 w-4" /></template>
+      </Button>
+      <Button
+        v-if="hasSelection"
+        variant="outline"
+        :label="__('Tag')"
+        @click="openTagDialog"
+      >
+        <template #prefix><FeatherIcon name="tag" class="h-4 w-4" /></template>
+      </Button>
+      <Button
+        v-if="selections.length === 2"
+        variant="outline"
+        :label="__('Merge')"
+        @click="openMergeDialog"
+      >
+        <template #prefix><FeatherIcon name="git-merge" class="h-4 w-4" /></template>
+      </Button>
+      <Button
         variant="outline"
         :label="__('Export')"
         @click="exportFilteredLeads"
@@ -47,6 +88,7 @@
       </Dropdown>
     </template>
   </LayoutHeader>
+  <LeadKpiRibbon @filter="onKpiFilter" />
   <ViewControls
     ref="viewControls"
     v-model="leads"
@@ -363,8 +405,10 @@
     @applyLikeFilter="(data) => viewControls.applyLikeFilter(data)"
     @likeDoc="(data) => viewControls.likeDoc(data)"
     @selectionsChanged="
-      (selections) => viewControls.updateSelections(selections)
+      (s) => { viewControls.updateSelections(s); selections.value = (s || []).map((r) => r.name) }
     "
+    @previewLead="onPreviewLead"
+    @openScoring="onOpenScoring"
   />
   <EmptyState
     v-else-if="leads.data && !rows.length"
@@ -375,6 +419,7 @@
     v-if="showLeadModal"
     v-model="showLeadModal"
     :defaults="defaults"
+    @created="onLeadsImported"
   />
   <LeadGenDialog
     v-model="showImportDialog"
@@ -446,6 +491,126 @@
       </div>
     </template>
   </Dialog>
+
+  <!-- Reassign Dialog -->
+  <Dialog v-model="reassignDialog.open" :options="{ title: __('Reassign Leads') }">
+    <template #body-content>
+      <div class="space-y-3">
+        <p class="text-sm text-ink-gray-7">{{ __('{0} leads selected').replace('{0}', selections.length) }}</p>
+        <div>
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Assignee') }}</label>
+          <select v-model="reassignDialog.toUser" class="mt-1 w-full rounded border border-outline-gray-2 px-3 py-2 text-sm">
+            <option v-for="u in users" :key="u.name" :value="u.name">{{ u.full_name || u.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Reason') }}</label>
+          <textarea v-model="reassignDialog.reason" rows="2" class="mt-1 w-full rounded border border-outline-gray-2 px-3 py-2 text-sm" :placeholder="__('Mandatory reason…')"></textarea>
+        </div>
+      </div>
+    </template>
+    <template #actions="{ close }">
+      <Button variant="ghost" label="Cancel" @click="close" />
+      <Button variant="solid" :disabled="!canReassign" @click="submitReassign().then(close)">{{ __('Reassign') }}</Button>
+    </template>
+  </Dialog>
+
+  <!-- Tag Dialog -->
+  <Dialog v-model="tagDialog.open" :options="{ title: __('Tag Leads') }">
+    <template #body-content>
+      <div class="space-y-3">
+        <p class="text-sm text-ink-gray-7">{{ __('{0} leads selected').replace('{0}', selections.length) }}</p>
+        <div>
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Tag') }}</label>
+          <input v-model="tagDialog.tag" class="mt-1 w-full rounded border border-outline-gray-2 px-3 py-2 text-sm" placeholder="e.g. Hot, Cross-sell" />
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Color') }}</label>
+          <input v-model="tagDialog.color" type="color" class="mt-1 h-8 w-full rounded border border-outline-gray-2" />
+        </div>
+      </div>
+    </template>
+    <template #actions="{ close }">
+      <Button variant="ghost" label="Cancel" @click="close" />
+      <Button variant="solid" :disabled="!canTag" @click="submitTag().then(close)">{{ __('Tag') }}</Button>
+    </template>
+  </Dialog>
+
+  <!-- Async Export Dialog -->
+  <Dialog v-model="exportDialog.open" :options="{ title: __('Export Leads') }">
+    <template #body-content>
+      <div class="space-y-3">
+        <p class="text-sm text-ink-gray-7">{{ __('This export contains {0} leads.').replace('{0}', exportDialog.rowCount) }}</p>
+        <div v-if="exportDialog.rowCount > 1000">
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Email when ready') }}</label>
+          <input v-model="exportDialog.email" type="email" class="mt-1 w-full rounded border border-outline-gray-2 px-3 py-2 text-sm" />
+        </div>
+        <div v-else>
+          <p class="text-sm text-ink-gray-5">{{ __('A direct download will start after confirmation.') }}</p>
+        </div>
+      </div>
+    </template>
+    <template #actions="{ close }">
+      <Button variant="ghost" label="Cancel" @click="close" />
+      <Button variant="solid" @click="confirmExport().then(close)">{{ __('Export') }}</Button>
+    </template>
+  </Dialog>
+
+  <!-- Quick View Popover -->
+  <LeadQuickView
+    :visible="quickView.visible"
+    :lead-name="quickView.leadName"
+    :position-style="quickView.style"
+    @close="quickView.visible = false"
+  />
+
+  <!-- Scoring Drawer -->
+  <LeadScoringDrawer
+    v-model:visible="scoringDrawer.open"
+    :lead-name="scoringDrawer.leadName"
+    @changed="onLeadsImported"
+  />
+
+  <!-- Close Dialog -->
+  <Dialog v-model="closeDialog.open" :options="{ title: __('Close Leads') }">
+    <template #body-content>
+      <div class="space-y-3">
+        <p class="text-sm text-ink-gray-7">{{ __(`${selections.length} leads selected`) }}</p>
+        <div>
+          <label class="text-xs font-medium uppercase tracking-wide text-ink-gray-5">{{ __('Close Reason') }}</label>
+          <textarea v-model="closeDialog.reason" rows="2" class="mt-1 w-full rounded border border-outline-gray-2 px-3 py-2 text-sm" :placeholder="__('Mandatory reason…')"></textarea>
+        </div>
+      </div>
+    </template>
+    <template #actions="{ close }">
+      <Button variant="ghost" label="Cancel" @click="close" />
+      <Button variant="solid" :disabled="!closeDialog.reason.trim()" @click="submitClose().then(close)">{{ __('Close Leads') }}</Button>
+    </template>
+  </Dialog>
+
+  <!-- Merge Dialog -->
+  <Dialog v-model="mergeDialog.open" :options="{ title: __('Merge Leads') }">
+    <template #body-content>
+      <div class="space-y-3">
+        <p class="text-sm text-ink-gray-7">{{ __('Select which lead to keep as the primary record.') }}</p>
+        <div class="space-y-2">
+          <label
+            v-for="name in mergeDialog.candidates"
+            :key="name"
+            class="flex cursor-pointer items-center gap-3 rounded-md border border-outline-gray-2 px-3 py-2"
+            :class="mergeDialog.primary === name ? 'border-crm-teal bg-crm-teal/5' : ''"
+          >
+            <input v-model="mergeDialog.primary" type="radio" :value="name" />
+            <span class="text-sm font-medium text-ink-gray-9">{{ name }}</span>
+          </label>
+        </div>
+      </div>
+    </template>
+    <template #actions="{ close }">
+      <Button variant="ghost" label="Cancel" @click="close" />
+      <Button variant="solid" :disabled="!mergeDialog.primary" @click="submitMerge().then(close)">{{ __('Merge') }}</Button>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -462,6 +627,9 @@ import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import LeadsListView from '@/components/ListViews/LeadsListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
+import LeadKpiRibbon from '@/components/LeadKpiRibbon.vue'
+import LeadQuickView from '@/components/LeadQuickView.vue'
+import LeadScoringDrawer from '@/components/LeadScoringDrawer.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import LeadGenDialog from '@/components/LeadGenDialog.vue'
@@ -475,7 +643,7 @@ import { usersStore } from '@/stores/users'
 import { statusesStore } from '@/stores/statuses'
 import { callEnabled } from '@/composables/telephony'
 import { useBroadcast } from '@/composables/useBroadcast'
-import { formatDate, timeAgo, website, formatTime } from '@/utils'
+import { formatDate, timeAgo, website, formatTime, formatCurrency } from '@/utils'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import {
   Avatar,
@@ -489,7 +657,7 @@ import {
   call,
 } from 'frappe-ui'
 import { useRoute, useRouter } from 'vue-router'
-import { ref, computed, reactive, h, onMounted, onUnmounted, watch, toRefs } from 'vue'
+import { ref, computed, reactive, h, onMounted, onUnmounted, watch, toRefs, onActivated } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Lead')
@@ -524,6 +692,19 @@ const captureDraft = reactive({
   referrer: '',
   npwp: '',
 })
+
+const selections = ref([])
+const hasSelection = computed(() => selections.value.length > 0)
+
+const quickView = reactive({ visible: false, leadName: '', style: {} })
+const scoringDrawer = reactive({ open: false, leadName: '' })
+const reassignDialog = reactive({ open: false, toUser: '', reason: '' })
+const tagDialog = reactive({ open: false, tag: '', color: '#0f766e' })
+  const exportDialog = reactive({ open: false, rowCount: 0, email: '' })
+  const mergeDialog = reactive({ open: false, candidates: [], primary: '' })
+  const closeDialog = reactive({ open: false, reason: '' })
+
+  const users = ref([])
 
 const viewModeActions = computed(() => [
   {
@@ -641,14 +822,29 @@ const handleFocus = () => {
 }
 
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('focus', handleFocus)
+  try {
+    users.value = await call('frappe.client.get_list', {
+      doctype: 'User',
+      fields: ['name', 'full_name'],
+      filters: { enabled: 1, user_type: 'System User' },
+      limit_page_length: 50,
+    })
+  } catch (e) {
+    users.value = []
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('focus', handleFocus)
 })
 
+onActivated(() => {
+  if (leads.value && typeof leads.value.reload === 'function') {
+    leads.value.reload()
+  }
+})
 
 const defaults = reactive({})
 
@@ -707,12 +903,161 @@ async function exportFilteredLeads() {
     filters,
     format: 'CSV',
   })
+  if (result.async && result.row_count > 1000) {
+    exportDialog.rowCount = result.row_count
+    exportDialog.open = true
+    return
+  }
   if (result.file_url) {
     window.location.href = result.file_url
   }
   toast.success(__('Lead export prepared'))
 }
 
+async function confirmExport() {
+  const filters = { converted: 0, ...(leads.value?.params?.filters || {}) }
+  const result = await call('crm.api.lead_management.export_leads', {
+    filters,
+    format: 'CSV',
+    email_to: exportDialog.email || undefined,
+  })
+  if (result.file_url) {
+    window.location.href = result.file_url
+  }
+  toast.success(result.async ? __('Export queued. You will be emailed when ready.') : __('Lead export prepared'))
+}
+
+function openReassignDialog() {
+  reassignDialog.toUser = ''
+  reassignDialog.reason = ''
+  reassignDialog.open = true
+}
+
+const canReassign = computed(() => reassignDialog.toUser && reassignDialog.reason.trim())
+
+async function submitReassign() {
+  try {
+    await call('crm.api.lead_management.reassign_leads', {
+      leads: selections.value,
+      to_user: reassignDialog.toUser,
+      reason: reassignDialog.reason,
+    })
+    toast.success(__('Leads reassigned'))
+    onLeadsImported()
+    selections.value = []
+  } catch (e) {
+    toast.error(e?.message || __('Reassign failed'))
+  }
+}
+
+function openTagDialog() {
+  tagDialog.tag = ''
+  tagDialog.color = '#0f766e'
+  tagDialog.open = true
+}
+
+const canTag = computed(() => tagDialog.tag.trim())
+
+async function submitTag() {
+  try {
+    await call('crm.api.lead_management.bulk_tag_leads', {
+      leads: selections.value,
+      tag: tagDialog.tag,
+      color: tagDialog.color,
+    })
+    toast.success(__('Tags applied'))
+    onLeadsImported()
+    selections.value = []
+  } catch (e) {
+    toast.error(e?.message || __('Tagging failed'))
+  }
+}
+
+function onKpiFilter(key) {
+  if (!viewControls.value) return
+  if (key === 'new_today') {
+    viewControls.value.applyFilter({ fieldname: 'creation', operator: 'Equals', value: new Date().toISOString().slice(0, 10) })
+  } else if (key === 'aging_stale') {
+    viewControls.value.applyFilter({ fieldname: 'last_activity_on', operator: '<=', value: addDays(new Date(), -14).toISOString().slice(0, 10) })
+  } else if (key === 'sla_breaching') {
+    viewControls.value.applyFilter({ fieldname: 'sla_status', operator: 'is', value: ['At Risk', 'Breached', 'Failed'] })
+  } else if (key === 'dedupe_pending') {
+    router.push({ name: 'Leads', params: { viewType: 'list' }, query: { ...route.query, dedupe: '1' } })
+  }
+}
+
+function addDays(date, days) {
+  const result = new Date(date)
+  result.setDate(result.getDate() + days)
+  return result
+}
+
+function onPreviewLead({ name, event }) {
+  const rect = event.target.closest('tr')?.getBoundingClientRect?.() || event.target.getBoundingClientRect()
+  quickView.leadName = name
+  quickView.style = {
+    top: `${rect.top + window.scrollY + 24}px`,
+    left: `${Math.min(rect.left + window.scrollX, window.innerWidth - 380)}px`,
+  }
+  quickView.visible = true
+}
+
+function onOpenScoring(name) {
+  scoringDrawer.leadName = name
+  scoringDrawer.open = true
+}
+
+function openCloseDialog() {
+  closeDialog.reason = ''
+  closeDialog.open = true
+}
+
+async function submitClose() {
+  try {
+    for (const name of selections.value) {
+      await call('crm.api.lead_management.close_lead', { name, reason: closeDialog.reason })
+    }
+    toast.success(__('Leads closed'))
+    onLeadsImported()
+    selections.value = []
+  } catch (e) {
+    toast.error(e?.message || __('Close failed'))
+  }
+}
+
+async function deleteSelectedLeads() {
+  if (!confirm(__('Are you sure you want to delete the selected leads?'))) return
+  try {
+    for (const name of selections.value) {
+      await call('crm.api.lead_management.delete_lead', { name })
+    }
+    toast.success(__('Leads deleted'))
+    onLeadsImported()
+    selections.value = []
+  } catch (e) {
+    toast.error(e?.message || __('Delete failed'))
+  }
+}
+
+function openMergeDialog() {
+  if (selections.value.length !== 2) return
+  mergeDialog.candidates = [...selections.value]
+  mergeDialog.primary = selections.value[0]
+  mergeDialog.open = true
+}
+
+async function submitMerge() {
+  try {
+    const primary = mergeDialog.primary
+    const duplicate = mergeDialog.candidates.find((n) => n !== primary)
+    await call('crm.api.lead_management.merge_leads', { primary, duplicate })
+    toast.success(__('Leads merged'))
+    onLeadsImported()
+    selections.value = []
+  } catch (e) {
+    toast.error(e?.message || __('Merge failed'))
+  }
+}
 
 function getRow(name, field) {
   function getValue(value) {
@@ -830,7 +1175,7 @@ function parseRows(rows, columns = []) {
       }
 
       if (fieldType && fieldType == 'Currency') {
-        _rows[row] = getFormattedCurrency(row, lead)
+        _rows[row] = formatCurrency(lead[row], '', 'IDR', 0)
       }
 
       if (fieldType && fieldType == 'Float') {

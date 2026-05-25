@@ -12,7 +12,7 @@ const requiresCrmRole = (route) => {
   
   const flatCrmRoutes = [
     'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
-    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Desk'
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center'
   ]
   if (flatCrmRoutes.includes(route.name)) return true
   
@@ -154,8 +154,13 @@ const routes = [
       },
       {
         path: 'ai-desk',
-        name: 'AI Desk',
-        component: () => import('@/pages/AIDesk.vue'),
+        redirect: { name: 'AI Agent Center' },
+      },
+      {
+        path: 'ai-agent-center',
+        name: 'AI Agent Center',
+        alias: 'ai-agent',
+        component: () => import('@/pages/AIAgentCenter.vue'),
       },
     ],
   },
@@ -176,35 +181,27 @@ const routes = [
       {
         path: 'loan-origination-system',
         name: 'Loan Origination System',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Loan Origination System',
-          subtitle: 'Lending',
-          icon: 'dollar-sign',
-          sourcePath: '/app/loans',
-        },
+        component: () => import('@/pages/LoanOrigination.vue'),
+      },
+      {
+        path: 'loan-origination-system/:id',
+        name: 'Loan Application',
+        component: () => import('@/pages/LoanOrigination.vue'),
       },
       {
         path: 'portfolio-monitoring',
         name: 'Portfolio Monitoring',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Portfolio Monitoring',
-          subtitle: 'Insights',
-          icon: 'pie-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/PortfolioMonitoring.vue'),
       },
       {
         path: 'product-configuration',
         name: 'Product Configuration',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Product Configuration',
-          subtitle: 'Item',
-          icon: 'package',
-          sourcePath: '/app/item',
-        },
+        component: () => import('@/pages/ProductConfiguration.vue'),
+      },
+      {
+        path: 'covenant-monitoring',
+        name: 'Covenant Monitoring',
+        component: () => import('@/pages/CovenantMonitoring.vue'),
       },
       {
         path: 'collections',
@@ -240,13 +237,7 @@ const routes = [
       {
         path: 'document-management',
         name: 'Document Management',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Document Management',
-          subtitle: 'Frappe Drive',
-          icon: 'folder',
-          sourcePath: '/drive',
-        },
+        component: () => import('@/pages/DocumentManagement.vue'),
       },
       {
         path: 'partner-vendor-management',
@@ -256,13 +247,7 @@ const routes = [
       {
         path: 'notification-center',
         name: 'Notification Center',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Notification Center',
-          subtitle: 'Notification',
-          icon: 'bell',
-          sourcePath: '/app/notification',
-        },
+        component: () => import('@/pages/NotificationCenter.vue'),
       },
       {
         path: 'drive/:pathMatch(.*)*',
@@ -295,24 +280,12 @@ const routes = [
       {
         path: 'reporting-bi',
         name: 'Reporting & BI',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Reporting & BI',
-          subtitle: 'Insights',
-          icon: 'bar-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/ReportingBI.vue'),
       },
       {
         path: 'api-integration-center',
         name: 'API & Integration Center',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'API & Integration Center',
-          subtitle: 'Integrations',
-          icon: 'link',
-          sourcePath: '/app/integrations',
-        },
+        component: () => import('@/pages/APIIntegrationCenter.vue'),
       },
       {
         path: 'rules-engine',
@@ -326,6 +299,11 @@ const routes = [
         props: true,
       },
       // RBAC Routes
+      {
+        path: 'rbac',
+        name: 'RBAC Admin',
+        component: () => import('@/modules/rbac/pages/RBACAdmin.vue'),
+      },
       {
         path: 'users',
         name: 'User List',
@@ -351,6 +329,36 @@ const routes = [
         path: 'user-permissions',
         name: 'User Permissions',
         component: () => import('@/modules/rbac/pages/UserPermissions.vue'),
+      },
+      {
+        path: 'branches',
+        name: 'RBAC Branches',
+        component: () => import('@/modules/rbac/pages/BranchManagement.vue'),
+      },
+      {
+        path: 'approval-matrix',
+        name: 'RBAC Approval Matrix',
+        component: () => import('@/modules/rbac/pages/ApprovalMatrix.vue'),
+      },
+      {
+        path: 'field-permissions',
+        name: 'RBAC Field Permissions',
+        component: () => import('@/modules/rbac/pages/FieldPermissions.vue'),
+      },
+      {
+        path: 'delegations',
+        name: 'RBAC Delegations',
+        component: () => import('@/modules/rbac/pages/Delegations.vue'),
+      },
+      {
+        path: 'sod-rules',
+        name: 'RBAC SoD',
+        component: () => import('@/modules/rbac/pages/SoDRules.vue'),
+      },
+      {
+        path: 'jit-requests',
+        name: 'RBAC JIT',
+        component: () => import('@/modules/rbac/pages/JITRequests.vue'),
       },
       {
         path: 'audit-trail',
@@ -381,17 +389,17 @@ const routes = [
       {
         path: 'customer-portal',
         name: 'Customer Portal',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Customer Portal',
-          subtitle: 'Helpdesk',
-          icon: 'life-buoy',
-          sourcePath: '/helpdesk',
-        },
+        component: () => import('@/pages/CustomerPortalFrame.vue'),
       },
     ],
   },
   // ─── Shared / Utility Routes ─────────────────────────────
+  {
+    path: '/customer-portal',
+    name: 'Customer Portal Web',
+    component: () => import('@/pages/CustomerPortal.vue'),
+    meta: { standalone: true },
+  },
   {
     path: '/data-import',
     name: 'DataImportList',
@@ -415,6 +423,11 @@ const routes = [
     component: () => import('@/pages/Welcome.vue'),
   },
   {
+    path: '/modules/committee-approval',
+    name: 'Committee Approval',
+    component: () => import('@/pages/CommitteeApproval.vue'),
+  },
+  {
     path: '/modules/:moduleSlug',
     name: 'Summon Module',
     component: () => import('@/pages/SummonModulePlaceholder.vue'),
@@ -436,7 +449,8 @@ const routes = [
   { path: '/tasks', redirect: '/crm-core/tasks' },
   { path: '/calendar', redirect: '/crm-core/calendar' },
   { path: '/call-logs', redirect: '/crm-core/call-logs' },
-  { path: '/ai-desk', redirect: '/crm-core/ai-desk' },
+  { path: '/ai-desk', redirect: '/crm-core/ai-agent-center' },
+  { path: '/ai-agent-center', redirect: '/crm-core/ai-agent-center' },
   // Drive legacy CRM redirects now land on the iframe-based Document Management page.
   { path: '/drive', redirect: '/operations/document-management' },
   { path: '/drive/:pathMatch(.*)*', redirect: '/operations/document-management' },
@@ -460,10 +474,11 @@ let router = createRouter({
 router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
-  const { isLoggedIn } = sessionStore()
+  const session = sessionStore()
+  const loggedIn = session.isLoggedIn
   const { users, isCrmUser } = usersStore()
 
-  if (isLoggedIn && !users.fetched) {
+  if (loggedIn && !users.fetched) {
     try {
       await users.promise
     } catch (error) {
@@ -477,16 +492,16 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.name === 'Not Permitted') {
     next()
-  } else if (isLoggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
+  } else if (loggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
     next({ name: 'Not Permitted' })
-  } else if (to.name === 'CRM Dispatcher' && isLoggedIn) {
+  } else if (to.name === 'CRM Dispatcher' && loggedIn) {
     const { views, getDefaultView } = viewsStore()
     await views.promise
 
     let defaultView = getDefaultView()
     if (!defaultView) {
       if (!isCrmUser()) {
-        next({ name: 'Home' })
+        next({ name: 'Not Permitted' })
       } else {
         next({ name: 'Executive Dashboard' })
       }
@@ -505,7 +520,7 @@ router.beforeEach(async (to, from, next) => {
     } else {
       next({ name: route_name, params: { viewType: type } })
     }
-  } else if (!isLoggedIn) {
+  } else if (!loggedIn) {
     window.location.href = `/login?redirect-to=${encodeURIComponent(`/crm${to.fullPath}`)}`
     next(false)
   } else if (to.matched.length === 0) {
@@ -527,7 +542,8 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name) &&
     !to.query?.view
   ) {
-    const { views, standardViews, getDefaultView } = viewsStore()
+    const viewsStoreInstance = viewsStore()
+    const { views, getDefaultView } = viewsStoreInstance
     await views.promise
 
     const viewType = to.params?.viewType ?? ''
@@ -561,7 +577,8 @@ router.beforeEach(async (to, from, next) => {
       }
 
       for (const viewType of standardViewTypes) {
-        const standardView = standardViews.value?.[doctype + ' ' + viewType]
+        const standardViews = viewsStoreInstance.standardViews
+        const standardView = (standardViews?.[doctype + ' ' + viewType]) || (standardViews?.value?.[doctype + ' ' + viewType])
         if (standardView?.is_default) {
           defaultViewType = viewType
           break

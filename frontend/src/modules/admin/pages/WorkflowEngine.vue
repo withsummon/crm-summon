@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col bg-white">
+  <div class="flex h-full flex-col bg-white overflow-hidden">
     <LayoutHeader>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
@@ -19,35 +19,34 @@
       <template #right-header>
         <div class="flex items-center gap-2">
           <Button
-            :label="__('Refresh')"
-            variant="subtle"
-            @click="refreshFrame"
+            :label="__('Save Workflow')"
+            variant="solid"
+            @click="saveWorkflow"
           >
             <template #prefix>
-              <LucideRefreshCw class="h-4 w-4" />
+              <LucideSave class="h-4 w-4" />
             </template>
           </Button>
           <Button
-            :label="__('Open Desk View')"
+            :label="__('Publish')"
             variant="outline"
-            @click="openDeskView"
           >
             <template #prefix>
-              <LucideExternalLink class="h-4 w-4" />
+              <LucideRocket class="h-4 w-4" />
             </template>
           </Button>
         </div>
       </template>
     </LayoutHeader>
 
-    <div class="flex min-h-0 flex-1 flex-col bg-surface-gray-1 p-4">
+    <div class="flex min-h-0 flex-1 bg-white relative">
+      <WorkflowNodePalette />
 
-      <div class="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-crm-border bg-white shadow-sm">
-        <iframe
-          ref="workflowFrame"
-          title="Workflow Engine"
-          src="/app/workflow"
-          class="h-full w-full border-0"
+      <div class="flex-1 relative">
+        <WorkflowCanvas
+          v-model:nodes="workflowNodes"
+          v-model:edges="workflowEdges"
+          @changed="workflowChanged = true"
         />
       </div>
     </div>
@@ -55,23 +54,53 @@
 </template>
 
 <script setup>
-import LayoutHeader from '@/components/LayoutHeader.vue'
-import LucideExternalLink from '~icons/lucide/external-link'
-import LucideGitBranch from '~icons/lucide/git-branch'
-import LucideRefreshCw from '~icons/lucide/refresh-cw'
-import { Button, usePageMeta } from 'frappe-ui'
 import { ref } from 'vue'
+import LayoutHeader from '@/components/LayoutHeader.vue'
+import LucideGitBranch from '~icons/lucide/git-branch'
+import LucideSave from '~icons/lucide/save'
+import LucideRocket from '~icons/lucide/rocket'
+import { Button, toast, usePageMeta } from 'frappe-ui'
+import WorkflowNodePalette from '../components/WorkflowEngine/WorkflowNodePalette.vue'
+import WorkflowCanvas from '../components/WorkflowEngine/WorkflowCanvas.vue'
 
-const workflowFrame = ref(null)
+const workflowNodes = ref([])
+const workflowEdges = ref([])
+const workflowChanged = ref(false)
 
-function refreshFrame() {
-  if (workflowFrame.value) {
-    workflowFrame.value.src = '/app/workflow'
+function saveWorkflow() {
+  const payload = {
+    nodes: workflowNodes.value.map(serializeNode),
+    edges: workflowEdges.value.map(serializeEdge),
+  }
+
+  console.log('Workflow payload', payload)
+  workflowChanged.value = false
+  toast.success(__('Workflow draft payload is ready in the console'))
+}
+
+function serializeNode(node) {
+  const data = { ...(node.data || {}) }
+  delete data.icon
+
+  return {
+    id: node.id,
+    type: node.data?.type || node.type,
+    subType: node.data?.subType,
+    label: node.data?.label,
+    position: node.position,
+    data,
   }
 }
 
-function openDeskView() {
-  window.location.href = '/app/workflow'
+function serializeEdge(edge) {
+  return {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    sourceHandle: edge.sourceHandle,
+    targetHandle: edge.targetHandle,
+    label: edge.data?.label || '',
+  }
 }
 
 usePageMeta(() => ({ title: __('Workflow Engine') }))

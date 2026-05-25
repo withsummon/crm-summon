@@ -551,6 +551,39 @@ def get_lead_funnel(from_date=None, to_date=None, user=None):
 
 
 @frappe.whitelist()
+def get_kpi_ribbon():
+	today_str = nowdate()
+	new_today = 0
+	aging_stale = 0
+	sla_breaching = 0
+	dedupe_pending = 0
+
+	if frappe.db.table_exists("CRM Lead"):
+		new_today = frappe.db.count("CRM Lead", {"converted": 0, "creation": [">=", today_str]})
+		aging_cutoff = add_days(today_str, -14)
+		aging_field = "last_activity_on" if frappe.get_meta("CRM Lead").has_field("last_activity_on") else "modified"
+		aging_stale = frappe.db.count("CRM Lead", {"converted": 0, aging_field: ["<=", aging_cutoff]})
+
+		breach_statuses = ["At Risk", "Breached", "Failed"]
+		meta = frappe.get_meta("CRM Lead")
+		if meta.has_field("sla_status"):
+			sla_breaching = frappe.db.count("CRM Lead", {
+				"converted": 0,
+				"sla_status": ["in", breach_statuses],
+			})
+
+	if frappe.db.table_exists("CRM Lead Duplicate Candidate"):
+		dedupe_pending = frappe.db.count("CRM Lead Duplicate Candidate", {"status": "Open"})
+
+	return {
+		"new_today": new_today,
+		"aging_stale": aging_stale,
+		"sla_breaching": sla_breaching,
+		"dedupe_pending": dedupe_pending,
+	}
+
+
+@frappe.whitelist()
 def export_leads(filters=None, format="CSV", email_to=None):
 	filters = _as_dict(filters)
 	format = (format or "CSV").upper()
@@ -629,7 +662,7 @@ def _write_export_file(rows, format="CSV"):
 	filename = f"lead-export-{frappe.generate_hash(length=8)}.{extension}"
 	if format == "PDF":
 		content = "Lead Export\n\n" + content
-	file_doc = save_file(filename, content.encode(), "CRM Lead Export Job", None, is_private=1)
+	file_doc = save_file(filename, content.encode(), "CRM Lead Export Job", "", is_private=1)
 	return file_doc.file_url
 
 
@@ -696,6 +729,84 @@ def mock_ocr_intake(payload=None):
 	return capture_lead(payload, "OCR")
 
 
+@frappe.whitelist()
+def delete_lead(name):
+	if not frappe.has_permission("CRM Lead", "write", name):
+		frappe.throw(_("Not allowed to delete Lead"), frappe.PermissionError)
+	lost_status = _lead_status_by_type("Lost", "Lost")
+	closed_status = _lead_status_by_type("Closed", "Closed")
+	status = lost_status or closed_status or "Closed"
+	reason = _lead_lost_reason() or "Auto Closed"
+	updates = {"status": status, "converted": 0}
+	if lost_status:
+		updates["lost_reason"] = reason
+		updates["lost_notes"] = _("Soft-deleted by user.")
+	if frappe.get_meta("CRM Lead").has_field("is_deleted"):
+		updates["is_deleted"] = 1
+	frappe.db.set_value("CRM Lead", name, updates)
+	return {"name": name, "deleted": True, "status": status}
+
+
+@frappe.whitelist()
+def close_lead(name, reason):
+	if not reason:
+		frappe.throw(_("Reason is required."))
+	if not frappe.has_permission("CRM Lead", "write", name):
+		frappe.throw(_("Not allowed to close Lead"), frappe.PermissionError)
+	closed_status = _lead_status_by_type("Closed", "Closed")
+	status = closed_status or "Closed"
+	frappe.db.set_value("CRM Lead", name, {"status": status, "reassignment_reason": reason})
+	_log_assignment(name, None, None, reason, "Close")
+	return {"name": name, "status": status, "reason": reason}
+
+
+@frappe.whitelist()
+def seed_lead_sample_data():
+	created = []
+	statuses = ["New", "Open", "Replied", "Opportunity", "Quotation", "Converted", "Do Not Contact"]
+	if frappe.db.table_exists("CRM Lead Status"):
+		status_docs = frappe.get_all("CRM Lead Status", fields=["name", "type"])
+		if status_docs:
+			statuses = [s["name"] for s in status_docs if s.get("type") != "Lost"]
+		if not statuses:
+			statuses = ["New", "Open", "Replied", "Opportunity", "Quotation", "Converted", "Do Not Contact"]
+	sources = ["Web Form", "Walk-in", "Referral", "Email", "WhatsApp", "Manual", "Campaign"]
+	score_bands = ["Cold", "Warm", "Hot"]
+	orgs = [
+		"PT Maju Jaya", "CV Cahaya Terang", "PT Teknologi Maju", "PT Industri Nusantara",
+		"PT Sinar Abadi", "CV Delta Mandiri", "PT Pratama Sejahtera", "PT Global Vision",
+		"PT Mitra Solusi", "CV Karya Bersama", "PT Bangun Negeri", "PT Sejahtera Mandiri",
+		"CV Harapan Jaya", "PT Lestari Abadi", "PT Nusa Indah", "PT Sumber Rejeki",
+		"CV Sukses Selalu", "PT Berkah Abadi", "PT Sentosa Makmur", "CV Citra Nusantara",
+	]
+	for i in range(18):
+		first = f"Sample{i+1}"
+		if frappe.db.exists("CRM Lead", {"first_name": first}):
+			continue
+		score = min(100, max(10, (i % 5) * 20 + (i % 3) * 10))
+		last = f"User{i+1}"
+		data = {
+			"doctype": "CRM Lead",
+			"first_name": first,
+			"last_name": last,
+			"organization": orgs[i % len(orgs)],
+			"email": f"sample{i+1}@example.com",
+			"mobile_no": f"0812{i+1:04d}{i+1:04d}",
+			"source": sources[i % len(sources)],
+			"status": statuses[i % len(statuses)],
+			"lead_score": score,
+			"lead_score_band": score_bands[i % len(score_bands)],
+			"lead_owner": _choose_assignment_user({}),
+			"capture_channel": sources[i % len(sources)],
+		}
+		doc = frappe.get_doc(data)
+		doc.flags.allow_duplicate = True
+		doc.insert(ignore_permissions=True, ignore_links=True)
+		created.append(doc.name)
+	return {"created": len(created), "leads": created}
+
+
+@frappe.whitelist()
 def process_idle_reassignments():
 	if not frappe.db.table_exists("CRM Lead"):
 		return
@@ -721,8 +832,10 @@ def process_idle_reassignments():
 			)
 			assign({"assign_to": [new_owner], "doctype": "CRM Lead", "name": lead.name}, ignore_permissions=True)
 			_log_assignment(lead.name, lead.lead_owner, new_owner, _("Idle more than 24 hours"), "Idle Reassignment", idle_hours)
+	return {"reassigned": len(leads)}
 
 
+@frappe.whitelist()
 def process_lead_aging():
 	if not frappe.db.table_exists("CRM Lead"):
 		return
@@ -760,3 +873,4 @@ def process_lead_aging():
 					_("Lead aging alert"),
 					_("Lead {0} has had no conversion for {1} days.").format(lead.name, days),
 				)
+	return {"processed": True}
