@@ -100,6 +100,26 @@ export const summonModules = [
     ],
   },
   {
+    label: 'Credit Flow Designer',
+    sheet: '27_CreditFlowDesigner',
+    description:
+      'Visual BPMN-like flow designer for dynamic credit application journey orchestration with conditional routing, complex approval matrix, and delegation.',
+    priority: 'High',
+    status: 'available',
+    routeName: 'Credit Flow Designer',
+    href: '/crm/lending-risk/credit-flow-designer',
+    group: 'Lending & Risk',
+    icon: 'workflow',
+    features: [
+      'Visual Flow Canvas',
+      'Dynamic Form Control',
+      'Conditional Routing',
+      'Complex Approval Matrix',
+      'Flow Versioning',
+      'Execution Monitoring',
+    ],
+  },
+  {
     label: 'Workflow Engine',
     sheet: '06_Workflow',
     description:
