@@ -479,20 +479,6 @@ router.beforeEach(async (to, from, next) => {
   const loggedIn = session.isLoggedIn
   const { users, isCrmUser } = usersStore()
 
-  // Send state to backend for console debugging
-  try {
-    fetch('/api/method/crm.www.crm.debug_log', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': window.csrf_token || ''
-      },
-      body: JSON.stringify({
-        message: `GUARD EVAL: to=${to.name} (${to.fullPath}), from=${from.name} (${from.fullPath}), loggedIn=${loggedIn}, session.user=${session.user}, window.user=${window.user}, cookie_user_id=${(document.cookie.match(/user_id=([^;]+)/) || [])[1]}`
-      })
-    }).catch(() => {})
-  } catch (e) {}
-
   if (loggedIn && !users.fetched) {
     try {
       await users.promise
