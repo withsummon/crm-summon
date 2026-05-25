@@ -35,12 +35,17 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'CRM Core Dashboard' },
+        redirect: { name: 'Executive Dashboard' },
       },
       {
         path: 'dashboard',
         name: 'CRM Core Dashboard',
         component: () => import('@/pages/CRMCoreDashboard.vue'),
+      },
+      {
+        path: 'executive-dashboard',
+        name: 'Executive Dashboard',
+        component: () => import('@/pages/ExecutiveDashboard.vue'),
       },
       {
         path: 'insights-dashboard',
@@ -418,7 +423,7 @@ const routes = [
   // Legacy redirect: /dashboard → /crm-core/dashboard
   {
     path: '/dashboard',
-    redirect: { name: 'CRM Core Dashboard' },
+    redirect: { name: 'Executive Dashboard' },
   },
   // Legacy redirects for old flat routes
   { path: '/leads', redirect: '/crm-core/leads' },
@@ -483,13 +488,13 @@ router.beforeEach(async (to, from, next) => {
       if (!isCrmUser()) {
         next({ name: 'Home' })
       } else {
-        next({ name: 'CRM Core Dashboard' })
+        next({ name: 'Executive Dashboard' })
       }
       return
     }
 
     let { route_name, type, name, is_standard } = defaultView
-    route_name = route_name || 'CRM Core Dashboard'
+    route_name = route_name || 'Executive Dashboard'
 
     if (name && !is_standard) {
       next({

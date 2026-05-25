@@ -249,7 +249,7 @@ const crmCoreLinks = [
   {
     label: 'Dashboard',
     icon: LucideLayoutDashboard,
-    to: 'CRM Core Dashboard',
+    to: 'Executive Dashboard',
   },
   {
     label: 'Customer 360',

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executive Dashboard — BNI SUMMON CRM</title>
+<style>
+:root {
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#e2e8f0;
+  --text:#1a202c;--text2:#4a5568;--text3:#718096;
+  --primary:#003F8C;--primary-light:#e8f0fc;--accent:#E87722;
+  --success:#38a169;--danger:#e53e3e;--warning:#d69e2e;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 25px -3px rgba(0,0,0,.12);
+  --radius:8px;--radius-lg:12px;
+}
+[data-theme="dark"] {
+  --bg:#0f172a;--surface:#1e293b;--surface2:#1a2535;--border:#334155;
+  --text:#f1f5f9;--text2:#cbd5e1;--text3:#94a3b8;
+  --primary:#3b82f6;--primary-light:#1e3a5f;
+  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow-lg:0 10px 25px -3px rgba(0,0,0,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5}
+.dash{max-width:1600px;margin:0 auto;padding:24px}
+
+/* HEADER */
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.header-title{flex:1;min-width:200px}
+.header-title h1{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px}
+.bni-logo{width:30px;height:30px;background:linear-gradient(135deg,#003F8C,#E87722);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:10px;flex-shrink:0}
+.header-title p{font-size:11px;color:var(--text3);margin-top:3px}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;font-family:inherit}
+.btn:hover{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:#002d6b;color:#fff;border-color:#002d6b}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-icon{padding:7px 9px}
+.kbd{font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px}
+
+/* NOTIF */
+.notif-wrapper{position:relative}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;border-radius:10px;padding:1px 5px;pointer-events:none}
+.notif-drop{position:absolute;right:0;top:calc(100% + 8px);width:360px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:100;display:none;max-height:420px;overflow-y:auto}
+.notif-drop.open{display:block}
+.notif-hdr{padding:12px 16px;border-bottom:1px solid var(--border);font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface)}
+.notif-item{padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer;transition:background .1s;display:flex;gap:10px;align-items:flex-start}
+.notif-item:hover{background:var(--surface2)}
+.notif-item:last-child{border-bottom:none}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:4px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.kpi-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
+.kpi-label{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:6px}
+.kpi-value{font-size:20px;font-weight:700;line-height:1.2;margin-bottom:5px}
+.kpi-trend{font-size:11px}
+.up{color:#38a169}.down-good{color:#38a169}.warn{color:#d69e2e}.down-bad{color:#e53e3e}
+
+/* FILTER */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;box-shadow:var(--shadow);flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--text3);font-weight:500;margin-right:4px}
+.filter-btn{padding:4px 11px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;font-family:inherit}
+.filter-btn:hover{background:var(--primary-light);color:var(--primary)}
+.filter-btn.active{background:var(--primary);color:#fff}
+
+/* GRID LAYOUTS */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.mb{margin-bottom:20px}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-red{background:#fee2e2;color:#dc2626}
+.badge-yellow{background:#fef3c7;color:#d97706}
+.badge-green{background:#d1fae5;color:#059669}
+.badge-blue{background:#dbeafe;color:#2563eb}
+.badge-gray{background:var(--surface2);color:var(--text3)}
+[data-theme="dark"] .badge-red{background:#450a0a;color:#f87171}
+[data-theme="dark"] .badge-yellow{background:#451a03;color:#fbbf24}
+[data-theme="dark"] .badge-green{background:#052e16;color:#4ade80}
+[data-theme="dark"] .badge-blue{background:#0c1a3d;color:#60a5fa}
+
+/* FUNNEL */
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .15s}
+.funnel-row:hover{background:var(--surface2)}
+.funnel-lbl{width:95px;font-size:11px;color:var(--text2);font-weight:500;flex-shrink:0}
+.funnel-wrap{flex:1;position:relative}
+.funnel-bar{height:32px;border-radius:4px;display:flex;align-items:center;padding:0 10px;color:#fff;font-size:11px;font-weight:700;transition:width .4s}
+.funnel-cnt{width:40px;font-size:12px;font-weight:700;text-align:right;flex-shrink:0}
+.funnel-pct{width:65px;font-size:10px;color:var(--text3);text-align:right;flex-shrink:0}
+
+/* RISK */
+.risk-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.risk-item:last-child{border-bottom:none}
+.risk-body{flex:1}
+.risk-title{font-size:12px;font-weight:500;margin-bottom:2px}
+.risk-meta{font-size:10px;color:var(--text3)}
+.btn-tl{background:none;border:1px solid var(--border);padding:3px 9px;border-radius:6px;font-size:10px;cursor:pointer;color:var(--text2);transition:all .15s;font-family:inherit;flex-shrink:0}
+.btn-tl:hover{border-color:var(--primary);color:var(--primary)}
+
+/* AI INSIGHTS */
+.insight-item{display:flex;gap:10px;padding:10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border)}
+.insight-item:last-child{margin-bottom:0}
+.insight-ico{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0}
+.insight-txt{font-size:11px;color:var(--text2);line-height:1.6}
+
+/* HEATMAP */
+.hm-grid{display:grid;gap:4px}
+.hm-cell{border-radius:4px;height:44px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;transition:transform .15s;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.hm-cell:hover{transform:scale(1.06);z-index:2;position:relative}
+.hm-hdr{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text3);text-align:center}
+
+/* ACTIVITIES */
+.act-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-ico{font-size:15px;flex-shrink:0;margin-top:1px}
+.act-txt{flex:1;font-size:11px;color:var(--text2);line-height:1.5}
+.act-time{font-size:10px;color:var(--text3);white-space:nowrap;margin-top:1px}
+
+/* PENDING */
+.btn-approve{background:#d1fae5;color:#059669;border:1px solid #a7f3d0;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;transition:all .15s;font-family:inherit}
+.btn-approve:hover{background:#059669;color:#fff}
+.btn-reject{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;padding:3px 9px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;transition:all .15s;font-family:inherit}
+.btn-reject:hover{background:#dc2626;color:#fff}
+[data-theme="dark"] .btn-approve{background:#052e16;color:#4ade80;border-color:#065f46}
+[data-theme="dark"] .btn-reject{background:#450a0a;color:#f87171;border-color:#7f1d1d}
+.act-btns{display:flex;gap:5px}
+
+/* FLOATING AI */
+.ai-float{position:fixed;bottom:24px;right:24px;z-index:200}
+.ai-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(102,126,234,.5);transition:transform .2s;display:flex;align-items:center;justify-content:center}
+.ai-fab:hover{transform:scale(1.1)}
+.ai-panel{position:absolute;bottom:64px;right:0;width:310px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);display:none;flex-direction:column;max-height:380px}
+.ai-panel.open{display:flex}
+.ai-panel-hdr{padding:12px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.ai-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px}
+.ai-msg{padding:8px 11px;border-radius:8px;font-size:11px;max-width:88%;line-height:1.5}
+.ai-bot{background:var(--primary-light);color:var(--text);align-self:flex-start}
+.ai-user{background:var(--primary);color:#fff;align-self:flex-end}
+.ai-inp{display:flex;gap:7px;padding:9px;border-top:1px solid var(--border)}
+.ai-inp input{flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;background:var(--bg);color:var(--text);outline:none;font-family:inherit}
+.ai-inp button{padding:5px 11px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-sm{width:400px}
+.modal-hdr{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-hdr h3{font-size:15px;font-weight:700}
+.modal-body{padding:18px 22px}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.close-x{background:none;border:none;font-size:17px;cursor:pointer;color:var(--text3);padding:3px;border-radius:4px;line-height:1}
+.close-x:hover{background:var(--surface2);color:var(--text)}
+.widget-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.widget-row:last-child{border-bottom:none}
+.widget-row input{width:16px;height:16px;cursor:pointer;accent-color:var(--primary)}
+.widget-row label{cursor:pointer;font-size:12px}
+.export-opt{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;transition:all .15s}
+.export-opt:hover{border-color:var(--primary);background:var(--primary-light)}
+.export-opt:last-child{margin-bottom:0}
+
+/* CMD PALETTE */
+.cmd-wrap{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:540px;max-width:95vw;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.cmd-wrap.open{display:block}
+.cmd-inp{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--border)}
+.cmd-inp input{flex:1;border:none;background:transparent;font-size:14px;color:var(--text);outline:none;font-family:inherit}
+.cmd-results{max-height:280px;overflow-y:auto}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:9px 15px;cursor:pointer;font-size:12px;transition:background .1s}
+.cmd-item:hover,.cmd-item.sel{background:var(--primary-light);color:var(--primary)}
+.cmd-ico{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.cmd-type{margin-left:auto;font-size:9px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px}
+.cmd-bg{position:fixed;inset:0;z-index:399;display:none}
+
+/* TOOLTIP */
+.tooltip{display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 13px;box-shadow:var(--shadow-lg);font-size:11px;z-index:500;pointer-events:none;max-width:220px;line-height:1.6}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+
+/* STATUS */
+.st-approve{background:#d1fae5;color:#059669;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.st-reject{background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+[data-theme="dark"] .st-approve{background:#052e16;color:#4ade80}
+[data-theme="dark"] .st-reject{background:#450a0a;color:#f87171}
+
+/* SCORE DOTS */
+.score-bar{display:flex;gap:2px;align-items:center}
+.s-dot{width:8px;height:8px;border-radius:2px}
+
+/* CHART */
+.chart-wrap{position:relative;height:250px}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}.header-actions{gap:5px}}
+</style>
+</head>
+<body>
+<div class="dash">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">
+    <h1><div class="bni-logo">BNI</div> Executive Dashboard</h1>
+    <p>Last updated: <span id="tsLabel">just now</span> &nbsp;·&nbsp; SUMMON CRM v2.0 &nbsp;·&nbsp; Administrator</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="openCmd()">⌘ Cari... <span class="kbd">⌘K</span></button>
+    <button class="btn" onclick="openWidgetModal()">⊞ Customize Widget</button>
+    <button class="btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
+    <button class="btn btn-primary" onclick="openModal('expModal')">⬇ Export</button>
+    <div class="notif-wrapper">
+      <button class="btn btn-icon" id="nBtn" onclick="toggleNotif(event)">🔔<span class="notif-badge">22</span></button>
+      <div class="notif-drop" id="nDrop">
+        <div class="notif-hdr">Notifikasi <span style="font-weight:400;font-size:10px;color:var(--text3)">22 belum dibaca</span></div>
+        <div id="nList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI GRID -->
+<div class="kpi-grid" id="kpiGrid">
+  <div class="kpi-card"><div class="kpi-icon" style="background:#dbeafe">📋</div><div class="kpi-label">Pengajuan Kredit Hari Ini</div><div class="kpi-value">47 <small style="font-size:13px;color:var(--text3)">pengajuan</small></div><div class="kpi-trend up">↑ 12% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#dcfce7">💼</div><div class="kpi-label">Portfolio Aktif</div><div class="kpi-value">Rp 1,84 T</div><div class="kpi-trend up">↑ 3.2% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#dcfce7">📉</div><div class="kpi-label">NPL Ratio</div><div class="kpi-value">2,14%</div><div class="kpi-trend down-good">↓ 0.3% vs bulan lalu (baik)</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#fef3c7">💰</div><div class="kpi-label">Disbursement MTD</div><div class="kpi-value">Rp 186 M</div><div class="kpi-trend up">↑ 8.7% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#ede9fe">🏦</div><div class="kpi-label">Portfolio Outstanding</div><div class="kpi-value">Rp 2,1 T</div><div class="kpi-trend up">↑ 1.4% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#dcfce7">✅</div><div class="kpi-label">Approval Rate</div><div class="kpi-value">73,5%</div><div class="kpi-trend up">↑ 2.1% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#fce7f3">🔄</div><div class="kpi-label">Collection Recovery Rate</div><div class="kpi-value">67,2%</div><div class="kpi-trend up">↑ 4.5% vs bulan lalu</div></div>
+  <div class="kpi-card"><div class="kpi-icon" style="background:#fef3c7">⏱</div><div class="kpi-label">SLA Compliance</div><div class="kpi-value">89,3%</div><div class="kpi-trend warn">↓ 1.1% vs bulan lalu ⚠</div></div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar mb">
+  <span class="filter-label">Periode:</span>
+  <button class="filter-btn" onclick="setPeriod(this,'1H')">1H</button>
+  <button class="filter-btn active" onclick="setPeriod(this,'1M')">1M</button>
+  <button class="filter-btn" onclick="setPeriod(this,'3M')">3M</button>
+  <button class="filter-btn" onclick="setPeriod(this,'6M')">6M</button>
+  <button class="filter-btn" onclick="setPeriod(this,'1T')">1T</button>
+  <button class="filter-btn" onclick="setPeriod(this,'SEMUA')">SEMUA</button>
+  <span style="margin-left:auto;font-size:10px;color:var(--text3)">Aktif: <strong id="pLabel">1 Bulan</strong></span>
+</div>
+
+<!-- CHARTS -->
+<div class="two-col" data-w="charts">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">📊 Disbursement per Segmen</span><span style="font-size:10px;color:var(--text3)">MTD — Miliar IDR</span></div>
+    <div class="chart-wrap"><canvas id="cDisb"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">📈 Trend NPL Ratio</span><span style="font-size:10px;color:var(--text3)">6 Bulan Terakhir</span></div>
+    <div class="chart-wrap"><canvas id="cNPL"></canvas></div>
+  </div>
+</div>
+
+<!-- FUNNEL + RM -->
+<div class="two-col">
+  <div class="card" data-w="funnel">
+    <div class="card-hdr"><span class="card-title">🔽 Pipeline Conversion Funnel</span></div>
+    <div id="funnelEl"></div>
+  </div>
+  <div class="card" data-w="leaderboard">
+    <div class="card-hdr"><span class="card-title">🏆 RM Productivity Leaderboard</span><span style="font-size:10px;color:var(--text3)">Top 5 bulan ini</span></div>
+    <table><thead><tr><th>Nama RM</th><th>Pengajuan</th><th>Approval</th><th>Disbursement</th><th>Score</th></tr></thead><tbody id="rmTb"></tbody></table>
+  </div>
+</div>
+
+<!-- RISK + AI -->
+<div class="two-col">
+  <div class="card" data-w="risk">
+    <div class="card-hdr"><span class="card-title">⚠️ Risk Alerts</span><span class="badge badge-red">5 Aktif</span></div>
+    <div id="riskEl"></div>
+  </div>
+  <div class="card" data-w="ai">
+    <div class="card-hdr">
+      <span class="card-title">🤖 AI Insights</span>
+      <button class="btn btn-sm" id="refBtn" onclick="refreshAI()">↻ Refresh</button>
+    </div>
+    <div id="aiEl"></div>
+  </div>
+</div>
+
+<!-- HEATMAP -->
+<div class="card mb" data-w="heatmap">
+  <div class="card-hdr">
+    <span class="card-title">🗺 Portfolio Heatmap — NPL Intensity by Segmen &amp; Produk</span>
+    <div style="display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text3)">
+      <span style="background:linear-gradient(to right,#22c55e,#eab308,#ef4444);width:70px;height:7px;border-radius:4px;display:inline-block"></span>Rendah → Tinggi NPL
+    </div>
+  </div>
+  <div id="hmEl"></div>
+</div>
+
+<!-- PENDING + ACTIVITIES -->
+<div class="two-col mb">
+  <div class="card" data-w="pending">
+    <div class="card-hdr"><span class="card-title">⏳ Pending Approvals</span><span class="badge badge-yellow">5 menunggu</span></div>
+    <table><thead><tr><th>Debitur</th><th>Produk</th><th>Plafon</th><th>RM</th><th>Tunggu</th><th>Aksi</th></tr></thead><tbody id="pendTb"></tbody></table>
+  </div>
+  <div class="card" data-w="activities">
+    <div class="card-hdr"><span class="card-title">📌 Recent Activities</span></div>
+    <div id="actEl"></div>
+  </div>
+</div>
+
+</div><!-- /dash -->
+
+<!-- FLOATING AI -->
+<div class="ai-float">
+  <div class="ai-panel" id="aiPanel">
+    <div class="ai-panel-hdr">🤖 SUMMON AI Assistant <button onclick="toggleAI()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:15px;line-height:1">✕</button></div>
+    <div class="ai-body" id="aiBody"><div class="ai-msg ai-bot">Halo! Saya SUMMON AI. Ada yang bisa saya bantu mengenai portofolio atau analisis kredit hari ini?</div></div>
+    <div class="ai-inp"><input id="aiIn" placeholder="Tanya sesuatu..." onkeydown="if(event.key==='Enter')sendAI()"><button onclick="sendAI()">Kirim</button></div>
+  </div>
+  <button class="ai-fab" onclick="toggleAI()">🤖</button>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tip"></div>
+<div class="tooltip" id="hmTip"></div>
+
+<!-- CMD PALETTE -->
+<div class="cmd-bg" id="cmdBg" onclick="closeCmd()"></div>
+<div class="cmd-wrap" id="cmdWrap">
+  <div class="cmd-inp">
+    <span style="color:var(--text3)">🔍</span>
+    <input id="cmdIn" placeholder="Cari halaman, aksi, debitur..." oninput="filterCmd(this.value)" onkeydown="cmdKey(event)">
+    <span class="kbd" style="cursor:pointer" onclick="closeCmd()">ESC</span>
+  </div>
+  <div class="cmd-results" id="cmdRes"></div>
+</div>
+
+<!-- WIDGET MODAL -->
+<div class="overlay" id="wModal" onclick="overlayClose(event,'wModal')">
+  <div class="modal">
+    <div class="modal-hdr"><h3>⊞ Customize Widget</h3><button class="close-x" onclick="closeModal('wModal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px">Pilih widget yang ditampilkan di dashboard. Pengaturan disimpan otomatis.</p>
+      <div id="wChecks"></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('wModal')">Batal</button><button class="btn btn-primary" onclick="saveWidgets()">Simpan</button></div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="overlay" id="expModal" onclick="overlayClose(event,'expModal')">
+  <div class="modal">
+    <div class="modal-hdr"><h3>⬇ Export Dashboard</h3><button class="close-x" onclick="closeModal('expModal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px">Pilih format ekspor:</p>
+      <div class="export-opt" onclick="doExport('PDF')"><span style="font-size:26px">📄</span><div><strong style="font-size:13px">PDF Report</strong><div style="font-size:11px;color:var(--text3)">Executive summary dengan semua chart</div></div></div>
+      <div class="export-opt" onclick="doExport('Excel')"><span style="font-size:26px">📊</span><div><strong style="font-size:13px">Excel Spreadsheet</strong><div style="font-size:11px;color:var(--text3)">Data tabular semua KPI dan tabel</div></div></div>
+      <div class="export-opt" onclick="doExport('PNG')"><span style="font-size:26px">🖼</span><div><strong style="font-size:13px">PNG Screenshot</strong><div style="font-size:11px;color:var(--text3)">Gambar dashboard saat ini</div></div></div>
+      <div id="expSt" style="display:none;text-align:center;padding:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION MODAL -->
+<div class="overlay" id="actModal" onclick="overlayClose(event,'actModal')">
+  <div class="modal modal-sm">
+    <div class="modal-hdr"><h3 id="actTitle">Konfirmasi</h3><button class="close-x" onclick="closeModal('actModal')">✕</button></div>
+    <div class="modal-body"><p id="actBody" style="font-size:12px;color:var(--text2);line-height:1.6"></p></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('actModal')">Batal</button><button class="btn btn-primary" id="actOK">Konfirmasi</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const NOTIFS = [
+  "Pengajuan kredit PT Maju Bersama menunggu approval",
+  "NPL Alert: CV Teknik Jaya DPD 45 hari",
+  "SLA breach: Modul Collections — 3 kasus",
+  "Disbursement batch Rp 45M telah diproses",
+  "RM Ahmad Santoso mencapai target bulan ini",
+  "Pengajuan baru: PT Sinar Gemilang — KMK Rp 2.5M",
+  "Covenant breach terdeteksi: PT Delta Konstruksi",
+  "Jadwal review kredit: 5 debitur jatuh tempo minggu ini",
+  "Approval pending >48 jam: 7 pengajuan",
+  "Laporan NPL Q2 siap diunduh"
+];
+
+const RM_DATA = [
+  {name:"Ahmad Santoso",peng:24,appr:"83%",disb:"Rp 48M",score:94},
+  {name:"Dewi Pratama",peng:21,appr:"79%",disb:"Rp 41M",score:88},
+  {name:"Rizky Andalan",peng:18,appr:"75%",disb:"Rp 35M",score:82},
+  {name:"Siti Rahayu",peng:16,appr:"81%",disb:"Rp 31M",score:79},
+  {name:"Budi Setiawan",peng:14,appr:"71%",disb:"Rp 27M",score:73}
+];
+
+const RISK_DATA = [
+  {sev:"High",cls:"red",ico:"🔴",txt:"PT Delta Konstruksi — covenant breach, DPD 67 hari"},
+  {sev:"High",cls:"red",ico:"🔴",txt:"CV Teknik Jaya — NPL alert, outstanding Rp 3.2M"},
+  {sev:"Medium",cls:"yellow",ico:"🟡",txt:"PT Sinar Nusantara — jatuh tempo dalam 7 hari"},
+  {sev:"Medium",cls:"yellow",ico:"🟡",txt:"5 debitur KPR — cicilan tertunggak >2 bulan"},
+  {sev:"Low",cls:"green",ico:"🟢",txt:"Laporan SLA collections bulan ini di bawah target"}
+];
+
+const INSIGHTS = [
+  "Portofolio KMK segmen manufacturing menunjukkan tren NPL naik 0.4% — rekomendasi review kredit 12 debitur",
+  "RM productivity tertinggi minggu ini: Ahmad Santoso dengan conversion rate 83%",
+  "Proyeksi disbursement bulan depan: Rp 210M berdasarkan pipeline saat ini"
+];
+const INSIGHT_ICONS = ["📊","⭐","🔮"];
+const INSIGHT_COLORS = ["#3b82f6","#f59e0b","#8b5cf6"];
+
+const FUNNEL_DATA = [
+  {lbl:"Prospek",cnt:320,color:"#3b82f6"},
+  {lbl:"Pengajuan",cnt:180,color:"#8b5cf6"},
+  {lbl:"Analisis",cnt:120,color:"#f59e0b"},
+  {lbl:"Approval",cnt:88,color:"#10b981"},
+  {lbl:"Disbursement",cnt:64,color:"#ef4444"}
+];
+
+const HM_SEGS = ["Manufaktur","Perdagangan","Konstruksi","Properti","Jasa"];
+const HM_PRODS = ["KMK","KI","KPR","KUR","Multiguna"];
+const HM_VALS = [
+  [2.1,1.8,0.9,1.2,2.4],
+  [1.5,2.3,1.1,0.8,1.7],
+  [3.2,2.8,1.4,0.6,2.1],
+  [1.2,1.5,3.8,1.9,1.3],
+  [0.9,1.1,0.7,0.5,1.4]
+];
+
+const PENDING_DATA = [
+  {deb:"PT Maju Bersama",prod:"KMK",plafon:"Rp 5M",rm:"Ahmad S",wait:"2 hari",days:2},
+  {deb:"CV Berkah Jaya",prod:"KI",plafon:"Rp 12M",rm:"Dewi P",wait:"3 hari",days:3},
+  {deb:"Sdr. Rudi Hartono",prod:"KPR",plafon:"Rp 800jt",rm:"Rizky A",wait:"1 hari",days:1},
+  {deb:"PT Global Tech",prod:"KMK",plafon:"Rp 8.5M",rm:"Siti R",wait:"4 hari",days:4},
+  {deb:"UD Makmur",prod:"KUR",plafon:"Rp 250jt",rm:"Budi S",wait:"5 hari",days:5}
+];
+
+const ACTS = [
+  {ico:"📋",txt:"Pengajuan baru: PT Sinar Gemilang — KMK Rp 2.5M",time:"5 menit lalu"},
+  {ico:"✅",txt:"Approval: CV Berkah Teknik disetujui oleh Kepala Kredit",time:"23 menit lalu"},
+  {ico:"📝",txt:"PTP recorded: Bpk. Hendra Wijaya — Rp 15jt, 3 Jun 2026",time:"1 jam lalu"},
+  {ico:"⚠️",txt:"NPL flag: PT Delta Konstruksi masuk watchlist",time:"2 jam lalu"},
+  {ico:"💸",txt:"Disbursement: PT Maju Nusantara Rp 4.5M telah dicairkan",time:"3 jam lalu"},
+  {ico:"🤖",txt:"Rule triggered: Auto-reject AML — 1 pengajuan ditolak",time:"4 jam lalu"},
+  {ico:"⏰",txt:"SLA breach: Collections modul — 3 kasus",time:"5 jam lalu"},
+  {ico:"🏢",txt:"New vendor: PT Nusantara Appraisal onboarding selesai",time:"kemarin"}
+];
+
+const CMD_DATA = [
+  {ico:"📊",lbl:"Executive Dashboard",type:"halaman"},
+  {ico:"👥",lbl:"Leads — Daftar Prospek",type:"halaman"},
+  {ico:"💼",lbl:"Deals — Pipeline Kredit",type:"halaman"},
+  {ico:"📋",lbl:"Pengajuan Kredit Baru",type:"aksi"},
+  {ico:"⚠️",lbl:"Risk Management",type:"halaman"},
+  {ico:"🏦",lbl:"Collections & NPL",type:"halaman"},
+  {ico:"👤",lbl:"RM Performance Report",type:"halaman"},
+  {ico:"⬇",lbl:"Export Dashboard PDF",type:"aksi"},
+  {ico:"🔔",lbl:"Semua Notifikasi",type:"halaman"},
+  {ico:"⚙️",lbl:"Pengaturan Sistem",type:"halaman"},
+  {ico:"📈",lbl:"Laporan Disbursement",type:"halaman"},
+  {ico:"🗺",lbl:"Portfolio Heatmap",type:"halaman"}
+];
+
+const WIDGETS = [
+  {id:"kpiGrid",lbl:"KPI Cards (8 metrik)"},
+  {id:"charts",lbl:"Charts — Disbursement & NPL Trend"},
+  {id:"funnel",lbl:"Pipeline Conversion Funnel"},
+  {id:"leaderboard",lbl:"RM Productivity Leaderboard"},
+  {id:"risk",lbl:"Risk Alerts Panel"},
+  {id:"ai",lbl:"AI Insights Panel"},
+  {id:"heatmap",lbl:"Portfolio Heatmap"},
+  {id:"pending",lbl:"Pending Approvals"},
+  {id:"activities",lbl:"Recent Activities Feed"}
+];
+
+const AI_REPLIES = [
+  "Berdasarkan data terkini, NPL ratio segmen konstruksi meningkat 0.6% dibanding bulan lalu. Disarankan review 8 debitur prioritas.",
+  "Pipeline disbursement bulan ini masih di bawah target 15%. Ahmad Santoso memiliki 3 pengajuan yang siap diproses.",
+  "Tingkat approval rate tertinggi ada di produk KMK dengan 76.3%. KPR memerlukan perhatian dengan approval rate 61.2%.",
+  "Terdapat 7 pengajuan pending lebih dari 48 jam. Ini berpotensi melanggar SLA commitment kepada nasabah.",
+  "Rekomendasi: Fokus collection pada 5 debitur teratas dengan outstanding Rp 18.5M untuk meningkatkan recovery rate."
+];
+
+const PERIOD_LABELS = {
+  '1H':['09:00','10:00','11:00','12:00','13:00','14:00'],
+  '1M':['Mg1','Mg2','Mg3','Mg4'],
+  '3M':['Jan','Feb','Mar'],
+  '6M':['Des','Jan','Feb','Mar','Apr','Mei'],
+  '1T':['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+  'SEMUA':['2021','2022','2023','2024','2025','2026']
+};
+const PERIOD_NAMES = {'1H':'1 Jam','1M':'1 Bulan','3M':'3 Bulan','6M':'6 Bulan','1T':'1 Tahun','SEMUA':'Semua Waktu'};
+
+// ═══════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════
+let dark = localStorage.getItem('bnitheme') === 'dark';
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = dark ? '☀️ Light Mode' : '🌙 Dark Mode';
+  if (window.cDisb) refreshChartColors();
+}
+function toggleTheme() { dark = !dark; localStorage.setItem('bnitheme', dark ? 'dark' : 'light'); applyTheme(); }
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function renderNotifs() {
+  document.getElementById('nList').innerHTML = NOTIFS.map(n =>
+    `<div class="notif-item"><div class="notif-dot"></div><div>${n}</div></div>`
+  ).join('');
+}
+function toggleNotif(e) {
+  e.stopPropagation();
+  document.getElementById('nDrop').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!document.getElementById('nBtn').contains(e.target)) document.getElementById('nDrop').classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════
+// FILTER BAR
+// ═══════════════════════════════════════════════
+function setPeriod(btn, p) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pLabel').textContent = PERIOD_NAMES[p];
+  updateChartPeriod(p);
+}
+
+// ═══════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════
+let cDisb, cNPL;
+function chartColors() {
+  return dark ? {grid:'#334155',tick:'#94a3b8'} : {grid:'#e2e8f0',tick:'#718096'};
+}
+function baseScales() {
+  const cc = chartColors();
+  return {
+    x:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10}}},
+    y:{grid:{color:cc.grid},ticks:{color:cc.tick,font:{size:10}}}
+  };
+}
+function initCharts() {
+  cDisb = new Chart(document.getElementById('cDisb'), {
+    type:'bar',
+    data:{
+      labels:['KMK','KI','KPR','Multiguna','KUR'],
+      datasets:[{label:'Miliar IDR',data:[58,42,35,28,23],
+        backgroundColor:['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444'],
+        borderRadius:5,borderSkipped:false}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',titleColor:'#f1f5f9',bodyColor:'#cbd5e1',callbacks:{label:ctx=>`Rp ${ctx.parsed.y} Miliar`}}},
+      scales:baseScales(),
+      onClick:(e,els)=>{
+        if(!els.length) return;
+        const i=els[0].index;
+        const labs=['KMK','KI','KPR','Multiguna','KUR'];
+        const vals=[58,42,35,28,23];
+        showAction(`Detail Disbursement — ${labs[i]}`,`Total disbursement ${labs[i]} bulan ini: Rp ${vals[i]} Miliar\nDebitur aktif: ${vals[i]*2} nasabah\nGrowth vs bulan lalu: +${(Math.random()*10+2).toFixed(1)}%`,()=>{});
+      }
+    }
+  });
+  cNPL = new Chart(document.getElementById('cNPL'), {
+    type:'line',
+    data:{
+      labels:['Des','Jan','Feb','Mar','Apr','Mei'],
+      datasets:[
+        {label:'NPL Ratio (%)',data:[2.8,2.6,2.5,2.3,2.2,2.14],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#3b82f6'},
+        {label:'Threshold (3%)',data:[3,3,3,3,3,3],borderColor:'#ef4444',borderDash:[5,5],pointRadius:0,fill:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:chartColors().tick,font:{size:10}}},tooltip:{backgroundColor:'#1e293b',titleColor:'#f1f5f9',bodyColor:'#cbd5e1'}},
+      scales:baseScales()
+    }
+  });
+}
+function refreshChartColors() {
+  const cc = chartColors();
+  [cDisb,cNPL].forEach(c=>{
+    c.options.scales.x.grid.color=cc.grid; c.options.scales.x.ticks.color=cc.tick;
+    c.options.scales.y.grid.color=cc.grid; c.options.scales.y.ticks.color=cc.tick;
+    if(c.options.plugins.legend.labels) c.options.plugins.legend.labels.color=cc.tick;
+    c.update();
+  });
+}
+function updateChartPeriod(p) {
+  const labs = PERIOD_LABELS[p];
+  const n = labs.length;
+  cNPL.data.labels = labs;
+  cNPL.data.datasets[0].data = Array.from({length:n},(_,i)=>+(3.2-i*(1.1/n)+Math.random()*.15).toFixed(2));
+  cNPL.data.datasets[1].data = Array(n).fill(3);
+  cNPL.update();
+}
+
+// ═══════════════════════════════════════════════
+// FUNNEL
+// ═══════════════════════════════════════════════
+function renderFunnel() {
+  const max = FUNNEL_DATA[0].cnt;
+  document.getElementById('funnelEl').innerHTML = FUNNEL_DATA.map((f,i)=>{
+    const pct = i>0 ? Math.round(f.cnt/FUNNEL_DATA[i-1].cnt*100) : 100;
+    const w = Math.round(f.cnt/max*100);
+    return `<div class="funnel-row"
+      onmouseenter="showTip(event,'<strong>${f.lbl}</strong><br>Jumlah: ${f.cnt} pengajuan<br>Konversi: ${pct}%<br>Drop-off: ${i>0?FUNNEL_DATA[i-1].cnt-f.cnt:0}')"
+      onmouseleave="hideTip()"
+      onclick="showAction('Stage: ${f.lbl}','Terdapat ${f.cnt} pengajuan di stage ${f.lbl}.\\nKlik untuk melihat detail masing-masing pengajuan.',()=>{})">
+      <div class="funnel-lbl">${f.lbl}</div>
+      <div class="funnel-wrap"><div class="funnel-bar" style="background:${f.color};width:${w}%">${f.cnt}</div></div>
+      <div class="funnel-cnt">${f.cnt}</div>
+      <div class="funnel-pct">${i>0?pct+'% conv':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RM TABLE
+// ═══════════════════════════════════════════════
+function renderRM() {
+  const medals = ['🥇','🥈','🥉','',''];
+  document.getElementById('rmTb').innerHTML = RM_DATA.map((r,i)=>{
+    const sc = r.score>=90?'#059669':r.score>=80?'#3b82f6':'#f59e0b';
+    const filled = Math.round(r.score/20);
+    const dots = Array.from({length:5},(_,j)=>`<div class="s-dot" style="background:${j<filled?sc:'var(--border)'}"></div>`).join('');
+    return `<tr>
+      <td><strong>${medals[i]} ${r.name}</strong></td>
+      <td>${r.peng}</td>
+      <td><span style="color:${sc};font-weight:700">${r.appr}</span></td>
+      <td>${r.disb}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="score-bar">${dots}</div><strong style="color:${sc}">${r.score}</strong></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// RISK ALERTS
+// ═══════════════════════════════════════════════
+function renderRisk() {
+  document.getElementById('riskEl').innerHTML = RISK_DATA.map(r=>`
+    <div class="risk-item">
+      <span style="font-size:17px;flex-shrink:0">${r.ico}</span>
+      <div class="risk-body">
+        <div class="risk-title">${r.txt}</div>
+        <div class="risk-meta">Severity: <span class="badge badge-${r.cls}">${r.sev}</span></div>
+      </div>
+      <button class="btn-tl" onclick="showAction('Tindak Lanjut','Tindak lanjut akan segera dikirim ke tim terkait:\\n${r.txt.replace(/'/g,'')}',()=>{})">Tindak Lanjut</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// AI INSIGHTS
+// ═══════════════════════════════════════════════
+function renderAI(loading) {
+  const el = document.getElementById('aiEl');
+  if (loading) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--text3)"><div class="spin"></div> Menganalisis data terbaru...</div>`;
+    setTimeout(()=>renderAI(false),1400);
+    return;
+  }
+  el.innerHTML = INSIGHTS.map((ins,i)=>`
+    <div class="insight-item">
+      <div class="insight-ico" style="background:${INSIGHT_COLORS[i]}">${INSIGHT_ICONS[i]}</div>
+      <div class="insight-txt">${ins}</div>
+    </div>`).join('');
+}
+function refreshAI() {
+  const btn = document.getElementById('refBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  renderAI(true);
+  setTimeout(()=>{btn.disabled=false;btn.innerHTML='↻ Refresh';},1500);
+}
+
+// ═══════════════════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════════════════
+function nplColor(v) {
+  if (v<1.5) return `hsl(${120-v*8},65%,42%)`;
+  if (v<2.5) return `hsl(${50-((v-1.5)*30)},70%,42%)`;
+  return `hsl(${Math.max(0,20-((v-2.5)*15))},75%,42%)`;
+}
+function renderHeatmap() {
+  const n = HM_PRODS.length;
+  let h = `<div class="hm-grid" style="grid-template-columns:100px repeat(${n},1fr);gap:4px">`;
+  h += `<div class="hm-hdr"></div>` + HM_PRODS.map(p=>`<div class="hm-hdr">${p}</div>`).join('');
+  HM_SEGS.forEach((seg,r)=>{
+    h += `<div class="hm-hdr" style="justify-content:flex-start;padding:0 6px;font-size:10px">${seg}</div>`;
+    HM_VALS[r].forEach((v,c)=>{
+      h += `<div class="hm-cell" style="background:${nplColor(v)}"
+        onmouseenter="showHMTip(event,'${seg}','${HM_PRODS[c]}',${v})"
+        onmouseleave="hideHMTip()">${v}%</div>`;
+    });
+  });
+  h += '</div>';
+  document.getElementById('hmEl').innerHTML = h;
+}
+function showHMTip(e,seg,prod,v) {
+  const t = document.getElementById('hmTip');
+  t.innerHTML = `<strong>${seg} — ${prod}</strong><br>NPL: <strong style="color:${v>=3?'#ef4444':v>=2?'#f59e0b':'#10b981'}">${v}%</strong><br>${v>=3?'⚠️ Tinggi':v>=2?'⚡ Sedang':'✅ Rendah'}`;
+  t.style.display='block'; t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-10)+'px';
+}
+function hideHMTip() { document.getElementById('hmTip').style.display='none'; }
+
+// ═══════════════════════════════════════════════
+// PENDING APPROVALS
+// ═══════════════════════════════════════════════
+const pendStatus = {};
+function renderPending() {
+  document.getElementById('pendTb').innerHTML = PENDING_DATA.map((p,i)=>{
+    const st = pendStatus[i];
+    const wc = p.days>=4?'badge-red':p.days>=2?'badge-yellow':'badge-green';
+    return `<tr style="${st?'opacity:.65':''}">
+      <td><strong>${p.deb}</strong></td>
+      <td><span class="badge badge-blue">${p.prod}</span></td>
+      <td>${p.plafon}</td>
+      <td>${p.rm}</td>
+      <td><span class="badge ${wc}">${p.wait}</span></td>
+      <td>${st
+        ? `<span class="st-${st}">${st==='approve'?'✓ Disetujui':'✗ Ditolak'}</span>`
+        : `<div class="act-btns">
+             <button class="btn-approve" onclick="pendAct(${i},'approve')">Approve</button>
+             <button class="btn-reject" onclick="pendAct(${i},'reject')">Reject</button>
+           </div>`
+      }</td>
+    </tr>`;
+  }).join('');
+}
+function pendAct(i, action) {
+  const p = PENDING_DATA[i];
+  showAction(
+    action==='approve'?'✅ Konfirmasi Approve':'❌ Konfirmasi Reject',
+    `${action==='approve'?'Setujui':'Tolak'} pengajuan ${p.deb} — ${p.prod} ${p.plafon}?`,
+    ()=>{ pendStatus[i]=action; renderPending(); }
+  );
+}
+
+// ═══════════════════════════════════════════════
+// ACTIVITIES
+// ═══════════════════════════════════════════════
+function renderActs() {
+  document.getElementById('actEl').innerHTML = ACTS.map(a=>`
+    <div class="act-item">
+      <div class="act-ico">${a.ico}</div>
+      <div class="act-txt">${a.txt}</div>
+      <div class="act-time">${a.time}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════
+function showTip(e, html) {
+  const t = document.getElementById('tip');
+  t.innerHTML = html; t.style.display='block';
+  t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-10)+'px';
+}
+function hideTip() { document.getElementById('tip').style.display='none'; }
+
+// ═══════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function overlayClose(e, id) { if(e.target.id===id) closeModal(id); }
+
+let _actCb = null;
+function showAction(title, body, cb) {
+  document.getElementById('actTitle').textContent = title;
+  document.getElementById('actBody').textContent = body;
+  _actCb = cb;
+  document.getElementById('actOK').onclick = ()=>{ cb(); closeModal('actModal'); };
+  openModal('actModal');
+}
+
+// WIDGET MODAL
+function openWidgetModal() {
+  const saved = JSON.parse(localStorage.getItem('bniWidgets')||'{}');
+  document.getElementById('wChecks').innerHTML = WIDGETS.map(w=>`
+    <div class="widget-row">
+      <input type="checkbox" id="wc_${w.id}" ${saved[w.id]===false?'':'checked'}>
+      <label for="wc_${w.id}">${w.lbl}</label>
+    </div>`).join('');
+  openModal('wModal');
+}
+function saveWidgets() {
+  const s={};
+  WIDGETS.forEach(w=>{ s[w.id]=document.getElementById('wc_'+w.id).checked; });
+  localStorage.setItem('bniWidgets',JSON.stringify(s));
+  applyWidgets(); closeModal('wModal');
+}
+function applyWidgets() {
+  const s = JSON.parse(localStorage.getItem('bniWidgets')||'{}');
+  WIDGETS.forEach(w=>{
+    const el = document.getElementById(w.id) || document.querySelector(`[data-w="${w.id}"]`);
+    if(el) el.style.display = s[w.id]===false ? 'none' : '';
+  });
+}
+
+// EXPORT
+function doExport(fmt) {
+  const st = document.getElementById('expSt');
+  st.style.display='block';
+  st.innerHTML=`<div class="spin" style="margin:0 auto 8px"></div><div style="font-size:12px;color:var(--text2)">Mengunduh ${fmt}...</div>`;
+  document.querySelectorAll('.export-opt').forEach(o=>o.style.pointerEvents='none');
+  setTimeout(()=>{
+    st.innerHTML=`<div style="font-size:28px">✅</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Selesai! ${fmt} berhasil diunduh.</div>`;
+    document.querySelectorAll('.export-opt').forEach(o=>o.style.pointerEvents='');
+  },2000);
+}
+
+// ═══════════════════════════════════════════════
+// COMMAND PALETTE
+// ═══════════════════════════════════════════════
+function openCmd() {
+  document.getElementById('cmdWrap').classList.add('open');
+  document.getElementById('cmdBg').style.display='block';
+  document.getElementById('cmdIn').value='';
+  filterCmd('');
+  setTimeout(()=>document.getElementById('cmdIn').focus(),50);
+}
+function closeCmd() {
+  document.getElementById('cmdWrap').classList.remove('open');
+  document.getElementById('cmdBg').style.display='none';
+}
+function filterCmd(q) {
+  const items = CMD_DATA.filter(c=>!q||c.lbl.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('cmdRes').innerHTML = items.length
+    ? items.map(c=>`<div class="cmd-item" onclick="cmdRun('${c.lbl}')">
+        <span class="cmd-ico">${c.ico}</span><span>${c.lbl}</span>
+        <span class="cmd-type">${c.type}</span>
+      </div>`).join('')
+    : `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Tidak ada hasil untuk "${q}"</div>`;
+}
+function cmdRun(lbl) {
+  closeCmd();
+  if(lbl==='Export Dashboard PDF') { document.getElementById('expSt').style.display='none'; openModal('expModal'); }
+}
+function cmdKey(e) {
+  if(e.key==='Escape') closeCmd();
+}
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){ e.preventDefault(); openCmd(); }
+  if(e.key==='Escape') closeCmd();
+});
+
+// ═══════════════════════════════════════════════
+// AI CHAT
+// ═══════════════════════════════════════════════
+function toggleAI() { document.getElementById('aiPanel').classList.toggle('open'); }
+function sendAI() {
+  const inp = document.getElementById('aiIn');
+  const msg = inp.value.trim(); if(!msg) return;
+  const body = document.getElementById('aiBody');
+  body.innerHTML += `<div class="ai-msg ai-user">${msg}</div>`;
+  inp.value='';
+  body.innerHTML += `<div class="ai-msg ai-bot" id="aiTyping"><span class="spin"></span> Menganalisis...</div>`;
+  body.scrollTop=body.scrollHeight;
+  setTimeout(()=>{
+    const r = AI_REPLIES[Math.floor(Math.random()*AI_REPLIES.length)];
+    const t = document.getElementById('aiTyping');
+    if(t) t.outerHTML = `<div class="ai-msg ai-bot">${r}</div>`;
+    body.scrollTop=body.scrollHeight;
+  },1200);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+applyTheme();
+renderNotifs();
+renderFunnel();
+renderRM();
+renderRisk();
+renderAI(false);
+renderHeatmap();
+renderPending();
+renderActs();
+applyWidgets();
+
+window.addEventListener('load', ()=>{ setTimeout(initCharts,50); });
+
+// Export modal reset on open
+document.getElementById('expModal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('expModal'))
+    document.getElementById('expSt').style.display='none';
+});
+</script>
+</body>
+</html>

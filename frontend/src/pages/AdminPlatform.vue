@@ -1128,11 +1128,7 @@
       </div>
       <div class="space-y-3 text-sm">
         <div>
-          <label class="text-xs text-ink-gray-5">{{ __('Full Name') }}</label>
-          <input v-model="inviteForm.name" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" />
-        </div>
-        <div>
-          <label class="text-xs text-ink-gray-5">{{ __('Email Address') }}</label>
+          <label class="text-xs text-ink-gray-5">{{ __('Email') }}</label>
           <input v-model="inviteForm.email" type="email" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" />
         </div>
         <div>
@@ -1148,12 +1144,17 @@
           </select>
         </div>
         <div>
-          <label class="text-xs text-ink-gray-5">{{ __('Send Invitation via') }}</label>
-          <div class="mt-1 flex gap-3 text-xs">
-            <label class="flex items-center gap-1"><input type="checkbox" checked class="h-3.5 w-3.5" /> Email</label>
-            <label class="flex items-center gap-1"><input type="checkbox" class="h-3.5 w-3.5" /> WhatsApp</label>
-          </div>
+          <label class="text-xs text-ink-gray-5">{{ __('Status') }}</label>
+          <select v-model="inviteForm.status" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-2 text-sm">
+            <option>Active</option>
+            <option>Inactive</option>
+            <option>Invited</option>
+          </select>
         </div>
+        <label class="flex items-center gap-2 text-xs text-ink-gray-6">
+          <input v-model="inviteForm.sendWelcomeEmail" type="checkbox" class="h-4 w-4 rounded" />
+          {{ __('Kirim Welcome Email') }}
+        </label>
       </div>
       <div class="mt-5 flex justify-end gap-2">
         <Button :label="__('Cancel')" variant="subtle" @click="showInviteModal = false" />
@@ -1240,7 +1241,7 @@ const showFieldModal = ref(false)
 const showTenantModal = ref(false)
 
 // ── Form state ───────────────────────────────────────────────
-const inviteForm = ref({ name: '', email: '', role: 'RM', branch: '' })
+const inviteForm = ref({ email: '', role: 'RM', branch: '', status: 'Invited', sendWelcomeEmail: true })
 const branchForm = ref({ name: '', code: '', type: 'Sub-Branch', region: '', manager: '' })
 const newField = ref({ doctype: 'CRM Lead', label: '', fieldType: 'Text', required: false })
 const fieldDoctype = ref('CRM Lead')
@@ -1455,7 +1456,7 @@ const installedLanguages = [
 
 // ── System Settings ──────────────────────────────────────────
 const systemSettings = ref([
-  { key: 'dark_mode', label: 'Dark Mode Support', desc: 'Allow users to toggle dark theme', type: 'toggle', value: true },
+  { key: 'dark_mode', label: 'Dark Mode Support', desc: 'Allow users to toggle dark theme', type: 'toggle', value: false },
   { key: 'mfa', label: 'MFA Required', desc: 'Force 2FA for all users', type: 'toggle', value: false },
   { key: 'session_timeout', label: 'Session Timeout', type: 'select', value: '60 min', options: ['15 min', '30 min', '60 min', '4h', '8h', 'Never'] },
   { key: 'audit_all', label: 'Full Audit Logging', desc: 'Log all read operations', type: 'toggle', value: true },
@@ -1526,7 +1527,13 @@ function navigate(feat) {
 }
 
 function editUser(u) {
-  inviteForm.value = { name: u.name, email: u.email, role: u.role, branch: u.branch }
+  inviteForm.value = {
+    email: u.email,
+    role: u.role,
+    branch: u.branch,
+    status: u.status || 'Active',
+    sendWelcomeEmail: false,
+  }
   showInviteModal.value = true
 }
 
@@ -1539,17 +1546,18 @@ function terminateSession(s) {
 }
 
 function sendInvite() {
-  if (!inviteForm.value.email || !inviteForm.value.name) return
+  if (!inviteForm.value.email) return
+  const inferredName = inviteForm.value.email.split('@')[0] || 'User'
   users.value.push({
     id: `u-${Date.now()}`,
-    name: inviteForm.value.name,
+    name: inferredName,
     email: inviteForm.value.email,
     role: inviteForm.value.role,
     branch: inviteForm.value.branch,
     lastLogin: '—',
-    status: 'Invited',
+    status: inviteForm.value.status,
   })
-  inviteForm.value = { name: '', email: '', role: 'RM', branch: '' }
+  inviteForm.value = { email: '', role: 'RM', branch: '', status: 'Invited', sendWelcomeEmail: true }
   showInviteModal.value = false
 }
 
