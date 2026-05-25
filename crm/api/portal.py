@@ -80,6 +80,12 @@ def _first_existing(doctype, candidates):
 	return rows[0] if rows else None
 
 
+def _as_dict(value):
+	if isinstance(value, str):
+		return frappe._dict(frappe.parse_json(value or "{}") or {})
+	return frappe._dict(value or {})
+
+
 def _ensure_portal_customer(customer=None, customer_type="Company"):
 	resolved = _resolve_customer(customer)
 	if resolved:
@@ -889,12 +895,14 @@ def update_application(name, fields, customer=None):
 	owner = frappe.db.get_value("CRM Credit Application", name, "borrower")
 	if owner != customer:
 		frappe.throw(_("Application not found"))
-	allowed = {"requested_amount", "purpose", "notes"}
+	allowed = {"requested_amount", "purpose", "notes", "status"}
 	updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
 	if not updates:
 		frappe.throw(_("No valid fields to update"))
 	if "requested_amount" in updates:
 		updates["requested_amount"] = flt(updates["requested_amount"])
+	if "status" in updates and updates["status"] not in STAGES + ["Cancelled"]:
+		frappe.throw(_("Invalid application status"))
 	frappe.db.set_value("CRM Credit Application", name, updates)
 	return _normalize_application(frappe.db.get_value("CRM Credit Application", name, "*", as_dict=True) or {})
 
