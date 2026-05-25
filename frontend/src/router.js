@@ -218,6 +218,33 @@ const routes = [
         name: 'Covenant Monitoring',
         component: () => import('@/pages/CovenantMonitoring.vue'),
       },
+      // ─── Credit Flow Designer ──────────────────────────────
+      {
+        path: 'credit-flow-designer',
+        name: 'Credit Flow Designer',
+        component: () =>
+          import('@/modules/credit-flow/pages/CreditFlowList.vue'),
+      },
+      {
+        path: 'credit-flow-designer/new',
+        name: 'Credit Flow New',
+        component: () =>
+          import('@/modules/credit-flow/pages/CreditFlowDesigner.vue'),
+      },
+      {
+        path: 'credit-flow-designer/:flowId',
+        name: 'Credit Flow Detail',
+        component: () =>
+          import('@/modules/credit-flow/pages/CreditFlowDesigner.vue'),
+        props: true,
+      },
+      {
+        path: 'credit-flow-designer/:flowId/monitor',
+        name: 'Credit Flow Monitor',
+        component: () =>
+          import('@/modules/credit-flow/pages/CreditFlowMonitor.vue'),
+        props: true,
+      },
     ],
   },
   // ─── Operations ──────────────────────────────────────────
