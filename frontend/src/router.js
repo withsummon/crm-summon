@@ -35,7 +35,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Executive Dashboard' },
+        redirect: { name: 'CRM Core Dashboard' },
       },
       {
         path: 'dashboard',
@@ -382,9 +382,9 @@ const routes = [
         props: { moduleGroup: 'Channels & Portal' },
       },
       {
-        path: 'omnichannel-communication',
-        name: 'Omnichannel Communication',
-        component: () => import('@/pages/OmnichannelCommunication.vue'),
+        path: 'omnichannel-workspace',
+        name: 'Omnichannel Workspace',
+        component: () => import('@/pages/OmnichannelWorkspace.vue'),
       },
       {
         path: 'customer-portal',
@@ -436,7 +436,7 @@ const routes = [
   // Legacy redirect: /dashboard → /crm-core/dashboard
   {
     path: '/dashboard',
-    redirect: { name: 'Executive Dashboard' },
+    redirect: { name: 'CRM Core Dashboard' },
   },
   // Legacy redirects for old flat routes
   { path: '/leads', redirect: '/crm-core/leads' },
@@ -503,13 +503,13 @@ router.beforeEach(async (to, from, next) => {
       if (!isCrmUser()) {
         next({ name: 'Not Permitted' })
       } else {
-        next({ name: 'Executive Dashboard' })
+        next({ name: 'CRM Core Dashboard' })
       }
       return
     }
 
     let { route_name, type, name, is_standard } = defaultView
-    route_name = route_name || 'Executive Dashboard'
+    route_name = route_name || 'CRM Core Dashboard'
 
     if (name && !is_standard) {
       next({

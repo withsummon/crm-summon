@@ -117,7 +117,7 @@ let pollTimer = null
 const loadedConversation = computed(() => !!conversation.value?.conversation)
 
 function openOmnichannel() {
-  router.push({ name: 'Omnichannel Communication' })
+  router.push({ name: 'Omnichannel Workspace' })
 }
 
 async function init() {

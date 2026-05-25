@@ -1,41 +1,24 @@
 <template>
-  <div class="bni-dashboard" :data-theme="dashTheme" @click="handleDashClick">
+  <div class="bni-dashboard">
     <div class="bni-content">
-      <LayoutHeader>
-        <template #left-header>
-          <ViewBreadcrumbs routeName="CRM Core Dashboard" />
-        </template>
-        <template #right-header>
+      <!-- ═══ TOPBAR ═══ -->
+      <header class="bni-topbar">
+        <div class="bni-topbar-row1">
+          <div class="bni-topbar-left">
+            <span class="bni-title-icon">
+              <FeatherIcon name="grid" class="h-[18px] w-[18px]" />
+            </span>
+            <h1>{{ __('Dashboard') }}</h1>
+          </div>
           <div class="bni-topbar-right">
-            <div class="bni-search-box" @click.stop="cmdOpen = true">
+            <div class="bni-search-box">
               <FeatherIcon name="search" class="h-4 w-4 shrink-0 opacity-50" />
-              <input v-model="aiSearch" :placeholder="__('Cari... ⌘K')" readonly />
-              <kbd class="bni-kbd">⌘K</kbd>
+              <input v-model="aiSearch" :placeholder="__('Search AI Mode')" />
             </div>
-
-            <div class="bni-notif-wrap" style="position:relative">
-              <button class="bni-icon-btn" :aria-label="__('Notifications')" @click.stop="notifOpen = !notifOpen">
-                <FeatherIcon name="bell" class="h-4 w-4" />
-                <span class="bni-bell-dot"></span>
-              </button>
-              <div v-if="notifOpen" class="bni-notif-drop" @click.stop>
-                <div class="bni-notif-hd">
-                  <strong>Notifikasi</strong>
-                  <span class="bni-notif-pill">3 baru</span>
-                </div>
-                <div class="bni-notif-scroll">
-                  <div v-for="n in bniNotifications" :key="n.id" :class="['bni-ni', { 'bni-ni--unread': n.unread }]">
-                    <div class="bni-ni-dot" v-if="n.unread"></div>
-                    <div class="bni-ni-body">
-                      <strong>{{ n.title }}</strong>
-                      <p>{{ n.body }}</p>
-                      <small>{{ n.time }}</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <span class="bni-icon-btn-wrap">
+            <button class="bni-icon-btn" :aria-label="__('Notifications')">
+              <FeatherIcon name="bell" class="h-4 w-4" />
+            </button>
+              <span class="bni-icon-btn-wrap">
               <button class="bni-icon-btn" :aria-label="__('Inbox')">
                 <FeatherIcon name="inbox" class="h-4 w-4" />
               </button>
@@ -45,8 +28,28 @@
               <FeatherIcon name="share-2" class="h-4 w-4" />
             </button>
           </div>
-        </template>
-      </LayoutHeader>
+        </div>
+        <div class="bni-topbar-row2">
+          <div class="bni-updated-pill">
+            <FeatherIcon name="check-circle" class="h-3.5 w-3.5" />
+            <span>{{ __('Last updated') }} {{ lastUpdated }}</span>
+          </div>
+          <div class="bni-action-buttons">
+            <button class="bni-action-btn" @click="showCustomize = true">
+              <FeatherIcon name="sliders" class="h-3.5 w-3.5" />
+              {{ __('Customize Widget') }}
+            </button>
+            <button class="bni-action-btn" @click="showImport = true">
+              {{ __('Imports') }}
+              <FeatherIcon name="chevron-down" class="h-3 w-3" />
+            </button>
+            <button class="bni-export-btn" @click="showExport = true">
+              {{ __('Exports') }}
+              <FeatherIcon name="chevron-down" class="h-3 w-3" />
+            </button>
+          </div>
+        </div>
+      </header>
 
       <!-- ═══ CUSTOMIZE MODE TOGGLE ═══ -->
       <div v-if="showCustomize" class="bni-customize-banner">
@@ -273,351 +276,281 @@
       </template>
     </Dialog>
 
-        <!-- Follow-up Load -->
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>{{ __('Follow-up Load') }}</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-lead-bars">
-            <div v-for="item in displayFollowUpLoad" :key="item.label" class="bni-lb-row">
-              <span class="bni-lb-label">{{ item.label }}</span>
-              <div class="bni-lb-track">
-                <div class="bni-lb-fill" :style="{ width: `${item.percent}%` }"></div>
-              </div>
-            </div>
-          </div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
-            <div class="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-center">
-              <div class="text-xl font-bold text-emerald-700">{{ followUpSummary.completed }}</div>
-              <div class="text-xs text-emerald-700">{{ __('Completed') }}</div>
-            </div>
-            <div class="rounded-lg border border-cyan-100 bg-cyan-50 px-3 py-3 text-center">
-              <div class="text-xl font-bold text-cyan-700">{{ followUpSummary.pending }}</div>
-              <div class="text-xs text-cyan-700">{{ __('Pending') }}</div>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <!-- ═══ EXEC DIVIDER ═══ -->
-      <div class="bni-exec-divider">
-        <span>Dashboard</span>
-      </div>
-
-      <!-- ═══ EXEC KPI ROW ═══ -->
-      <section v-if="widgets.kpi" class="bni-exec-kpi-grid">
-        <article v-for="k in execKPIs" :key="k.label" class="bni-exec-kpi-card">
-          <div class="bni-ekc-top">
-            <div class="bni-ekc-icon"><FeatherIcon :name="k.icon" class="h-4 w-4" /></div>
-            <span :class="['bni-ekc-change', k.up ? 'up' : 'down']">{{ k.change }}</span>
-          </div>
-          <strong class="bni-ekc-val">{{ k.value }}</strong>
-          <span class="bni-ekc-label">{{ k.label }}</span>
-          <span class="bni-ekc-cap">{{ k.caption }}</span>
-        </article>
-      </section>
-
-      <!-- ═══ FILTER BAR ═══ -->
-      <div class="bni-exec-filter">
-        <span class="bni-exec-filter-label">Periode:</span>
-        <button
-          v-for="p in revenuePeriods" :key="p"
-          :class="['bni-fp-btn', { active: activePeriod === p }]"
-          @click="activePeriod = p"
-        >{{ p }}</button>
-      </div>
-
-      <!-- ═══ CHARTS ROW ═══ -->
-      <section v-if="widgets.charts" class="bni-exec-two-col">
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>Disbursement per Segmen</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
-          </div>
-          <div style="height:220px;position:relative">
-            <canvas ref="disbCanvas"></canvas>
-          </div>
-        </article>
-        <article class="bni-card">
-          <div class="bni-card-head">
-            <h2>Trend NPL Ratio</h2>
-            <button class="bni-dots"><FeatherIcon name="more-vertical" class="h-4 w-4" /></button>
-          </div>
-          <div style="height:220px;position:relative">
-            <canvas ref="nplCanvas"></canvas>
-          </div>
-        </article>
-      </section>
-
-      <!-- ═══ FUNNEL + RM LEADERBOARD ═══ -->
-      <section class="bni-exec-two-col">
-        <article v-if="widgets.funnel" class="bni-card">
-          <div class="bni-card-head"><h2>Pipeline Konversi</h2></div>
-          <div class="bni-funnel">
-            <div v-for="(step, i) in funnelSteps" :key="step.label" class="bni-funnel-row">
-              <div class="bni-funnel-bar" :style="{ width: `${(step.value/funnelSteps[0].value)*100}%`, background: step.color }">
-                <span class="bni-funnel-label">{{ step.label }}</span>
-                <span class="bni-funnel-val">{{ step.value }}</span>
-              </div>
-              <div v-if="i < funnelSteps.length-1" class="bni-funnel-conv">
-                ↓ {{ Math.round(funnelSteps[i+1].value/step.value*100) }}%
-              </div>
-            </div>
-          </div>
-        </article>
-        <article v-if="widgets.leaderboard" class="bni-card">
-          <div class="bni-card-head"><h2>RM Productivity Leaderboard</h2></div>
-          <table class="bni-rm-table">
-            <thead>
-              <tr><th>#</th><th>Nama</th><th>Cabang</th><th>Deal</th><th>Nilai</th><th>Rate</th></tr>
-            </thead>
-            <tbody>
-              <tr v-for="rm in rmLeaderboard" :key="rm.rank">
-                <td><span :class="['bni-rm-rank', rm.rank===1?'gold':rm.rank===2?'silver':rm.rank===3?'bronze':'']">{{ rm.rank }}</span></td>
-                <td class="bni-rm-name">{{ rm.name }}</td>
-                <td class="bni-rm-branch">{{ rm.branch }}</td>
-                <td class="bni-rm-deals">{{ rm.deals }}</td>
-                <td class="bni-rm-val">{{ rm.value }}</td>
-                <td><span class="bni-rm-rate">{{ rm.rate }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-      </section>
-
-      <!-- ═══ RISK ALERTS + AI INSIGHTS ═══ -->
-      <section class="bni-exec-two-col">
-        <article v-if="widgets.risk" class="bni-card">
-          <div class="bni-card-head"><h2>Risk Alerts</h2><span class="bni-risk-count">{{ riskAlerts.length }}</span></div>
-          <div class="bni-risk-list">
-            <div v-for="r in riskAlerts" :key="r.id" class="bni-risk-item">
-              <span :class="['bni-risk-badge', 'bni-risk-'+r.color]">{{ r.severity }}</span>
-              <div class="bni-risk-body">
-                <strong>{{ r.title }}</strong>
-                <p>{{ r.body }}</p>
-              </div>
-              <button class="bni-risk-action" @click="showAction(r.title,'Tindak lanjut untuk: '+r.body, ()=>{})">Tindak Lanjut</button>
-            </div>
-          </div>
-        </article>
-        <article v-if="widgets.ai" class="bni-card">
-          <div class="bni-card-head">
-            <h2>AI Insights</h2>
-            <button class="bni-action-btn" style="height:28px;font-size:11px" @click="refreshAI" :disabled="aiRefreshing">
-              <FeatherIcon name="refresh-cw" :class="['h-3 w-3', aiRefreshing?'bni-spin':'']" />
-              {{ aiRefreshing ? 'Memuat...' : 'Refresh' }}
-            </button>
-          </div>
-          <div class="bni-ai-list">
-            <div v-for="(ins, i) in aiInsights" :key="i" class="bni-ai-item">
-              <span class="bni-ai-icon">{{ ins.icon }}</span>
-              <div>
-                <strong>{{ ins.title }}</strong>
-                <p>{{ ins.body }}</p>
-              </div>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <!-- ═══ PORTFOLIO HEATMAP ═══ -->
-      <section v-if="widgets.heatmap" class="bni-card bni-exec-heatmap-card">
-        <div class="bni-card-head"><h2>Portfolio Heatmap (NPL % per Segmen × Produk)</h2></div>
-        <div class="bni-hm-wrap">
-          <table class="bni-hm-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th v-for="col in heatmapData.cols" :key="col">{{ col }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(row, ri) in heatmapData.values" :key="ri">
-                <td class="bni-hm-rowlabel">{{ heatmapData.rows[ri] }}</td>
-                <td
-                  v-for="(val, ci) in row" :key="ci"
-                  :style="{ background: nplColor(val) }"
-                  class="bni-hm-cell"
-                  @mouseenter="e => showHmTip(heatmapData.rows[ri], heatmapData.cols[ci], val, e)"
-                  @mouseleave="hmTip = null"
-                >{{ val.toFixed(1) }}%</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="bni-hm-legend">
-            <span>Rendah</span>
-            <div class="bni-hm-grad"></div>
-            <span>Tinggi</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ═══ PENDING APPROVALS + ACTIVITIES ═══ -->
-      <section class="bni-exec-two-col">
-        <article v-if="widgets.pending" class="bni-card bni-exec-pending">
-          <div class="bni-card-head"><h2>Pending Approvals</h2><span class="bni-risk-count">{{ pendingApprovals.filter(p=>!p.status).length }}</span></div>
-          <table class="bni-pa-table">
-            <thead><tr><th>Debitur</th><th>Segmen</th><th>Nominal</th><th>RM</th><th>Hari</th><th>Aksi</th></tr></thead>
-            <tbody>
-              <tr v-for="p in pendingApprovals" :key="p.id" :class="{ 'bni-pa-done': p.status }">
-                <td>{{ p.debitur }}</td>
-                <td><span class="bni-seg-badge">{{ p.segmen }}</span></td>
-                <td class="bni-pa-nom">{{ p.nominal }}</td>
-                <td>{{ p.rm }}</td>
-                <td><span :class="['bni-pa-days', p.hari >= 5 ? 'warn' : '']">{{ p.hari }}h</span></td>
-                <td v-if="!p.status" class="bni-pa-acts">
-                  <button class="bni-btn-approve" @click="pendingAct(p, 'approve')">✓</button>
-                  <button class="bni-btn-reject" @click="pendingAct(p, 'reject')">✕</button>
-                </td>
-                <td v-else>
-                  <span :class="['bni-pa-status', p.status]">{{ p.status === 'approve' ? 'Disetujui' : 'Ditolak' }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-        <article v-if="widgets.activities" class="bni-card">
-          <div class="bni-card-head"><h2>Aktivitas Terkini</h2></div>
-          <div class="bni-act-feed">
-            <div v-for="(act, i) in recentActivities" :key="i" class="bni-act-item">
-              <span class="bni-act-icon">{{ act.icon }}</span>
-              <div class="bni-act-body">
-                <p>{{ act.text }}</p>
-                <small>{{ act.time }}</small>
-              </div>
-            </div>
-          </div>
-        </article>
-      </section>
-    </div>
-
-    <!-- ═══ FLOATING AI CHAT ═══ -->
-    <div class="bni-ai-fab" @click.stop="aiChatOpen = !aiChatOpen">
-      <FeatherIcon name="message-circle" class="h-5 w-5" />
-    </div>
-    <div v-if="aiChatOpen" class="bni-ai-chat" @click.stop>
-      <div class="bni-ai-chat-hd">
-        <strong>Summon AI</strong>
-        <button @click="aiChatOpen = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
-      </div>
-      <div class="bni-ai-chat-body" ref="aiBodyRef">
-        <div v-for="(msg, i) in aiMessages" :key="i" :class="['bni-ai-msg', msg.from]">{{ msg.text }}</div>
-      </div>
-      <div class="bni-ai-chat-foot">
-        <input v-model="aiInput" placeholder="Tanya sesuatu..." @keydown.enter="sendAI" />
-        <button @click="sendAI"><FeatherIcon name="send" class="h-4 w-4" /></button>
-      </div>
-    </div>
-
-    <!-- Heatmap tooltip -->
-    <div v-if="hmTip" class="bni-hm-tip" :style="{ top: (hmTip.y+14)+'px', left: hmTip.x+'px' }">
-      <strong>{{ hmTip.seg }} × {{ hmTip.prod }}</strong>
-      <div>NPL: {{ hmTip.val.toFixed(1) }}%</div>
-    </div>
-
-    <!-- ═══ WIDGET MODAL ═══ -->
-    <Teleport to="body">
-      <div v-if="widgetModalOpen" class="bni-overlay" @click.self="widgetModalOpen = false">
-        <div class="bni-modal">
-          <div class="bni-modal-hd">
-            <strong>Customize Widget</strong>
-            <button @click="widgetModalOpen = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-modal-body">
-            <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Pilih widget yang ingin ditampilkan di Dashboard.</p>
-            <div class="bni-widget-list">
-              <label v-for="w in widgetList" :key="w.key" class="bni-widget-row">
-                <input type="checkbox" v-model="widgets[w.key]" />
-                <span>{{ w.label }}</span>
-              </label>
-            </div>
-          </div>
-          <div class="bni-modal-ft">
-            <button class="bni-btn-cancel" @click="widgetModalOpen = false">Batal</button>
-            <button class="bni-btn-save" @click="saveWidgets">Simpan</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- ═══ EXPORT MODAL ═══ -->
-    <Teleport to="body">
-      <div v-if="exportModalOpen" class="bni-overlay" @click.self="exportModalOpen = false">
-        <div class="bni-modal">
-          <div class="bni-modal-hd">
-            <strong>Export Dashboard</strong>
-            <button @click="exportModalOpen = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-modal-body">
-            <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Pilih format export:</p>
-            <div style="display:flex;gap:10px;margin-bottom:18px">
-              <button
-                v-for="fmt in ['PDF','Excel','PNG']" :key="fmt"
-                :class="['bni-fmt-btn', { active: selectedExportFmt === fmt }]"
-                @click="selectedExportFmt = fmt"
-              >{{ fmt }}</button>
-            </div>
-            <div v-if="exportStatus" class="bni-export-status">{{ exportStatus }}</div>
-          </div>
-          <div class="bni-modal-ft">
-            <button class="bni-btn-cancel" @click="exportModalOpen = false">Batal</button>
-            <button class="bni-btn-save" @click="doExport(selectedExportFmt)">
-              <FeatherIcon name="download" class="h-3.5 w-3.5" /> Download {{ selectedExportFmt }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- ═══ ACTION CONFIRM MODAL ═══ -->
-    <Teleport to="body">
-      <div v-if="actionModal.open" class="bni-overlay" @click.self="actionModal.open = false">
-        <div class="bni-modal bni-modal--sm">
-          <div class="bni-modal-hd">
-            <strong>{{ actionModal.title }}</strong>
-            <button @click="actionModal.open = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
-          </div>
-          <div class="bni-modal-body">
-            <p style="font-size:13px;color:var(--text-2)">{{ actionModal.body }}</p>
-          </div>
-          <div class="bni-modal-ft">
-            <button class="bni-btn-cancel" @click="actionModal.open = false">Batal</button>
-            <button class="bni-btn-save" @click="confirmAction">Konfirmasi</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- ═══ COMMAND PALETTE ═══ -->
-    <Teleport to="body">
-      <div v-if="cmdOpen" class="bni-overlay bni-cmd-overlay" @click.self="cmdOpen = false">
-        <div class="bni-cmd">
-          <div class="bni-cmd-search">
-            <FeatherIcon name="search" class="h-4 w-4 opacity-50" />
-            <input ref="cmdInputRef" v-model="cmdQuery" placeholder="Cari perintah..." @keydown.escape="cmdOpen = false" />
-            <kbd class="bni-kbd">ESC</kbd>
-          </div>
-          <div class="bni-cmd-list">
-            <button v-for="cmd in filteredCmds" :key="cmd.label" class="bni-cmd-item" @click="cmd.action">
-              <FeatherIcon :name="cmd.icon" class="h-4 w-4 opacity-60" />
-              <span>{{ cmd.label }}</span>
-            </button>
-            <div v-if="!filteredCmds.length" class="bni-cmd-empty">Tidak ada hasil</div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { FeatherIcon, createResource, usePageMeta } from 'frappe-ui'
-import { computed, reactive, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { Chart, registerables } from 'chart.js'
-import LayoutHeader from '@/components/LayoutHeader.vue'
-import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
-Chart.register(...registerables)
+import { Dialog, FeatherIcon, call, createResource, usePageMeta, toast } from 'frappe-ui'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import Sortable from 'sortablejs'
+import html2pdf from 'html2pdf.js'
+
+const router = useRouter()
+
+function truncateLabel(str, length = 12) {
+  if (!str) return ''
+  return str.length > length ? str.slice(0, length) + '...' : str
+}
+
+// ─── Widget Configuration (draggable + toggleable) ─────────
+const defaultWidgets = [
+  { key: 'metrics', label: 'Metrics', icon: 'activity', visible: true },
+  { key: 'revenue', label: 'Revenue Chart', icon: 'bar-chart-2', visible: true },
+  { key: 'calendar', label: 'Calendar', icon: 'calendar', visible: true },
+  { key: 'leadManagement', label: 'Lead Management', icon: 'users', visible: true },
+  { key: 'bankBreakdown', label: 'Bank Breakdown', icon: 'building-2', visible: true },
+  { key: 'picOwnership', label: 'PIC Ownership', icon: 'user-check', visible: true },
+  { key: 'followUpLoad', label: 'Follow-up Load', icon: 'check-circle', visible: true },
+]
+const STORAGE_KEY = 'bni_dashboard_widgets'
+
+function loadWidgets() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch {}
+  return defaultWidgets.map(w => ({ ...w }))
+}
+
+const widgets = ref(loadWidgets())
+const showCustomize = ref(false)
+
+function saveWidgets() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets.value))
+}
+
+function exitCustomize() {
+  showCustomize.value = false
+}
+
+function widgetVisible(key) {
+  const w = widgets.value.find(w => w.key === key)
+  return w ? w.visible : true
+}
+
+function widgetOrder(key) {
+  return widgets.value.findIndex(w => w.key === key)
+}
+
+function toggleWidget(key) {
+  const w = widgets.value.find(w => w.key === key)
+  if (w) { w.visible = !w.visible; saveWidgets() }
+}
+
+function onDragEnd() {
+  saveWidgets()
+}
+
+function resetWidgets() {
+  widgets.value = defaultWidgets.map(w => ({ ...w }))
+  saveWidgets()
+}
+
+// ─── SortableJS (direct, no vuedraggable) ──────────────────
+const widgetsContainerRef = ref(null)
+let sortableInstance = null
+
+function initSortable() {
+  if (sortableInstance || !widgetsContainerRef.value) return
+  sortableInstance = Sortable.create(widgetsContainerRef.value, {
+    animation: 200,
+    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    ghostClass: 'bni-ghost',
+    dragClass: 'bni-dragging',
+    handle: '.bni-drag-handle',
+    onEnd(evt) {
+      if (evt.oldIndex === evt.newIndex) return
+      const newOrder = [...widgets.value]
+      const [moved] = newOrder.splice(evt.oldIndex, 1)
+      newOrder.splice(evt.newIndex, 0, moved)
+      widgets.value = newOrder
+      saveWidgets()
+    },
+  })
+}
+
+function destroySortable() {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+}
+
+watch(showCustomize, async (val) => {
+  if (val) {
+    await nextTick()
+    initSortable()
+  } else {
+    destroySortable()
+  }
+})
+
+onMounted(() => {
+  if (showCustomize.value) {
+    nextTick(initSortable)
+  }
+})
+
+onUnmounted(() => {
+  destroySortable()
+})
+
+// ─── Import / Export Dialogs ───────────────────────────────
+const showImport = ref(false)
+const showExport = ref(false)
+
+const importOptions = [
+  { label: 'Import Leads', doctype: 'CRM Lead', icon: 'users' },
+  { label: 'Import Customers', doctype: 'Customer', icon: 'briefcase' },
+  { label: 'Import Credit Facilities', doctype: 'CRM Credit Facility', icon: 'dollar-sign' },
+  { label: 'Import Risk Profiles', doctype: 'CRM Risk Profile', icon: 'activity' },
+]
+const exportOptions = [
+  { label: 'Export Dashboard PDF', format: 'pdf', icon: 'file-text' },
+  { label: 'Export Dashboard Excel', format: 'xlsx', icon: 'file' },
+  { label: 'Export Leads', doctype: 'CRM Lead', icon: 'users' },
+  { label: 'Export Portfolio Report', format: 'pdf', icon: 'bar-chart' },
+]
+
+async function runImport(opt) {
+  showImport.value = false
+  if (opt.doctype) {
+    window.open(`/app/data-import?reference_doctype=${encodeURIComponent(opt.doctype)}`, '_blank')
+  }
+}
+
+function downloadBlob(content, filename, mime) {
+  const blob = new Blob([content], { type: mime })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(link.href)
+}
+
+function jsonToCsv(rows) {
+  if (!rows.length) return ''
+  const keys = Object.keys(rows[0])
+  const header = keys.join(',')
+  const lines = rows.map(r =>
+    keys.map(k => {
+      const v = r[k]
+      const s = v == null ? '' : String(v)
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    }).join(',')
+  )
+  return [header, ...lines].join('\n')
+}
+
+function exportDashboardExcel() {
+  const d = data.value
+  const rows = []
+
+  // Metrics
+  if (d.metrics?.length) {
+    d.metrics.forEach(m => rows.push({ Section: 'Metrics', Label: m.label, Value: m.value ?? 0, Change: `${m.change ?? 0}%` }))
+  }
+
+  // Revenue / Company Breakdown
+  if (d.revenue?.months?.length) {
+    d.revenue.months.forEach(m => rows.push({ Section: 'Revenue Breakdown', Label: m.label, Value: m.value ?? m.count ?? 0, Change: '' }))
+  }
+
+  // Lead Management
+  const lm = d.lead_management
+  if (lm) {
+    ;['status', 'source', 'qualification'].forEach(tab => {
+      if (lm[tab]?.length) {
+        lm[tab].forEach(r => rows.push({ Section: `Lead Management - ${tab}`, Label: r.label, Value: r.percent ?? 0, Change: '' }))
+      }
+    })
+  }
+
+  // PIC Ownership
+  if (d.lead_gen?.pic_ownership?.length) {
+    d.lead_gen.pic_ownership.forEach(o => rows.push({ Section: 'PIC Ownership', Label: o.label, Value: o.count ?? 0, Change: '' }))
+  }
+
+  // Follow-up Load
+  if (d.lead_gen?.follow_up_load?.status_rows?.length) {
+    d.lead_gen.follow_up_load.status_rows.forEach(r => rows.push({ Section: 'Follow-up Load', Label: r.label, Value: r.percent ?? 0, Change: '' }))
+    rows.push({ Section: 'Follow-up Load', Label: 'Completed', Value: d.lead_gen.follow_up_load.completed ?? 0, Change: '' })
+    rows.push({ Section: 'Follow-up Load', Label: 'Pending', Value: d.lead_gen.follow_up_load.pending ?? 0, Change: '' })
+  }
+
+  if (!rows.length) {
+    toast({ title: __('No dashboard data to export'), variant: 'warning' })
+    return
+  }
+
+  const csv = jsonToCsv(rows)
+  const bom = '\uFEFF'
+  downloadBlob(bom + csv, `dashboard-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;')
+}
+
+async function runExport(opt) {
+  showExport.value = false
+
+  if (opt.label === 'Export Dashboard PDF') {
+    const el = document.querySelector('.bni-widgets-container')
+    if (!el) { toast({ title: __('Dashboard content not found'), variant: 'warning' }); return }
+    try {
+      await html2pdf().set({
+        margin: 8, filename: `dashboard-${new Date().toISOString().slice(0, 10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      }).from(el).save()
+      toast({ title: __('PDF exported successfully'), variant: 'success' })
+    } catch (e) {
+      toast({ title: __('PDF export failed'), variant: 'error' })
+      console.error(e)
+    }
+    return
+  }
+
+  if (opt.label === 'Export Dashboard Excel') {
+    exportDashboardExcel()
+    return
+  }
+
+  if (opt.label === 'Export Portfolio Report') {
+    try {
+      const result = await call('crm.api.portfolio_monitoring.generate_report', {
+        template: 'Committee Meeting Summary Package (PDF)',
+        send_email: false,
+      })
+      if (result?.data) {
+        const csv = jsonToCsv([result.data])
+        const bom = '\uFEFF'
+        downloadBlob(bom + csv, `portfolio-report-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8;')
+        toast({ title: __('Portfolio report exported'), variant: 'success' })
+      }
+    } catch (e) {
+      toast({ title: __('Portfolio report export failed'), variant: 'error' })
+      console.error(e)
+    }
+    return
+  }
+
+  // Export Leads / other doctypes via API
+  if (opt.doctype) {
+    try {
+      const result = await call('crm.api.lead_management.export_leads', { format: 'CSV' })
+      if (result?.file_url) {
+        window.open(result.file_url, '_blank')
+      } else if (result?.async) {
+        toast({ title: __('Export is being processed. You will be notified when ready.'), variant: 'info' })
+      } else {
+        toast({ title: __('Export failed'), variant: 'error' })
+      }
+    } catch (e) {
+      toast({ title: __('Export failed'), variant: 'error' })
+      console.error(e)
+    }
+  }
+}
 
 // ─── Reactive State ───────────────────────────────────────
 const aiSearch = ref('')
@@ -905,321 +838,6 @@ const pieChartData = computed(() => {
 // ─── Lifecycle ────────────────────────────────────────────
 watch(activeRevenuePeriod, () => dashboard.fetch())
 usePageMeta(() => ({ title: __('Dashboard') }))
-
-// ─── Executive Dashboard State ────────────────────────────
-// Dark mode is temporarily disabled/hidden — force light theme
-const dashTheme = ref('light')
-const notifOpen = ref(false)
-const widgetModalOpen = ref(false)
-const exportModalOpen = ref(false)
-const exportStatus = ref(null)
-const selectedExportFmt = ref('PDF')
-const actionModal = reactive({ open: false, title: '', body: '', cb: null })
-const activePeriod = ref('1M')
-const aiRefreshing = ref(false)
-const hmTip = ref(null)
-const aiChatOpen = ref(false)
-const aiInput = ref('')
-const aiMessages = ref([{ from: 'bot', text: 'Halo! Saya Summon AI. Ada yang bisa saya bantu mengenai dashboard kredit BNI?' }])
-const aiBodyRef = ref(null)
-const cmdOpen = ref(false)
-const cmdQuery = ref('')
-const cmdInputRef = ref(null)
-const disbCanvas = ref(null)
-const nplCanvas = ref(null)
-let disbChart = null, nplChart = null
-
-const widgets = reactive(
-  JSON.parse(localStorage.getItem('bni_widgets') || 'null') || {
-    kpi: true, charts: true, funnel: true, leaderboard: true,
-    risk: true, ai: true, heatmap: true, pending: true, activities: true,
-  }
-)
-const widgetList = [
-  { key: 'kpi', label: '8 KPI Utama' },
-  { key: 'charts', label: 'Grafik Disbursement & NPL' },
-  { key: 'funnel', label: 'Pipeline Konversi' },
-  { key: 'leaderboard', label: 'RM Leaderboard' },
-  { key: 'risk', label: 'Risk Alerts' },
-  { key: 'ai', label: 'AI Insights' },
-  { key: 'heatmap', label: 'Portfolio Heatmap' },
-  { key: 'pending', label: 'Pending Approvals' },
-  { key: 'activities', label: 'Aktivitas Terkini' },
-]
-
-// ─── Exec KPI Data ────────────────────────────────────────
-const execKPIs = [
-  { label: 'Pengajuan', value: '1.247', change: '+12%', up: true, icon: 'file-text', caption: 'Total pengajuan kredit' },
-  { label: 'Portfolio Aktif', value: 'Rp 8,4T', change: '+5%', up: true, icon: 'briefcase', caption: 'Outstanding kredit aktif' },
-  { label: 'NPL Ratio', value: '2,8%', change: '-0.3%', up: false, icon: 'alert-triangle', caption: 'Non-Performing Loan' },
-  { label: 'Disbursement MTD', value: 'Rp 1,2T', change: '+18%', up: true, icon: 'trending-up', caption: 'Month-to-date disbursement' },
-  { label: 'Portfolio Outstanding', value: 'Rp 12,6T', change: '+3%', up: true, icon: 'database', caption: 'Total portfolio outstanding' },
-  { label: 'Approval Rate', value: '76%', change: '+4%', up: true, icon: 'check-circle', caption: 'Tingkat persetujuan kredit' },
-  { label: 'Collection Recovery', value: '88%', change: '+2%', up: true, icon: 'refresh-cw', caption: 'Recovery rate koleksi' },
-  { label: 'SLA Compliance', value: '94%', change: '-1%', up: false, icon: 'clock', caption: 'Kepatuhan SLA proses' },
-]
-
-// ─── Funnel + Leaderboard ─────────────────────────────────
-const funnelSteps = [
-  { label: 'Prospek', value: 320, color: '#0e9298' },
-  { label: 'Pengajuan', value: 180, color: '#15b8bd' },
-  { label: 'Analisis', value: 120, color: '#3acfd4' },
-  { label: 'Approval', value: 88, color: '#5ddde1' },
-  { label: 'Disbursement', value: 64, color: '#85e8eb' },
-]
-const rmLeaderboard = [
-  { rank: 1, name: 'Budi Santoso', branch: 'Jakarta Pusat', deals: 28, value: 'Rp 145M', rate: '89%' },
-  { rank: 2, name: 'Siti Rahayu', branch: 'Surabaya', deals: 24, value: 'Rp 132M', rate: '85%' },
-  { rank: 3, name: 'Ahmad Fauzi', branch: 'Bandung', deals: 21, value: 'Rp 118M', rate: '82%' },
-  { rank: 4, name: 'Dewi Kusuma', branch: 'Medan', deals: 19, value: 'Rp 95M', rate: '79%' },
-  { rank: 5, name: 'Rizky Pratama', branch: 'Semarang', deals: 17, value: 'Rp 88M', rate: '76%' },
-]
-
-// ─── Risk Alerts ──────────────────────────────────────────
-const riskAlerts = [
-  { id: 1, severity: 'KRITIS', title: 'NPL Segmen Mikro Meningkat', body: 'NPL mikro naik 0.8% dalam 7 hari terakhir. Perlu tindakan segera.', color: 'red' },
-  { id: 2, severity: 'TINGGI', title: 'Limit Konsentrasi Sektor Properti', body: 'Eksposur properti mencapai 28% dari total portfolio (batas 25%).', color: 'orange' },
-  { id: 3, severity: 'SEDANG', title: 'Dokumen Jaminan Kadaluarsa', body: '34 debitur memiliki dokumen jaminan kadaluarsa < 30 hari.', color: 'yellow' },
-  { id: 4, severity: 'RENDAH', title: 'SLA Review Terlampaui', body: '12 pengajuan melebihi SLA review 5 hari kerja.', color: 'blue' },
-  { id: 5, severity: 'INFO', title: 'Jadwal Audit Internal', body: 'Audit internal dijadwalkan 15 Juni 2026. Persiapkan dokumen.', color: 'gray' },
-]
-
-// ─── AI Insights ──────────────────────────────────────────
-const aiInsights = ref([
-  { icon: '🎯', title: 'Peluang Cross-Sell', body: '127 nasabah segmen UKM berpotensi untuk produk KI berdasarkan pola transaksi.' },
-  { icon: '⚠️', title: 'Risiko Churn', body: '23 debitur premium tidak ada aktivitas >60 hari. Disarankan outreach segera.' },
-  { icon: '📈', title: 'Tren Positif', body: 'Approval rate minggu ini 82%, naik 6% dari rata-rata bulan lalu.' },
-])
-
-// ─── Heatmap ──────────────────────────────────────────────
-const heatmapData = {
-  rows: ['Mikro', 'UKM', 'Korporasi', 'Konsumer', 'Syariah'],
-  cols: ['KTA', 'KPR', 'KI', 'KUR', 'KMK'],
-  values: [
-    [2.1, 1.4, 3.8, 4.2, 1.9],
-    [1.8, 2.6, 1.2, 3.1, 2.4],
-    [0.9, 1.1, 2.8, 0.7, 1.6],
-    [3.4, 1.7, 0.8, 2.2, 3.9],
-    [1.3, 2.9, 1.5, 1.8, 2.1],
-  ],
-}
-
-// ─── Pending Approvals ────────────────────────────────────
-const pendingApprovals = ref([
-  { id: 1, debitur: 'PT Maju Bersama', segmen: 'Korporasi', nominal: 'Rp 12,5M', rm: 'Budi S.', hari: 3, status: null },
-  { id: 2, debitur: 'CV Tekno Jaya', segmen: 'UKM', nominal: 'Rp 3,2M', rm: 'Siti R.', hari: 5, status: null },
-  { id: 3, debitur: 'Yanto Surya', segmen: 'Mikro', nominal: 'Rp 850jt', rm: 'Ahmad F.', hari: 2, status: null },
-  { id: 4, debitur: 'PT Karya Abadi', segmen: 'Korporasi', nominal: 'Rp 8,7M', rm: 'Dewi K.', hari: 7, status: null },
-  { id: 5, debitur: 'UD Sumber Rezeki', segmen: 'UKM', nominal: 'Rp 1,5M', rm: 'Rizky P.', hari: 1, status: null },
-])
-
-// ─── Activities ───────────────────────────────────────────
-const recentActivities = [
-  { icon: '✅', time: '10 mnt lalu', text: 'Approval kredit PT Maju Bersama Rp 12,5M disetujui oleh Kepala Cabang Jakarta' },
-  { icon: '📄', time: '25 mnt lalu', text: 'Pengajuan baru dari CV Tekno Jaya Rp 3,2M masuk oleh RM Siti Rahayu' },
-  { icon: '⚠️', time: '1 jam lalu', text: 'Alert NPL: Debitur Ahmad Yusuf (KUR Mikro) masuk watchlist koleksi' },
-  { icon: '📊', time: '2 jam lalu', text: 'Disbursement batch Mei 2026 selesai — total Rp 487M ke 34 debitur' },
-  { icon: '🔔', time: '3 jam lalu', text: 'Jadwal review portfolio Q2 ditetapkan 28 Mei 2026 pukul 09:00' },
-  { icon: '📞', time: '4 jam lalu', text: 'Follow-up call Yanto Surya berhasil — jadwal tatap muka Jumat' },
-  { icon: '🏦', time: 'Kemarin', text: 'Pelunasan early dari PT Karya Abadi — penghematan bunga Rp 120jt' },
-  { icon: '📋', time: 'Kemarin', text: 'Audit internal dokumen jaminan selesai — 34 item membutuhkan pembaruan' },
-]
-
-// ─── Notifications ────────────────────────────────────────
-const bniNotifications = [
-  { id: 1, title: 'Approval Kredit Menunggu', body: 'PT Maju Bersama - Rp 12,5M menunggu persetujuan Anda', time: '5 mnt lalu', unread: true },
-  { id: 2, title: 'Alert NPL Kritis', body: 'Segmen Mikro NPL naik 0.8% dalam 7 hari', time: '12 mnt lalu', unread: true },
-  { id: 3, title: 'Disbursement Selesai', body: 'Batch Mei 2026 berhasil — Rp 487M ke 34 debitur', time: '1 jam lalu', unread: true },
-  { id: 4, title: 'Laporan SLA Tersedia', body: 'Laporan kepatuhan SLA April 2026 sudah dapat diunduh', time: '2 jam lalu', unread: false },
-  { id: 5, title: 'Review Portfolio Q2', body: 'Jadwal review ditetapkan 28 Mei 2026 pukul 09:00', time: '3 jam lalu', unread: false },
-  { id: 6, title: 'Limit Konsentrasi', body: 'Sektor properti mendekati batas 25% portfolio', time: '4 jam lalu', unread: false },
-  { id: 7, title: 'Dokumen Kadaluarsa', body: '34 dokumen jaminan perlu diperbaharui segera', time: 'Kemarin', unread: false },
-  { id: 8, title: 'Target Bulanan Tercapai', body: 'Target disbursement Mei 2026 tercapai 108%', time: 'Kemarin', unread: false },
-  { id: 9, title: 'RM Baru Bergabung', body: 'Andi Wijaya mulai bertugas di Cabang Yogyakarta', time: '2 hari lalu', unread: false },
-  { id: 10, title: 'Update Regulasi OJK', body: 'Surat edaran OJK No. 15/2026 perlu ditindaklanjuti', time: '3 hari lalu', unread: false },
-]
-
-// ─── Command Palette ──────────────────────────────────────
-const cmdCommands = [
-  { label: 'Dashboard Utama', icon: 'grid', action: () => { cmdOpen.value = false } },
-  { label: 'Lihat Pending Approvals', icon: 'check-square', action: () => { cmdOpen.value = false; nextTick(() => document.querySelector('.bni-exec-pending')?.scrollIntoView({ behavior: 'smooth' })) } },
-  { label: 'Export Dashboard', icon: 'download', action: () => { cmdOpen.value = false; exportModalOpen.value = true } },
-  { label: 'Customize Widget', icon: 'sliders', action: () => { cmdOpen.value = false; widgetModalOpen.value = true } },
-
-  { label: 'Refresh Data', icon: 'refresh-cw', action: () => { cmdOpen.value = false; dashboard.fetch() } },
-]
-const filteredCmds = computed(() =>
-  cmdQuery.value
-    ? cmdCommands.filter(c => c.label.toLowerCase().includes(cmdQuery.value.toLowerCase()))
-    : cmdCommands
-)
-
-// ─── Executive Functions ──────────────────────────────────
-function toggleTheme() {
-  // Dark mode is temporarily disabled/hidden
-}
-
-function handleDashClick() {
-  notifOpen.value = false
-}
-
-function nplColor(v) {
-  if (v >= 4) return '#fecdca'
-  if (v >= 3) return '#fedf89'
-  if (v >= 2) return '#a9ecd6'
-  return '#d1fadf'
-}
-
-function showHmTip(seg, prod, val, event) {
-  hmTip.value = { seg, prod, val, x: event.clientX, y: event.clientY }
-}
-
-function showAction(title, body, cb) {
-  actionModal.title = title
-  actionModal.body = body
-  actionModal.cb = cb
-  actionModal.open = true
-}
-
-function confirmAction() {
-  if (actionModal.cb) actionModal.cb()
-  actionModal.open = false
-}
-
-function pendingAct(item, action) {
-  showAction(
-    action === 'approve' ? 'Konfirmasi Approval' : 'Konfirmasi Penolakan',
-    `${action === 'approve' ? 'Setujui' : 'Tolak'} pengajuan ${item.debitur} senilai ${item.nominal}?`,
-    () => { item.status = action }
-  )
-}
-
-function saveWidgets() {
-  localStorage.setItem('bni_widgets', JSON.stringify({ ...widgets }))
-  widgetModalOpen.value = false
-}
-
-function doExport(fmt) {
-  exportStatus.value = `Mengunduh ${fmt}...`
-  setTimeout(() => {
-    exportStatus.value = `${fmt} berhasil diunduh!`
-    setTimeout(() => {
-      exportStatus.value = null
-      exportModalOpen.value = false
-    }, 1500)
-  }, 1200)
-}
-
-function refreshAI() {
-  aiRefreshing.value = true
-  setTimeout(() => {
-    aiInsights.value = [
-      { icon: '🎯', title: 'Peluang Baru', body: `${Math.floor(Math.random() * 50 + 100)} nasabah teridentifikasi untuk produk baru.` },
-      { icon: '📉', title: 'Analisis Risiko', body: `Model prediksi: ${Math.floor(Math.random() * 10 + 15)} debitur berisiko tinggi perlu monitoring.` },
-      { icon: '💡', title: 'Rekomendasi', body: 'Segmen Korporasi menunjukkan peluang KMK jangka pendek berdasarkan arus kas.' },
-    ]
-    aiRefreshing.value = false
-  }, 1200)
-}
-
-function sendAI() {
-  const msg = aiInput.value.trim()
-  if (!msg) return
-  aiMessages.value.push({ from: 'user', text: msg })
-  aiInput.value = ''
-  nextTick(() => { if (aiBodyRef.value) aiBodyRef.value.scrollTop = aiBodyRef.value.scrollHeight })
-  setTimeout(() => {
-    const lower = msg.toLowerCase()
-    const reply = lower.includes('npl')
-      ? 'NPL ratio saat ini 2,8% dengan tren menurun positif. Target akhir tahun 2,5%.'
-      : lower.includes('disbursement')
-      ? 'Disbursement MTD mencapai Rp 1,2T, 18% di atas target bulan ini.'
-      : lower.includes('approval')
-      ? 'Approval rate minggu ini 82%, naik 6% dari rata-rata bulan lalu.'
-      : 'Saya sedang menganalisis data terkini. Coba tanya tentang NPL, disbursement, atau approval rate.'
-    aiMessages.value.push({ from: 'bot', text: reply })
-    nextTick(() => { if (aiBodyRef.value) aiBodyRef.value.scrollTop = aiBodyRef.value.scrollHeight })
-  }, 800)
-}
-
-function handleKeydown(e) {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault()
-    cmdOpen.value = true
-    nextTick(() => cmdInputRef.value?.focus())
-  }
-  if (e.key === 'Escape') {
-    cmdOpen.value = false
-    notifOpen.value = false
-    widgetModalOpen.value = false
-    exportModalOpen.value = false
-    actionModal.open = false
-    aiChatOpen.value = false
-  }
-}
-
-function initCharts() {
-  const isDark = dashTheme.value === 'dark'
-  const textColor = isDark ? '#8fa3b8' : '#667085'
-  const gridColor = isDark ? '#2a3547' : '#edf2f4'
-
-  if (disbCanvas.value) {
-    disbChart?.destroy()
-    disbChart = new Chart(disbCanvas.value, {
-      type: 'bar',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-        datasets: [{ label: 'Disbursement (Rp M)', data: [420, 380, 510, 490, 620, 587], backgroundColor: '#0e9298', borderRadius: 6 }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: gridColor }, ticks: { color: textColor } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor } },
-        },
-      },
-    })
-  }
-
-  if (nplCanvas.value) {
-    nplChart?.destroy()
-    nplChart = new Chart(nplCanvas.value, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-        datasets: [{
-          label: 'NPL Ratio (%)',
-          data: [3.4, 3.2, 3.1, 2.9, 2.8, 2.8],
-          borderColor: '#f04438',
-          backgroundColor: 'rgba(240,68,56,0.08)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#f04438',
-        }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: gridColor }, ticks: { color: textColor } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor }, min: 2, max: 4 },
-        },
-      },
-    })
-  }
-}
-
-onMounted(() => {
-  nextTick(() => initCharts())
-  document.addEventListener('keydown', handleKeydown)
-})
-
-onUnmounted(() => {
-  disbChart?.destroy()
-  nplChart?.destroy()
-  document.removeEventListener('keydown', handleKeydown)
-})
 </script>
 
 <style scoped>
@@ -2231,607 +1849,46 @@ onUnmounted(() => {
 
 /* ═══ RESPONSIVE ════════════════════════════════════════ */
 @media (max-width: 1280px) {
-  .bni-metric-grid { grid-template-columns: repeat(2, 1fr); }
-  .bni-bottom-grid { grid-template-columns: repeat(2, 1fr); }
+  .bni-metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bni-widget-revenue { width: calc(60% - 8px); }
+  .bni-widget-calendar { width: calc(40% - 8px); }
+  .bni-widget-leadManagement { width: calc(50% - 8px); }
+  .bni-widget-bankBreakdown { width: calc(50% - 8px); }
+  .bni-widget-picOwnership { width: calc(50% - 8px); }
+  .bni-widget-followUpLoad { width: calc(50% - 8px); }
 }
 @media (max-width: 1024px) {
-  .bni-main-grid { grid-template-columns: 1fr; }
-  .bni-exec-two-col { grid-template-columns: 1fr; }
+  .bni-widget-revenue,
+  .bni-widget-calendar {
+    width: 100%;
+  }
 }
 @media (max-width: 768px) {
   .bni-content { padding: 12px 14px 20px; }
-  .bni-topbar-row1, .bni-topbar-row2 { flex-direction: column; align-items: stretch; gap: 10px; }
-  .bni-topbar-right { flex-wrap: wrap; justify-content: flex-end; }
+  .bni-topbar-row1,
+  .bni-topbar-row2 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .bni-topbar-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
   .bni-search-box { width: 100%; }
-  .bni-metric-grid, .bni-bottom-grid, .bni-exec-kpi-grid { grid-template-columns: 1fr; }
+  .bni-metric-grid {
+    grid-template-columns: 1fr;
+  }
+  .bni-widget-revenue,
+  .bni-widget-calendar,
+  .bni-widget-leadManagement,
+  .bni-widget-bankBreakdown,
+  .bni-widget-picOwnership,
+  .bni-widget-followUpLoad {
+    width: 100%;
+  }
   .bni-action-buttons { flex-wrap: wrap; }
 }
-
-/* ═══ DARK MODE ══════════════════════════════════════════ */
-.bni-dashboard[data-theme="dark"] {
-  --bg: #0f1623;
-  --card: #1a2335;
-  --border: #2a3547;
-  --border-soft: #1e2d42;
-  --text: #e9edf3;
-  --text-2: #8fa3b8;
-  --text-3: #56718a;
-  --teal-soft: #0d2f32;
-  --green-soft: #0d2e1c;
-  --red-soft: #2e1118;
-  --shadow: 0 8px 20px rgba(0,0,0,.3);
-  --shadow-soft: 0 4px 12px rgba(0,0,0,.2);
-}
-.bni-dashboard[data-theme="dark"] input {
-  color: var(--text);
-  background: transparent;
-}
-.bni-dashboard[data-theme="dark"] .bni-rev-periods {
-  background: #0d1b2a;
-}
-.bni-dashboard[data-theme="dark"] .bni-evt { background: #141e2e; }
-.bni-dashboard[data-theme="dark"] .bni-evt-empty { background: #141e2e; }
-
-/* ═══ TOPBAR EXTRAS ══════════════════════════════════════ */
-.bni-kbd {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-3);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 5px;
-  flex-shrink: 0;
-}
-.bni-search-box { cursor: pointer; }
-
-/* ─── Bell notification ──────────────────────────────── */
-.bni-bell-dot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--red);
-  border: 2px solid var(--card);
-}
-.bni-notif-drop {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 320px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 12px 32px rgba(0,0,0,.12);
-  z-index: 200;
-}
-.bni-notif-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.bni-notif-hd strong { font-size: 13px; font-weight: 700; }
-.bni-notif-pill {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--teal);
-  background: var(--teal-soft);
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-.bni-notif-scroll {
-  max-height: 320px;
-  overflow-y: auto;
-}
-.bni-ni {
-  display: flex;
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-soft);
-  transition: background .15s;
-}
-.bni-ni:hover { background: var(--bg); }
-.bni-ni--unread { background: var(--teal-soft); }
-.bni-ni--unread:hover { background: #c8f0f0; }
-.bni-ni-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--teal);
-  flex-shrink: 0;
-  margin-top: 6px;
-}
-.bni-ni-body strong { display: block; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
-.bni-ni-body p { font-size: 11px; color: var(--text-2); margin: 0 0 3px; }
-.bni-ni-body small { font-size: 10px; color: var(--text-3); }
-
-/* ═══ EXEC DIVIDER ═══════════════════════════════════════ */
-.bni-exec-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 24px 0 16px;
-}
-.bni-exec-divider::before,
-.bni-exec-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-.bni-exec-divider span {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  white-space: nowrap;
-}
-
-/* ═══ EXEC KPI GRID ══════════════════════════════════════ */
-.bni-exec-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 12px;
-  margin-bottom: 14px;
-}
-@media (max-width: 1400px) {
-  .bni-exec-kpi-grid { grid-template-columns: repeat(4, 1fr); }
-}
-.bni-exec-kpi-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  box-shadow: var(--shadow-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: box-shadow .2s, transform .2s;
-}
-.bni-exec-kpi-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
-.bni-ekc-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-.bni-ekc-icon {
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  background: var(--teal-soft);
-  color: var(--teal);
-  display: flex; align-items: center; justify-content: center;
-}
-.bni-ekc-change {
-  font-size: 11px; font-weight: 700;
-  padding: 2px 6px; border-radius: 6px;
-}
-.bni-ekc-change.up { color: var(--green); background: var(--green-soft); }
-.bni-ekc-change.down { color: var(--red); background: var(--red-soft); }
-.bni-ekc-val { font-size: 20px; font-weight: 800; line-height: 1.2; }
-.bni-ekc-label { font-size: 12px; font-weight: 700; color: var(--text-2); }
-.bni-ekc-cap { font-size: 10px; color: var(--text-3); }
-
-/* ═══ FILTER BAR ═════════════════════════════════════════ */
-.bni-exec-filter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.bni-exec-filter-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-2);
-  margin-right: 4px;
-}
-.bni-fp-btn {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-2);
-  cursor: pointer;
-  font-family: inherit;
-  transition: all .15s;
-}
-.bni-fp-btn:hover { border-color: var(--teal); color: var(--teal); }
-.bni-fp-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
-
-/* ═══ TWO COLUMN EXEC LAYOUT ═════════════════════════════ */
-.bni-exec-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-/* ═══ FUNNEL ════════════════════════════════════════════ */
-.bni-funnel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0;
-}
-.bni-funnel-row { display: flex; flex-direction: column; gap: 2px; }
-.bni-funnel-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px;
-  border-radius: 8px;
-  min-width: 40%;
-  transition: width .5s ease;
-}
-.bni-funnel-label { font-size: 12px; font-weight: 700; color: #fff; }
-.bni-funnel-val { font-size: 14px; font-weight: 800; color: #fff; }
-.bni-funnel-conv {
-  font-size: 11px;
-  color: var(--text-3);
-  padding-left: 14px;
-  margin-bottom: 2px;
-}
-
-/* ═══ RM TABLE ══════════════════════════════════════════ */
-.bni-rm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-.bni-rm-table th {
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-3);
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.bni-rm-table td { padding: 8px 8px; border-bottom: 1px solid var(--border-soft); }
-.bni-rm-rank {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
-  background: var(--bg); color: var(--text-2);
-}
-.bni-rm-rank.gold { background: #fef3c7; color: #d97706; }
-.bni-rm-rank.silver { background: #f1f5f9; color: #64748b; }
-.bni-rm-rank.bronze { background: #fef0e6; color: #c2613f; }
-.bni-rm-name { font-weight: 700; color: var(--text); }
-.bni-rm-branch { color: var(--text-2); font-size: 11px; }
-.bni-rm-deals { font-weight: 700; color: var(--teal); }
-.bni-rm-val { font-weight: 700; }
-.bni-rm-rate {
-  background: var(--green-soft); color: var(--green);
-  padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
-}
-
-/* ═══ RISK ALERTS ════════════════════════════════════════ */
-.bni-risk-count {
-  font-size: 11px; font-weight: 700;
-  background: var(--red-soft); color: var(--red);
-  padding: 2px 8px; border-radius: 999px;
-}
-.bni-risk-list { display: flex; flex-direction: column; gap: 10px; }
-.bni-risk-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-}
-.bni-risk-badge {
-  font-size: 9px; font-weight: 800;
-  padding: 2px 6px; border-radius: 4px;
-  white-space: nowrap; flex-shrink: 0; margin-top: 2px;
-  letter-spacing: .03em;
-}
-.bni-risk-red { background: #fecdca; color: #c01048; }
-.bni-risk-orange { background: #fedf89; color: #b54708; }
-.bni-risk-yellow { background: #fef9c3; color: #854d0e; }
-.bni-risk-blue { background: #dbeafe; color: #1d4ed8; }
-.bni-risk-gray { background: var(--border-soft); color: var(--text-2); }
-.bni-risk-body { flex: 1; }
-.bni-risk-body strong { display: block; font-size: 12px; font-weight: 700; margin-bottom: 3px; }
-.bni-risk-body p { font-size: 11px; color: var(--text-2); margin: 0; }
-.bni-risk-action {
-  font-size: 11px; font-weight: 600;
-  color: var(--teal); border: 1px solid var(--teal);
-  background: transparent; border-radius: 6px;
-  padding: 4px 10px; cursor: pointer; white-space: nowrap;
-  flex-shrink: 0; transition: background .15s;
-}
-.bni-risk-action:hover { background: var(--teal-soft); }
-
-/* ═══ AI INSIGHTS ════════════════════════════════════════ */
-.bni-ai-list { display: flex; flex-direction: column; gap: 12px; }
-.bni-ai-item {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 12px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
-}
-.bni-ai-icon { font-size: 20px; flex-shrink: 0; }
-.bni-ai-item strong { display: block; font-size: 12px; font-weight: 700; margin-bottom: 3px; }
-.bni-ai-item p { font-size: 12px; color: var(--text-2); margin: 0; }
-@keyframes bni-spin { to { transform: rotate(360deg); } }
-.bni-spin { animation: bni-spin .8s linear infinite; }
-
-/* ═══ HEATMAP ════════════════════════════════════════════ */
-.bni-exec-heatmap-card { margin-bottom: 14px; }
-.bni-hm-wrap { overflow-x: auto; }
-.bni-hm-table { width: 100%; border-collapse: collapse; }
-.bni-hm-table th {
-  font-size: 11px; font-weight: 700; color: var(--text-2);
-  padding: 8px 12px; text-align: center;
-}
-.bni-hm-rowlabel {
-  font-size: 12px; font-weight: 700; color: var(--text);
-  padding: 8px 14px 8px 0; white-space: nowrap;
-}
-.bni-hm-cell {
-  text-align: center;
-  font-size: 12px; font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity .15s;
-}
-.bni-hm-cell:hover { opacity: .8; }
-.bni-hm-legend {
-  display: flex; align-items: center; gap: 10px;
-  margin-top: 12px;
-  font-size: 11px; color: var(--text-3);
-}
-.bni-hm-grad {
-  flex: 1; max-width: 160px; height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #d1fadf, #fedf89, #fecdca);
-}
-.bni-hm-tip {
-  position: fixed;
-  background: #1a2335; color: #fff;
-  padding: 8px 12px; border-radius: 8px;
-  font-size: 12px; pointer-events: none;
-  z-index: 9999; white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,.2);
-}
-.bni-hm-tip strong { display: block; margin-bottom: 3px; }
-
-/* ═══ PENDING APPROVALS ══════════════════════════════════ */
-.bni-pa-table {
-  width: 100%; border-collapse: collapse; font-size: 12px;
-}
-.bni-pa-table th {
-  text-align: left; font-size: 11px; font-weight: 700;
-  color: var(--text-3); padding: 6px 8px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.bni-pa-table td { padding: 8px; border-bottom: 1px solid var(--border-soft); }
-.bni-pa-done td { opacity: .5; }
-.bni-seg-badge {
-  font-size: 10px; font-weight: 700;
-  padding: 2px 6px; border-radius: 5px;
-  background: var(--teal-soft); color: var(--teal);
-}
-.bni-pa-nom { font-weight: 700; }
-.bni-pa-days {
-  font-size: 11px; font-weight: 700;
-  padding: 2px 7px; border-radius: 5px;
-  background: var(--green-soft); color: var(--green);
-}
-.bni-pa-days.warn { background: var(--red-soft); color: var(--red); }
-.bni-pa-acts { display: flex; gap: 6px; }
-.bni-btn-approve, .bni-btn-reject {
-  width: 26px; height: 26px; border-radius: 6px;
-  border: none; cursor: pointer; font-size: 13px;
-  display: flex; align-items: center; justify-content: center;
-  transition: opacity .15s;
-}
-.bni-btn-approve { background: var(--green-soft); color: var(--green); }
-.bni-btn-approve:hover { opacity: .75; }
-.bni-btn-reject { background: var(--red-soft); color: var(--red); }
-.bni-btn-reject:hover { opacity: .75; }
-.bni-pa-status {
-  font-size: 11px; font-weight: 700;
-  padding: 2px 8px; border-radius: 5px;
-}
-.bni-pa-status.approve { background: var(--green-soft); color: var(--green); }
-.bni-pa-status.reject { background: var(--red-soft); color: var(--red); }
-
-/* ═══ ACTIVITIES FEED ════════════════════════════════════ */
-.bni-act-feed { display: flex; flex-direction: column; gap: 0; }
-.bni-act-item {
-  display: flex; gap: 12px; align-items: flex-start;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-soft);
-}
-.bni-act-item:last-child { border-bottom: none; }
-.bni-act-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
-.bni-act-body p { font-size: 12px; color: var(--text); margin: 0 0 2px; line-height: 1.5; }
-.bni-act-body small { font-size: 10px; color: var(--text-3); }
-
-/* ═══ FLOATING AI CHAT ═══════════════════════════════════ */
-.bni-ai-fab {
-  position: fixed;
-  bottom: 24px; right: 24px;
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  background: var(--teal);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,140,149,.35);
-  z-index: 100;
-  transition: background .15s, transform .15s;
-}
-.bni-ai-fab:hover { background: var(--teal-dark); transform: scale(1.05); }
-.bni-ai-chat {
-  position: fixed;
-  bottom: 84px; right: 24px;
-  width: 320px;
-  background: var(--card, #fff);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: var(--radius, 16px);
-  box-shadow: 0 16px 40px rgba(0,0,0,.15);
-  z-index: 100;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.bni-ai-chat-hd {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px;
-  background: var(--teal);
-  color: #fff;
-}
-.bni-ai-chat-hd strong { font-size: 13px; font-weight: 700; }
-.bni-ai-chat-hd button { background: transparent; border: none; color: #fff; cursor: pointer; }
-.bni-ai-chat-body {
-  flex: 1; max-height: 240px; overflow-y: auto;
-  padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.bni-ai-msg {
-  max-width: 88%; font-size: 12px; line-height: 1.5;
-  padding: 8px 12px; border-radius: 12px;
-}
-.bni-ai-msg.bot { background: var(--teal-soft, #d9f3f4); color: var(--text, #111827); align-self: flex-start; border-bottom-left-radius: 2px; }
-.bni-ai-msg.user { background: var(--teal); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-.bni-ai-chat-foot {
-  display: flex; gap: 8px; padding: 10px 12px;
-  border-top: 1px solid var(--border-soft, #eef2f6);
-}
-.bni-ai-chat-foot input {
-  flex: 1; border: 1px solid var(--border, #e5e7eb); border-radius: 8px;
-  padding: 6px 10px; font-size: 12px; outline: none;
-  background: var(--bg, #f8fafc); color: var(--text, #111827); font-family: inherit;
-}
-.bni-ai-chat-foot input:focus { border-color: var(--teal); }
-.bni-ai-chat-foot button {
-  width: 32px; height: 32px;
-  background: var(--teal); color: #fff; border: none;
-  border-radius: 8px; cursor: pointer; display: flex;
-  align-items: center; justify-content: center;
-}
-
-/* ═══ MODALS ═════════════════════════════════════════════ */
-.bni-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 500;
-}
-.bni-cmd-overlay { align-items: flex-start; padding-top: 10vh; }
-.bni-modal {
-  background: var(--card, #fff);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: var(--radius, 16px);
-  width: 440px; max-width: calc(100vw - 32px);
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.bni-modal--sm { width: 360px; }
-.bni-modal-hd {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-soft, #eef2f6);
-}
-.bni-modal-hd strong { font-size: 14px; font-weight: 700; }
-.bni-modal-hd button {
-  background: none; border: none; cursor: pointer;
-  color: var(--text-2, #475569); padding: 4px;
-}
-.bni-modal-body {
-  padding: 16px 20px;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-.bni-modal-ft {
-  position: sticky;
-  bottom: 0;
-  display: flex; justify-content: flex-end; gap: 10px;
-  padding: 12px 20px;
-  border-top: 1px solid var(--border-soft, #eef2f6);
-  background: var(--card, #fff);
-}
-.bni-widget-list { display: flex; flex-direction: column; gap: 10px; }
-.bni-widget-row {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-}
-.bni-widget-row input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--teal); }
-.bni-btn-cancel {
-  height: 34px; padding: 0 16px;
-  border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius-sm, 10px);
-  background: var(--card, #fff); font-size: 12px; font-weight: 600;
-  color: var(--text, #111827); cursor: pointer; font-family: inherit;
-}
-.bni-btn-save {
-  height: 34px; padding: 0 16px;
-  border: none; border-radius: var(--radius-sm);
-  background: var(--teal); color: #fff;
-  font-size: 12px; font-weight: 700;
-  cursor: pointer; font-family: inherit;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.bni-btn-save:hover { background: var(--teal-dark); }
-.bni-fmt-btn {
-  height: 38px; padding: 0 20px;
-  border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius-sm, 10px);
-  background: var(--card, #fff); font-size: 13px; font-weight: 600;
-  color: var(--text, #111827); cursor: pointer; font-family: inherit;
-  transition: all .15s;
-}
-.bni-fmt-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
-.bni-export-status {
-  padding: 10px 14px;
-  background: var(--green-soft, #d1fadf); color: var(--green, #059669);
-  border-radius: var(--radius-sm, 10px);
-  font-size: 13px; font-weight: 600;
-}
-
-/* ─── Command Palette ────────────────────────────────── */
-.bni-cmd {
-  background: var(--card, #fff);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: var(--radius, 16px);
-  width: 500px; max-width: calc(100vw - 32px);
-  box-shadow: 0 24px 60px rgba(0,0,0,.25);
-  overflow: hidden;
-}
-.bni-cmd-search {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border-soft, #eef2f6);
-}
-.bni-cmd-search input {
-  flex: 1; border: none; outline: none;
-  font-size: 15px; background: transparent;
-  color: var(--text, #111827); font-family: inherit;
-}
-.bni-cmd-list { padding: 6px; max-height: 300px; overflow-y: auto; }
-.bni-cmd-item {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 10px 14px;
-  border: none; background: transparent;
-  border-radius: var(--radius-sm, 10px);
-  font-size: 13px; font-weight: 600; color: var(--text, #111827);
-  cursor: pointer; text-align: left; font-family: inherit;
-  transition: background .1s;
-}
-.bni-cmd-item:hover { background: var(--teal-soft, #d9f3f4); color: var(--teal, #008C95); }
-.bni-cmd-empty { padding: 16px; text-align: center; color: var(--text-3, #64748b); font-size: 13px; }
 </style>
