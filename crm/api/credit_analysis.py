@@ -1697,7 +1697,7 @@ def run_cashflow_projection(application_id: str, years: int = 5, drivers=None):
 
 def _call_credit_agent(application, prompt, fallback):
 	try:
-		from crm.api.ai_agent_center import query_agent
+		from crm.api.ai_agent_center import _normalize_structured_response, _plain_text_from_structured, query_agent
 
 		is_mocked_agent = hasattr(query_agent, "mock_calls")
 		customer = application.get("borrower")
@@ -1711,19 +1711,73 @@ def _call_credit_agent(application, prompt, fallback):
 
 		response = query_agent("credit_analyst", prompt, customer=customer)
 		text = cstr((response or {}).get("response")).strip()
-		if not text or "do not have enough grounded CRM/RAG sources" in text:
+		if not text or "belum memiliki sumber crm/rag" in text.lower() or "do not have enough grounded CRM/RAG sources" in text:
 			raise ValueError("Credit agent did not have enough grounded RAG sources.")
+		if not response.get("structured_response"):
+			response["structured_response"] = _normalize_structured_response(
+				{
+					"title": "Output Credit Analyst",
+					"executive_summary": text,
+					"sections": [{"title": "Analisis", "summary": text, "items": [], "metrics": []}],
+					"sources": response.get("sources") or [],
+					"limitations": ["Model atau mock lama tidak mengembalikan structured_response."],
+				},
+				"credit_analyst",
+				response.get("sources") or [],
+				response.get("confidence") or 0.74,
+			)
+			response["response"] = _plain_text_from_structured(response["structured_response"])
 		return response
 	except Exception:
+		from crm.api.ai_agent_center import _normalize_structured_response, _plain_text_from_structured
+
+		sources = [{"title": "Credit Analysis workspace", "doctype": "CRM Credit Application", "docname": application.name}]
+		structured = _normalize_structured_response(
+			{
+				"title": "Output Credit Analyst berbasis workspace",
+				"executive_summary": fallback,
+				"sections": [{"title": "Ringkasan Kredit", "summary": fallback, "items": [], "metrics": []}],
+				"sources": sources,
+				"limitations": ["AI Agent Center menggunakan fallback lokal karena RAG/LLM belum tersedia atau tidak memiliki sumber cukup."],
+			},
+			"credit_analyst",
+			sources,
+			0.74,
+		)
 		return {
-			"response": fallback,
-			"sources": [{"title": "Credit Analysis workspace", "reference_doctype": "CRM Credit Application", "reference_docname": application.name}],
+			"response": _plain_text_from_structured(structured),
+			"structured_response": structured,
+			"sources": sources,
 			"confidence": 0.74,
 			"model": "kimi-k2.6",
 			"tokens": 0,
 			"cost": 0,
 			"fallback": True,
 		}
+
+
+def _structured_summary_bullets(structured, fallback_text=None, limit=5):
+	bullets = []
+	if structured:
+		for section in structured.get("sections") or []:
+			if section.get("summary"):
+				bullets.append(cstr(section.get("summary")).strip())
+			for item in section.get("items") or []:
+				bullets.append(cstr(item).strip())
+		for rec in structured.get("recommendations") or []:
+			text = rec.get("title") or rec.get("recommendation") or rec.get("next_step")
+			if text:
+				bullets.append(cstr(text).strip())
+	if not bullets:
+		bullets = [line.strip("- ").strip("* ").strip() for line in cstr(fallback_text).split("\n") if line.strip()]
+	seen = set()
+	unique = []
+	for bullet in bullets:
+		if not bullet or bullet in seen:
+			continue
+		seen.add(bullet)
+		unique.append(bullet)
+	return unique[:limit]
 
 
 @frappe.whitelist()
@@ -1736,14 +1790,16 @@ def generate_credit_summary(application_id: str):
 		f"Generate a five-bullet executive credit summary for application {application.name}. Use Credit Analysis ratios, DSCR, collateral, bureau, and sources only.",
 		fallback,
 	)
-	payload = {"summary": response["response"], "sources": response.get("sources") or [], "confidence": response.get("confidence"), "model": response.get("model")}
+	structured = response.get("structured_response")
+	payload = {"summary": response["response"], "structured_response": structured, "sources": response.get("sources") or [], "confidence": response.get("confidence"), "model": response.get("model")}
 	_replace_artifact(application.name, application.get("borrower"), "executive_summary", "AI Executive Summary", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	
 	# Also update the credit_memo's summary_bullets!
-	bullets = [line.strip("- ").strip("* ").strip() for line in response["response"].split("\n") if line.strip()]
+	bullets = _structured_summary_bullets(structured, response["response"])
 	if bullets:
 		memo = workspace.get("memo") or {}
 		memo["summary_bullets"] = bullets[:5]
+		memo["summary_structured_response"] = structured
 		_replace_artifact(application.name, application.get("borrower"), "credit_memo", "AI Credit Memo Draft", memo, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 
 	frappe.db.commit()
@@ -1761,7 +1817,7 @@ def generate_credit_memo(application_id: str):
 		fallback,
 	)
 	payload = deepcopy(workspace["memo"])
-	payload.update({"content": response["response"], "sources": response.get("sources") or payload.get("sources"), "model": response.get("model"), "confidence": response.get("confidence")})
+	payload.update({"content": response["response"], "structured_response": response.get("structured_response"), "sources": response.get("sources") or payload.get("sources"), "model": response.get("model"), "confidence": response.get("confidence")})
 	_replace_artifact(application.name, application.get("borrower"), "credit_memo", "AI Credit Memo Draft", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	_replace_artifact(application.name, application.get("borrower"), f"credit_memo_version_{payload['version']}", "Credit Memo Version", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	frappe.db.commit()
@@ -1779,7 +1835,7 @@ def generate_credit_recommendation(application_id: str):
 		fallback,
 	)
 	payload = deepcopy(workspace["recommendation"])
-	payload.update({"narrative": response["response"], "sources": response.get("sources") or [], "model": response.get("model"), "confidence": payload.get("confidence") or int((response.get("confidence") or 0.74) * 100)})
+	payload.update({"narrative": response["response"], "structured_response": response.get("structured_response"), "sources": response.get("sources") or [], "model": response.get("model"), "confidence": payload.get("confidence") or int((response.get("confidence") or 0.74) * 100)})
 	_replace_artifact(application.name, application.get("borrower"), "recommendation", "AI Recommendation", payload, source="AI Agent Center", confidence=(payload.get("confidence") or 0) / 100)
 	frappe.db.commit()
 	return payload

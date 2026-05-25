@@ -6,7 +6,16 @@ from unittest.mock import patch
 import frappe
 
 from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, normalize_kimi_model, stream_kimi_chat_events
-from crm.api.ai_agent_center import AGENTS, ensure_ai_tables, get_agents, get_rag_status, query_agent, query_agent_stream
+from crm.api.ai_agent_center import (
+	AGENTS,
+	OUTPUT_PROFILES,
+	ensure_ai_tables,
+	get_agents,
+	get_rag_status,
+	query_agent,
+	query_agent_stream,
+	_parse_structured_response,
+)
 
 
 class TestAIAgentCenter(TestCase):
@@ -90,6 +99,85 @@ class TestAIAgentCenter(TestCase):
 		response = query_agent_stream.__wrapped__("general", "hello")
 		self.assertEqual(response.mimetype, "text/event-stream")
 
+	def test_structured_parser_accepts_valid_json(self):
+		payload = {
+			"schema_version": "1.0",
+			"agent_key": "credit_analyst",
+			"title": "Analisis Kredit PT Demo",
+			"executive_summary": "Debitur menunjukkan performa memadai.",
+			"confidence": 0.82,
+			"sections": [{"title": "Rasio & DSCR", "summary": "DSCR di atas ambang minimum.", "metrics": [{"label": "DSCR", "value": "1,42x"}]}],
+			"recommendations": [{"title": "Approve", "rationale": "Cash flow memadai.", "priority": "medium", "next_step": "Review covenant"}],
+			"risks": [{"title": "Konsentrasi pelanggan", "severity": "medium", "description": "Top buyer dominan.", "mitigation": "Pantau AR aging"}],
+			"actions": [],
+			"sources": [{"id": "S1", "title": "Financial Spread", "doctype": "CRM Credit Application", "docname": "APP-001", "excerpt": "DSCR 1,42x"}],
+			"limitations": [],
+		}
+
+		result = _parse_structured_response(json.dumps(payload), "credit_analyst", confidence=0.5)
+
+		self.assertEqual(result["title"], "Analisis Kredit PT Demo")
+		self.assertEqual(result["agent_key"], "credit_analyst")
+		self.assertEqual(result["confidence"], 0.82)
+		self.assertEqual(result["sections"][0]["metrics"][0]["label"], "DSCR")
+
+	def test_structured_parser_accepts_fenced_json(self):
+		raw = """```json
+{"title":"Ringkasan RM","executive_summary":"Nasabah perlu follow-up.","confidence":75,"sections":[{"title":"Next Best Action","items":["Telepon hari ini"]}],"actions":[]}
+```"""
+
+		result = _parse_structured_response(raw, "relationship_manager")
+
+		self.assertEqual(result["agent_key"], "relationship_manager")
+		self.assertEqual(result["confidence"], 0.75)
+		self.assertEqual(result["sections"][0]["items"], ["Telepon hari ini"])
+
+	def test_structured_parser_falls_back_for_broken_output(self):
+		result = _parse_structured_response("Saya tidak sengaja menulis markdown.\n\n| A | B |", "portfolio_monitor")
+
+		self.assertEqual(result["title"], "Output AI perlu divalidasi")
+		self.assertEqual(result["agent_key"], "portfolio_monitor")
+		self.assertTrue(result["limitations"])
+		self.assertIn("markdown", result["executive_summary"].lower())
+
+	def test_all_agent_profiles_have_required_sections(self):
+		for agent_key, titles in OUTPUT_PROFILES.items():
+			with self.subTest(agent_key=agent_key):
+				result = _parse_structured_response("{}", agent_key)
+				section_titles = [section["title"] for section in result["sections"]]
+				self.assertEqual(section_titles[:3], titles[:3])
+
+	def test_stream_endpoint_emits_status_and_structured_done_without_delta(self):
+		rag_response = {
+			"passes_guardrail": True,
+			"context": "Source 1: Demo CRM customer context.",
+			"sources": [{"title": "Demo CRM customer context"}],
+			"confidence": 0.9,
+		}
+		stream_events = [
+			frappe._dict({"event": "delta", "delta": '{"title":"Analisis Portofolio","executive_summary":"Risiko utama terkendali.","confidence":0.9,"sections":[{"title":"Ringkasan Portofolio","summary":"Tidak ada breach mayor."}],"actions":[]}', "model": DEFAULT_KIMI_MODEL}),
+			frappe._dict({"event": "done", "model": DEFAULT_KIMI_MODEL, "total_tokens": 11, "cost": 0}),
+		]
+
+		with (
+			patch("crm.api.ai_agent_center._save_session", return_value="AI-SESSION-001"),
+			patch("crm.api.ai_agent_center._save_message", return_value="AI-MSG-001"),
+			patch("crm.api.ai_agent_center.query_rag", return_value=rag_response),
+			patch("crm.api.ai_agent_center.get_ai_settings", return_value=frappe._dict({"kimi_model": DEFAULT_KIMI_MODEL, "thinking_mode": "disabled"})),
+			patch("crm.api.ai_agent_center.stream_kimi_chat_events", return_value=iter(stream_events)),
+			patch("crm.api.ai_agent_center._handle_actions", return_value=[]),
+			patch("crm.api.ai_agent_center._audit"),
+			patch.object(frappe.db, "commit"),
+		):
+			response = query_agent_stream.__wrapped__("portfolio_monitor", "scan portfolio")
+			body = "".join(response.response)
+
+		self.assertIn("event: status", body)
+		self.assertIn("event: sources", body)
+		self.assertIn("event: done", body)
+		self.assertIn("structured_response", body)
+		self.assertNotIn("event: delta", body)
+
 	def test_rag_status_reports_counts(self):
 		status = get_rag_status.__wrapped__()
 		self.assertIn("native_raganything_ready", status)
@@ -122,7 +210,10 @@ class TestAIAgentCenter(TestCase):
 			):
 				response = query_agent.__wrapped__("credit_analyst", "summarize the application")
 			created_session = response["session_id"]
-			self.assertEqual(response["response"], "Grounded answer.\n\nSources\n1. Demo CRM customer context")
+			self.assertIn("Grounded answer", response["response"])
+			self.assertEqual(response["structured_response"]["title"], "Output AI perlu divalidasi")
+			self.assertEqual(response["structured_response"]["agent_key"], "credit_analyst")
+			self.assertTrue(response["structured_response"]["limitations"])
 			self.assertEqual(response["model"], DEFAULT_KIMI_MODEL)
 			self.assertEqual(response["confidence"], 0.9)
 		finally:

@@ -360,6 +360,8 @@ class TestCreditAnalysisUAT(TestCase):
 		demo = create_uat_demo_pack(self.application.name)
 
 		self.assertIn("AI generated credit memo", memo["content"])
+		self.assertEqual(memo["structured_response"]["agent_key"], "credit_analyst")
+		self.assertEqual(recommendation["structured_response"]["agent_key"], "credit_analyst")
 		self.assertIn(recommendation["decision"], {"Approve", "Refer", "Reject"})
 		self.assertEqual(approval["status"], "Submitted")
 		self.assertEqual(export["watermark"], "BNI UAT")

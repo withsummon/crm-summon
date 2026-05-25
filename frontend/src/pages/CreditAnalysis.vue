@@ -524,12 +524,15 @@
             <section class="grid grid-cols-1 xl:grid-cols-3 gap-5">
               <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-4">
                 <h3 class="font-bold text-slate-800 mb-3">{{ __('Executive Summary') }}</h3>
-                <ul class="space-y-2 text-sm text-slate-700">
+                <StructuredResponseCard v-if="summaryStructured" :response="summaryStructured" compact />
+                <ul v-else class="space-y-2 text-sm text-slate-700">
                   <li v-for="item in memo.summary_bullets || []" :key="item" class="rounded border border-slate-100 bg-slate-50 p-2">{{ item }}</li>
                 </ul>
+                <StructuredResponseCard v-if="recommendationStructured" class="mt-3" :response="recommendationStructured" compact />
               </div>
               <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-4 xl:col-span-2">
                 <h3 class="font-bold text-slate-800 mb-3">{{ __('Credit Memo Editor') }}</h3>
+                <StructuredResponseCard v-if="memoStructured" class="mb-3" :response="memoStructured" />
                 <textarea
                   v-model="memoContent"
                   class="h-[360px] w-full rounded-lg border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 focus:outline-none focus:border-teal-600"
@@ -585,6 +588,7 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import html2pdf from 'html2pdf.js'
 import RupiahInput from '@/components/Controls/RupiahInput.vue'
+import StructuredResponseCard from '@/components/AI/StructuredResponseCard.vue'
 
 const MetricCard = {
   props: ['label', 'value', 'icon'],
@@ -694,6 +698,9 @@ const extractionReviewCells = computed(() => {
 })
 const memo = computed(() => workspace.value.memo || {})
 const recommendation = computed(() => workspace.value.recommendation || {})
+const summaryStructured = computed(() => memo.value.summary_structured_response || null)
+const memoStructured = computed(() => memo.value.structured_response || null)
+const recommendationStructured = computed(() => recommendation.value.structured_response || null)
 const proofRows = computed(() => workspace.value.proof || [])
 
 const spreadMatrix = computed(() => {

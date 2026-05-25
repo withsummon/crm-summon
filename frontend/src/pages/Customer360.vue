@@ -67,7 +67,7 @@
         </div>
         <h3 class="text-lg font-semibold text-slate-700">{{ __('No Customer Selected') }}</h3>
         <p class="text-sm text-slate-500 mt-1 max-w-sm text-center">
-          {{ __('Select a customer to manage the complete Customer 360 UAT workspace.') }}
+          {{ __('Select a customer to manage the complete production-safe Customer 360 workspace.') }}
         </p>
       </div>
 
@@ -114,6 +114,61 @@
           <StatCard :label="__('Missed Payments')" :value="String(summary.missed_payments || 0)" :detail="`${summary.transactions || 0} transactions`" icon="repeat" tone="red" />
         </div>
 
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 px-6 pt-4 shrink-0">
+          <Panel :title="__('Data Quality')" icon="check-square">
+            <div class="flex items-center gap-4">
+              <div
+                class="flex h-16 w-16 items-center justify-center rounded-full border-4 text-lg font-black"
+                :class="dataQuality.score >= 80 ? 'border-green-200 bg-green-50 text-green-700' : dataQuality.score >= 60 ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-red-200 bg-red-50 text-red-700'"
+              >
+                {{ dataQuality.score || 0 }}
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-slate-700">{{ dataQualityStatus }}</div>
+                <div class="mt-1 text-xs text-slate-500">{{ (dataQuality.missing_required_fields || []).length }} missing fields · {{ (dataQuality.warnings || []).length }} warnings</div>
+              </div>
+            </div>
+            <div v-if="(dataQuality.missing_required_fields || []).length" class="mt-3 flex flex-wrap gap-1.5">
+              <Badge v-for="field in dataQuality.missing_required_fields.slice(0, 4)" :key="field.field" :label="field.label" theme="orange" variant="subtle" />
+            </div>
+          </Panel>
+
+          <Panel :title="__('External Adapter Status')" icon="link">
+            <div class="grid grid-cols-1 gap-2">
+              <button
+                v-for="adapter in externalAdapters.slice(0, 4)"
+                :key="adapter.key"
+                class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-left hover:border-teal-200 hover:bg-white"
+                @click="checkAdapter(adapter.key)"
+              >
+                <span class="min-w-0">
+                  <span class="block truncate text-xs font-bold text-slate-700">{{ adapter.label }}</span>
+                  <span class="block truncate text-[11px] text-slate-500">{{ adapter.message }}</span>
+                </span>
+                <Badge :label="adapter.status" theme="gray" variant="subtle" />
+              </button>
+            </div>
+          </Panel>
+
+          <Panel :title="__('Next Best Actions')" icon="zap">
+            <div class="space-y-2">
+              <button
+                v-for="action in nextActions.slice(0, 4)"
+                :key="`${action.action_key}-${action.title}`"
+                class="flex w-full items-start gap-2 rounded-lg border border-slate-100 bg-white px-3 py-2 text-left hover:border-teal-200 hover:bg-teal-50/40"
+                @click="runNextAction(action)"
+              >
+                <Badge :label="action.priority || 'P1'" :theme="action.priority === 'P0' ? 'red' : 'orange'" variant="subtle" />
+                <span class="min-w-0">
+                  <span class="block truncate text-xs font-bold text-slate-700">{{ action.title }}</span>
+                  <span class="block truncate text-[11px] text-slate-500">{{ action.source }}</span>
+                </span>
+              </button>
+              <div v-if="!nextActions.length" class="text-sm text-slate-400">{{ __('No immediate action required') }}</div>
+            </div>
+          </Panel>
+        </div>
+
         <div class="px-6 pt-4 shrink-0">
           <div class="flex border-b border-slate-200 gap-6 overflow-x-auto">
             <button
@@ -136,16 +191,18 @@
               <Panel class="xl:col-span-2" :title="__('AI Customer Summary')" icon="cpu">
                 <div class="relative">
                   <div v-if="!editingSummary"
-                    class="min-h-[150px] w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 cursor-pointer hover:border-teal-300 prose prose-sm prose-teal max-w-none overflow-auto"
+                    class="min-h-[150px] w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 cursor-pointer hover:border-teal-300 overflow-auto"
                     style="min-height: 144px"
                     @click="editingSummary = true"
-                    v-html="renderMarkdown(summaryText)"
-                  />
+                  >
+                    <StructuredResponseCard :response="summaryStructured" :fallback="summaryText || __('Click to edit or generate a summary...')" compact />
+                  </div>
                   <textarea
                     v-else
                     v-model="summaryText"
                     rows="9"
                     class="w-full p-4 bg-white border border-teal-400 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-teal-500 font-mono"
+                    @input="summaryStructured = null; summaryStructuredCustomer = null"
                     @blur="editingSummary = false"
                     ref="summaryTextareaRef"
                   />
@@ -157,7 +214,7 @@
                   </button>
                 </div>
                 <div class="mt-3 flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
-                  <span>{{ __('RAG summary generated from indexed Customer 360 records and documents') }}</span>
+                  <span>{{ summaryMetaText }}</span>
                   <div class="flex gap-2">
                     <select v-model="summaryLength" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 focus:outline-none focus:border-teal-500">
                       <option>TL;DR</option>
@@ -212,13 +269,13 @@
 
               <Panel :title="__('Relationship Graph')" icon="share-2">
                 <div class="mb-3 flex justify-between gap-2">
-                  <FormSelect v-model="graphFilter" label="Filter" :options="['All', 'Shareholder', 'Director', 'Group Company', 'RM', 'UBO']" compact />
+                  <FormSelect v-model="graphFilter" label="Filter" :options="graphFilterOptions" compact />
                   <div class="flex items-end gap-1">
                     <Button size="sm" variant="outline" label="+" @click="graphZoom += 0.1" />
                     <Button size="sm" variant="outline" label="-" @click="graphZoom = Math.max(0.8, graphZoom - 0.1)" />
                   </div>
                 </div>
-                <RelationshipGraph :customer="selectedCustomer" :relationships="filteredGraphRelationships" :zoom="graphZoom" @open-node="openRelatedCustomer" />
+                <RelationshipGraph :customer="selectedCustomer" :graph="filteredRelationshipGraph" :zoom="graphZoom" @open-node="openRelatedCustomer" />
               </Panel>
 
               <Panel :title="__('Customer History Timeline')" icon="clock">
@@ -269,7 +326,7 @@
             <Panel :title="__('Shareholders')" icon="pie-chart">
               <div class="mb-4 flex flex-wrap items-center gap-3">
                 <Badge :label="`${summary.shareholder_total || 0}% ownership captured`" :theme="summary.shareholder_balanced ? 'green' : 'orange'" />
-                <span class="text-xs text-slate-500">{{ __('UAT requires total shareholders to equal 100%.') }}</span>
+                <span class="text-xs text-slate-500">{{ __('Production control requires captured shareholders to equal 100%.') }}</span>
               </div>
               <OwnershipChart :shareholders="shareholders" />
               <SimpleTable :headers="['Shareholder', 'Ownership %', 'UBO', 'Linked Profile']" :rows="shareholders" :columns="['related_party', 'ownership_percent', 'is_ubo', 'related_customer']" :edit="(row) => openForm('relationship', row)" />
@@ -527,10 +584,10 @@
 import { Button, FeatherIcon, Badge, Dialog, usePageMeta, createListResource, createResource, toast, call } from 'frappe-ui'
 import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import DOMPurify from 'dompurify'
 import ChatPanel from '@/components/ChatPanel.vue'
 import Link from '@/components/Controls/Link.vue'
 import RupiahInput from '@/components/Controls/RupiahInput.vue'
+import StructuredResponseCard from '@/components/AI/StructuredResponseCard.vue'
 import html2pdf from 'html2pdf.js'
 
 const route = useRoute()
@@ -544,6 +601,8 @@ const showProfileEdit = ref(false)
 const showDynamicForm = ref(false)
 const showExportDialog = ref(false)
 const summaryText = ref('')
+const summaryStructured = ref(null)
+const summaryStructuredCustomer = ref(null)
 const summaryLength = ref('Standard')
 const summarySources = ref([])
 const isGeneratingSummary = ref(false)
@@ -691,6 +750,62 @@ function validateKYC() {
   return isValid
 }
 
+const requiredDynamicFields = {
+  relationship: ['related_party', 'relationship_type'],
+  facility: ['facility_type'],
+  bankAccount: ['bank', 'account_number'],
+  collateral: ['asset'],
+  bureau: ['source'],
+  document: ['title'],
+  communication: ['subject'],
+  financial: ['metric', 'year'],
+  siteVisit: ['visit_date'],
+  transaction: ['transaction_date', 'transaction_type'],
+  aiInsight: ['title'],
+  tag: ['tag'],
+  task: ['title'],
+  note: ['title'],
+  event: ['subject'],
+}
+
+function validateDynamicForm() {
+  let isValid = true
+  for (const fieldname in dynamicFormErrors) {
+    dynamicFormErrors[fieldname] = ''
+  }
+  for (const fieldname of requiredDynamicFields[dynamicForm.key] || []) {
+    if (dynamicForm.doc[fieldname] === undefined || dynamicForm.doc[fieldname] === null || String(dynamicForm.doc[fieldname]).trim() === '') {
+      dynamicFormErrors[fieldname] = __('This field is required')
+      isValid = false
+    }
+  }
+  const scoreFields = ['score', 'internal_score']
+  for (const fieldname of scoreFields) {
+    if (dynamicForm.doc[fieldname] !== undefined && dynamicForm.doc[fieldname] !== '') {
+      const value = Number(dynamicForm.doc[fieldname])
+      if (Number.isNaN(value) || value < 0 || value > 1000) {
+        dynamicFormErrors[fieldname] = __('Score must be between 0 and 1000')
+        isValid = false
+      }
+    }
+  }
+  if (dynamicForm.doc.confidence_score !== undefined && dynamicForm.doc.confidence_score !== '') {
+    const value = Number(dynamicForm.doc.confidence_score)
+    if (Number.isNaN(value) || value < 0 || value > 100) {
+      dynamicFormErrors.confidence_score = __('Confidence must be between 0 and 100')
+      isValid = false
+    }
+  }
+  if (dynamicForm.doc.ltv_percent !== undefined && dynamicForm.doc.ltv_percent !== '') {
+    const value = Number(dynamicForm.doc.ltv_percent)
+    if (Number.isNaN(value) || value < 0 || value > 100) {
+      dynamicFormErrors.ltv_percent = __('LTV must be between 0 and 100')
+      isValid = false
+    }
+  }
+  return isValid
+}
+
 // Watchers for Profile Edit validation
 watch(() => profileForm.tax_id, (newVal) => {
   const formatted = formatNPWP(newVal)
@@ -788,6 +903,7 @@ const customer360 = createResource({
   },
   onSuccess(data) {
     summaryText.value = data?.summary?.summary_text || ''
+    summaryStructured.value = data?.summary?.structured_response || (summaryStructuredCustomer.value === selectedCustomerName.value ? summaryStructured.value : null)
     if (data?.customer) {
       selectedCustomer.value = data.customer
       Object.assign(profileForm, {
@@ -837,6 +953,7 @@ const collaterals = computed(() => data.value.collaterals || [])
 const bureauReports = computed(() => data.value.bureau_reports || [])
 const latestBureau = computed(() => bureauReports.value[0] || null)
 const relationships = computed(() => data.value.relationships || [])
+const relationshipGraph = computed(() => data.value.relationship_graph || { nodes: [], edges: [], filters: [] })
 const shareholders = computed(() => data.value.shareholders || [])
 const directors = computed(() => data.value.directors || [])
 const relatedEntities = computed(() => data.value.related_entities || [])
@@ -855,9 +972,37 @@ const tasks = computed(() => data.value.tasks || [])
 const notes = computed(() => data.value.notes || [])
 const events = computed(() => data.value.events || [])
 const timeline = computed(() => data.value.timeline || [])
+const dataQuality = computed(() => data.value.data_quality || { score: 0, missing_required_fields: [], warnings: [], stale_records: [], expired_documents: [] })
+const externalAdapters = computed(() => data.value.external_adapters || [])
+const riskControls = computed(() => data.value.risk_controls || {})
+const complianceStatus = computed(() => data.value.compliance_status || {})
+const nextActions = computed(() => data.value.next_actions || [])
+const auditSummary = computed(() => data.value.audit_summary || {})
+const dataQualityStatus = computed(() => {
+  if ((dataQuality.value.score || 0) >= 80) return __('Production-safe')
+  if ((dataQuality.value.score || 0) >= 60) return __('Needs completion')
+  return __('High priority cleanup')
+})
+const summaryMetaText = computed(() => {
+  const confidence = summaryStructured.value?.confidence ?? summary.value?.structured_response?.confidence
+  const sourceCount = summarySources.value.length || summaryStructured.value?.sources?.length || summary.value?.structured_response?.sources?.length || 0
+  if (confidence || sourceCount) return `${__('Structured AI summary')} · ${__('confidence')} ${confidence ?? '-'} · ${sourceCount} ${__('sources')}`
+  return __('Structured AI summary from Customer 360 records; external adapters are explicit when not configured')
+})
 const timelineKinds = computed(() => ['All', ...new Set(timeline.value.map((row) => row.kind).filter(Boolean))])
 const filteredTimeline = computed(() => timelineFilter.value === 'All' ? timeline.value : timeline.value.filter((row) => row.kind === timelineFilter.value))
-const filteredGraphRelationships = computed(() => graphFilter.value === 'All' ? relationships.value : relationships.value.filter((row) => row.relationship_type === graphFilter.value))
+const graphFilterOptions = computed(() => ['All', ...(relationshipGraph.value.filters || []).filter((item) => item !== 'Customer')])
+const filteredRelationshipGraph = computed(() => {
+  const graph = relationshipGraph.value
+  if (graphFilter.value === 'All') return graph
+  const nodes = (graph.nodes || []).filter((node) => node.type === 'Customer' || node.type === graphFilter.value)
+  const nodeIds = new Set(nodes.map((node) => node.id))
+  return {
+    ...graph,
+    nodes,
+    edges: (graph.edges || []).filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)),
+  }
+})
 const filteredDocuments = computed(() => {
   const query = documentSearch.value.toLowerCase()
   if (!query) return documents.value
@@ -1073,6 +1218,10 @@ function submitDynamicForm() {
       return
     }
   }
+  if (!validateDynamicForm()) {
+    toast.error(__('Please complete required fields'))
+    return
+  }
   insertResource.submit({ doctype: dynamicForm.doctype, doc: normalizeDoc(dynamicForm.doc) })
 }
 
@@ -1099,7 +1248,15 @@ async function saveProfile() {
 }
 
 async function saveCustomerSummary() {
-  await call('crm.api.credit.save_customer_summary', { customer: selectedCustomerName.value, summary: summaryText.value })
+  await call('crm.api.credit.save_customer_summary', {
+    customer: selectedCustomerName.value,
+    summary: summaryText.value,
+    structured_response: summaryStructured.value || summary.value?.structured_response || null,
+    sources: summarySources.value,
+    confidence: summaryStructured.value?.confidence || null,
+    limitations: summaryStructured.value?.limitations || [],
+  })
+  summaryStructuredCustomer.value = selectedCustomerName.value
   toast.success(__('Summary saved'))
   reloadCustomer360()
 }
@@ -1114,13 +1271,40 @@ async function generateCustomerSummary() {
       length: summaryLength.value,
     })
     summaryText.value = response.response || ''
-    summarySources.value = response.sources || []
+    summaryStructured.value = response.structured_response || null
+    summaryStructuredCustomer.value = selectedCustomerName.value
+    summarySources.value = response.structured_response?.sources || response.sources || []
     toast.success(__('RAG summary generated'))
     reloadCustomer360()
   } catch (error) {
     toast.error(error?.messages?.[0] || __('Could not generate RAG summary'))
   } finally {
     isGeneratingSummary.value = false
+  }
+}
+
+async function checkAdapter(adapterKey) {
+  try {
+    const status = await call('crm.api.credit.check_customer360_adapter', { customer: selectedCustomerName.value, adapter_key: adapterKey })
+    toast.success(`${status.label}: ${status.status}`)
+  } catch (error) {
+    toast.error(error?.messages?.[0] || __('Could not check adapter status'))
+  }
+}
+
+function runNextAction(action) {
+  const map = {
+    open_profile: 'profile',
+    open_kyc: 'profile',
+    open_documents: 'documents',
+    open_transactions: 'risk',
+    open_ownership: 'ownership',
+    open_ai_insight: 'engagement',
+    check_adapter: 'overview',
+  }
+  activeTab.value = map[action.action_key] || 'overview'
+  if (action.action_key === 'check_adapter' && action.payload?.adapter_key) {
+    checkAdapter(action.payload.adapter_key)
   }
 }
 
@@ -1141,9 +1325,7 @@ async function addCustomer() {
 }
 
 async function runAmlCheck(row) {
-  await call('frappe.client.set_value', { doctype: 'CRM Relationship', name: row.name, fieldname: 'aml_pep_status', value: 'Pending Vendor' })
-  toast.success(__('AML/PEP check marked as pending vendor'))
-  reloadCustomer360()
+  await checkAdapter('aml_pep')
 }
 
 async function requestRestructure(row) {
@@ -1245,6 +1427,20 @@ function buildProfileHTML(cust, scope, watermark) {
           <h3 style="font-size: 14px; font-weight: 800; color: #0f766e; margin: 0 0 10px 0; letter-spacing: 0.5px; text-transform: uppercase;">AI Customer Executive Summary</h3>
           <div style="font-size: 13px; color: #334155; line-height: 1.6; font-style: italic;">
             ${summaryText.value ? summaryText.value.replace(/\n/g, '<br>') : 'No executive summary generated.'}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 30px;">
+          <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; background: #f8fafc;">
+            <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Data Quality</div>
+            <div style="font-size: 28px; font-weight: 900; color: #005e6a; margin-top: 4px;">${dataQuality.value?.score || 0}</div>
+            <div style="font-size: 12px; color: #475569;">${(dataQuality.value?.missing_required_fields || []).length} missing fields · ${(dataQuality.value?.warnings || []).length} warnings</div>
+          </div>
+          <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; background: #f8fafc;">
+            <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">External Adapters</div>
+            <div style="font-size: 13px; color: #475569; margin-top: 8px; line-height: 1.5;">
+              ${(externalAdapters.value || []).slice(0, 4).map(adapter => `${adapter.label}: ${adapter.status}`).join('<br>') || 'No adapter status available.'}
+            </div>
           </div>
         </div>
         
@@ -1523,14 +1719,14 @@ function buildProfileHTML(cust, scope, watermark) {
         
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 40px;">
           <div style="background: #fff8e6; border: 1px solid #ffe8cc; border-radius: 8px; padding: 20px; text-align: center;">
-            <div style="font-size: 11px; font-weight: 800; color: #b78103; text-transform: uppercase; margin-bottom: 6px;">UAT Risk Rating</div>
+            <div style="font-size: 11px; font-weight: 800; color: #b78103; text-transform: uppercase; margin-bottom: 6px;">Internal Risk Rating</div>
             <div style="font-size: 42px; font-weight: 900; color: #b78103; margin-bottom: 5px;">${latestRisk.value?.risk_grade || 'B'}</div>
             <div style="font-size: 12px; font-weight: 700; color: #667085;">Internal Score: ${latestRisk.value?.internal_score || 720} / 1000</div>
           </div>
           <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 20px;">
             <h4 style="font-size: 12px; font-weight: 800; color: #334155; margin: 0 0 8px 0; text-transform: uppercase;">Adverse Risk Factors & Triggers</h4>
             <p style="font-size: 12px; color: #475569; margin: 0 0 10px 0; line-height: 1.5;">
-              <strong>Factors:</strong> ${latestRisk.value?.risk_factors || 'No severe qualitative adverse risks reported in UAT.'}
+              <strong>Factors:</strong> ${latestRisk.value?.risk_factors || 'No severe qualitative adverse risks reported from Customer 360 records.'}
             </p>
             <p style="font-size: 12px; color: #475569; margin: 0; line-height: 1.5;">
               <strong>Early Warning triggers:</strong> ${latestRisk.value?.early_warning_triggers || 'No triggers tripped.'}
@@ -1669,6 +1865,12 @@ function buildProfileCSV(cust, scope) {
   
   addSubHeader('executive ai summary')
   csv += `${summaryText.value || 'No summary text available.'}\n`
+  addSubHeader('production readiness controls')
+  addRow(['Data Quality Score', dataQuality.value?.score || 0])
+  addRow(['Missing Required Fields', (dataQuality.value?.missing_required_fields || []).map(row => row.label).join('; ') || '-'])
+  addRow(['Warnings', (dataQuality.value?.warnings || []).join('; ') || '-'])
+  addRow(['External Adapters', (externalAdapters.value || []).map(row => `${row.label}: ${row.status}`).join('; ') || '-'])
+  addRow(['Last Profile Update', auditSummary.value?.last_profile_update || '-'])
   
   if (scope === 'Full Profile' || scope === 'Profile & KYC') {
     addSubHeader('kyc review registry')
@@ -1797,7 +1999,7 @@ function openConversation(row) {
 }
 
 function openRelatedCustomer(row) {
-  const target = row?.related_customer || row?.name
+  const target = row?.related_customer || row?.customer || (String(row?.id || '').startsWith('customer:') ? String(row.id).slice(9) : '')
   if (!target) return
   if (routeCustomer.value) {
     router.push({ name: 'Customer 360 Detail', params: { customer: target } })
@@ -1844,29 +2046,6 @@ function pushRecentSearch(value) {
 
 function initials(value) {
   return (value || 'CU').slice(0, 2).toUpperCase()
-}
-
-function renderMarkdown(text) {
-  if (!text) return '<p class="text-slate-400 text-sm">Click to edit or generate a summary...</p>'
-  let html = String(text)
-    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/^---$/gm, '<hr>')
-    .replace(/^\|(.*)\|$/gm, (match) => {
-      const cells = match.split('|').filter((cell) => cell.trim())
-      if (cells.every((cell) => /^[\s:-]+$/.test(cell))) return ''
-      return '<tr>' + cells.map((cell) => `<td>${cell.trim()}</td>`).join('') + '</tr>'
-    })
-    .replace(/^- (.*$)/gm, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-  html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-  html = html.replace(/(<tr>.*<\/tr>)/gs, '<table class="w-full border-collapse text-xs">$1</table>')
-  if (!html.startsWith('<')) html = `<p>${html}</p>`
-  return DOMPurify.sanitize(html)
 }
 
 function formatCurrency(value) {
@@ -2027,19 +2206,34 @@ const TimelineList = {
 }
 
 const RelationshipGraph = {
-  props: ['customer', 'relationships', 'zoom'],
+  props: ['customer', 'graph', 'zoom'],
   emits: ['openNode'],
   setup(props, { emit }) {
+    const positionedNodes = computed(() => {
+      const nodes = (props.graph?.nodes || []).filter((node) => node.type !== 'Customer').slice(0, 12)
+      return nodes.map((node, index) => {
+        const angle = (index / Math.max(nodes.length, 1)) * Math.PI * 2
+        return {
+          ...node,
+          left: 112 + Math.cos(angle) * 100,
+          top: 112 + Math.sin(angle) * 100,
+        }
+      })
+    })
     return () => h('div', { class: 'relative h-72 rounded-lg border border-slate-100 bg-slate-50 overflow-hidden' }, [
       h('div', { class: 'absolute inset-0 flex items-center justify-center', style: { transform: `scale(${props.zoom || 1})` } }, [
         h('div', { class: 'relative w-64 h-64' }, [
           h('div', { class: 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-black text-center p-2 shadow-lg' }, props.customer?.customer_name || props.customer?.name || 'Customer'),
-          ...props.relationships.slice(0, 8).map((rel, index) => {
-            const angle = (index / Math.max(props.relationships.length, 1)) * Math.PI * 2
-            const x = 112 + Math.cos(angle) * 100
-            const y = 112 + Math.sin(angle) * 100
-            return h('button', { class: 'absolute w-16 h-16 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm p-1 hover:border-teal-400', style: { left: `${x}px`, top: `${y}px` }, onClick: () => emit('openNode', rel) }, [h('span', { class: 'line-clamp-2' }, rel.related_party || rel.relationship_type)])
-          }),
+          ...positionedNodes.value.map((node) => h('button', {
+            class: 'absolute w-16 h-16 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm p-1 hover:border-teal-400',
+            style: { left: `${node.left}px`, top: `${node.top}px` },
+            title: `${node.type}${node.exposure ? ` · ${formatCurrency(node.exposure)}` : ''}`,
+            onClick: () => emit('openNode', node),
+          }, [
+            h('span', { class: 'line-clamp-2' }, node.label || node.type),
+            h('span', { class: 'block text-[8px] font-semibold text-teal-600' }, node.type),
+          ])),
+          !positionedNodes.value.length ? h('div', { class: 'absolute bottom-4 left-0 right-0 text-center text-xs text-slate-400' }, __('No relationship graph nodes yet')) : null,
         ]),
       ]),
     ])

@@ -72,10 +72,10 @@
   ];
 
   const metrics = [
-    ["Total Outstanding", "Rp 24.8B", "6 active facilities"],
-    ["Risk Grade", "B+", "Internal score 782"],
-    ["Group Exposure", "Rp 41.2B", "4 related entities"],
-    ["KYC Status", "Done", "Next review 18 Jun 2026"],
+    ["total_outstanding", "Total Outstanding", "-", "Open CRM View to load exposure"],
+    ["risk_grade", "Risk Grade", "-", "Open CRM View to load score"],
+    ["group_exposure", "Group Exposure", "-", "Open CRM View to load relationship data"],
+    ["kyc_status", "KYC Status", "-", "Open CRM View to load KYC status"],
   ];
 
   function esc(value) {
@@ -177,6 +177,7 @@
             <button class="summon-c360-button primary" type="button" data-c360-action="new-application">${__("New Application")}</button>
             <button class="summon-c360-button" type="button" data-c360-action="communicate">${__("Communicate")}</button>
             <button class="summon-c360-button" type="button" data-c360-action="export">${__("Export Profile")}</button>
+            <button class="summon-c360-button" type="button" data-c360-action="refresh">${__("Refresh Data")}</button>
             <button class="summon-c360-button" type="button" data-c360-action="open-crm">${__("CRM View")}</button>
           </div>
         </div>
@@ -184,11 +185,11 @@
           <div class="summon-c360-metrics">
             ${metrics
               .map(
-                ([label, value, help]) => `
+                ([key, label, value, help]) => `
                   <div class="summon-c360-metric">
                     <div class="summon-c360-label">${esc(label)}</div>
-                    <div class="summon-c360-value">${esc(value)}</div>
-                    <div class="summon-c360-text">${esc(help)}</div>
+                    <div class="summon-c360-value" data-c360-metric-value="${esc(key)}">${esc(value)}</div>
+                    <div class="summon-c360-text" data-c360-metric-help="${esc(key)}">${esc(help)}</div>
                   </div>
                 `,
               )
@@ -215,6 +216,7 @@
       ? frm.$wrapper.find(".layout-main-section").first()
       : frm.$wrapper.find(".form-dashboard").first();
     $target.prepend($panel);
+    hydrateCustomer360Metrics(frm, $panel);
 
     $panel.on("click", "[data-c360-tab]", function () {
       const key = $(this).attr("data-c360-tab");
@@ -238,21 +240,54 @@
     $panel.on("click", "[data-c360-action]", function () {
       const action = $(this).attr("data-c360-action");
       if (action === "open-crm") {
-        window.location.href = "/crm/crm-core/customer-360";
+        window.location.href = `/crm/crm-core/customer-360/${encodeURIComponent(frm.doc.name)}`;
       } else if (action === "new-application") {
-        frappe.set_route("List", "Loan Application", { customer: frm.doc.name });
+        window.location.href = `/crm/crm-core/credit-analysis?customer=${encodeURIComponent(frm.doc.name)}`;
       } else if (action === "communicate") {
-        frappe.set_route("List", "Communication", { reference_doctype: "Customer", reference_name: frm.doc.name });
+        window.location.href = `/crm/channels-portal/omnichannel-workspace?customer=${encodeURIComponent(frm.doc.name)}`;
       } else if (action === "export") {
-        frappe.msgprint(__("SUMMON Customer 360 export is ready for full profile, tab-specific PDF, watermark, email export, and password protection."));
+        window.location.href = `/crm/crm-core/customer-360/${encodeURIComponent(frm.doc.name)}?export=1`;
+      } else if (action === "refresh") {
+        hydrateCustomer360Metrics(frm, $panel);
       }
+    });
+  }
+
+  function formatCurrency(value) {
+    const amount = Number(value || 0);
+    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
+  }
+
+  function setMetric($panel, key, value, help) {
+    $panel.find(`[data-c360-metric-value="${key}"]`).text(value || "-");
+    $panel.find(`[data-c360-metric-help="${key}"]`).text(help || "");
+  }
+
+  function hydrateCustomer360Metrics(frm, $panel) {
+    if (!frm.doc.name || frm.is_new()) return;
+    setMetric($panel, "total_outstanding", __("Loading..."), __("Fetching Customer 360 records"));
+    frappe.call({
+      method: "crm.api.credit.get_customer_360",
+      args: { customer: frm.doc.name },
+      callback(response) {
+        const data = response.message || {};
+        const summary = data.summary || {};
+        const quality = data.data_quality || {};
+        setMetric($panel, "total_outstanding", formatCurrency(summary.total_outstanding), `${summary.active_facilities || 0} active facilities`);
+        setMetric($panel, "risk_grade", summary.risk_grade || "-", `Score ${summary.score || 0} · data quality ${quality.score || 0}`);
+        setMetric($panel, "group_exposure", formatCurrency(summary.group_exposure), `${summary.related_entities || 0} relationship records`);
+        setMetric($panel, "kyc_status", summary.kyc_status || "Pending", summary.next_review_date ? `Next review ${summary.next_review_date}` : "No review date");
+      },
+      error() {
+        setMetric($panel, "total_outstanding", "-", __("Open CRM View to load Customer 360 metrics"));
+      },
     });
   }
 
   frappe.ui.form.on("Customer", {
     refresh(frm) {
       frm.add_custom_button(__("Open Customer 360"), () => {
-        window.location.href = "/crm/crm-core/customer-360";
+        window.location.href = `/crm/crm-core/customer-360/${encodeURIComponent(frm.doc.name)}`;
       }, __("SUMMON"));
       frm.add_custom_button(__("Export 360 Profile"), () => {
         frappe.msgprint(__("Generate watermarked or password-protected Customer 360 PDF from the SUMMON dashboard."));
