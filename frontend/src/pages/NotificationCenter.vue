@@ -1,15 +1,10 @@
 <template>
   <div class="flex h-full flex-col">
     <LayoutHeader>
-      <header class="flex min-h-[72px] items-center justify-between gap-6 px-10 py-3">
-        <div class="flex min-w-0 items-center gap-4">
-          <div class="flex h-8 w-8 items-center justify-center rounded-[10px] bg-crm-teal">
-            <FeatherIcon name="bell" class="h-4 w-4 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">{{ __('Notification Center') }}</h1>
-          </div>
-        </div>
+      <template #left-header>
+        <ViewBreadcrumbs v-model="viewControls" routeName="Notification Center" />
+      </template>
+      <template #right-header>
         <div class="flex shrink-0 items-center gap-3">
           <Button variant="outline" size="sm" :label="__('Mark All Read')" @click="markAllAsRead">
             <template #prefix><FeatherIcon name="check-circle" class="h-4 w-4" /></template>
@@ -21,7 +16,7 @@
             <template #prefix><FeatherIcon name="settings" class="h-4 w-4" /></template>
           </Button>
         </div>
-      </header>
+      </template>
     </LayoutHeader>
 
     <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-10 py-4">
@@ -131,6 +126,7 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import {
   Badge,
@@ -146,6 +142,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const viewControls = ref(null)
 const activeTab = ref('all')
 const query = ref('')
 const loading = ref(false)

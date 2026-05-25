@@ -1,20 +1,10 @@
 <template>
   <div class="flex h-full flex-col">
     <LayoutHeader>
-      <header class="flex min-h-[72px] items-center justify-between gap-6 px-10 py-3">
-        <div class="flex min-w-0 items-center gap-4">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: #008C95"
-          >
-            <FeatherIcon name="shield" class="h-4 w-4 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-              {{ __('Audit Trail') }}
-            </h1>
-          </div>
-        </div>
+      <template #left-header>
+        <ViewBreadcrumbs v-model="viewControls" routeName="Audit Trail" />
+      </template>
+      <template #right-header>
         <div class="flex shrink-0 items-center gap-3">
           <Button
             variant="outline"
@@ -58,7 +48,7 @@
             </template>
           </Button>
         </div>
-      </header>
+      </template>
     </LayoutHeader>
 
     <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-10 py-5">
@@ -445,6 +435,7 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import {
   Badge,
   Button,
@@ -470,6 +461,8 @@ const TABS = [
   { key: 'compliance', label: 'Compliance' },
   { key: 'settings', label: 'Settings' },
 ]
+
+const viewControls = ref(null)
 
 const activeTab = ref('activity')
 const loading = ref(false)

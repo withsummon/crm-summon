@@ -3,9 +3,6 @@
     <LayoutHeader>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-[10px]" style="background:#008C95">
-            <FeatherIcon name="package" class="h-4 w-4 text-white" />
-          </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2 text-base">
               <button class="text-ink-gray-5 hover:text-ink-gray-9" @click="navigate('catalog')">
