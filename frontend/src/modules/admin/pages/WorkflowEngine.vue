@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full flex-col bg-white">
+  <div class="flex h-full flex-col bg-white overflow-hidden">
     <LayoutHeader>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
@@ -19,36 +19,31 @@
       <template #right-header>
         <div class="flex items-center gap-2">
           <Button
-            :label="__('Refresh')"
-            variant="subtle"
-            @click="refreshFrame"
+            :label="__('Save Workflow')"
+            variant="solid"
+            @click="saveWorkflow"
           >
             <template #prefix>
-              <LucideRefreshCw class="h-4 w-4" />
+              <LucideSave class="h-4 w-4" />
             </template>
           </Button>
           <Button
-            :label="__('Open Desk View')"
+            :label="__('Publish')"
             variant="outline"
-            @click="openDeskView"
           >
             <template #prefix>
-              <LucideExternalLink class="h-4 w-4" />
+              <LucideRocket class="h-4 w-4" />
             </template>
           </Button>
         </div>
       </template>
     </LayoutHeader>
 
-    <div class="flex min-h-0 flex-1 flex-col bg-surface-gray-1 p-4">
-
-      <div class="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-crm-border bg-white shadow-sm">
-        <iframe
-          ref="workflowFrame"
-          title="Workflow Engine"
-          src="/app/workflow"
-          class="h-full w-full border-0"
-        />
+    <div class="flex min-h-0 flex-1 bg-white relative">
+      <WorkflowNodePalette />
+      
+      <div class="flex-1 relative">
+        <WorkflowCanvas />
       </div>
     </div>
   </div>
@@ -56,22 +51,15 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
-import LucideExternalLink from '~icons/lucide/external-link'
 import LucideGitBranch from '~icons/lucide/git-branch'
-import LucideRefreshCw from '~icons/lucide/refresh-cw'
+import LucideSave from '~icons/lucide/save'
+import LucideRocket from '~icons/lucide/rocket'
 import { Button, usePageMeta } from 'frappe-ui'
-import { ref } from 'vue'
+import WorkflowNodePalette from '../components/WorkflowEngine/WorkflowNodePalette.vue'
+import WorkflowCanvas from '../components/WorkflowEngine/WorkflowCanvas.vue'
 
-const workflowFrame = ref(null)
-
-function refreshFrame() {
-  if (workflowFrame.value) {
-    workflowFrame.value.src = '/app/workflow'
-  }
-}
-
-function openDeskView() {
-  window.location.href = '/app/workflow'
+function saveWorkflow() {
+  console.log('Save workflow')
 }
 
 usePageMeta(() => ({ title: __('Workflow Engine') }))
