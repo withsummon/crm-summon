@@ -1135,58 +1135,416 @@
     <!-- ── Preview Modal ── -->
     <div
       v-if="showPreviewModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       @click.self="showPreviewModal = false"
     >
-      <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div
-          class="px-5 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-800"
-        >
-          <span class="text-sm font-semibold text-white truncate">{{
-            selectedDoc?.name
-          }}</span>
-          <div class="flex items-center gap-2">
-            <button
-              @click="downloadDoc(selectedDoc)"
-              class="text-gray-300 hover:text-white"
-            >
+      <div class="w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col bg-gray-800" style="max-height: 90vh">
+        <!-- Header -->
+        <div class="px-5 py-3 flex items-center gap-3 shrink-0">
+          <FeatherIcon name="file-text" class="h-4 w-4 text-gray-400 shrink-0" />
+          <span class="text-sm font-semibold text-white truncate flex-1">{{ selectedDoc?.name }}</span>
+          <div class="flex items-center gap-2 shrink-0">
+            <button @click="downloadDoc(selectedDoc)" class="text-gray-400 hover:text-white transition-colors">
               <FeatherIcon name="download" class="h-4 w-4" />
             </button>
-            <button
-              @click="showPreviewModal = false"
-              class="text-gray-300 hover:text-white"
-            >
+            <button @click="showPreviewModal = false" class="text-gray-400 hover:text-white transition-colors">
               <FeatherIcon name="x" class="h-4 w-4" />
             </button>
           </div>
         </div>
-        <div class="h-96 bg-gray-100 flex flex-col items-center justify-center">
-          <div
-            class="w-20 h-24 rounded-xl flex items-center justify-center mb-4 shadow-lg"
-            :class="fileIconBg(selectedDoc?.ext || 'pdf')"
-          >
-            <span
-              class="text-xl font-black"
-              :class="fileIconColor(selectedDoc?.ext || 'pdf')"
-              >{{ (selectedDoc?.ext || "PDF").toUpperCase() }}</span
-            >
+
+        <!-- Viewer toolbar -->
+        <div class="bg-gray-700 px-4 py-1.5 flex items-center gap-2 shrink-0 border-t border-gray-600">
+          <button @click="previewPage = Math.max(1, previewPage - 1)" :disabled="previewPage === 1" class="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 transition-colors">
+            <FeatherIcon name="chevron-left" class="h-3.5 w-3.5" />
+          </button>
+          <span class="text-xs text-gray-300 w-24 text-center">Page {{ previewPage }} of {{ previewTotalPages }}</span>
+          <button @click="previewPage = Math.min(previewTotalPages, previewPage + 1)" :disabled="previewPage === previewTotalPages" class="p-1 rounded text-gray-400 hover:text-white disabled:opacity-30 transition-colors">
+            <FeatherIcon name="chevron-right" class="h-3.5 w-3.5" />
+          </button>
+          <div class="ml-auto flex items-center gap-1.5 text-[10px] text-gray-400">
+            <FeatherIcon name="shield" class="h-3 w-3" />Confidential · Watermarked preview
           </div>
-          <p class="text-sm text-gray-500">{{ selectedDoc?.name }}</p>
-          <p class="text-xs text-gray-400 mt-1">
-            {{ selectedDoc?.size }} · v{{ selectedDoc?.version }}
-          </p>
-          <div class="mt-4 flex gap-2 text-xs text-gray-500">
-            <button class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-200">
-              ◀ Prev
-            </button>
-            <span class="px-3 py-1">Page 1 / 4</span>
-            <button class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-200">
-              Next ▶
-            </button>
+        </div>
+
+        <!-- PDF paper area -->
+        <div class="flex-1 overflow-y-auto bg-gray-600 flex justify-center py-6 px-4">
+          <div class="w-full max-w-[520px] bg-white shadow-2xl relative" style="min-height: 720px">
+
+            <!-- Watermark -->
+            <div class="absolute inset-0 pointer-events-none select-none overflow-hidden flex items-center justify-center z-10">
+              <span class="text-[52px] font-black text-gray-400 opacity-[0.06] tracking-[0.3em] whitespace-nowrap" style="transform:rotate(-30deg)">CONFIDENTIAL</span>
+            </div>
+
+            <!-- Page footer -->
+            <div class="absolute bottom-3 left-0 right-0 flex items-center justify-between px-8 text-[9px] text-gray-300 z-10">
+              <span>Bank Summon — Internal Use Only</span>
+              <span>{{ previewPage }} / {{ previewTotalPages }}</span>
+            </div>
+
+            <!-- Content -->
+            <div class="p-10 pb-12">
+
+              <!-- ── AGREEMENT ── -->
+              <template v-if="selectedDoc?.doc_type === 'Agreement'">
+                <!-- Page 1 -->
+                <div v-if="previewPage === 1">
+                  <div class="flex items-start justify-between mb-6 pb-4 border-b-2 border-teal-600">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center shrink-0"><span class="text-white text-xs font-black">BS</span></div>
+                      <div>
+                        <div class="text-sm font-black text-gray-800 tracking-wide">BANK SUMMON</div>
+                        <div class="text-[9px] text-gray-400">Jl. Sudirman Kav. 45, Jakarta 10220</div>
+                      </div>
+                    </div>
+                    <div class="text-right text-[9px] text-gray-500">
+                      <div>No: PKR/2026/0547/WC</div>
+                      <div>Tgl: 24 Mei 2026</div>
+                    </div>
+                  </div>
+                  <div class="text-center mb-6">
+                    <p class="text-sm font-black text-gray-800 tracking-widest uppercase">Perjanjian Kredit</p>
+                    <p class="text-xs text-gray-500 mt-1">Nomor: PKR/2026/0547/WC</p>
+                    <div class="mt-3 h-px bg-gray-200" />
+                  </div>
+                  <div class="text-[11px] text-gray-700 leading-relaxed space-y-3 mb-6">
+                    <p>Yang bertanda tangan di bawah ini:</p>
+                    <div class="space-y-2 ml-3">
+                      <p><span class="font-bold">I. BANK SUMMON</span>, badan hukum Perseroan Terbatas berkedudukan di Jakarta, diwakili oleh <span class="font-semibold">Dewi Kusuma</span>, Kepala Divisi Kredit Korporat — selanjutnya disebut <span class="font-bold">"BANK"</span>.</p>
+                      <p><span class="font-bold">II. PT MAJU BERSAMA</span>, NPWP 01.234.567.8-001.000, diwakili oleh <span class="font-semibold">Budi Santoso</span>, Direktur Utama — selanjutnya disebut <span class="font-bold">"DEBITUR"</span>.</p>
+                    </div>
+                    <p>Kedua belah pihak telah sepakat untuk membuat dan menandatangani Perjanjian Kredit ini dengan syarat dan ketentuan sebagai berikut:</p>
+                  </div>
+                  <div class="mb-5">
+                    <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Pasal 1 — Fasilitas Kredit</p>
+                    <div class="text-[11px] text-gray-600 leading-relaxed">
+                      <p class="mb-2">1.1 BANK menyetujui Fasilitas Kredit Modal Kerja dengan ketentuan:</p>
+                      <div class="ml-3 rounded-lg border border-gray-200 overflow-hidden">
+                        <table class="w-full text-[10px]">
+                          <tr class="bg-teal-50 border-b border-gray-100"><td class="px-3 py-1.5 text-gray-500 w-2/5">Jenis Fasilitas</td><td class="px-3 py-1.5 font-bold text-gray-800">Kredit Modal Kerja (KMK)</td></tr>
+                          <tr class="border-b border-gray-100"><td class="px-3 py-1.5 text-gray-500">Plafond</td><td class="px-3 py-1.5 font-bold text-gray-800">Rp 5.000.000.000,-</td></tr>
+                          <tr class="bg-gray-50 border-b border-gray-100"><td class="px-3 py-1.5 text-gray-500">Suku Bunga</td><td class="px-3 py-1.5 font-bold text-gray-800">10,5% p.a. floating</td></tr>
+                          <tr class="border-b border-gray-100"><td class="px-3 py-1.5 text-gray-500">Jangka Waktu</td><td class="px-3 py-1.5 font-bold text-gray-800">36 Bulan</td></tr>
+                          <tr class="bg-gray-50"><td class="px-3 py-1.5 text-gray-500">Provisi</td><td class="px-3 py-1.5 font-bold text-gray-800">1% (sekali bayar)</td></tr>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Pasal 2 — Jaminan</p>
+                    <div class="text-[11px] text-gray-600 space-y-1">
+                      <p>2.1 Sebagai jaminan, DEBITUR menyerahkan agunan:</p>
+                      <div class="ml-3 text-[10px] space-y-0.5">
+                        <p>a) SHM Gudang Bekasi 2.500 m² — nilai appraisal Rp 8,5 M</p>
+                        <p>b) Mesin CNC Haas VF-4 (3 unit) — nilai appraisal Rp 3,2 M</p>
+                        <p>c) Deposito BCA No. 00128xxx — Rp 1,5 M</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Page 2 -->
+                <div v-if="previewPage === 2">
+                  <div class="text-[10px] text-gray-400 font-semibold mb-5 pb-3 border-b border-gray-200">Perjanjian Kredit No. PKR/2026/0547/WC — Lanjutan</div>
+                  <div class="mb-5">
+                    <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Pasal 3 — Covenant Keuangan</p>
+                    <p class="text-[11px] text-gray-600 mb-2">3.1 Selama fasilitas berjalan, DEBITUR wajib memenuhi kondisi berikut:</p>
+                    <div class="rounded-lg border border-gray-200 overflow-hidden">
+                      <table class="w-full text-[10px]">
+                        <thead><tr class="bg-gray-50 border-b border-gray-200"><th class="px-3 py-1.5 text-left text-gray-500">Covenant</th><th class="px-3 py-1.5 text-left text-gray-500">Threshold</th><th class="px-3 py-1.5 text-left text-gray-500">Frekuensi</th></tr></thead>
+                        <tbody>
+                          <tr class="border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">DSCR</td><td class="px-3 py-1.5 text-gray-600">≥ 1,25x</td><td class="px-3 py-1.5 text-gray-600">Bulanan</td></tr>
+                          <tr class="bg-gray-50 border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">DER</td><td class="px-3 py-1.5 text-gray-600">≤ 3,0x</td><td class="px-3 py-1.5 text-gray-600">Triwulan</td></tr>
+                          <tr class="border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">Current Ratio</td><td class="px-3 py-1.5 text-gray-600">≥ 1,0x</td><td class="px-3 py-1.5 text-gray-600">Bulanan</td></tr>
+                          <tr class="bg-gray-50"><td class="px-3 py-1.5 font-semibold text-gray-800">Asuransi Agunan</td><td class="px-3 py-1.5 text-gray-600">Valid / Aktif</td><td class="px-3 py-1.5 text-gray-600">Tahunan</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div class="mb-5">
+                    <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Pasal 4 — Events of Default</p>
+                    <div class="text-[11px] text-gray-600 space-y-1">
+                      <p>4.1 Cidera janji terjadi apabila:</p>
+                      <div class="ml-3 text-[10px] space-y-0.5 text-gray-600">
+                        <p>a) Gagal bayar pokok atau bunga lebih dari 30 hari kalender;</p>
+                        <p>b) Melanggar covenant keuangan selama 2 periode berturut-turut;</p>
+                        <p>c) Perubahan material yang berdampak negatif pada kemampuan bayar;</p>
+                        <p>d) DEBITUR dinyatakan pailit atau mengajukan permohonan PKPU;</p>
+                        <p>e) Agunan mengalami kerusakan material tanpa penggantian dalam 30 hari.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Pasal 5 — Kondisi Pencairan</p>
+                    <div class="text-[11px] text-gray-600 space-y-1">
+                      <p>5.1 Pencairan dapat dilakukan setelah seluruh condition precedent terpenuhi:</p>
+                      <div class="ml-3 text-[10px] space-y-0.5 text-gray-600">
+                        <p>a) Perjanjian ini telah ditandatangani oleh seluruh pihak;</p>
+                        <p>b) Seluruh agunan telah diikat sempurna sesuai peraturan berlaku;</p>
+                        <p>c) Asuransi agunan aktif dengan BANK sebagai loss payee;</p>
+                        <p>d) Seluruh dokumen persyaratan pencairan telah diserahkan.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Page 3: Signatures -->
+                <div v-if="previewPage === 3">
+                  <div class="text-[10px] text-gray-400 font-semibold mb-5 pb-3 border-b border-gray-200">Perjanjian Kredit No. PKR/2026/0547/WC — Halaman Penandatanganan</div>
+                  <p class="text-[11px] text-gray-600 leading-relaxed mb-8">Demikian Perjanjian Kredit ini dibuat dan ditandatangani dalam keadaan sadar dan tanpa paksaan dari siapapun pada hari dan tanggal tersebut di atas.</p>
+                  <div class="grid grid-cols-2 gap-10 mt-6">
+                    <div class="text-center">
+                      <p class="text-[10px] font-semibold text-gray-700 mb-14">BANK SUMMON</p>
+                      <div class="border-b border-gray-400 mb-1.5" />
+                      <p class="text-[10px] font-bold text-gray-800">Dewi Kusuma</p>
+                      <p class="text-[9px] text-gray-500">Kepala Divisi Kredit Korporat</p>
+                      <div class="mt-4 flex justify-center">
+                        <div class="w-16 h-16 rounded-full border-2 border-teal-400 flex items-center justify-center">
+                          <span class="text-[8px] text-teal-600 font-bold text-center leading-tight">e-SIGN<br/>✓ VALID</span>
+                        </div>
+                      </div>
+                      <p class="text-[9px] text-gray-400 mt-1.5">24 Mei 2026 · 10:15 WIB</p>
+                    </div>
+                    <div class="text-center">
+                      <p class="text-[10px] font-semibold text-gray-700 mb-14">PT MAJU BERSAMA</p>
+                      <div class="border-b border-gray-400 mb-1.5" />
+                      <p class="text-[10px] font-bold text-gray-800">Budi Santoso</p>
+                      <p class="text-[9px] text-gray-500">Direktur Utama</p>
+                      <div class="mt-4 flex justify-center">
+                        <div class="w-16 h-16 rounded-full border-2 border-teal-400 flex items-center justify-center">
+                          <span class="text-[8px] text-teal-600 font-bold text-center leading-tight">e-SIGN<br/>✓ VALID</span>
+                        </div>
+                      </div>
+                      <p class="text-[9px] text-gray-400 mt-1.5">24 Mei 2026 · 14:32 WIB</p>
+                    </div>
+                  </div>
+                  <div class="mt-10 text-center border-t border-gray-200 pt-5">
+                    <p class="text-[10px] font-semibold text-gray-700 mb-1">Disaksikan oleh Notaris:</p>
+                    <p class="text-[10px] font-bold text-gray-800">Dr. Hendra Pratama, S.H., M.Kn.</p>
+                    <p class="text-[9px] text-gray-500">Notaris dan PPAT Jakarta Selatan · SK AHU-123/KN.01.2024</p>
+                  </div>
+                  <div class="flex justify-center mt-6">
+                    <div class="w-24 h-24 rounded-full border-4 border-dashed border-teal-300 flex items-center justify-center opacity-30">
+                      <span class="text-[8px] text-teal-700 font-bold text-center">BANK<br/>SUMMON</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- ── FINANCIAL ── -->
+              <template v-else-if="selectedDoc?.doc_type === 'Financial'">
+                <!-- Page 1: P&L -->
+                <div v-if="previewPage === 1">
+                  <div class="flex items-start justify-between mb-5 pb-4 border-b-2 border-blue-600">
+                    <div>
+                      <p class="text-sm font-black text-gray-800">PT MAJU BERSAMA</p>
+                      <p class="text-[9px] text-gray-500">NPWP: 01.234.567.8-001.000</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs font-bold text-gray-700">Laporan Keuangan Audited</p>
+                      <p class="text-[9px] text-gray-500">Tahun Fiskal 2024</p>
+                      <p class="text-[9px] text-gray-400">KAP: Purwantono, Sungkoro &amp; Surja (EY)</p>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2 mb-5">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
+                      <p class="text-sm font-black text-blue-700">Rp 28,4M</p>
+                      <p class="text-[9px] text-blue-600">Revenue</p>
+                      <p class="text-[8px] text-green-600 font-semibold">↑ 12% YoY</p>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                      <p class="text-sm font-black text-green-700">Rp 4,2M</p>
+                      <p class="text-[9px] text-green-600">Net Profit</p>
+                      <p class="text-[8px] text-green-600 font-semibold">↑ 20% YoY</p>
+                    </div>
+                    <div class="bg-teal-50 border border-teal-200 rounded-lg p-2 text-center">
+                      <p class="text-sm font-black text-teal-700">Rp 52,1M</p>
+                      <p class="text-[9px] text-teal-600">Total Assets</p>
+                      <p class="text-[8px] text-green-600 font-semibold">↑ 5% YoY</p>
+                    </div>
+                  </div>
+                  <p class="text-[11px] font-bold text-gray-800 uppercase tracking-wide mb-2 border-b border-gray-100 pb-1">Laporan Laba Rugi Komprehensif</p>
+                  <table class="w-full text-[10px] mb-1">
+                    <thead><tr class="bg-gray-50 border-b border-gray-200"><th class="px-3 py-1.5 text-left text-gray-500">Pos</th><th class="px-3 py-1.5 text-right text-gray-500">FY2024</th><th class="px-3 py-1.5 text-right text-gray-500">FY2023</th><th class="px-3 py-1.5 text-right text-gray-500">Δ%</th></tr></thead>
+                    <tbody>
+                      <tr class="border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">Pendapatan Bersih</td><td class="px-3 py-1.5 text-right">28.432</td><td class="px-3 py-1.5 text-right text-gray-400">25.390</td><td class="px-3 py-1.5 text-right text-green-600 font-semibold">+12,0%</td></tr>
+                      <tr class="bg-gray-50 border-b border-gray-100"><td class="px-3 py-1.5 text-gray-600">Beban Pokok</td><td class="px-3 py-1.5 text-right">(18.120)</td><td class="px-3 py-1.5 text-right text-gray-400">(16.504)</td><td class="px-3 py-1.5 text-right text-red-400">+9,8%</td></tr>
+                      <tr class="border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">Laba Bruto</td><td class="px-3 py-1.5 text-right font-bold">10.312</td><td class="px-3 py-1.5 text-right font-bold text-gray-400">8.886</td><td class="px-3 py-1.5 text-right text-green-600 font-semibold">+16,1%</td></tr>
+                      <tr class="bg-gray-50 border-b border-gray-100"><td class="px-3 py-1.5 text-gray-600">Beban Operasional</td><td class="px-3 py-1.5 text-right">(4.890)</td><td class="px-3 py-1.5 text-right text-gray-400">(4.210)</td><td class="px-3 py-1.5 text-right text-red-400">+16,2%</td></tr>
+                      <tr class="border-b border-gray-100"><td class="px-3 py-1.5 font-semibold text-gray-800">EBITDA</td><td class="px-3 py-1.5 text-right font-bold text-teal-700">5.422</td><td class="px-3 py-1.5 text-right font-bold text-gray-400">4.676</td><td class="px-3 py-1.5 text-right text-green-600 font-semibold">+16,0%</td></tr>
+                      <tr class="bg-gray-50 border-b border-gray-100"><td class="px-3 py-1.5 text-gray-600">Beban Bunga &amp; Pajak</td><td class="px-3 py-1.5 text-right">(1.228)</td><td class="px-3 py-1.5 text-right text-gray-400">(1.192)</td><td class="px-3 py-1.5 text-right text-red-400">+3,0%</td></tr>
+                      <tr class="bg-blue-50"><td class="px-3 py-2 font-black text-gray-800">Laba Bersih</td><td class="px-3 py-2 text-right font-black text-blue-700">4.194</td><td class="px-3 py-2 text-right font-black text-gray-500">3.484</td><td class="px-3 py-2 text-right text-green-600 font-bold">+20,4%</td></tr>
+                    </tbody>
+                  </table>
+                  <p class="text-[8px] text-gray-400">*dalam juta rupiah</p>
+                </div>
+
+                <!-- Page 2: Neraca -->
+                <div v-if="previewPage === 2">
+                  <div class="text-[10px] text-gray-500 font-semibold mb-4 pb-3 border-b border-gray-200">PT Maju Bersama — Neraca per 31 Desember 2024 (Rp Juta)</div>
+                  <div class="grid grid-cols-2 gap-5 text-[10px]">
+                    <div>
+                      <p class="font-bold text-gray-700 mb-2 text-[9px] uppercase tracking-wide">ASET</p>
+                      <p class="font-semibold text-gray-700 mb-1">Aset Lancar</p>
+                      <div class="space-y-0.5 ml-2 mb-3">
+                        <div class="flex justify-between"><span class="text-gray-500">Kas &amp; Setara Kas</span><span>4.832</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Piutang Usaha</span><span>8.215</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Persediaan</span><span>6.120</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Aset Lancar Lain</span><span>1.443</span></div>
+                        <div class="flex justify-between border-t border-gray-200 pt-0.5 font-bold"><span>Total Aset Lancar</span><span class="text-blue-700">20.610</span></div>
+                      </div>
+                      <p class="font-semibold text-gray-700 mb-1">Aset Tidak Lancar</p>
+                      <div class="space-y-0.5 ml-2">
+                        <div class="flex justify-between"><span class="text-gray-500">Aset Tetap (Net)</span><span>28.320</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Aset Lain-lain</span><span>3.170</span></div>
+                        <div class="flex justify-between border-t border-gray-200 pt-0.5 font-bold"><span>Total Tidak Lancar</span><span class="text-blue-700">31.490</span></div>
+                      </div>
+                      <div class="flex justify-between border-t-2 border-gray-300 pt-1 mt-2 font-black"><span>TOTAL ASET</span><span class="text-blue-800">52.100</span></div>
+                    </div>
+                    <div>
+                      <p class="font-bold text-gray-700 mb-2 text-[9px] uppercase tracking-wide">LIABILITAS &amp; EKUITAS</p>
+                      <p class="font-semibold text-gray-700 mb-1">Liabilitas Jangka Pendek</p>
+                      <div class="space-y-0.5 ml-2 mb-3">
+                        <div class="flex justify-between"><span class="text-gray-500">Utang Usaha</span><span>5.240</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Utang Bank (&lt;1 th)</span><span>4.500</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Liabilitas Lain</span><span>1.830</span></div>
+                        <div class="flex justify-between border-t border-gray-200 pt-0.5 font-bold"><span>Total Liab. Pendek</span><span class="text-red-600">11.570</span></div>
+                      </div>
+                      <p class="font-semibold text-gray-700 mb-1">Liabilitas Jangka Panjang</p>
+                      <div class="space-y-0.5 ml-2 mb-3">
+                        <div class="flex justify-between"><span class="text-gray-500">Utang Bank (&gt;1 th)</span><span>14.200</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Liabilitas Lain</span><span>2.100</span></div>
+                        <div class="flex justify-between border-t border-gray-200 pt-0.5 font-bold"><span>Total Liab. Panjang</span><span class="text-red-600">16.300</span></div>
+                      </div>
+                      <p class="font-semibold text-gray-700 mb-1">Ekuitas</p>
+                      <div class="space-y-0.5 ml-2">
+                        <div class="flex justify-between"><span class="text-gray-500">Modal Disetor</span><span>10.000</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Saldo Laba</span><span>14.230</span></div>
+                        <div class="flex justify-between border-t border-gray-200 pt-0.5 font-bold"><span>Total Ekuitas</span><span class="text-green-700">24.230</span></div>
+                      </div>
+                      <div class="flex justify-between border-t-2 border-gray-300 pt-1 mt-2 font-black"><span>TOTAL L+E</span><span class="text-blue-800">52.100</span></div>
+                    </div>
+                  </div>
+                  <p class="text-[8px] text-gray-400 mt-3">Diaudit oleh KAP Purwantono, Sungkoro &amp; Surja — Opini Wajar Tanpa Pengecualian</p>
+                </div>
+
+                <!-- Pages 3-4: placeholder -->
+                <div v-if="previewPage >= 3">
+                  <div class="text-[10px] text-gray-500 font-semibold mb-4 pb-3 border-b border-gray-200">{{ previewPage === 3 ? 'Laporan Arus Kas FY2024' : 'Catatan atas Laporan Keuangan' }}</div>
+                  <div class="space-y-2">
+                    <div v-for="i in 18" :key="i" class="h-2.5 rounded bg-gray-100" :style="{ width: (45 + (i * 11 % 50)) + '%' }" />
+                  </div>
+                </div>
+              </template>
+
+              <!-- ── IDENTITY / KTP ── -->
+              <template v-else-if="selectedDoc?.doc_type === 'Identity'">
+                <div v-if="previewPage === 1">
+                  <div class="text-center mb-5">
+                    <p class="text-[9px] text-gray-400 uppercase tracking-widest">Dokumen Kependudukan — Salinan Digital Terverifikasi</p>
+                  </div>
+                  <div class="mx-auto max-w-[370px] rounded-xl overflow-hidden border-2 border-gray-300 shadow-xl mb-6">
+                    <div class="bg-gradient-to-r from-blue-800 to-blue-900 px-4 py-2.5 flex items-center justify-between">
+                      <div>
+                        <p class="text-[8px] text-blue-200 tracking-widest uppercase font-semibold">Republik Indonesia</p>
+                        <p class="text-[11px] text-white font-black tracking-wider">KARTU TANDA PENDUDUK</p>
+                      </div>
+                      <div class="flex gap-1.5">
+                        <div class="w-5 h-5 rounded-full bg-red-500 opacity-80" />
+                        <div class="w-5 h-5 rounded-full bg-white opacity-80" />
+                      </div>
+                    </div>
+                    <div class="bg-white px-4 py-3 grid grid-cols-[64px_1fr] gap-3 text-[9px]">
+                      <div class="w-16 h-20 bg-gray-200 border border-gray-300 flex items-center justify-center rounded">
+                        <FeatherIcon name="user" class="h-7 w-7 text-gray-400" />
+                      </div>
+                      <div class="space-y-0.5">
+                        <div><span class="text-gray-400">NIK</span><span class="ml-2 font-black text-gray-800">3171 0203 1503 8500 1</span></div>
+                        <div><span class="text-gray-400">Nama</span><span class="ml-2 font-semibold text-gray-800">BUDI SANTOSO</span></div>
+                        <div><span class="text-gray-400">TTL</span><span class="ml-2 text-gray-700">Jakarta, 15-03-1985</span></div>
+                        <div><span class="text-gray-400">Kelamin</span><span class="ml-2 text-gray-700">Laki-laki</span></div>
+                        <div><span class="text-gray-400">Alamat</span><span class="ml-2 text-gray-700">Jl. Sudirman No. 12, RT.003/RW.005</span></div>
+                        <div><span class="text-gray-400">Agama</span><span class="ml-2 text-gray-700">Islam · Kawin</span></div>
+                      </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-1.5 border-t border-gray-200 flex justify-between text-[8px] text-gray-400">
+                      <span>Kel. Senayan, Kec. Kebayoran Baru, Jak-Sel</span>
+                      <span>Berlaku seumur hidup</span>
+                    </div>
+                  </div>
+                  <div class="flex gap-3 justify-center">
+                    <div class="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1">
+                      <FeatherIcon name="check-circle" class="h-3 w-3 text-green-600" />
+                      <span class="text-[10px] font-semibold text-green-700">OCR Verified · 98%</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-teal-50 border border-teal-200 rounded-full px-3 py-1">
+                      <FeatherIcon name="cpu" class="h-3 w-3 text-teal-600" />
+                      <span class="text-[10px] font-semibold text-teal-700">AI: KTP / ID Card</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-purple-50 border border-purple-200 rounded-full px-3 py-1">
+                      <FeatherIcon name="shield" class="h-3 w-3 text-purple-600" />
+                      <span class="text-[10px] font-semibold text-purple-700">Dukcapil: Valid</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="previewPage === 2">
+                  <div class="text-[10px] text-gray-500 font-semibold mb-4 pb-3 border-b border-gray-200">Hasil Verifikasi KYC — {{ selectedDoc?.customer }}</div>
+                  <div class="space-y-3 text-[11px]">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
+                      <p class="font-semibold text-green-800 mb-1">Verifikasi Dukcapil</p>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>NIK valid — terdaftar Dukcapil DKI Jakarta</span></div>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>Status kependudukan: Aktif</span></div>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>Tidak terdaftar dalam daftar kematian</span></div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5">
+                      <p class="font-semibold text-green-800 mb-1">AML / PEP Screening</p>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>OFAC: Clear</span></div>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>UN Sanctions: Clear</span></div>
+                      <div class="flex items-center gap-2 text-green-700"><FeatherIcon name="check-circle" class="h-3.5 w-3.5" /><span>Local Watchlist: Clear</span></div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- ── DEFAULT (KYC / Collateral / etc.) ── -->
+              <template v-else>
+                <div v-if="previewPage === 1">
+                  <div class="flex items-start justify-between mb-6 pb-4 border-b border-gray-200">
+                    <div>
+                      <p class="text-sm font-black text-gray-800 truncate max-w-[300px]">{{ selectedDoc?.name }}</p>
+                      <p class="text-[9px] text-gray-500 mt-0.5">{{ selectedDoc?.customer }} · {{ selectedDoc?.doc_type }}</p>
+                    </div>
+                    <span class="text-[9px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded font-semibold shrink-0">v{{ selectedDoc?.version }}</span>
+                  </div>
+                  <div class="space-y-2 mb-6">
+                    <div v-for="i in 5" :key="i" class="h-2.5 rounded bg-gray-100" :style="{ width: [80, 100, 75, 95, 65][i-1] + '%' }" />
+                  </div>
+                  <div class="border border-gray-200 rounded-lg overflow-hidden mb-5">
+                    <div class="bg-gray-50 px-3 py-2 border-b border-gray-200 flex gap-6">
+                      <div class="h-2.5 bg-gray-300 rounded w-24" />
+                      <div class="h-2.5 bg-gray-300 rounded w-20" />
+                      <div class="h-2.5 bg-gray-300 rounded w-16" />
+                    </div>
+                    <div v-for="j in 5" :key="j" class="px-3 py-2 flex gap-6 border-b border-gray-100 last:border-0" :class="j % 2 === 0 ? 'bg-gray-50' : 'bg-white'">
+                      <div class="h-2 bg-gray-200 rounded w-24" />
+                      <div class="h-2 bg-gray-100 rounded w-20" />
+                      <div class="h-2 bg-gray-100 rounded w-16" />
+                    </div>
+                  </div>
+                  <div class="space-y-1.5">
+                    <div v-for="k in 6" :key="k" class="h-2.5 rounded bg-gray-100" :style="{ width: (50 + (k * 9 % 45)) + '%' }" />
+                  </div>
+                </div>
+                <div v-if="previewPage === 2">
+                  <div class="text-[10px] text-gray-500 font-semibold mb-4 pb-3 border-b border-gray-200">{{ selectedDoc?.name }} — Lanjutan</div>
+                  <div class="space-y-2">
+                    <div v-for="i in 20" :key="i" class="h-2.5 rounded bg-gray-100" :style="{ width: (40 + (i * 13 % 55)) + '%' }" />
+                  </div>
+                </div>
+              </template>
+
+            </div>
           </div>
-          <p class="text-[10px] text-gray-400 mt-4">
-            Inline preview — watermark applied on download
-          </p>
         </div>
       </div>
     </div>
@@ -1280,6 +1638,13 @@ const panelTab = ref("info");
 const showUpload = ref(false);
 const showShareModal = ref(false);
 const showPreviewModal = ref(false);
+const previewPage = ref(1);
+const previewTotalPages = computed(() => {
+  const t = selectedDoc.value?.doc_type;
+  if (t === 'Agreement') return 3;
+  if (t === 'Financial') return 4;
+  return 2;
+});
 const shareLink = ref("");
 const copied = ref(false);
 const toast = ref("");
@@ -1921,6 +2286,7 @@ function clearSelection() {
 
 function previewDoc(doc) {
   selectedDoc.value = doc;
+  previewPage.value = 1;
   showPreviewModal.value = true;
 }
 
