@@ -41,25 +41,66 @@
 
     <div class="flex min-h-0 flex-1 bg-white relative">
       <WorkflowNodePalette />
-      
+
       <div class="flex-1 relative">
-        <WorkflowCanvas />
+        <WorkflowCanvas
+          v-model:nodes="workflowNodes"
+          v-model:edges="workflowEdges"
+          @changed="workflowChanged = true"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import LucideGitBranch from '~icons/lucide/git-branch'
 import LucideSave from '~icons/lucide/save'
 import LucideRocket from '~icons/lucide/rocket'
-import { Button, usePageMeta } from 'frappe-ui'
+import { Button, toast, usePageMeta } from 'frappe-ui'
 import WorkflowNodePalette from '../components/WorkflowEngine/WorkflowNodePalette.vue'
 import WorkflowCanvas from '../components/WorkflowEngine/WorkflowCanvas.vue'
 
+const workflowNodes = ref([])
+const workflowEdges = ref([])
+const workflowChanged = ref(false)
+
 function saveWorkflow() {
-  console.log('Save workflow')
+  const payload = {
+    nodes: workflowNodes.value.map(serializeNode),
+    edges: workflowEdges.value.map(serializeEdge),
+  }
+
+  console.log('Workflow payload', payload)
+  workflowChanged.value = false
+  toast.success(__('Workflow draft payload is ready in the console'))
+}
+
+function serializeNode(node) {
+  const data = { ...(node.data || {}) }
+  delete data.icon
+
+  return {
+    id: node.id,
+    type: node.data?.type || node.type,
+    subType: node.data?.subType,
+    label: node.data?.label,
+    position: node.position,
+    data,
+  }
+}
+
+function serializeEdge(edge) {
+  return {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    sourceHandle: edge.sourceHandle,
+    targetHandle: edge.targetHandle,
+    label: edge.data?.label || '',
+  }
 }
 
 usePageMeta(() => ({ title: __('Workflow Engine') }))
