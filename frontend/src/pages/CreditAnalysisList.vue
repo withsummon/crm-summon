@@ -30,7 +30,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
         <SummaryCard :label="__('Applications')" :value="String(rows.length)" icon="file-text" />
         <SummaryCard :label="__('Requested')" :value="formatCurrency(totalRequested)" icon="dollar-sign" />
-        <SummaryCard :label="__('In Progress')" :value="String(statusCount('In Progress'))" icon="clock" />
+        <SummaryCard :label="__('In Analysis')" :value="String(statusCount(['Credit Analysis', 'In Progress']))" icon="clock" />
         <SummaryCard :label="__('With PT Tbk')" :value="String(withTicker)" icon="briefcase" />
       </div>
 
@@ -120,7 +120,7 @@
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FieldGroup :label="__('Existing Customer ID')" hint="Optional — link to an existing Customer record">
-                <input v-model="newApp.borrower" class="form-input" :placeholder="__('e.g. CUST-00001')" />
+                <Link v-model="newApp.borrower" doctype="Customer" :placeholder="__('Search customer')" />
               </FieldGroup>
               <FieldGroup :label="__('Borrower Name')" required>
                 <input v-model="newApp.borrower_name" class="form-input" :placeholder="__('Full legal name')" />
@@ -222,8 +222,10 @@
               <FieldGroup :label="__('Application Status')">
                 <select v-model="newApp.status" class="form-input">
                   <option value="Draft">Draft</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Pending Review">Pending Review</option>
+                  <option value="Application Received">Application Received</option>
+                  <option value="Document Review">Document Review</option>
+                  <option value="Credit Analysis">Credit Analysis</option>
+                  <option value="Committee Approval">Committee Approval</option>
                 </select>
               </FieldGroup>
               <FieldGroup :label="__('Risk Grade (if known)')">
@@ -410,6 +412,7 @@
 import { Badge, Button, Dialog, FeatherIcon, FileUploader, call, createResource, toast, usePageMeta } from 'frappe-ui'
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import Link from '@/components/Controls/Link.vue'
 
 const router = useRouter()
 const query = ref('')
@@ -551,13 +554,13 @@ async function createApplication() {
     // If a spread file was uploaded, import it immediately
     if (newApp.spread_file_url) {
       try {
-        await call('crm.api.credit_analysis.import_statement_file', {
+        const importResult = await call('crm.api.credit_analysis.import_statement_file', {
           application_id: row.name,
           file_url: newApp.spread_file_url,
         })
+        toast.success(__('Financial spread imported: {0} rows', [importResult.row_count || 0]))
       } catch (importError) {
-        // File import failed but the application was created — still navigate
-        console.warn('Spread import failed:', importError)
+        toast.error(importError?.messages?.[0] || importError.message || __('Credit application was created, but the spread file import failed'))
       }
     }
 
@@ -572,7 +575,8 @@ async function createApplication() {
 }
 
 function statusCount(status) {
-  return rows.value.filter((row) => row.status === status).length
+  const statuses = Array.isArray(status) ? status : [status]
+  return rows.value.filter((row) => statuses.includes(row.status)).length
 }
 
 function statusTheme(status) {

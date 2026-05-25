@@ -224,6 +224,25 @@
                 <Button class="mt-2 w-full" size="sm" variant="solid" :label="__('Run Sandbox')" :loading="isSandboxing" @click="runSandbox" />
                 <p v-if="sandboxResult" class="mt-2 text-xs leading-5 text-slate-600">{{ sandboxResult }}</p>
               </PanelBlock>
+              <PanelBlock title="RAG">
+                <div class="space-y-2 text-xs text-slate-600">
+                  <div class="flex justify-between gap-3">
+                    <span>{{ __('Status') }}</span>
+                    <span class="font-semibold text-slate-800">{{ ragStatus.status || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <span>{{ __('Fallback chunks') }}</span>
+                    <span class="font-mono text-slate-800">{{ ragStatus.chunk_count || 0 }}</span>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <span>{{ __('RAGAnything') }}</span>
+                    <span class="font-semibold" :class="ragStatus.native_raganything_ready ? 'text-teal-700' : 'text-orange-700'">
+                      {{ ragStatus.native_raganything_ready ? __('Ready') : __('Parser missing') }}
+                    </span>
+                  </div>
+                  <p v-if="ragStatus.message" class="leading-5 text-orange-700">{{ ragStatus.message }}</p>
+                </div>
+              </PanelBlock>
             </div>
 
             <div v-else class="space-y-3">
@@ -265,6 +284,7 @@ const activeSideTab = ref('Context')
 const sideTabs = ['Context', 'Admin', 'Audit']
 const costDashboard = ref({ total_cost: 0, rows: [] })
 const auditLog = ref([])
+const ragStatus = ref({})
 const sandboxPrompt = ref('Summarize portfolio risk signals from the indexed CRM data.')
 const sandboxResult = ref('')
 const chatContainer = ref(null)
@@ -334,8 +354,85 @@ async function loadAdminData() {
   try {
     costDashboard.value = await call('crm.api.ai_agent_center.get_cost_dashboard')
     auditLog.value = await call('crm.api.ai_agent_center.get_audit_log')
+    ragStatus.value = await call('crm.api.ai_agent_center.get_rag_status')
   } catch (error) {
     console.error('Could not load AI admin data', error)
+  }
+}
+
+function parseSSEBlock(block) {
+  const event = { type: 'message', data: '' }
+  for (const line of block.split('\n')) {
+    if (line.startsWith('event:')) event.type = line.slice(6).trim()
+    if (line.startsWith('data:')) event.data += line.slice(5).trim()
+  }
+  if (!event.data) return null
+  try {
+    event.payload = JSON.parse(event.data)
+  } catch {
+    event.payload = { message: event.data }
+  }
+  return event
+}
+
+async function streamAgentResponse({ agent, content, loadingId }) {
+  const response = await fetch('/api/method/crm.api.ai_agent_center.query_agent_stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': window.csrf_token || '',
+    },
+    body: JSON.stringify({
+      agent_key: agent.key,
+      message: content,
+      session_id: sessionId.value,
+      attachments: attachments.value.map((file) => ({ name: file.name, size: file.size, type: file.type })),
+    }),
+  })
+  if (!response.ok || !response.body) {
+    throw new Error(await response.text())
+  }
+
+  const target = messages.value.find((message) => message.id === loadingId)
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const blocks = buffer.split('\n\n')
+    buffer = blocks.pop() || ''
+    for (const block of blocks) {
+      const event = parseSSEBlock(block)
+      if (!event || !target) continue
+      const payload = event.payload || {}
+      if (event.type === 'meta') {
+        sessionId.value = payload.session_id || sessionId.value
+      } else if (event.type === 'sources') {
+        target.sources = payload.sources || []
+        selectedSources.value = payload.sources || []
+      } else if (event.type === 'delta') {
+        target.loading = false
+        target.content = `${target.content || ''}${payload.delta || ''}`
+        scrollToBottom()
+      } else if (event.type === 'actions') {
+        target.actions = payload.actions || []
+      } else if (event.type === 'done') {
+        target.loading = false
+        target.content = payload.response || target.content
+        target.sources = payload.sources || target.sources || []
+        target.actions = payload.actions || target.actions || []
+        target.model = payload.model
+        target.tokens = payload.tokens
+        target.messageId = payload.message_id
+        sessionId.value = payload.session_id || sessionId.value
+        selectedSources.value = target.sources || []
+      } else if (event.type === 'error') {
+        target.loading = false
+        target.content = payload.message || 'AI Agent Center request failed.'
+      }
+    }
   }
 }
 
@@ -350,24 +447,7 @@ async function sendMessage(text) {
   isLoading.value = true
   scrollToBottom()
   try {
-    const response = await call('crm.api.ai_agent_center.query_agent', {
-      agent_key: agent.key,
-      message: content,
-      session_id: sessionId.value,
-      attachments: attachments.value.map((file) => ({ name: file.name, size: file.size, type: file.type })),
-    })
-    sessionId.value = response.session_id
-    const target = messages.value.find((message) => message.id === loadingId)
-    Object.assign(target, {
-      content: response.response,
-      loading: false,
-      sources: response.sources || [],
-      actions: response.actions || [],
-      model: response.model,
-      tokens: response.tokens,
-      messageId: response.message_id,
-    })
-    selectedSources.value = response.sources || []
+    await streamAgentResponse({ agent, content, loadingId })
     attachments.value = []
     await loadAdminData()
   } catch (error) {

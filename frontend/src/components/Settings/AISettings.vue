@@ -75,18 +75,18 @@
           />
         </div>
 
-        <!-- API Base URL (for Custom provider) -->
-        <div v-if="localProvider === 'Custom'" class="flex flex-col gap-2">
+        <!-- API Base URL -->
+        <div v-if="localProvider === 'Kimi' || localProvider === 'Custom'" class="flex flex-col gap-2">
           <div class="text-p-base font-medium text-ink-gray-7">
             {{ __('API Base URL') }}
           </div>
           <div class="text-p-sm text-ink-gray-5 mb-2">
-            {{ __('Base URL for your OpenAI-compatible endpoint (e.g. https://api.openrouter.ai/v1).') }}
+            {{ localProvider === 'Kimi' ? __('Moonshot/Kimi OpenAI-compatible API endpoint.') : __('Base URL for your OpenAI-compatible endpoint (e.g. https://api.openrouter.ai/v1).') }}
           </div>
           <input
             v-model="localApiBase"
             type="text"
-            placeholder="https://api.openrouter.ai/v1"
+            :placeholder="localProvider === 'Kimi' ? 'https://api.moonshot.ai/v1' : 'https://api.openrouter.ai/v1'"
             class="w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none"
           />
         </div>
@@ -118,10 +118,10 @@ const saving = ref(false)
 
 const PROVIDER_MODELS = {
   Kimi: [
+    { value: 'kimi-k2.6', label: 'Kimi K2.6 (Moonshot latest)' },
     { value: 'moonshot-v1-8k', label: 'Kimi moonshot-v1-8k' },
     { value: 'moonshot-v1-32k', label: 'Kimi moonshot-v1-32k' },
     { value: 'moonshot-v1-128k', label: 'Kimi moonshot-v1-128k' },
-    { value: 'kimi-k2', label: 'Kimi K2 (Latest)' },
   ],
   OpenAI: [
     { value: 'gpt-4o', label: 'GPT-4o' },
@@ -146,14 +146,37 @@ const localProvider = ref(settings.doc?.ai_provider || 'Kimi')
 const localModel = ref(settings.doc?.kimi_model || '')
 const localCustomModel = ref('')
 const localApiKey = ref('')
-const localApiBase = ref(settings.doc?.kimi_base_url || '')
+const localApiBase = ref(settings.doc?.kimi_base_url || 'https://api.moonshot.ai/v1')
+
+function normalizeKimiModel(model) {
+  const value = String(model || '').trim()
+  if (value === 'kimi-k2' || value === 'kimi-k2-latest') return 'kimi-k2.6'
+  return value
+}
+
+function applyModel(provider, model) {
+  const models = PROVIDER_MODELS[provider] || []
+  const normalized = provider === 'Kimi' ? normalizeKimiModel(model) : String(model || '').trim()
+  if (!normalized) {
+    localModel.value = models[0]?.value || ''
+    localCustomModel.value = ''
+    return
+  }
+  if (models.some((row) => row.value === normalized)) {
+    localModel.value = normalized
+    localCustomModel.value = ''
+    return
+  }
+  localModel.value = '__custom__'
+  localCustomModel.value = normalized
+}
 
 // watch for settings doc to be loaded
 watch(() => settings.doc, (doc) => {
   if (doc) {
     localProvider.value = doc.ai_provider || 'Kimi'
-    localModel.value = doc.kimi_model || (PROVIDER_MODELS[doc.ai_provider || 'Kimi']?.[0]?.value || '')
-    localApiBase.value = doc.kimi_base_url || ''
+    applyModel(localProvider.value, doc.kimi_model)
+    localApiBase.value = doc.kimi_base_url || (localProvider.value === 'Kimi' ? 'https://api.moonshot.ai/v1' : '')
   }
 }, { immediate: true })
 
@@ -178,6 +201,10 @@ watch(localProvider, (newProvider) => {
   // Reset model to first available when provider changes
   const models = PROVIDER_MODELS[newProvider] || []
   localModel.value = models[0]?.value || ''
+  localCustomModel.value = ''
+  if (newProvider === 'Kimi' && !localApiBase.value) {
+    localApiBase.value = 'https://api.moonshot.ai/v1'
+  }
 })
 
 async function save() {

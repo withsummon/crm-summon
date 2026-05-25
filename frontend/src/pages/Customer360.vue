@@ -200,11 +200,14 @@
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
               <Panel :title="__('Activities')" icon="calendar">
                 <div class="flex flex-wrap gap-2 mb-4">
-                  <Button size="sm" variant="solid" :label="__('Task')" @click="openForm('task')" />
-                  <Button size="sm" variant="outline" :label="__('Note')" @click="openForm('note')" />
-                  <Button size="sm" variant="outline" :label="__('Event')" @click="openForm('event')" />
+                  <Button size="sm" :variant="activityFilter === 'task' ? 'solid' : 'outline'" :label="__('Task')" @click="activityFilter = activityFilter === 'task' ? 'all' : 'task'" />
+                  <Button size="sm" :variant="activityFilter === 'note' ? 'solid' : 'outline'" :label="__('Note')" @click="activityFilter = activityFilter === 'note' ? 'all' : 'note'" />
+                  <Button size="sm" :variant="activityFilter === 'event' ? 'solid' : 'outline'" :label="__('Event')" @click="activityFilter = activityFilter === 'event' ? 'all' : 'event'" />
+                  <Button size="sm" variant="outline" :label="__('+')" @click="openForm('task')" />
+                  <Button size="sm" variant="outline" :label="__('+ Note')" @click="openForm('note')" />
+                  <Button size="sm" variant="outline" :label="__('+ Event')" @click="openForm('event')" />
                 </div>
-                <ActivityList :tasks="tasks" :notes="notes" :events="events" @toggle-task="toggleTask" />
+                <ActivityList :tasks="tasks" :notes="notes" :events="events" :filter="activityFilter" @toggle-task="toggleTask" />
               </Panel>
 
               <Panel :title="__('Relationship Graph')" icon="share-2">
@@ -230,7 +233,7 @@
           <div v-else-if="activeTab === 'profile'" class="space-y-6">
             <Panel :title="__('Personal / Company Data')" icon="user-check">
               <template #actions>
-                <Button size="sm" variant="solid" :label="__('Edit Profile')" @click="showProfileEdit = true" />
+                <Button size="sm" variant="solid" :label="__('Edit Profile')" @click="openForm('kyc', kyc || {})" />
               </template>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FieldDisplay label="Name" :value="selectedCustomer.customer_name" />
@@ -260,10 +263,10 @@
           </div>
 
           <div v-else-if="activeTab === 'ownership'" class="space-y-6">
+            <div class="flex justify-end">
+              <Button size="sm" variant="solid" :label="__('Add Relationship')" @click="openForm('relationship')" />
+            </div>
             <Panel :title="__('Shareholders')" icon="pie-chart">
-              <template #actions>
-                <Button size="sm" variant="solid" :label="__('Add Shareholder')" @click="openForm('relationship', { relationship_type: 'Shareholder' })" />
-              </template>
               <div class="mb-4 flex flex-wrap items-center gap-3">
                 <Badge :label="`${summary.shareholder_total || 0}% ownership captured`" :theme="summary.shareholder_balanced ? 'green' : 'orange'" />
                 <span class="text-xs text-slate-500">{{ __('UAT requires total shareholders to equal 100%.') }}</span>
@@ -273,16 +276,10 @@
             </Panel>
 
             <Panel :title="__('Directors')" icon="briefcase">
-              <template #actions>
-                <Button size="sm" variant="solid" :label="__('Add Director')" @click="openForm('relationship', { relationship_type: 'Director' })" />
-              </template>
               <SimpleTable :headers="['Name', 'Role', 'ID', 'LinkedIn', 'Tenure', 'AML/PEP', 'Background']" :rows="directors" :columns="['related_party', 'position', 'director_id', 'linkedin_url', 'tenure_start', 'aml_pep_status', 'background_check_status']" :edit="(row) => openForm('relationship', row)" :action="runAmlCheck" action-label="AML/PEP" />
             </Panel>
 
             <Panel :title="__('Related Entities')" icon="git-branch">
-              <template #actions>
-                <Button size="sm" variant="solid" :label="__('Add Related Entity')" @click="openForm('relationship', { relationship_type: 'Group Company' })" />
-              </template>
               <SimpleTable :headers="['Entity', 'Type', 'Group Exposure', 'Linked Customer']" :rows="relatedEntities" :columns="['related_party', 'relationship_type', 'exposure', 'related_customer']" currency-column="exposure" :edit="(row) => openForm('relationship', row)" :action="openRelatedCustomer" action-label="Open" />
             </Panel>
           </div>
@@ -467,10 +464,10 @@
     <Dialog v-model="showProfileEdit" :options="{ title: __('Edit Basic Profile') }">
       <template #body-content>
         <div class="space-y-4 pt-3">
-          <FormInput v-model="profileForm.customer_name" label="Customer Name" />
+          <FormInput v-model="profileForm.customer_name" label="Customer Name" :error="profileErrors.customer_name" />
           <FormSelect v-model="profileForm.customer_type" label="Customer Type" :options="['Company', 'Individual']" />
-          <FormInput v-model="profileForm.tax_id" label="Tax ID / NPWP" />
-          <FormInput v-model="profileForm.website" label="Website" />
+          <FormInput v-model="profileForm.tax_id" label="Tax ID / NPWP" :error="profileErrors.tax_id" />
+          <FormInput v-model="profileForm.website" label="Website" :error="profileErrors.website" />
         </div>
       </template>
       <template #actions>
@@ -502,10 +499,12 @@
       <template #body-content>
         <div :class="dynamicForm.fields.length > 5 ? 'grid grid-cols-1 md:grid-cols-2 gap-4 pt-3' : 'space-y-4 pt-3'">
           <template v-for="field in dynamicForm.fields" :key="field.fieldname">
-            <FormSelect v-if="field.type === 'select'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :options="field.options" />
-            <FormTextarea v-else-if="field.type === 'textarea'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :class="dynamicForm.fields.length > 5 ? 'md:col-span-2' : ''" />
+            <input v-if="field.type === 'hidden'" v-model="dynamicForm.doc[field.fieldname]" type="hidden" />
+            <FormSelect v-else-if="field.type === 'select'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :options="field.options" :error="dynamicFormErrors[field.fieldname]" />
+            <Link v-else-if="field.type === 'link'" v-model="dynamicForm.doc[field.fieldname]" :doctype="field.options" :filters="field.filters || []" :label="field.label" :placeholder="field.placeholder || __('Search {0}', [field.label])" />
+            <FormTextarea v-else-if="field.type === 'textarea'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :class="dynamicForm.fields.length > 5 ? 'md:col-span-2' : ''" :error="dynamicFormErrors[field.fieldname]" />
             <FormCheckbox v-else-if="field.type === 'checkbox'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" />
-            <FormInput v-else v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :type="field.type || 'text'" />
+            <FormInput v-else v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :type="field.type || 'text'" :error="dynamicFormErrors[field.fieldname]" />
           </template>
         </div>
       </template>
@@ -525,6 +524,7 @@ import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DOMPurify from 'dompurify'
 import ChatPanel from '@/components/ChatPanel.vue'
+import Link from '@/components/Controls/Link.vue'
 import html2pdf from 'html2pdf.js'
 
 const route = useRoute()
@@ -543,6 +543,7 @@ const summarySources = ref([])
 const isGeneratingSummary = ref(false)
 const globalResults = ref([])
 const recentSearches = ref(JSON.parse(localStorage.getItem('customer360RecentSearches') || '[]'))
+const activityFilter = ref('all')
 const graphFilter = ref('All')
 const graphZoom = ref(1)
 const timelineFilter = ref('All')
@@ -561,6 +562,198 @@ const profileForm = reactive({ customer_name: '', customer_type: 'Company', tax_
 const exportForm = reactive({ scope: 'Full Profile', watermark: 'BNI CRM Confidential', password: '', format: 'PDF Report' })
 const mergeForm = reactive({ target: '', field_map_json: '{}' })
 const dynamicForm = reactive({ key: '', title: '', doctype: '', doc: {}, fields: [], options: {} })
+
+// Validation State for basic profile edit and dynamic forms (KYC)
+const profileErrors = reactive({ customer_name: '', tax_id: '', website: '' })
+const dynamicFormErrors = reactive({})
+
+function formatNPWP(value) {
+  if (!value) return ''
+  const digits = value.replace(/\D/g, '')
+  if (digits.length <= 15) {
+    let formatted = ''
+    for (let i = 0; i < digits.length; i++) {
+      if (i === 2 || i === 5 || i === 8) formatted += '.'
+      else if (i === 9) formatted += '-'
+      else if (i === 12) formatted += '.'
+      formatted += digits[i]
+    }
+    return formatted
+  } else {
+    return digits.slice(0, 16)
+  }
+}
+
+function isValidWebsite(url) {
+  if (!url) return true
+  const pattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/i
+  return pattern.test(url)
+}
+
+function validateProfile() {
+  let isValid = true
+  profileErrors.customer_name = ''
+  profileErrors.tax_id = ''
+  profileErrors.website = ''
+  
+  if (!profileForm.customer_name || !profileForm.customer_name.trim()) {
+    profileErrors.customer_name = __('Customer Name is required')
+    isValid = false
+  }
+  
+  if (profileForm.tax_id) {
+    const digits = profileForm.tax_id.replace(/\D/g, '')
+    if (digits.length !== 15 && digits.length !== 16) {
+      profileErrors.tax_id = __('NPWP must be exactly 15 or 16 digits')
+      isValid = false
+    }
+  }
+  
+  if (profileForm.website) {
+    if (!isValidWebsite(profileForm.website)) {
+      profileErrors.website = __('Please enter a valid website URL')
+      isValid = false
+    }
+  }
+  
+  return isValid
+}
+
+function validateKYC() {
+  let isValid = true
+  // Reset all existing KYC errors
+  for (const fieldname in dynamicFormErrors) {
+    dynamicFormErrors[fieldname] = ''
+  }
+  
+  const doc = dynamicForm.doc
+  
+  if (doc.npwp) {
+    const digits = doc.npwp.replace(/\D/g, '')
+    if (digits.length !== 15 && digits.length !== 16) {
+      dynamicFormErrors.npwp = __('NPWP must be exactly 15 or 16 digits')
+      isValid = false
+    }
+  }
+  
+  if (doc.nik) {
+    const digits = doc.nik.replace(/\D/g, '')
+    if (digits.length !== 16) {
+      dynamicFormErrors.nik = __('NIK / KTP must be exactly 16 digits')
+      isValid = false
+    }
+  }
+  
+  if (doc.employee_count !== undefined && doc.employee_count !== null && doc.employee_count !== '') {
+    const count = Number(doc.employee_count)
+    if (isNaN(count) || count < 0) {
+      dynamicFormErrors.employee_count = __('Employee count cannot be negative')
+      isValid = false
+    }
+  }
+  
+  if (doc.date_of_birth) {
+    const dob = new Date(doc.date_of_birth)
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (dob > today) {
+      dynamicFormErrors.date_of_birth = __('Date of Birth cannot be in the future')
+      isValid = false
+    }
+  }
+  
+  if (doc.founded_date) {
+    const fd = new Date(doc.founded_date)
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (fd > today) {
+      dynamicFormErrors.founded_date = __('Company Founded Date cannot be in the future')
+      isValid = false
+    }
+  }
+  
+  if (!doc.registered_address || !doc.registered_address.trim()) {
+    dynamicFormErrors.registered_address = __('Registered Address is required')
+    isValid = false
+  }
+
+  if (doc.watchlist && (!doc.watchlist_reason || !doc.watchlist_reason.trim())) {
+    dynamicFormErrors.watchlist_reason = __('Watchlist Reason is required when watchlist is enabled')
+    isValid = false
+  }
+  
+  return isValid
+}
+
+// Watchers for Profile Edit validation
+watch(() => profileForm.tax_id, (newVal) => {
+  const formatted = formatNPWP(newVal)
+  if (formatted !== newVal) {
+    profileForm.tax_id = formatted
+  }
+  if (profileErrors.tax_id) validateProfile()
+})
+
+watch(() => profileForm.customer_name, () => {
+  if (profileErrors.customer_name) validateProfile()
+})
+
+watch(() => profileForm.website, () => {
+  if (profileErrors.website) validateProfile()
+})
+
+watch(showProfileEdit, (newVal) => {
+  if (!newVal) {
+    profileErrors.customer_name = ''
+    profileErrors.tax_id = ''
+    profileErrors.website = ''
+  }
+})
+
+// Watchers for dynamic KYC form real-time formatting & validation
+watch(() => dynamicForm.doc.npwp, (newVal) => {
+  if (dynamicForm.key === 'kyc' && newVal) {
+    const formatted = formatNPWP(newVal)
+    if (formatted !== newVal) {
+      dynamicForm.doc.npwp = formatted
+    }
+    if (dynamicFormErrors.npwp) validateKYC()
+  }
+})
+
+watch(() => dynamicForm.doc.nik, (newVal) => {
+  if (dynamicForm.key === 'kyc' && newVal) {
+    const clean = newVal.replace(/\D/g, '').slice(0, 16)
+    if (clean !== newVal) {
+      dynamicForm.doc.nik = clean
+    }
+    if (dynamicFormErrors.nik) validateKYC()
+  }
+})
+
+watch(() => dynamicForm.doc.employee_count, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.employee_count) validateKYC()
+})
+
+watch(() => dynamicForm.doc.date_of_birth, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.date_of_birth) validateKYC()
+})
+
+watch(() => dynamicForm.doc.founded_date, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.founded_date) validateKYC()
+})
+
+watch(() => dynamicForm.doc.registered_address, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.registered_address) validateKYC()
+})
+
+watch(() => dynamicForm.doc.watchlist, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.watchlist_reason) validateKYC()
+})
+
+watch(() => dynamicForm.doc.watchlist_reason, () => {
+  if (dynamicForm.key === 'kyc' && dynamicFormErrors.watchlist_reason) validateKYC()
+})
 
 const tabs = [
   { key: 'overview', label: 'Overview' },
@@ -676,7 +869,16 @@ const formConfigs = computed(() => ({
     title: __('New Credit Application'),
     doctype: 'CRM Credit Application',
     defaults: { borrower: selectedCustomerName.value, borrower_type: selectedCustomer.value?.customer_type || 'Company', status: 'Draft' },
-    fields: [field('facility_type', 'Facility Type'), field('requested_amount', 'Requested Amount', 'number'), field('employer_name', 'Employer / Affiliation'), field('public_company_ticker', 'PT Tbk Ticker'), field('purpose', 'Purpose', 'textarea')],
+    fields: [
+      field('borrower', 'Borrower', 'hidden'),
+      field('borrower_type', 'Borrower Type', 'select', ['Individual', 'Company']),
+      field('status', 'Status', 'select', ['Draft', 'Application Received', 'Document Review', 'Credit Analysis', 'Collateral Appraisal', 'Committee Approval', 'Legal Documentation', 'Disbursement', 'Active', 'Rejected', 'Closed']),
+      field('facility_type', 'Facility Type'),
+      field('requested_amount', 'Requested Amount', 'number'),
+      field('employer_name', 'Employer / Affiliation'),
+      field('public_company_ticker', 'PT Tbk Ticker'),
+      field('purpose', 'Purpose', 'textarea'),
+    ],
   },
   kyc: {
     title: __('KYC Review'),
@@ -705,7 +907,7 @@ const formConfigs = computed(() => ({
     defaults: { customer: selectedCustomerName.value, aml_pep_status: 'Manual', background_check_status: 'Manual' },
     fields: [
       field('related_party', 'Related Party'),
-      field('related_customer', 'Linked Customer Profile'),
+      field('related_customer', 'Linked Customer Profile', 'link', 'Customer'),
       field('relationship_type', 'Relationship Type', 'select', ['Shareholder', 'UBO', 'Director', 'Commissioner', 'Group Company', 'RM', 'Other']),
       field('ownership_percent', 'Ownership %', 'number'),
       field('position', 'Position / Role'),
@@ -745,7 +947,7 @@ const formConfigs = computed(() => ({
     title: __('Collateral'),
     doctype: 'CRM Collateral',
     defaults: { customer: selectedCustomerName.value, status: 'Active', reappraisal_status: 'Not Required' },
-    fields: [field('asset', 'Asset'), field('collateral_type', 'Type'), field('collateral_value', 'Value', 'number'), field('linked_facility', 'Linked Facility ID'), field('ltv_percent', 'LTV %', 'number'), field('expiry_date', 'Expiry Date', 'date'), field('insurance_expiry', 'Insurance Expiry', 'date'), field('document_link', 'Document Link'), field('reappraisal_status', 'Re-appraisal', 'select', ['Not Required', 'Due', 'In Progress', 'Completed']), field('status', 'Status', 'select', ['Active', 'Expired', 'Released', 'Under Review'])],
+    fields: [field('asset', 'Asset'), field('collateral_type', 'Type'), field('collateral_value', 'Value', 'number'), field('linked_facility', 'Linked Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('ltv_percent', 'LTV %', 'number'), field('expiry_date', 'Expiry Date', 'date'), field('insurance_expiry', 'Insurance Expiry', 'date'), field('document_link', 'Document Link'), field('reappraisal_status', 'Re-appraisal', 'select', ['Not Required', 'Due', 'In Progress', 'Completed']), field('status', 'Status', 'select', ['Active', 'Expired', 'Released', 'Under Review'])],
   },
   bureau: {
     title: __('Bureau Report'),
@@ -787,13 +989,13 @@ const formConfigs = computed(() => ({
     title: __('Transaction'),
     doctype: 'CRM Transaction History',
     defaults: { customer: selectedCustomerName.value, transaction_type: 'Repayment', status: 'Posted' },
-    fields: [field('facility', 'Facility ID'), field('transaction_date', 'Transaction Date', 'date'), field('transaction_type', 'Type', 'select', ['Repayment', 'Missed Payment', 'Disbursement', 'Fee', 'Adjustment']), field('amount', 'Amount', 'number'), field('running_balance', 'Running Balance', 'number'), field('status', 'Status', 'select', ['Posted', 'Pending', 'Failed']), field('notes', 'Notes', 'textarea')],
+    fields: [field('facility', 'Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('transaction_date', 'Transaction Date', 'date'), field('transaction_type', 'Type', 'select', ['Repayment', 'Missed Payment', 'Disbursement', 'Fee', 'Adjustment']), field('amount', 'Amount', 'number'), field('running_balance', 'Running Balance', 'number'), field('status', 'Status', 'select', ['Posted', 'Pending', 'Failed']), field('notes', 'Notes', 'textarea')],
   },
   task: {
     title: __('Customer Task'),
     doctype: 'CRM Task',
     defaults: { reference_doctype: 'Customer', reference_docname: selectedCustomerName.value, status: 'Todo', priority: 'Medium' },
-    fields: [field('title', 'Title'), field('assigned_to', 'Assigned To'), field('priority', 'Priority', 'select', ['Low', 'Medium', 'High']), field('status', 'Status', 'select', ['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled']), field('due_date', 'Due Date', 'datetime-local'), field('recurring', 'Recurring', 'checkbox'), field('recurrence_rule', 'Recurrence Rule'), field('description', 'Description', 'textarea')],
+    fields: [field('title', 'Title'), field('assigned_to', 'Assigned To', 'link', 'User'), field('priority', 'Priority', 'select', ['Low', 'Medium', 'High']), field('status', 'Status', 'select', ['Backlog', 'Todo', 'In Progress', 'Done', 'Canceled']), field('due_date', 'Due Date', 'datetime-local'), field('recurring', 'Recurring', 'checkbox'), field('recurrence_rule', 'Recurrence Rule'), field('description', 'Description', 'textarea')],
   },
   note: { title: __('Customer Note'), doctype: 'FCRM Note', defaults: { reference_doctype: 'Customer', reference_docname: selectedCustomerName.value }, fields: [field('title', 'Title'), field('content', 'Content', 'textarea')] },
   event: { title: __('Customer Event'), doctype: 'Event', defaults: { reference_doctype: 'Customer', reference_docname: selectedCustomerName.value, status: 'Open', event_type: 'Private' }, fields: [field('subject', 'Subject'), field('starts_on', 'Starts On', 'datetime-local'), field('ends_on', 'Ends On', 'datetime-local'), field('description', 'Description', 'textarea')] },
@@ -806,8 +1008,8 @@ const formConfigs = computed(() => ({
   tag: { title: __('Customer Tag'), doctype: 'CRM Customer Tag', defaults: { customer: selectedCustomerName.value, color: '#0f766e' }, fields: [field('tag', 'Tag'), field('color', 'Color', 'color'), field('bulk_batch_id', 'Bulk Batch ID'), field('notes', 'Notes', 'textarea')] },
 }))
 
-function field(fieldname, label, type = 'text', options = []) {
-  return { fieldname, label, type, options }
+function field(fieldname, label, type = 'text', options = [], filters = []) {
+  return { fieldname, label, type, options, filters }
 }
 
 function selectCustomer(cust) {
@@ -840,6 +1042,12 @@ function reloadCustomer360() {
 function openForm(key, existing = {}) {
   const config = formConfigs.value[key]
   if (!config) return
+  
+  // Clear any existing errors when opening form
+  for (const k in dynamicFormErrors) {
+    dynamicFormErrors[k] = ''
+  }
+  
   dynamicForm.key = key
   dynamicForm.title = config.title
   dynamicForm.doctype = config.doctype
@@ -853,6 +1061,12 @@ function openForm(key, existing = {}) {
 }
 
 function submitDynamicForm() {
+  if (dynamicForm.key === 'kyc') {
+    if (!validateKYC()) {
+      toast.error(__('Please correct the errors in the KYC form'))
+      return
+    }
+  }
   insertResource.submit({ doctype: dynamicForm.doctype, doc: normalizeDoc(dynamicForm.doc) })
 }
 
@@ -864,6 +1078,10 @@ async function toggleTask(task) {
 }
 
 async function saveProfile() {
+  if (!validateProfile()) {
+    toast.error(__('Please correct the errors in the profile form'))
+    return
+  }
   await call('crm.api.credit.update_customer_profile', {
     customer: selectedCustomerName.value,
     payload: normalizeDoc(profileForm),
@@ -1651,7 +1869,7 @@ function formatCurrency(value) {
 }
 
 function normalizeDoc(doc) {
-  return Object.fromEntries(Object.entries(doc).map(([key, value]) => [key, typeof value === 'string' && value.includes('T') ? value.replace('T', ' ') : value]))
+  return Object.fromEntries(Object.entries(doc).map(([key, value]) => [key, typeof value === 'string' ? value.replace(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/, '$1 $2') : value]))
 }
 
 watch(searchQuery, () => {
@@ -1760,18 +1978,31 @@ function formatCell(value, isCurrency) {
 }
 
 const ActivityList = {
-  props: ['tasks', 'notes', 'events'],
+  props: ['tasks', 'notes', 'events', 'filter'],
   emits: ['toggleTask'],
   setup(props, { emit }) {
-    return () => h('div', { class: 'space-y-3' }, [
-      ...props.tasks.slice(0, 4).map((task) => h('div', { class: 'flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3' }, [
-        h('input', { type: 'checkbox', checked: task.status === 'Done', class: 'mt-1 accent-teal-600', onChange: () => emit('toggleTask', task) }),
-        h('div', { class: 'min-w-0' }, [h('div', { class: 'text-sm font-semibold text-slate-800 truncate' }, task.title), h('div', { class: 'text-xs text-slate-500' }, `${task.priority || 'Medium'} - ${task.due_date || 'No due date'}`)]),
-      ])),
-      ...props.notes.slice(0, 2).map((note) => h('div', { class: 'rounded-lg border border-slate-100 p-3' }, [h('div', { class: 'text-sm font-semibold text-slate-800' }, note.title), h('div', { class: 'text-xs text-slate-500 truncate' }, note.content || '')])),
-      ...props.events.slice(0, 2).map((event) => h('div', { class: 'rounded-lg border border-slate-100 p-3' }, [h('div', { class: 'text-sm font-semibold text-slate-800' }, event.subject), h('div', { class: 'text-xs text-slate-500' }, event.starts_on || '')])),
-      !props.tasks.length && !props.notes.length && !props.events.length ? h('div', { class: 'text-sm text-slate-400' }, __('No activities yet')) : null,
-    ])
+    return () => {
+      const showTasks = props.filter === 'all' || props.filter === 'task'
+      const showNotes = props.filter === 'all' || props.filter === 'note'
+      const showEvents = props.filter === 'all' || props.filter === 'event'
+      const children = []
+      if (showTasks) {
+        children.push(...props.tasks.slice(0, 4).map((task) => h('div', { class: 'flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3' }, [
+          h('input', { type: 'checkbox', checked: task.status === 'Done', class: 'mt-1 accent-teal-600', onChange: () => emit('toggleTask', task) }),
+          h('div', { class: 'min-w-0' }, [h('div', { class: 'text-sm font-semibold text-slate-800 truncate' }, task.title), h('div', { class: 'text-xs text-slate-500' }, `${task.priority || 'Medium'} - ${task.due_date || 'No due date'}`)]),
+        ])))
+      }
+      if (showNotes) {
+        children.push(...props.notes.slice(0, 2).map((note) => h('div', { class: 'rounded-lg border border-slate-100 p-3' }, [h('div', { class: 'text-sm font-semibold text-slate-800' }, note.title), h('div', { class: 'text-xs text-slate-500 truncate' }, note.content || '')])))
+      }
+      if (showEvents) {
+        children.push(...props.events.slice(0, 2).map((event) => h('div', { class: 'rounded-lg border border-slate-100 p-3' }, [h('div', { class: 'text-sm font-semibold text-slate-800' }, event.subject), h('div', { class: 'text-xs text-slate-500' }, event.starts_on || '')])))
+      }
+      if (!children.length) {
+        children.push(h('div', { class: 'text-sm text-slate-400' }, __('No activities yet')))
+      }
+      return h('div', { class: 'space-y-3' }, children)
+    }
   },
 }
 
@@ -1833,7 +2064,7 @@ const ScoreTrend = {
 }
 
 const FormInput = {
-  props: ['label', 'type', 'modelValue'],
+  props: ['label', 'type', 'modelValue', 'error'],
   emits: ['update:modelValue'],
   setup(props, { attrs, emit }) {
     return () => h('label', { class: 'block' }, [
@@ -1842,15 +2073,21 @@ const FormInput = {
         ...attrs, 
         type: props.type || 'text', 
         value: props.modelValue, 
-        class: 'w-full px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all duration-200', 
+        class: [
+          'w-full px-3.5 py-2 border rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:ring-4 transition-all duration-200',
+          props.error 
+            ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
+            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+        ],
         onInput: (event) => emit('update:modelValue', event.target.value) 
       }),
+      props.error ? h('span', { class: 'block mt-1 text-xs text-red-500 font-semibold' }, props.error) : null
     ])
   },
 }
 
 const FormTextarea = {
-  props: ['label', 'modelValue'],
+  props: ['label', 'modelValue', 'error'],
   emits: ['update:modelValue'],
   setup(props, { attrs, emit }) {
     return () => h('label', { class: 'block' }, [
@@ -1859,15 +2096,21 @@ const FormTextarea = {
         ...attrs, 
         rows: 3, 
         value: props.modelValue, 
-        class: 'w-full px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all duration-200', 
+        class: [
+          'w-full px-3.5 py-2 border rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:ring-4 transition-all duration-200',
+          props.error 
+            ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
+            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+        ],
         onInput: (event) => emit('update:modelValue', event.target.value) 
       }),
+      props.error ? h('span', { class: 'block mt-1 text-xs text-red-500 font-semibold' }, props.error) : null
     ])
   },
 }
 
 const FormSelect = {
-  props: ['label', 'options', 'modelValue', 'compact'],
+  props: ['label', 'options', 'modelValue', 'compact', 'error'],
   emits: ['update:modelValue'],
   setup(props, { attrs, emit }) {
     return () => h('label', { class: props.compact ? 'block min-w-32' : 'block' }, [
@@ -1875,9 +2118,15 @@ const FormSelect = {
       h('select', { 
         ...attrs, 
         value: props.modelValue, 
-        class: 'w-full px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all duration-200 bg-white', 
+        class: [
+          'w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-4 transition-all duration-200 bg-white',
+          props.error 
+            ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
+            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+        ],
         onChange: (event) => emit('update:modelValue', event.target.value) 
       }, (props.options || []).map((option) => h('option', { value: option }, option))),
+      props.error ? h('span', { class: 'block mt-1 text-xs text-red-500 font-semibold' }, props.error) : null
     ])
   },
 }

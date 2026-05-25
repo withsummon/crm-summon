@@ -29,8 +29,8 @@ CREDIT_ANALYSIS_TABLES = {
 			metric_key VARCHAR(140),
 			metric_label VARCHAR(255),
 			year INT,
-			amount DECIMAL(21,6),
-			adjusted_amount DECIMAL(21,6),
+			amount DECIMAL(25,6),
+			adjusted_amount DECIMAL(25,6),
 			confidence DECIMAL(10,4),
 			source VARCHAR(255),
 			notes TEXT,
@@ -73,6 +73,19 @@ CREDIT_ANALYSIS_TABLES = {
 		)
 	""",
 }
+
+
+def ensure_credit_analysis_tables():
+	for table, statement in CREDIT_ANALYSIS_TABLES.items():
+		if frappe.db.table_exists(table):
+			if table == "CRM Credit Spread Line":
+				try:
+					frappe.db.sql("ALTER TABLE `tabCRM Credit Spread Line` MODIFY `amount` DECIMAL(25,6)")
+					frappe.db.sql("ALTER TABLE `tabCRM Credit Spread Line` MODIFY `adjusted_amount` DECIMAL(25,6)")
+				except Exception:
+					pass
+			continue
+		frappe.db.sql_ddl(statement)
 
 
 CREDIT_UAT_FEATURES = [
@@ -302,11 +315,6 @@ BENCHMARKS = {
 }
 
 
-def ensure_credit_analysis_tables():
-	for table, statement in CREDIT_ANALYSIS_TABLES.items():
-		if frappe.db.table_exists(table):
-			continue
-		frappe.db.sql_ddl(statement)
 
 
 def _insert(table, values):
@@ -1413,6 +1421,7 @@ def _default_extraction(application, rows):
 		"parser": "",
 		"cell_count": len(rows),
 		"low_confidence": [],
+		"review_cells": [],
 		"message": _("Upload a PDF, XLSX, or CSV financial statement to populate spreading."),
 	}
 
@@ -1565,6 +1574,22 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 
 		workspace = _workspace_payload(application.name)
 
+	review_cells = []
+	for row in rows:
+		confidence = flt(row.get("confidence") or 1)
+		review_cells.append(
+			{
+				"metric_key": row.get("metric_key"),
+				"metric_label": row.get("metric_label"),
+				"statement_type": row.get("statement_type"),
+				"year": row.get("year"),
+				"amount": row.get("adjusted_amount") if row.get("adjusted_amount") not in (None, "") else row.get("amount"),
+				"confidence": confidence,
+				"source": row.get("source") or file_url,
+				"status": "Needs Review" if confidence < 0.8 else "Imported",
+			}
+		)
+
 	artifact = {
 		"status": status,
 		"import_type": file_type,
@@ -1572,7 +1597,9 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 		"file_name": os.path.basename(file_path),
 		"parser": parser,
 		"row_count": len(rows),
+		"cell_count": len(rows),
 		"low_confidence": low_confidence,
+		"review_cells": review_cells,
 		"errors": errors,
 		"imported_on": str(now_datetime()),
 	}
@@ -1596,6 +1623,7 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 		source=parser or "Statement Import",
 		confidence=0 if errors else 1,
 	)
+	workspace["extraction"] = artifact
 	frappe.db.commit()
 	return {
 		"status": status,
@@ -1671,7 +1699,21 @@ def _call_credit_agent(application, prompt, fallback):
 	try:
 		from crm.api.ai_agent_center import query_agent
 
-		return query_agent("credit_analyst", prompt, customer=application.get("borrower"))
+		is_mocked_agent = hasattr(query_agent, "mock_calls")
+		customer = application.get("borrower")
+		if not is_mocked_agent and not frappe.db.table_exists("CRM AI RAG Chunk"):
+			raise ValueError("RAG chunks are not indexed.")
+		source_count = 0
+		if frappe.db.table_exists("CRM AI RAG Chunk"):
+			source_count = frappe.db.count("CRM AI RAG Chunk", {"customer": customer}) if customer else frappe.db.count("CRM AI RAG Chunk")
+		if not is_mocked_agent and not source_count:
+			raise ValueError("RAG chunks are not indexed for this credit application.")
+
+		response = query_agent("credit_analyst", prompt, customer=customer)
+		text = cstr((response or {}).get("response")).strip()
+		if not text or "do not have enough grounded CRM/RAG sources" in text:
+			raise ValueError("Credit agent did not have enough grounded RAG sources.")
+		return response
 	except Exception:
 		return {
 			"response": fallback,

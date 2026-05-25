@@ -53,6 +53,7 @@ CUSTOMER_360_CUSTOMER_FIELD_DOCTYPES = {
 	"CRM AI Insight",
 	"CRM Customer Tag",
 }
+LARGE_CURRENCY_SQL_TYPE = "decimal(30,9)"
 
 
 def _doctype_ready(doctype: str) -> bool:
@@ -66,6 +67,75 @@ def _get_customer_label(customer: str | None) -> str:
 	if not customer:
 		return ""
 	return frappe.db.get_value("Customer", customer, "customer_name") or customer
+
+
+def _ensure_large_currency_columns(doctype: str):
+	if not _doctype_ready(doctype):
+		return
+	meta = frappe.get_meta(doctype)
+	currency_fields = [field.fieldname for field in meta.fields if field.fieldtype == "Currency" and field.fieldname]
+	if not currency_fields:
+		return
+	for fieldname in currency_fields:
+		column = frappe.db.sql(f"SHOW COLUMNS FROM `tab{doctype}` LIKE %s", fieldname, as_dict=True)
+		if not column:
+			continue
+		column_type = cstr(column[0].get("Type")).lower()
+		if column_type != LARGE_CURRENCY_SQL_TYPE:
+			frappe.db.change_column_type(doctype, fieldname, LARGE_CURRENCY_SQL_TYPE)
+
+
+def _valid_link_value(link_doctype: str | None, value) -> bool:
+	if not link_doctype or not value:
+		return True
+	try:
+		return bool(frappe.db.exists(link_doctype, value))
+	except Exception:
+		return False
+
+
+def _normalize_link_values(doctype: str, doc):
+	meta = frappe.get_meta(doctype)
+	for field in meta.fields:
+		fieldname = field.fieldname
+		if not fieldname or not doc.get(fieldname):
+			continue
+		value = doc.get(fieldname)
+		if isinstance(value, str):
+			value = re.sub(r"\s+", " ", value.strip())
+			doc[fieldname] = value
+		if not value:
+			continue
+		if field.fieldtype == "Link":
+			if _valid_link_value(field.options, value):
+				continue
+			if field.reqd:
+				frappe.throw(_("{0} not found: {1}").format(field.label or fieldname, value))
+			doc[fieldname] = None
+		elif field.fieldtype == "Dynamic Link":
+			reference_field = field.options
+			reference_doctype = doc.get(reference_field)
+			if _valid_link_value(reference_doctype, value):
+				continue
+			if field.reqd:
+				frappe.throw(_("{0} not found: {1}").format(field.label or fieldname, value))
+			doc[fieldname] = None
+
+
+def _normalize_numeric_values(doctype: str, doc):
+	meta = frappe.get_meta(doctype)
+	for field in meta.fields:
+		fieldname = field.fieldname
+		if not fieldname or fieldname not in doc:
+			continue
+		value = doc.get(fieldname)
+		if value == "":
+			doc[fieldname] = 0
+			continue
+		if field.fieldtype in {"Currency", "Float", "Percent"}:
+			doc[fieldname] = flt(value)
+		elif field.fieldtype == "Int":
+			doc[fieldname] = int(flt(value))
 
 
 def _json_loads(value):
@@ -102,9 +172,12 @@ def create_or_update_customer360_record(doctype: str, doc: dict):
 		frappe.throw(_("Cannot create records for {0} from Customer 360").format(doctype))
 
 	ensure_credit_doctype_modules()
+	_ensure_large_currency_columns(doctype)
 	doc = frappe._dict(doc or {})
 	doc.doctype = doctype
+	_normalize_numeric_values(doctype, doc)
 	_normalize_select_values(doctype, doc)
+	_normalize_link_values(doctype, doc)
 	_validate_customer360_doc(doctype, doc)
 	if doc.get("name") and frappe.db.exists(doctype, doc.name):
 		existing = frappe.get_doc(doctype, doc.name)
@@ -405,9 +478,9 @@ def create_customer_360_customer(customer_name: str, customer_type: str = "Compa
 
 
 @frappe.whitelist()
-@frappe.whitelist()
 def create_credit_application(payload=None):
 	payload = frappe._dict(_json_loads(payload) if isinstance(payload, str) else payload or {})
+	_ensure_large_currency_columns("CRM Credit Application")
 	borrower = payload.get("borrower")
 	borrower_name = cstr(payload.get("borrower_name")).strip()
 	borrower_type = payload.get("borrower_type") or "Company"
@@ -608,6 +681,20 @@ def _first_leaf_value(doctype: str, value_field: str):
 
 def _normalize_select_values(doctype: str, doc):
 	meta = frappe.get_meta(doctype)
+	status_aliases = {
+		"application received": ["Application Received", "Draft"],
+		"document review": ["Document Review", "Pending Review", "In Progress"],
+		"credit analysis": ["Credit Analysis", "In Progress"],
+		"collateral appraisal": ["Collateral Appraisal", "In Progress"],
+		"committee approval": ["Committee Approval", "Pending Review", "Submitted"],
+		"legal documentation": ["Legal Documentation", "Approved", "In Progress"],
+		"disbursement": ["Disbursement", "Approved"],
+		"active": ["Active", "Approved"],
+		"in progress": ["In Progress", "Credit Analysis"],
+		"pending review": ["Pending Review", "Document Review", "Committee Approval"],
+		"submitted": ["Submitted", "Committee Approval", "Pending Review"],
+		"approved": ["Approved", "Active"],
+	}
 	for field in meta.fields:
 		if field.fieldtype != "Select" or not field.options or not doc.get(field.fieldname):
 			continue
@@ -617,6 +704,8 @@ def _normalize_select_values(doctype: str, doc):
 			continue
 		lower_value = value.lower()
 		match = next((option for option in options if option.lower() == lower_value), None)
+		if not match and doctype == "CRM Credit Application" and field.fieldname == "status":
+			match = next((candidate for candidate in status_aliases.get(lower_value, []) if candidate in options), None)
 		if not match:
 			match = next((option for option in options if option.lower().endswith(lower_value)), None)
 		if not match:

@@ -222,23 +222,28 @@
 
             <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
               <div class="p-4 border-b border-slate-200">
-                <h3 class="font-bold text-slate-800">{{ __('Cells Needing Manual Review') }}</h3>
+                <h3 class="font-bold text-slate-800">{{ __('Imported / Review Cells') }}</h3>
               </div>
               <table class="w-full text-sm">
                 <thead>
                   <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
                     <th class="py-3 px-4 text-left">{{ __('Metric') }}</th>
                     <th class="py-3 px-4 text-right">{{ __('Year') }}</th>
+                    <th class="py-3 px-4 text-right">{{ __('Amount') }}</th>
                     <th class="py-3 px-4 text-right">{{ __('Confidence') }}</th>
                     <th class="py-3 px-4 text-left">{{ __('Status') }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="cell in extraction.low_confidence || []" :key="`${cell.metric_key}-${cell.year}`" class="border-b border-slate-100">
+                  <tr v-for="cell in extractionReviewCells" :key="`${cell.metric_key}-${cell.year}`" class="border-b border-slate-100">
                     <td class="py-3 px-4 font-semibold text-slate-800">{{ cell.metric_label || cell.metric_key }}</td>
                     <td class="py-3 px-4 text-right font-mono">{{ cell.year }}</td>
+                    <td class="py-3 px-4 text-right font-mono">{{ formatCurrency(cell.amount) }}</td>
                     <td class="py-3 px-4 text-right font-mono">{{ formatPercent(cell.confidence) }}</td>
-                    <td class="py-3 px-4"><Badge :label="cell.status" theme="orange" variant="subtle" /></td>
+                    <td class="py-3 px-4"><Badge :label="cell.status" :theme="cell.status === 'Needs Review' ? 'orange' : 'green'" variant="subtle" /></td>
+                  </tr>
+                  <tr v-if="!extractionReviewCells.length">
+                    <td colspan="5" class="py-6 text-center text-sm text-slate-400">{{ __('No extracted cells yet. Import a PDF, Excel, or CSV statement first.') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -579,6 +584,7 @@
 import { Button, FeatherIcon, Badge, FileUploader, usePageMeta, toast, createResource, call } from 'frappe-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import html2pdf from 'html2pdf.js'
 
 const MetricCard = {
   props: ['label', 'value', 'icon'],
@@ -674,6 +680,18 @@ const collaterals = computed(() => workspace.value.collaterals || [])
 const bureau = computed(() => workspace.value.bureau || {})
 const newsSentiment = computed(() => workspace.value.news_sentiment || {})
 const extraction = computed(() => workspace.value.extraction || {})
+const extractionReviewCells = computed(() => {
+  const cells = extraction.value.review_cells?.length ? extraction.value.review_cells : (extraction.value.low_confidence || [])
+  if (cells.length) return cells
+  return spreadRows.value.map((row) => ({
+    metric_key: row.metric_key,
+    metric_label: row.metric_label,
+    year: row.year,
+    amount: row.adjusted_amount ?? row.amount,
+    confidence: row.confidence || 1,
+    status: row.confidence && row.confidence < 0.8 ? 'Needs Review' : 'Imported',
+  }))
+})
 const memo = computed(() => workspace.value.memo || {})
 const recommendation = computed(() => workspace.value.recommendation || {})
 const proofRows = computed(() => workspace.value.proof || [])
@@ -863,8 +881,77 @@ async function submitApproval() {
   await runAction(() => call('crm.api.credit_analysis.submit_memo_for_approval', { application_id: selectedApp.value.name }), __('Memo submitted to approval route'))
 }
 
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 async function exportMemo() {
-  await runAction(() => call('crm.api.credit_analysis.export_credit_memo_pdf', { application_id: selectedApp.value.name, watermark: 'Internal' }), __('Memo export queued'))
+  const app = selectedApp.value
+  if (!app?.name) return
+  busy.value = true
+  try {
+    const memoData = memo.value
+    const rec = recommendation.value
+    const summaryBullets = memoData.summary_bullets || []
+    const borrowerName = app.borrower_name || app.name
+    const now = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+    const htmlContent = `
+      <div style="font-family: 'Inter', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
+        <div style="border-bottom: 3px solid #0f766e; padding-bottom: 20px; margin-bottom: 30px;">
+          <h1 style="font-size: 24px; font-weight: 800; color: #0f766e; margin: 0;">Credit Memo</h1>
+          <p style="color: #64748b; margin: 4px 0 0 0;">${borrowerName} — ${app.name}</p>
+          <p style="color: #94a3b8; font-size: 12px; margin: 2px 0 0 0;">Generated: ${now}</p>
+        </div>
+        ${summaryBullets.length ? `
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size: 16px; font-weight: 700; color: #334155; margin: 0 0 12px 0;">Executive Summary</h2>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${summaryBullets.map(b => `<li style="color: #475569; font-size: 13px; line-height: 1.6; margin-bottom: 6px;">${b}</li>`).join('')}
+          </ul>
+        </div>` : ''}
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-size: 16px; font-weight: 700; color: #334155; margin: 0 0 12px 0;">Credit Memo</h2>
+          <div style="color: #475569; font-size: 13px; line-height: 1.7; white-space: pre-wrap;">${memoContent.value || 'No memo content.'}</div>
+        </div>
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+          <h2 style="font-size: 16px; font-weight: 700; color: #334155; margin: 0 0 12px 0;">Recommendation</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #16a34a; text-transform: uppercase; margin-bottom: 4px;">Decision</div>
+              <div style="font-size: 18px; font-weight: 800; color: #15803d;">${rec.decision || '-'}</div>
+            </div>
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 4px;">Confidence</div>
+              <div style="font-size: 18px; font-weight: 800; color: #0369a1;">${rec.confidence || 0}%</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8;">
+          <p>Credit Memo — ${app.name} · Generated by FCRM Credit Analysis · Internal Use Only</p>
+        </div>
+      </div>`
+    const opt = {
+      margin: 10,
+      filename: `credit-memo-${app.name}-${Date.now()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    }
+    const blob = await html2pdf().set(opt).from(htmlContent).outputPdf('blob')
+    downloadBlob(blob, opt.filename)
+    toast.success(__('Credit memo exported as PDF'))
+  } catch (error) {
+    toast.error(error?.messages?.[0] || error.message || __('Failed to export memo PDF'))
+  } finally {
+    busy.value = false
+  }
 }
 
 onMounted(() => {
