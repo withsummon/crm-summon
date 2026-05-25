@@ -746,8 +746,6 @@ const displayLeadBars = computed(() => {
 })
 
 // ─── Supporting Lists ─────────────────────────────────────
-const displayCompanies = computed(() => data.value.lead_gen?.company_breakdown || [])
-
 const displayCompanies = computed(() => {
   const rows = data.value.lead_gen?.company_breakdown
   if (Array.isArray(rows)) return rows
