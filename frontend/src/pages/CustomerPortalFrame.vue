@@ -2,19 +2,7 @@
   <div class="flex h-full flex-col bg-white">
     <LayoutHeader>
       <template #left-header>
-        <div class="flex min-w-0 items-center gap-3 pr-12">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #7c3aed, #c084fc)"
-          >
-            <FeatherIcon name="life-buoy" class="h-4 w-4 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-crm-text">
-              {{ __('Customer Portal') }}
-            </h1>
-          </div>
-        </div>
+        <ViewBreadcrumbs v-model="viewControls" routeName="Customer Portal" />
       </template>
       <template #right-header>
         <div class="flex items-center gap-2">
@@ -41,8 +29,12 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import CustomerPortal from '@/pages/CustomerPortal.vue'
 import { Button, FeatherIcon, usePageMeta } from 'frappe-ui'
+import { ref } from 'vue'
+
+const viewControls = ref(null)
 
 function openExternalPortal() {
   window.open('/crm/customer-portal', '_blank', 'noopener,noreferrer')

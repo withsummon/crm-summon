@@ -51,7 +51,8 @@ def _can_select_customer():
 
 
 def _resolve_customer(customer=None):
-	if customer and _can_select_customer() and frappe.db.exists("Customer", customer):
+	can_select = _can_select_customer()
+	if customer and can_select and frappe.db.exists("Customer", customer):
 		return customer
 
 	user = frappe.session.user
@@ -60,12 +61,57 @@ def _resolve_customer(customer=None):
 		if match:
 			return match[0]
 
+	if not can_select:
+		return None
+
 	for preferred in ("PT Maju Jaya", "PT Industri Nusantara", "CV Cahaya Terang", "PT Teknologi Maju"):
 		if frappe.db.exists("Customer", preferred):
 			return preferred
 
 	rows = frappe.get_all("Customer", pluck="name", order_by="modified desc", limit=1)
 	return rows[0] if rows else None
+
+
+def _first_existing(doctype, candidates):
+	for name in candidates:
+		if frappe.db.exists(doctype, name):
+			return name
+	rows = frappe.get_all(doctype, pluck="name", limit=1)
+	return rows[0] if rows else None
+
+
+def _ensure_portal_customer(customer=None, customer_type="Company"):
+	resolved = _resolve_customer(customer)
+	if resolved:
+		return resolved
+	if not _doctype_ready("Customer"):
+		frappe.throw(_("Customer storage is not available"))
+
+	user = frappe.session.user
+	if not user or user == "Guest":
+		frappe.throw(_("Please log in before using the customer portal."))
+
+	meta = frappe.get_meta("Customer")
+	user_doc = frappe.db.get_value("User", user, ["full_name", "email", "mobile_no", "phone"], as_dict=True) or {}
+	customer_name = user_doc.get("full_name") or user_doc.get("email") or user
+	payload = {
+		"doctype": "Customer",
+		"customer_name": customer_name,
+	}
+	if meta.has_field("customer_type"):
+		payload["customer_type"] = customer_type or "Company"
+	if meta.has_field("customer_group"):
+		payload["customer_group"] = _first_existing("Customer Group", ["Individual", "Commercial", "All Customer Groups"])
+	if meta.has_field("territory"):
+		payload["territory"] = _first_existing("Territory", ["Indonesia", "All Territories"])
+	if meta.has_field("email_id"):
+		payload["email_id"] = user_doc.get("email") or user
+	if meta.has_field("mobile_no") and user_doc.get("mobile_no"):
+		payload["mobile_no"] = user_doc.get("mobile_no")
+	if meta.has_field("phone") and (user_doc.get("phone") or user_doc.get("mobile_no")):
+		payload["phone"] = user_doc.get("phone") or user_doc.get("mobile_no")
+
+	return frappe.get_doc(payload).insert(ignore_permissions=True).name
 
 
 def _require_customer(customer=None):
@@ -168,6 +214,8 @@ def _normalize_facility(row):
 
 
 def _get_customer_doc(customer):
+	if not customer:
+		return None
 	fields = _customer_fields()
 	if not fields:
 		return {"name": customer, "customer_name": customer}
@@ -191,6 +239,15 @@ def _safe_list(value):
 
 
 def _get_rm_context(customer):
+	if not customer:
+		return {
+			"name": "Relationship Manager",
+			"role": "RM",
+			"initials": "RM",
+			"phone": "",
+			"wa_link": "",
+			"last_message": "",
+		}
 	comm = None
 	if _doctype_ready("CRM Customer Communication"):
 		rows = frappe.get_all(
@@ -248,7 +305,7 @@ def _get_rm_context(customer):
 
 @frappe.whitelist()
 def get_portal_context(customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
 	return {
 		"customer": _get_customer_doc(customer),
 		"rm": _get_rm_context(customer),
@@ -258,7 +315,9 @@ def get_portal_context(customer=None):
 
 @frappe.whitelist()
 def get_my_applications(customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
+	if not customer:
+		return []
 	if not _doctype_ready("CRM Credit Application"):
 		return []
 	rows = frappe.get_all(
@@ -276,7 +335,9 @@ def get_my_applications(customer=None):
 
 @frappe.whitelist()
 def get_my_facilities(customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
+	if not customer:
+		return []
 	if not _doctype_ready("CRM Credit Facility"):
 		return []
 	rows = frappe.get_all(
@@ -308,7 +369,16 @@ def get_my_facilities(customer=None):
 @frappe.whitelist()
 def get_portal_dashboard(customer=None):
 	try:
-		customer = _require_customer(customer)
+		customer = _resolve_customer(customer)
+		if not customer:
+			return {
+				"customer": None,
+				"active_facilities": 0,
+				"pending_applications": 0,
+				"next_payment": None,
+				"notifications": [],
+				"rm": _get_rm_context(None),
+			}
 		applications = _safe_list(get_my_applications(customer))
 		facilities = _safe_list(get_my_facilities(customer))
 		docs = _safe_list(get_document_checklist(customer=customer))
@@ -422,7 +492,9 @@ def _statement_periods():
 
 @frappe.whitelist()
 def get_document_checklist(application_name=None, customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
+	if not customer:
+		return []
 	if application_name and _doctype_ready("CRM Credit Application"):
 		owner = frappe.db.get_value("CRM Credit Application", application_name, "borrower")
 		if owner and owner != customer:
@@ -471,7 +543,9 @@ def update_document_file(document_name, file_url, customer=None):
 
 @frappe.whitelist()
 def get_my_tickets(customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
+	if not customer:
+		return []
 	if not _doctype_ready("HD Ticket"):
 		return []
 	fields = _meta_fields("HD Ticket", ["name", "subject", "status", "creation", "description", "ticket_type"])
@@ -491,7 +565,7 @@ def get_my_tickets(customer=None):
 
 @frappe.whitelist()
 def submit_ticket(category, subject, description="", customer=None):
-	customer = _require_customer(customer)
+	customer = _ensure_portal_customer(customer)
 	if not subject or not category:
 		frappe.throw(_("Category and subject are required"))
 	if _doctype_ready("HD Ticket"):
@@ -557,7 +631,7 @@ def _seed_application_documents(customer, application_name):
 
 @frappe.whitelist()
 def submit_new_application(facility_type, requested_amount, purpose, borrower_type="Company", notes=None, customer=None):
-	customer = _require_customer(customer)
+	customer = _ensure_portal_customer(customer, borrower_type or "Company")
 	amount = flt(requested_amount)
 	if not facility_type or amount <= 0 or not purpose:
 		frappe.throw(_("Facility type, amount, and purpose are required"))
@@ -587,7 +661,7 @@ def submit_new_application(facility_type, requested_amount, purpose, borrower_ty
 
 @frappe.whitelist()
 def upload_document(title, document_type, file_url, customer=None, application_name=None):
-	customer = _require_customer(customer)
+	customer = _ensure_portal_customer(customer)
 	if not title or not file_url:
 		frappe.throw(_("Title and file are required"))
 	if not _doctype_ready("CRM Customer Document"):
@@ -766,7 +840,7 @@ def _llm_answer(message, ctx):
 
 @frappe.whitelist()
 def ask_assistant(message, customer=None):
-	customer = _require_customer(customer)
+	customer = _resolve_customer(customer)
 	message = (message or "").strip()
 	if not message:
 		frappe.throw(_("Message is required"))
@@ -896,7 +970,7 @@ def update_ticket(name, fields, customer=None):
 
 @frappe.whitelist()
 def seed_portal_sample_data(customer=None):
-	customer = _require_customer(customer)
+	customer = _ensure_portal_customer(customer)
 	created = {"applications": [], "documents": [], "tickets": [], "facilities": []}
 
 	if _doctype_ready("CRM Credit Application"):

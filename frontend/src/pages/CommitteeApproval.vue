@@ -2,19 +2,7 @@
   <div class="flex h-full flex-col">
     <LayoutHeader>
       <template #left-header>
-        <div class="flex min-w-0 items-center gap-3">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: #008C95"
-          >
-            <FeatherIcon name="users" class="h-4 w-4 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-              {{ __('Committee Approval') }}
-            </h1>
-          </div>
-        </div>
+        <ViewBreadcrumbs v-model="viewControls" routeName="Committee Approval" />
       </template>
       <template #right-header>
         <div
@@ -916,7 +904,10 @@
 <script setup>
 import { ref, reactive, computed, defineComponent, h, onMounted } from 'vue'
 import { Badge, Button, Dialog, FeatherIcon, LoadingIndicator, createResource, toast } from 'frappe-ui'
+import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
+
+const viewControls = ref(null)
 
 const QuorumBar = defineComponent({
   name: 'QuorumBar',

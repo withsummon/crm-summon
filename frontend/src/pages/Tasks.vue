@@ -2,19 +2,7 @@
   <div class="flex h-full flex-col">
     <LayoutHeader>
       <template #left-header>
-        <div class="flex min-w-0 items-center gap-3">
-          <div
-            class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: #008C95"
-          >
-            <FeatherIcon name="check-square" class="h-4 w-4 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="truncate text-lg font-semibold text-ink-gray-9">
-              {{ __('Tasks & SLA') }}
-            </h1>
-          </div>
-        </div>
+        <ViewBreadcrumbs v-model="viewControls" routeName="Tasks" />
       </template>
       <template #right-header>
         <div
@@ -892,6 +880,7 @@
 <script setup>
 import { ref, reactive, computed, h, defineComponent, onMounted, watch } from 'vue'
 import { Avatar, Badge, Button, Dialog, FeatherIcon, LoadingIndicator, createResource, toast } from 'frappe-ui'
+import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import TaskDetailDrawer from '@/components/TaskDetailDrawer.vue'
 
@@ -928,6 +917,7 @@ const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // ── Reactive state ──────────────────────────────────────────────────
 const activeView = ref('inbox')
+const viewControls = ref(null)
 const inboxFilters = reactive({ scope: 'me', task_type: '', priority: '', sort_by: 'sla', search: '' })
 const selected = ref([])
 const swimlane = ref('off')
