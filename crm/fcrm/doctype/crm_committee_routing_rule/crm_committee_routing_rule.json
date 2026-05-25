@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:rule_name",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "active",
+  "priority",
+  "column_break_top",
+  "committee",
+  "section_break_criteria",
+  "min_amount",
+  "max_amount",
+  "column_break_criteria",
+  "product_type",
+  "risk_grade"
+ ],
+ "fields": [
+  {"fieldname": "rule_name", "fieldtype": "Data", "in_list_view": 1, "in_global_search": 1, "label": "Rule Name", "reqd": 1, "unique": 1},
+  {"default": "1", "fieldname": "active", "fieldtype": "Check", "in_list_view": 1, "label": "Active"},
+  {"default": "10", "fieldname": "priority", "fieldtype": "Int", "in_list_view": 1, "label": "Priority"},
+  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+  {"fieldname": "committee", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Route To Committee", "options": "CRM Committee", "reqd": 1},
+  {"fieldname": "section_break_criteria", "fieldtype": "Section Break", "label": "Criteria"},
+  {"fieldname": "min_amount", "fieldtype": "Currency", "label": "Min Amount"},
+  {"fieldname": "max_amount", "fieldtype": "Currency", "label": "Max Amount"},
+  {"fieldname": "column_break_criteria", "fieldtype": "Column Break"},
+  {"fieldname": "product_type", "fieldtype": "Data", "label": "Product Type"},
+  {"fieldname": "risk_grade", "fieldtype": "Data", "label": "Risk Grade"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Committee Routing Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Sales User"}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

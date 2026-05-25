@@ -93,6 +93,11 @@ export default defineConfig(async ({ mode }) => {
       host: '0.0.0.0',
       port: devServerPort,
       strictPort: true,
+      allowedHosts: [
+        '.ngrok-free.app',
+        '.ngrok-free.dev',
+        '.share.zrok.io',
+      ],
       fs: {
         allow: [path.resolve(__dirname, '..')],
       },
