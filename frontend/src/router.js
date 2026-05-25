@@ -176,13 +176,12 @@ const routes = [
       {
         path: 'loan-origination-system',
         name: 'Loan Origination System',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Loan Origination System',
-          subtitle: 'Lending',
-          icon: 'dollar-sign',
-          sourcePath: '/app/loans',
-        },
+        component: () => import('@/pages/LoanOrigination.vue'),
+      },
+      {
+        path: 'loan-origination-system/:id',
+        name: 'Loan Application',
+        component: () => import('@/pages/LoanOrigination.vue'),
       },
       {
         path: 'portfolio-monitoring',
@@ -193,6 +192,11 @@ const routes = [
         path: 'product-configuration',
         name: 'Product Configuration',
         component: () => import('@/pages/ProductConfiguration.vue'),
+      },
+      {
+        path: 'covenant-monitoring',
+        name: 'Covenant Monitoring',
+        component: () => import('@/pages/CovenantMonitoring.vue'),
       },
     ],
   },
@@ -213,13 +217,7 @@ const routes = [
       {
         path: 'document-management',
         name: 'Document Management',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Document Management',
-          subtitle: 'Frappe Drive',
-          icon: 'folder',
-          sourcePath: '/drive',
-        },
+        component: () => import('@/pages/DocumentManagement.vue'),
       },
       {
         path: 'partner-vendor-management',
@@ -269,24 +267,12 @@ const routes = [
       {
         path: 'reporting-bi',
         name: 'Reporting & BI',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Reporting & BI',
-          subtitle: 'Insights',
-          icon: 'bar-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/ReportingBI.vue'),
       },
       {
         path: 'api-integration-center',
         name: 'API & Integration Center',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'API & Integration Center',
-          subtitle: 'Integrations',
-          icon: 'link',
-          sourcePath: '/app/integrations',
-        },
+        component: () => import('@/pages/APIIntegrationCenter.vue'),
       },
       {
         path: 'rules-engine',
