@@ -10,15 +10,39 @@
  "field_order": [
   "title",
   "priority",
+  "task_type",
   "start_date",
   "reference_doctype",
   "reference_docname",
   "column_break_cqua",
   "assigned_to",
   "status",
+  "blocked_reason",
   "due_date",
   "recurring",
   "recurrence_rule",
+  "is_milestone",
+  "section_break_assignees",
+  "assignees",
+  "section_break_sla",
+  "sla_minutes",
+  "sla_due_at",
+  "sla_paused_at",
+  "sla_paused_minutes",
+  "sla_state",
+  "column_break_sla",
+  "started_at",
+  "completed_at",
+  "blocked_at",
+  "time_logged_minutes",
+  "is_billable",
+  "section_break_struct",
+  "parent_task",
+  "template_used",
+  "column_break_struct",
+  "depends_on",
+  "section_break_checklist",
+  "checklist",
   "section_break_bzhd",
   "description"
  ],
@@ -27,7 +51,6 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Title",
    "reqd": 1
   },
@@ -36,7 +59,14 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Priority",
-   "options": "Low\nMedium\nHigh"
+   "options": "Critical\nHigh\nMedium\nLow",
+   "default": "Medium"
+  },
+  {
+   "fieldname": "task_type",
+   "fieldtype": "Link",
+   "label": "Task Type",
+   "options": "CRM Task Type"
   },
   {
    "fieldname": "start_date",
@@ -51,7 +81,7 @@
    "fieldname": "assigned_to",
    "fieldtype": "Link",
    "in_standard_filter": 1,
-   "label": "Assigned To",
+   "label": "Primary Assignee",
    "options": "User"
   },
   {
@@ -60,7 +90,13 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Backlog\nTodo\nIn Progress\nDone\nCanceled"
+   "options": "Backlog\nTodo\nIn Progress\nBlocked\nDone\nCanceled",
+   "default": "Backlog"
+  },
+  {
+   "fieldname": "blocked_reason",
+   "fieldtype": "Small Text",
+   "label": "Blocked Reason"
   },
   {
    "fieldname": "due_date",
@@ -78,6 +114,126 @@
    "fieldname": "recurrence_rule",
    "fieldtype": "Data",
    "label": "Recurrence Rule"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_milestone",
+   "fieldtype": "Check",
+   "label": "Milestone"
+  },
+  {
+   "fieldname": "section_break_assignees",
+   "fieldtype": "Section Break",
+   "label": "Assignees"
+  },
+  {
+   "fieldname": "assignees",
+   "fieldtype": "Table",
+   "label": "Assignees",
+   "options": "CRM Task Assignee"
+  },
+  {
+   "fieldname": "section_break_sla",
+   "fieldtype": "Section Break",
+   "label": "SLA"
+  },
+  {
+   "default": "0",
+   "fieldname": "sla_minutes",
+   "fieldtype": "Int",
+   "label": "SLA Minutes"
+  },
+  {
+   "fieldname": "sla_due_at",
+   "fieldtype": "Datetime",
+   "label": "SLA Due At"
+  },
+  {
+   "fieldname": "sla_paused_at",
+   "fieldtype": "Datetime",
+   "label": "SLA Paused At"
+  },
+  {
+   "default": "0",
+   "fieldname": "sla_paused_minutes",
+   "fieldtype": "Int",
+   "label": "SLA Paused Minutes"
+  },
+  {
+   "default": "OK",
+   "fieldname": "sla_state",
+   "fieldtype": "Select",
+   "label": "SLA State",
+   "options": "OK\nApproaching\nBreached\nPaused\nCompleted"
+  },
+  {
+   "fieldname": "column_break_sla",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At"
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At"
+  },
+  {
+   "fieldname": "blocked_at",
+   "fieldtype": "Datetime",
+   "label": "Blocked At"
+  },
+  {
+   "default": "0",
+   "fieldname": "time_logged_minutes",
+   "fieldtype": "Float",
+   "label": "Time Logged (min)"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_billable",
+   "fieldtype": "Check",
+   "label": "Billable"
+  },
+  {
+   "fieldname": "section_break_struct",
+   "fieldtype": "Section Break",
+   "label": "Structure"
+  },
+  {
+   "fieldname": "parent_task",
+   "fieldtype": "Link",
+   "label": "Parent Task",
+   "options": "CRM Task"
+  },
+  {
+   "fieldname": "template_used",
+   "fieldtype": "Link",
+   "label": "Template",
+   "options": "CRM Task Template"
+  },
+  {
+   "fieldname": "column_break_struct",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "depends_on",
+   "fieldtype": "Table",
+   "label": "Dependencies",
+   "options": "CRM Task Dependency"
+  },
+  {
+   "fieldname": "section_break_checklist",
+   "fieldtype": "Section Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "CRM Task Checklist Item"
   },
   {
    "fieldname": "section_break_bzhd",
@@ -103,8 +259,8 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-26 12:55:16.304522",
- "modified_by": "shariq@frappe.io",
+ "modified": "2026-05-24 12:00:00.000000",
+ "modified_by": "Administrator",
  "module": "FCRM",
  "name": "CRM Task",
  "naming_rule": "Autoincrement",

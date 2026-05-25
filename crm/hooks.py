@@ -234,10 +234,23 @@ scheduler_events = {
 	"hourly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_hourly"],
 	"monthly_long": ["crm.lead_syncing.background_sync.sync_leads_from_sources_monthly"],
 	"cron": {
-		"*/5 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes"],
+		"*/5 * * * *": [
+			"crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes",
+			"crm.lead_jobs.recompute_lead_sla",
+			"crm.lead_jobs.fire_sla_alerts",
+		],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
-		"*/15 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_15_minutes"],
-		"0 * * * *": ["crm.api.lead_management.process_idle_reassignments"],
+		"*/15 * * * *": [
+			"crm.lead_syncing.background_sync.sync_leads_from_sources_15_minutes",
+			"crm.lead_jobs.run_nurture_sequences",
+		],
+		"0 * * * *": [
+			"crm.api.lead_management.process_idle_reassignments",
+			"crm.lead_jobs.compute_lead_aging",
+		],
+		"0 8 * * *": ["crm.lead_jobs.fire_aging_alerts"],
+		"0 6 * * *": ["crm.task_jobs.process_recurring_tasks"],
+		"*/10 * * * *": ["crm.task_jobs.process_escalations"],
 	},
 }
 

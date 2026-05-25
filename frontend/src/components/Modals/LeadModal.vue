@@ -61,6 +61,7 @@ import { useRouter } from 'vue-router'
 const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
 })
+const emit = defineEmits(['created'])
 
 const { user } = sessionStore()
 const { getUser, isManager } = usersStore()
@@ -159,6 +160,7 @@ async function createNewLead() {
         isLeadCreating.value = false
         show.value = false
         lead.doc = {}
+        emit('created', data)
         router.push({ name: 'Lead', params: { leadId: data.name } })
         updateOnboardingStep('create_first_lead', true, false, () => {
           localStorage.setItem('firstLead' + user, data.name)

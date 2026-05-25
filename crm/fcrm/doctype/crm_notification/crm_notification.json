@@ -4,24 +4,25 @@
  "creation": "2024-01-29 19:31:13.613929",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": [
-  "notification_text",
-  "section_break_hace",
-  "from_user",
-  "type",
-  "column_break_dduu",
-  "to_user",
-  "read",
-  "section_break_pbvx",
-  "reference_doctype",
-  "reference_name",
-  "column_break_eant",
-  "notification_type_doctype",
-  "notification_type_doc",
-  "comment",
-  "section_break_vpwa",
-  "message"
- ],
+  "field_order": [
+   "notification_text",
+   "section_break_hace",
+   "from_user",
+   "type",
+   "column_break_dduu",
+   "to_user",
+   "read",
+   "archived",
+   "section_break_pbvx",
+   "reference_doctype",
+   "reference_name",
+   "column_break_eant",
+   "notification_type_doctype",
+   "notification_type_doc",
+   "comment",
+   "section_break_vpwa",
+   "message"
+  ],
  "fields": [
   {
    "fieldname": "from_user",
@@ -56,12 +57,18 @@
    "label": "Comment",
    "options": "Comment"
   },
-  {
-   "default": "0",
-   "fieldname": "read",
-   "fieldtype": "Check",
-   "label": "Read"
-  },
+   {
+    "default": "0",
+    "fieldname": "read",
+    "fieldtype": "Check",
+    "label": "Read"
+   },
+   {
+    "default": "0",
+    "fieldname": "archived",
+    "fieldtype": "Check",
+    "label": "Archived"
+   },
   {
    "fieldname": "section_break_vpwa",
    "fieldtype": "Section Break"

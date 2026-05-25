@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "creation": "2026-05-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "fee_type",
+  "calc_mode",
+  "value",
+  "min_cap",
+  "max_cap",
+  "trigger_event",
+  "tax_inclusive"
+ ],
+ "fields": [
+  {"fieldname": "fee_type", "fieldtype": "Select", "label": "Fee Type", "options": "Admin\nProvision\nLate\nPrepay\nOther", "default": "Admin", "in_list_view": 1, "columns": 2, "reqd": 1},
+  {"fieldname": "calc_mode", "fieldtype": "Select", "label": "Mode", "options": "Fixed\nPercent", "default": "Fixed", "in_list_view": 1, "columns": 1},
+  {"fieldname": "value", "fieldtype": "Float", "label": "Value", "in_list_view": 1, "columns": 1, "reqd": 1},
+  {"fieldname": "min_cap", "fieldtype": "Currency", "label": "Min Cap", "in_list_view": 1, "columns": 1},
+  {"fieldname": "max_cap", "fieldtype": "Currency", "label": "Max Cap", "in_list_view": 1, "columns": 1},
+  {"fieldname": "trigger_event", "fieldtype": "Select", "label": "Trigger", "options": "Origination\nDisbursement\nRepayment\nPrepayment\nDefault", "default": "Origination", "in_list_view": 1, "columns": 2},
+  {"default": "0", "fieldname": "tax_inclusive", "fieldtype": "Check", "label": "Tax Inclusive"}
+ ],
+ "links": [],
+ "modified": "2026-05-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Product Fee",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": [],
+ "translated_doctype": 1
+}
