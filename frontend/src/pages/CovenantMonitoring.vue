@@ -15,31 +15,6 @@
           </div>
         </div>
       </template>
-      <template #right-header>
-        <div class="flex items-center gap-2">
-          <button
-            @click="runAllTests"
-            class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white"
-          >
-            <FeatherIcon
-              :name="testing ? 'loader' : 'cpu'"
-              class="h-3.5 w-3.5"
-              :class="testing && 'animate-spin'"
-            />
-            {{ __("Run Tests") }}
-          </button>
-          <button
-            @click="
-              activeNav = 'library';
-              showAddCovenant = true;
-            "
-            class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
-          >
-            <FeatherIcon name="plus" class="h-3.5 w-3.5" />
-            {{ __("Add Covenant") }}
-          </button>
-        </div>
-      </template>
     </LayoutHeader>
 
     <div class="flex flex-1 min-h-0 overflow-hidden">
@@ -511,7 +486,7 @@
               </button>
             </div>
             <button
-              @click="showToast('Covenant added to library')"
+              @click="openAddCovenant"
               class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Covenant") }}
@@ -620,11 +595,12 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1">
                         <button
+                          @click.stop="openEditCovenant(cov)"
                           class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
                         >
                           <FeatherIcon name="edit-2" class="h-3 w-3" />
                         </button>
-                        <button class="p-1.5 rounded hover:bg-gray-100 text-gray-400">
+                        <button @click.stop="duplicateCovenant(cov)" class="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                           <FeatherIcon name="copy" class="h-3 w-3" />
                         </button>
                       </div>
@@ -982,7 +958,7 @@
               >{{ cureTasks.length }} {{ __("active tasks") }}</span
             >
             <button
-              @click="showToast('Cure task created')"
+              @click="openAddTask"
               class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Task") }}
@@ -1066,7 +1042,7 @@
               >{{ waivers.length }} {{ __("waivers") }}</span
             >
             <button
-              @click="showToast('Waiver request submitted')"
+              @click="openAddWaiver"
               class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("New Waiver") }}
@@ -1349,6 +1325,168 @@
               <p class="text-[10px] text-gray-500 mt-0.5">{{ simResult.detail }}</p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Covenant Modal -->
+    <div
+      v-if="showAddCovForm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      @click.self="showAddCovForm = false"
+    >
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
+            <FeatherIcon :name="editingCov ? 'edit-2' : 'shield'" class="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">{{ editingCov ? 'Edit Covenant' : 'Add Covenant' }}</h3>
+            <p class="text-xs text-gray-400 mt-0.5">{{ editingCov ? editingCov.name : 'Add a new covenant to the library' }}</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant Name <span class="text-red-400">*</span></label>
+            <input v-model="covForm.name" type="text" placeholder="e.g. DSCR Minimum 1.25x" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+              <select v-model="covForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <option>Financial</option>
+                <option>Non-Financial</option>
+                <option>Operational</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Frequency</label>
+              <select v-model="covForm.frequency" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <option>Monthly</option>
+                <option>Quarterly</option>
+                <option>Semi-Annual</option>
+                <option>Annual</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Metric / Threshold</label>
+            <input v-model="covForm.metric" type="text" placeholder="e.g. DSCR ≥ 1.25" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Tags (comma-separated)</label>
+            <input v-model="covForm.tags" type="text" placeholder="e.g. Cash Flow, Core" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button @click="showAddCovForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button @click="submitAddCovenant" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">{{ editingCov ? 'Save Changes' : 'Add Covenant' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div
+      v-if="showAddTaskForm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      @click.self="showAddTaskForm = false"
+    >
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
+            <FeatherIcon name="check-square" class="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Add Cure Task</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Create a new cure workflow task</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Task Title <span class="text-red-400">*</span></label>
+            <input v-model="taskForm.title" type="text" placeholder="e.g. DSCR Improvement Plan" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
+            <input v-model="taskForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Priority</label>
+              <select v-model="taskForm.priority" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <option>Critical</option>
+                <option>High</option>
+                <option>Medium</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>
+              <input v-model="taskForm.deadline" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Assigned To</label>
+            <input v-model="taskForm.owner" type="text" placeholder="e.g. Reza M." class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button @click="showAddTaskForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button @click="submitAddTask" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Add Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Waiver Modal -->
+    <div
+      v-if="showAddWaiverForm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      @click.self="showAddWaiverForm = false"
+    >
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
+            <FeatherIcon name="file-text" class="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">New Waiver Request</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Submit a covenant waiver for approval</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant <span class="text-red-400">*</span></label>
+            <select v-model="waiverForm.covenant" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <option value="">Select covenant…</option>
+              <option v-for="c in covenantLibrary" :key="c.id" :value="c.name">{{ c.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
+            <input v-model="waiverForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Reason <span class="text-red-400">*</span></label>
+            <input v-model="waiverForm.reason" type="text" placeholder="e.g. Post-pandemic recovery" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Waiver Expiry</label>
+              <input v-model="waiverForm.expiry" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Approver</label>
+              <select v-model="waiverForm.approver" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                <option>Risk Committee</option>
+                <option>Credit Head</option>
+                <option>Division Director</option>
+                <option>Risk Officer</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button @click="showAddWaiverForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button @click="submitAddWaiver" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Submit Waiver</button>
         </div>
       </div>
     </div>
@@ -2178,8 +2316,137 @@ function showToast(msg) {
   }, 2500);
 }
 
-// misc
-const showAddCovenant = ref(false);
+// ── Add / Edit Covenant ──
+const showAddCovForm = ref(false);
+const editingCov = ref(null);
+const covForm = ref({ name: '', type: 'Financial', frequency: 'Quarterly', metric: '', tags: '' });
+
+function openAddCovenant() {
+  editingCov.value = null;
+  covForm.value = { name: '', type: 'Financial', frequency: 'Quarterly', metric: '', tags: '' };
+  showAddCovForm.value = true;
+}
+
+function openEditCovenant(cov) {
+  editingCov.value = cov;
+  covForm.value = {
+    name: cov.name,
+    type: cov.type,
+    frequency: cov.frequency,
+    metric: cov.metric === '—' ? '' : cov.metric,
+    tags: cov.tags.join(', '),
+  };
+  showAddCovForm.value = true;
+}
+
+function submitAddCovenant() {
+  if (!covForm.value.name.trim()) return;
+  const tags = covForm.value.tags
+    ? covForm.value.tags.split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+  const icon = covForm.value.type === 'Financial' ? 'trending-up'
+    : covForm.value.type === 'Non-Financial' ? 'check-circle'
+    : 'file-text';
+
+  if (editingCov.value) {
+    const idx = covenantLibrary.value.findIndex(c => c.id === editingCov.value.id);
+    if (idx !== -1) {
+      covenantLibrary.value[idx] = {
+        ...covenantLibrary.value[idx],
+        name: covForm.value.name,
+        type: covForm.value.type,
+        frequency: covForm.value.frequency,
+        metric: covForm.value.metric || '—',
+        tags,
+        icon,
+      };
+    }
+    showToast('Covenant updated');
+  } else {
+    covenantLibrary.value.unshift({
+      id: Date.now(),
+      name: covForm.value.name,
+      type: covForm.value.type,
+      metric: covForm.value.metric || '—',
+      frequency: covForm.value.frequency,
+      facilities: 0,
+      tags,
+      icon,
+      template: false,
+    });
+    showToast('Covenant added to library');
+  }
+  showAddCovForm.value = false;
+}
+
+function duplicateCovenant(cov) {
+  covenantLibrary.value.unshift({
+    ...cov,
+    id: Date.now(),
+    name: cov.name + ' (Copy)',
+    template: false,
+  });
+  showToast('Covenant duplicated');
+}
+
+// ── Add Cure Task ──
+const showAddTaskForm = ref(false);
+const taskForm = ref({ title: '', facility: '', priority: 'High', deadline: '', owner: '' });
+
+function openAddTask() {
+  taskForm.value = { title: '', facility: '', priority: 'High', deadline: '', owner: '' };
+  showAddTaskForm.value = true;
+}
+
+function submitAddTask() {
+  if (!taskForm.value.title.trim() || !taskForm.value.facility.trim()) return;
+  const dl = taskForm.value.deadline
+    ? new Date(taskForm.value.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  cureTasks.value.unshift({
+    id: Date.now(),
+    title: taskForm.value.title,
+    facility: taskForm.value.facility,
+    status: 'Open',
+    priority: taskForm.value.priority,
+    deadline: dl,
+    owner: taskForm.value.owner || 'Unassigned',
+    progress: 0,
+    overdue: false,
+  });
+  showAddTaskForm.value = false;
+  showToast('Cure task created');
+}
+
+// ── Add Waiver ──
+const showAddWaiverForm = ref(false);
+const waiverForm = ref({ covenant: '', facility: '', reason: '', expiry: '', approver: 'Risk Committee' });
+
+function openAddWaiver() {
+  waiverForm.value = { covenant: '', facility: '', reason: '', expiry: '', approver: 'Risk Committee' };
+  showAddWaiverForm.value = true;
+}
+
+function submitAddWaiver() {
+  if (!waiverForm.value.covenant || !waiverForm.value.facility.trim() || !waiverForm.value.reason.trim()) return;
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const exp = waiverForm.value.expiry
+    ? new Date(waiverForm.value.expiry).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+  waivers.value.unshift({
+    id: Date.now(),
+    covenant: waiverForm.value.covenant,
+    reason: waiverForm.value.reason,
+    facility: waiverForm.value.facility,
+    requested: today,
+    expiry: exp,
+    approver: waiverForm.value.approver,
+    status: 'Pending',
+    expiring: false,
+  });
+  showAddWaiverForm.value = false;
+  showToast('Waiver request submitted');
+}
 </script>
 
 <style scoped>
