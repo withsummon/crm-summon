@@ -21,6 +21,10 @@ ARCHIVE = "CRM Omnichannel Compliance Archive"
 ANALYTICS = "CRM Omnichannel Analytics Snapshot"
 
 CHANNELS = ["WhatsApp", "Email", "SMS", "In-App", "Voice"]
+DEMO_WHATSAPP_RECIPIENTS = {
+	"6285591150319": "Demo WhatsApp 0319",
+	"6285774240730": "Demo WhatsApp 0730",
+}
 COUNT_KEYS = {
 	"WhatsApp": "whatsapp",
 	"Email": "email",
@@ -102,6 +106,29 @@ def _clean_tags(tags) -> list[str]:
 	return []
 
 
+def _normalize_demo_phone(value: str | None) -> str:
+	digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+	if digits.startswith("0"):
+		digits = f"62{digits[1:]}"
+	return digits
+
+
+def _default_customer_group() -> str | None:
+	return (
+		frappe.db.get_value("Customer Group", {"is_group": 0}, "name")
+		or frappe.db.get_value("Customer Group", "Commercial", "name")
+		or frappe.db.get_value("Customer Group", {"is_group": 1}, "name")
+	)
+
+
+def _default_territory() -> str | None:
+	return (
+		frappe.db.get_default("territory")
+		or frappe.db.get_value("Territory", {"is_group": 0}, "name")
+		or frappe.db.get_value("Territory", "All Territories", "name")
+	)
+
+
 def _conversation_doc(name: str):
 	if not frappe.db.exists(CONVERSATION, name):
 		frappe.throw(_("Conversation {0} does not exist").format(name), frappe.DoesNotExistError)
@@ -175,10 +202,13 @@ def _provider_status(channel: str) -> dict:
 		if frappe.db.exists("Email Account", {"enable_outgoing": 1}):
 			status = "Active"
 			provider = provider or "Frappe Email"
-	if channel in ["Email", "WhatsApp", "SMS", "Voice", "In-App"]:
+	if channel == "Email" and frappe.conf.get("mail_server") and frappe.conf.get("mail_login"):
+		status = "Active"
+		provider = provider or "SMTP"
+	if channel == "In-App":
 		status = "Active"
 		if not provider:
-			provider = "Frappe Email" if channel == "Email" else f"Simulated {channel}"
+			provider = "Frappe In-App"
 	return {"channel": channel, "status": status, "provider": provider, "account": account.name if account else None}
 
 
@@ -539,6 +569,7 @@ def _send_to_provider(conversation, content=None, template=None, attachment=None
 			)
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), "Omnichannel sendmail native fallback failed")
+			return {"status": "Failed", "failed_reason": _("SMTP send failed. Check outgoing Email Account or SMTP site config."), "to_party": to_party}
 		doc = frappe.get_doc(
 			{
 				"doctype": "Communication",
@@ -1043,6 +1074,47 @@ def search_customers(query: str = "") -> list[dict]:
 
 
 @frappe.whitelist()
+def ensure_demo_whatsapp_customer(recipient: str) -> dict:
+	"""Create or reuse a demo Customer for the allowlisted WhatsApp test numbers."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Authentication required"))
+
+	normalized = _normalize_demo_phone(recipient)
+	customer_name = DEMO_WHATSAPP_RECIPIENTS.get(normalized)
+	if not customer_name:
+		frappe.throw(_("This WhatsApp demo recipient is not allowlisted"))
+
+	meta = frappe.get_meta("Customer")
+	fields = ["name", "customer_name"]
+	if meta.has_field("mobile_no"):
+		fields.append("mobile_no")
+	customer = None
+	if meta.has_field("mobile_no"):
+		customer = frappe.db.get_value("Customer", {"mobile_no": ["in", [normalized, f"+{normalized}"]]}, fields, as_dict=True)
+	if not customer:
+		customer = frappe.db.get_value("Customer", {"customer_name": customer_name}, fields, as_dict=True)
+
+	if customer:
+		if meta.has_field("mobile_no") and customer.get("mobile_no") != normalized:
+			frappe.db.set_value("Customer", customer.name, "mobile_no", normalized, update_modified=False)
+			customer.mobile_no = normalized
+		return customer
+
+	doc = frappe.new_doc("Customer")
+	doc.customer_name = customer_name
+	if meta.has_field("customer_type"):
+		doc.customer_type = "Individual"
+	if meta.has_field("customer_group"):
+		doc.customer_group = _default_customer_group()
+	if meta.has_field("territory"):
+		doc.territory = _default_territory()
+	if meta.has_field("mobile_no"):
+		doc.mobile_no = normalized
+	doc.insert(ignore_permissions=True)
+	return {fieldname: doc.get(fieldname) for fieldname in fields}
+
+
+@frappe.whitelist()
 def start_external_conversation(
 	channel: str,
 	customer: str,
@@ -1090,6 +1162,21 @@ def start_external_conversation(
 def sync_whatsapp_message(doc, method: str | None = None):
 	if not _ready():
 		return
+	reference_doctype = getattr(doc, "reference_doctype", None)
+	reference_name = getattr(doc, "reference_name", None)
+	upsert_inbound_message(
+		channel="WhatsApp",
+		content=getattr(doc, "message", None),
+		provider_message_id=getattr(doc, "message_id", None) or doc.name,
+		sender=getattr(doc, "from", None),
+		recipient=getattr(doc, "to", None),
+		reference_doctype=reference_doctype,
+		reference_name=reference_name,
+		status="Received" if getattr(doc, "type", None) == "Incoming" else getattr(doc, "status", None),
+		message_type=getattr(doc, "message_type", None) or "Text",
+		attachment=getattr(doc, "attach", None),
+		payload=doc.as_dict(),
+	)
 
 
 @frappe.whitelist()
@@ -1113,7 +1200,8 @@ def create_or_get_conversation(
 	)
 	if existing:
 		return get_conversation(existing[0].name)
-	display = frappe.db.get_value(reference_doctype, reference_name, "customer_name") or reference_name
+	title_field = frappe.get_meta(reference_doctype).title_field or "name"
+	display = frappe.db.get_value(reference_doctype, reference_name, title_field) or reference_name
 	conv = frappe.get_doc({
 		"doctype": CONVERSATION,
 		"subject": subject or f"In-App Chat - {display}",
@@ -1125,21 +1213,6 @@ def create_or_get_conversation(
 	})
 	conv.insert(ignore_permissions=True)
 	return get_conversation(conv.name)
-	reference_doctype = getattr(doc, "reference_doctype", None)
-	reference_name = getattr(doc, "reference_name", None)
-	upsert_inbound_message(
-		channel="WhatsApp",
-		content=getattr(doc, "message", None),
-		provider_message_id=getattr(doc, "message_id", None) or doc.name,
-		sender=getattr(doc, "from", None),
-		recipient=getattr(doc, "to", None),
-		reference_doctype=reference_doctype,
-		reference_name=reference_name,
-		status="Received" if getattr(doc, "type", None) == "Incoming" else getattr(doc, "status", None),
-		message_type=getattr(doc, "message_type", None) or "Text",
-		attachment=getattr(doc, "attach", None),
-		payload=doc.as_dict(),
-	)
 
 
 def sync_communication(doc, method: str | None = None):
@@ -1200,6 +1273,37 @@ def sync_customer_communication(doc, method: str | None = None):
 			"payload": doc.as_dict(),
 		},
 	)
+
+
+@frappe.whitelist()
+def send_lead_email(lead: str, recipients: str, subject: str, content: str, attachments=None):
+	"""Send email from a lead context using configured SMTP immediately."""
+	if not recipients:
+		frappe.throw(_("Recipient email is required"))
+	try:
+		frappe.sendmail(
+			recipients=recipients,
+			subject=subject,
+			content=content or "",
+			reference_doctype="CRM Lead",
+			reference_name=lead,
+			now=True,
+		)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Lead email send failed")
+		frappe.throw(_("Failed to send email. Check SMTP configuration."))
+	comm = frappe.get_doc({
+		"doctype": "Communication",
+		"communication_type": "Communication",
+		"sent_or_received": "Sent",
+		"subject": subject,
+		"content": content or "",
+		"recipients": recipients,
+		"reference_doctype": "CRM Lead",
+		"reference_name": lead,
+	})
+	comm.insert(ignore_permissions=True)
+	return {"status": "Sent", "communication": comm.name}
 
 
 def sync_call_log(doc, method: str | None = None):

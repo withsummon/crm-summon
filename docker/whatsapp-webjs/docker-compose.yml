@@ -1,0 +1,13 @@
+services:
+  whatsapp-webjs:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${PORT:-3020}:3020"
+    volumes:
+      - whatsapp-webjs-session:/data/session
+
+volumes:
+  whatsapp-webjs-session:

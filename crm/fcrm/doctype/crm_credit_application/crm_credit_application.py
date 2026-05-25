@@ -9,4 +9,12 @@ class CRMCreditApplication(Document):
 			self.borrower_type = "Individual"
 		if not self.status:
 			self.status = "Draft"
-
+		else:
+			status_aliases = {
+				"In Progress": "Credit Analysis",
+				"Pending Review": "Document Review",
+				"Submitted": "Committee Approval",
+				"Approved": "Active",
+				"Cancelled": "Closed",
+			}
+			self.status = status_aliases.get(self.status, self.status)

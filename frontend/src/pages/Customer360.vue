@@ -502,6 +502,11 @@
             <input v-if="field.type === 'hidden'" v-model="dynamicForm.doc[field.fieldname]" type="hidden" />
             <FormSelect v-else-if="field.type === 'select'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :options="field.options" :error="dynamicFormErrors[field.fieldname]" />
             <Link v-else-if="field.type === 'link'" v-model="dynamicForm.doc[field.fieldname]" :doctype="field.options" :filters="field.filters || []" :label="field.label" :placeholder="field.placeholder || __('Search {0}', [field.label])" />
+            <label v-else-if="field.type === 'currency'" class="flex flex-col gap-1">
+              <span class="text-xs text-ink-gray-5">{{ field.label }}</span>
+              <RupiahInput v-model="dynamicForm.doc[field.fieldname]" />
+              <span v-if="dynamicFormErrors[field.fieldname]" class="text-xs text-red-600">{{ dynamicFormErrors[field.fieldname] }}</span>
+            </label>
             <FormTextarea v-else-if="field.type === 'textarea'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :class="dynamicForm.fields.length > 5 ? 'md:col-span-2' : ''" :error="dynamicFormErrors[field.fieldname]" />
             <FormCheckbox v-else-if="field.type === 'checkbox'" v-model="dynamicForm.doc[field.fieldname]" :label="field.label" />
             <FormInput v-else v-model="dynamicForm.doc[field.fieldname]" :label="field.label" :type="field.type || 'text'" :error="dynamicFormErrors[field.fieldname]" />
@@ -525,6 +530,7 @@ import { useRoute, useRouter } from 'vue-router'
 import DOMPurify from 'dompurify'
 import ChatPanel from '@/components/ChatPanel.vue'
 import Link from '@/components/Controls/Link.vue'
+import RupiahInput from '@/components/Controls/RupiahInput.vue'
 import html2pdf from 'html2pdf.js'
 
 const route = useRoute()
@@ -874,7 +880,7 @@ const formConfigs = computed(() => ({
       field('borrower_type', 'Borrower Type', 'select', ['Individual', 'Company']),
       field('status', 'Status', 'select', ['Draft', 'Application Received', 'Document Review', 'Credit Analysis', 'Collateral Appraisal', 'Committee Approval', 'Legal Documentation', 'Disbursement', 'Active', 'Rejected', 'Closed']),
       field('facility_type', 'Facility Type'),
-      field('requested_amount', 'Requested Amount', 'number'),
+      field('requested_amount', 'Requested Amount', 'currency'),
       field('employer_name', 'Employer / Affiliation'),
       field('public_company_ticker', 'PT Tbk Ticker'),
       field('purpose', 'Purpose', 'textarea'),
@@ -916,7 +922,7 @@ const formConfigs = computed(() => ({
       field('tenure_start', 'Tenure Start', 'date'),
       field('aml_pep_status', 'AML / PEP Status', 'select', ['Manual', 'Pending Vendor', 'Clear', 'Potential Match', 'Unavailable']),
       field('background_check_status', 'Background Check', 'select', ['Manual', 'Pending Vendor', 'Clear', 'Flagged', 'Unavailable']),
-      field('exposure', 'Exposure', 'number'),
+      field('exposure', 'Exposure', 'currency'),
       field('is_ubo', 'Is UBO', 'checkbox'),
     ],
   },
@@ -929,8 +935,8 @@ const formConfigs = computed(() => ({
       field('product_type', 'Product Type'),
       field('status', 'Status', 'select', ['Active', 'Closed', 'Restructured', 'Watchlist']),
       field('due_date', 'Due Date', 'date'),
-      field('outstanding', 'Outstanding', 'number'),
-      field('limit_amount', 'Limit Amount', 'number'),
+      field('outstanding', 'Outstanding', 'currency'),
+      field('limit_amount', 'Limit Amount', 'currency'),
       field('health', 'Health / KOL'),
       field('repayment_behavior', 'Repayment Behavior', 'textarea'),
       field('default_flag', 'Default History Flag', 'checkbox'),
@@ -947,13 +953,13 @@ const formConfigs = computed(() => ({
     title: __('Collateral'),
     doctype: 'CRM Collateral',
     defaults: { customer: selectedCustomerName.value, status: 'Active', reappraisal_status: 'Not Required' },
-    fields: [field('asset', 'Asset'), field('collateral_type', 'Type'), field('collateral_value', 'Value', 'number'), field('linked_facility', 'Linked Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('ltv_percent', 'LTV %', 'number'), field('expiry_date', 'Expiry Date', 'date'), field('insurance_expiry', 'Insurance Expiry', 'date'), field('document_link', 'Document Link'), field('reappraisal_status', 'Re-appraisal', 'select', ['Not Required', 'Due', 'In Progress', 'Completed']), field('status', 'Status', 'select', ['Active', 'Expired', 'Released', 'Under Review'])],
+    fields: [field('asset', 'Asset'), field('collateral_type', 'Type'), field('collateral_value', 'Value', 'currency'), field('linked_facility', 'Linked Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('ltv_percent', 'LTV %', 'number'), field('expiry_date', 'Expiry Date', 'date'), field('insurance_expiry', 'Insurance Expiry', 'date'), field('document_link', 'Document Link'), field('reappraisal_status', 'Re-appraisal', 'select', ['Not Required', 'Due', 'In Progress', 'Completed']), field('status', 'Status', 'select', ['Active', 'Expired', 'Released', 'Under Review'])],
   },
   bureau: {
     title: __('Bureau Report'),
     doctype: 'CRM Bureau Report',
     defaults: { customer: selectedCustomerName.value, source: 'SLIK/OJK Manual Upload' },
-    fields: [field('source', 'Source', 'select', ['SLIK/OJK Manual Upload', 'PEFINDO', 'Internal', 'Other']), field('report_date', 'Report Date', 'date'), field('kol_status', 'KOL Status'), field('score', 'Score', 'number'), field('external_exposure', 'External Exposure', 'number'), field('notes', 'Notes', 'textarea')],
+    fields: [field('source', 'Source', 'select', ['SLIK/OJK Manual Upload', 'PEFINDO', 'Internal', 'Other']), field('report_date', 'Report Date', 'date'), field('kol_status', 'KOL Status'), field('score', 'Score', 'number'), field('external_exposure', 'External Exposure', 'currency'), field('notes', 'Notes', 'textarea')],
   },
   document: {
     title: __('Customer Document'),
@@ -971,7 +977,7 @@ const formConfigs = computed(() => ({
     title: __('Financial Statement'),
     doctype: 'CRM Financial Statement',
     defaults: { customer: selectedCustomerName.value, statement_type: 'P&L', extraction_status: 'Manual' },
-    fields: [field('statement_type', 'Statement Type', 'select', ['P&L', 'Balance Sheet', 'Cash Flow', 'Other']), field('metric', 'Metric'), field('year', 'Year', 'number'), field('amount', 'Amount', 'number'), field('auditor', 'Auditor'), field('audit_year', 'Audit Year', 'number'), field('source', 'Source'), field('extraction_status', 'AI Extraction Status', 'select', ['Manual', 'Pending Vendor', 'Extracted', 'Failed', 'Unavailable']), field('audited', 'Audited', 'checkbox'), field('forecast', 'Forecast', 'checkbox'), field('notes', 'Notes', 'textarea')],
+    fields: [field('statement_type', 'Statement Type', 'select', ['P&L', 'Balance Sheet', 'Cash Flow', 'Other']), field('metric', 'Metric'), field('year', 'Year', 'number'), field('amount', 'Amount', 'currency'), field('auditor', 'Auditor'), field('audit_year', 'Audit Year', 'number'), field('source', 'Source'), field('extraction_status', 'AI Extraction Status', 'select', ['Manual', 'Pending Vendor', 'Extracted', 'Failed', 'Unavailable']), field('audited', 'Audited', 'checkbox'), field('forecast', 'Forecast', 'checkbox'), field('notes', 'Notes', 'textarea')],
   },
   siteVisit: {
     title: __('Site Visit'),
@@ -989,7 +995,7 @@ const formConfigs = computed(() => ({
     title: __('Transaction'),
     doctype: 'CRM Transaction History',
     defaults: { customer: selectedCustomerName.value, transaction_type: 'Repayment', status: 'Posted' },
-    fields: [field('facility', 'Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('transaction_date', 'Transaction Date', 'date'), field('transaction_type', 'Type', 'select', ['Repayment', 'Missed Payment', 'Disbursement', 'Fee', 'Adjustment']), field('amount', 'Amount', 'number'), field('running_balance', 'Running Balance', 'number'), field('status', 'Status', 'select', ['Posted', 'Pending', 'Failed']), field('notes', 'Notes', 'textarea')],
+    fields: [field('facility', 'Facility', 'link', 'CRM Credit Facility', { customer: selectedCustomerName.value }), field('transaction_date', 'Transaction Date', 'date'), field('transaction_type', 'Type', 'select', ['Repayment', 'Missed Payment', 'Disbursement', 'Fee', 'Adjustment']), field('amount', 'Amount', 'currency'), field('running_balance', 'Running Balance', 'currency'), field('status', 'Status', 'select', ['Posted', 'Pending', 'Failed']), field('notes', 'Notes', 'textarea')],
   },
   task: {
     title: __('Customer Task'),

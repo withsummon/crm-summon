@@ -197,6 +197,13 @@
                   </li>
                 </ul>
               </PanelBlock>
+              <PanelBlock title="Agent Tools">
+                <div class="flex flex-wrap gap-1.5">
+                  <span v-for="tool in selectedAgent?.tools || []" :key="tool" class="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                    {{ tool.replaceAll('_', ' ') }}
+                  </span>
+                </div>
+              </PanelBlock>
               <PanelBlock title="Sources">
                 <div v-if="selectedSources.length" class="space-y-3">
                   <div v-for="source in selectedSources" :key="source.id" class="rounded-lg border border-slate-200 p-3">
@@ -222,7 +229,7 @@
               <PanelBlock title="Sandbox">
                 <textarea v-model="sandboxPrompt" rows="5" class="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-teal-500" />
                 <Button class="mt-2 w-full" size="sm" variant="solid" :label="__('Run Sandbox')" :loading="isSandboxing" @click="runSandbox" />
-                <p v-if="sandboxResult" class="mt-2 text-xs leading-5 text-slate-600">{{ sandboxResult }}</p>
+                <div v-if="sandboxResult" class="prose prose-xs mt-3 max-w-none text-slate-700" v-html="renderMarkdown(sandboxResult)" />
               </PanelBlock>
               <PanelBlock title="RAG">
                 <div class="space-y-2 text-xs text-slate-600">
@@ -271,8 +278,8 @@ import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 
 const agents = ref([])
 const selectedAgent = ref(null)
-const STORAGE_KEY = 'ai_agent_center_messages'
-const messages = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(m => ({ ...m, loading: false })))
+const LEGACY_STORAGE_KEY = 'ai_agent_center_messages'
+const messages = ref([])
 const inputMessage = ref('')
 const sessionId = ref(null)
 const isLoading = ref(false)
@@ -290,9 +297,7 @@ const sandboxResult = ref('')
 const chatContainer = ref(null)
 
 watch(messages, (newMessages) => {
-  // Save non-loading messages to localStorage
-  const toSave = newMessages.filter(m => !m.loading)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+  persistAgentConversation(newMessages)
 }, { deep: true })
 
 const quickSuggestions = computed(() => [
@@ -303,8 +308,44 @@ const quickSuggestions = computed(() => [
 ])
 
 function selectAgent(agent) {
+  persistAgentConversation(messages.value)
   selectedAgent.value = agent
   localStorage.setItem('ai_agent_center_selected_agent', agent.key)
+  loadAgentConversation(agent)
+}
+
+function agentStorageKey(agentKey) {
+  return `ai_agent_center_messages:${agentKey || 'general'}`
+}
+
+function agentSessionKey(agentKey) {
+  return `ai_agent_center_session:${agentKey || 'general'}`
+}
+
+function loadAgentConversation(agent) {
+  const key = agent?.key || 'general'
+  const storedMessages = localStorage.getItem(agentStorageKey(key))
+  const legacyMessages = key === 'general' ? localStorage.getItem(LEGACY_STORAGE_KEY) : null
+  messages.value = parseStoredMessages(storedMessages || legacyMessages)
+  sessionId.value = localStorage.getItem(agentSessionKey(key)) || null
+  selectedSources.value = []
+}
+
+function parseStoredMessages(raw) {
+  try {
+    return JSON.parse(raw || '[]').map((message) => ({ ...message, loading: false }))
+  } catch {
+    return []
+  }
+}
+
+function persistAgentConversation(nextMessages = messages.value) {
+  const key = selectedAgent.value?.key
+  if (!key) return
+  const toSave = nextMessages.filter((message) => !message.loading)
+  localStorage.setItem(agentStorageKey(key), JSON.stringify(toSave))
+  if (sessionId.value) localStorage.setItem(agentSessionKey(key), sessionId.value)
+  else localStorage.removeItem(agentSessionKey(key))
 }
 
 function formatCost(value) {
@@ -327,7 +368,7 @@ function renderMarkdown(text) {
     .replace(/^- (.*$)/gm, '<li>$1</li>')
     .replace(/^\|(.*)\|$/gm, (match) => {
       const cells = match.split('|').filter((cell) => cell.trim())
-      if (cells.every((cell) => /^[\s-]+$/.test(cell))) return ''
+      if (cells.every((cell) => /^[\s:|-]+$/.test(cell))) return ''
       return '<tr>' + cells.map((cell) => `<td>${cell.trim()}</td>`).join('') + '</tr>'
     })
     .replace(/\n\n/g, '</p><p>')
@@ -348,6 +389,7 @@ async function loadAgents() {
   agents.value = await call('crm.api.ai_agent_center.get_agents')
   const selectedKey = localStorage.getItem('ai_agent_center_selected_agent')
   selectedAgent.value = agents.value.find((agent) => agent.key === selectedKey) || agents.value[0]
+  loadAgentConversation(selectedAgent.value)
 }
 
 async function loadAdminData() {
@@ -409,6 +451,7 @@ async function streamAgentResponse({ agent, content, loadingId }) {
       const payload = event.payload || {}
       if (event.type === 'meta') {
         sessionId.value = payload.session_id || sessionId.value
+        persistAgentConversation()
       } else if (event.type === 'sources') {
         target.sources = payload.sources || []
         selectedSources.value = payload.sources || []
@@ -428,6 +471,7 @@ async function streamAgentResponse({ agent, content, loadingId }) {
         target.messageId = payload.message_id
         sessionId.value = payload.session_id || sessionId.value
         selectedSources.value = target.sources || []
+        persistAgentConversation()
       } else if (event.type === 'error') {
         target.loading = false
         target.content = payload.message || 'AI Agent Center request failed.'
@@ -523,7 +567,9 @@ function clearChat() {
   messages.value = []
   sessionId.value = null
   selectedSources.value = []
-  localStorage.removeItem(STORAGE_KEY)
+  const key = selectedAgent.value?.key || 'general'
+  localStorage.removeItem(agentStorageKey(key))
+  localStorage.removeItem(agentSessionKey(key))
 }
 
 const PanelBlock = {

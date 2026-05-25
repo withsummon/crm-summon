@@ -195,14 +195,14 @@
                 </select>
               </FieldGroup>
               <FieldGroup :label="__('Requested Amount (IDR)')" required>
-                <input v-model.number="newApp.requested_amount" type="number" class="form-input" :placeholder="__('e.g. 5000000000')" />
+                <RupiahInput v-model="newApp.requested_amount" :placeholder="__('e.g. 5.000.000.000')" />
                 <div v-if="newApp.requested_amount" class="mt-1 text-xs text-teal-700 font-semibold">{{ formatCurrency(newApp.requested_amount) }}</div>
               </FieldGroup>
               <FieldGroup :label="__('Credit Limit (IDR)')">
-                <input v-model.number="newApp.credit_limit" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.credit_limit" />
               </FieldGroup>
               <FieldGroup :label="__('Plafond (IDR)')">
-                <input v-model.number="newApp.plafond" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.plafond" />
               </FieldGroup>
               <FieldGroup :label="__('Tenor (months) / Jangka Waktu')">
                 <input v-model.number="newApp.tenor_months" type="number" class="form-input" placeholder="12" />
@@ -257,7 +257,7 @@
                 </select>
               </FieldGroup>
               <FieldGroup :label="__('Collateral Value (IDR)')">
-                <input v-model.number="newApp.collateral_value" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.collateral_value" />
               </FieldGroup>
               <FieldGroup :label="__('LTV % (Loan to Value)')">
                 <input v-model.number="newApp.ltv_percent" type="number" step="0.1" class="form-input" placeholder="80" />
@@ -278,22 +278,22 @@
             </div>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FieldGroup :label="__('Revenue / Penjualan (Latest Year IDR)')">
-                <input v-model.number="newApp.revenue" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.revenue" />
               </FieldGroup>
               <FieldGroup :label="__('EBITDA (IDR)')">
-                <input v-model.number="newApp.ebitda" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.ebitda" />
               </FieldGroup>
               <FieldGroup :label="__('Net Profit / Laba Bersih (IDR)')">
-                <input v-model.number="newApp.net_profit" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.net_profit" />
               </FieldGroup>
               <FieldGroup :label="__('Total Assets (IDR)')">
-                <input v-model.number="newApp.total_assets" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.total_assets" />
               </FieldGroup>
               <FieldGroup :label="__('Total Liabilities (IDR)')">
-                <input v-model.number="newApp.total_liabilities" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.total_liabilities" />
               </FieldGroup>
               <FieldGroup :label="__('Equity / Modal (IDR)')">
-                <input v-model.number="newApp.equity" type="number" class="form-input" placeholder="0" />
+                <RupiahInput v-model="newApp.equity" />
               </FieldGroup>
               <FieldGroup :label="__('Financial Year')">
                 <input v-model.number="newApp.financial_year" type="number" class="form-input" :placeholder="String(new Date().getFullYear() - 1)" />
@@ -413,6 +413,7 @@ import { Badge, Button, Dialog, FeatherIcon, FileUploader, call, createResource,
 import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Link from '@/components/Controls/Link.vue'
+import RupiahInput from '@/components/Controls/RupiahInput.vue'
 
 const router = useRouter()
 const query = ref('')

@@ -9,6 +9,8 @@ app_logo_url = "/assets/crm/images/bni-logo.png"
 app_icon_title = "BNI CRM"
 app_icon_route = "/crm"
 
+
+
 # Apps
 # ------------------
 

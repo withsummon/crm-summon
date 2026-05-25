@@ -103,6 +103,45 @@ class CRMLead(Document):
 	def on_update(self):
 		self.update_uat_score()
 
+	def on_trash(self):
+		# Clear reference in CRM Lead Intake Log
+		if frappe.db.table_exists("CRM Lead Intake Log"):
+			frappe.db.set_value("CRM Lead Intake Log", {"lead": self.name}, "lead", None, update_modified=False)
+
+		# Delete related CRM Lead Tag Link records
+		if frappe.db.table_exists("CRM Lead Tag Link"):
+			frappe.db.delete("CRM Lead Tag Link", {"lead": self.name})
+
+		# Delete related CRM Lead Assignment Log records
+		if frappe.db.table_exists("CRM Lead Assignment Log"):
+			frappe.db.delete("CRM Lead Assignment Log", {"lead": self.name})
+
+		# Delete related CRM Lead Duplicate Candidate records
+		if frappe.db.table_exists("CRM Lead Duplicate Candidate"):
+			frappe.db.delete("CRM Lead Duplicate Candidate", {"lead": self.name})
+			frappe.db.delete("CRM Lead Duplicate Candidate", {"duplicate_lead": self.name})
+
+		# Delete related CRM AI RAG Chunk records
+		if frappe.db.table_exists("CRM AI RAG Chunk"):
+			frappe.db.delete("CRM AI RAG Chunk", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related CRM Notification records
+		if frappe.db.table_exists("CRM Notification"):
+			frappe.db.delete("CRM Notification", {"reference_doctype": self.doctype, "reference_name": self.name})
+			frappe.db.delete("CRM Notification", {"notification_type_doctype": self.doctype, "notification_type_doc": self.name})
+
+		# Delete related CRM Task records
+		if frappe.db.table_exists("CRM Task"):
+			frappe.db.delete("CRM Task", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related FCRM Note records
+		if frappe.db.table_exists("FCRM Note"):
+			frappe.db.delete("FCRM Note", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related CRM Call Log records
+		if frappe.db.table_exists("CRM Call Log"):
+			frappe.db.delete("CRM Call Log", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
 	def before_save(self):
 		self.apply_sla()
 

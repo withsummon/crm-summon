@@ -44,7 +44,7 @@
           v-model="reassignReason"
           type="textarea"
           :label="__('Reason')"
-          :placeholder="__('Reason is mandatory for UAT audit')"
+          :placeholder="__('Reason is mandatory for audit trail')"
         />
       </div>
     </template>

@@ -114,6 +114,31 @@
 
           <!-- For External Channels (Email, SMS, WhatsApp, Voice) -->
           <div v-else class="space-y-4 pt-3">
+            <div v-if="selectedChannel === 'WhatsApp'" class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+              <div class="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-emerald-800">{{ __('Demo Recipients') }}</div>
+                  <div class="text-xs text-emerald-700">{{ __('Use a prepared WhatsApp number for test chat') }}</div>
+                </div>
+                <FeatherIcon v-if="demoRecipientLoading" name="loader" class="h-4 w-4 animate-spin text-emerald-700" />
+              </div>
+              <div class="grid gap-2">
+                <button
+                  v-for="recipient in demoWhatsAppRecipients"
+                  :key="recipient.number"
+                  class="flex items-center justify-between rounded-lg border border-emerald-100 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-emerald-300"
+                  :disabled="demoRecipientLoading"
+                  @click="selectDemoWhatsAppRecipient(recipient)"
+                >
+                  <span>
+                    <span class="block font-semibold text-slate-800">{{ recipient.label }}</span>
+                    <span class="text-xs text-slate-500">{{ recipient.display }}</span>
+                  </span>
+                  <FeatherIcon name="chevron-right" class="h-4 w-4 text-emerald-600" />
+                </button>
+              </div>
+            </div>
+
             <!-- Customer Search Input -->
             <div class="relative">
               <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -463,7 +488,13 @@ const newChatRecipient = ref('')
 const newChatSubject = ref('')
 const newChatFirstMessage = ref('')
 const newChatLoading = ref(false)
+const demoRecipientLoading = ref(false)
 let customerSearchTimer = null
+
+const demoWhatsAppRecipients = [
+  { label: 'Demo WhatsApp 0319', display: '+62 855-9115-0319', number: '6285591150319' },
+  { label: 'Demo WhatsApp 0730', display: '+62 857-7424-0730', number: '6285774240730' },
+]
 
 // Tag dialog
 const showTagDialog = ref(false)
@@ -804,6 +835,27 @@ function selectNewChatCustomer(customer) {
   }
   newChatSubject.value = ''
   newChatFirstMessage.value = ''
+}
+
+async function selectDemoWhatsAppRecipient(recipient) {
+  if (demoRecipientLoading.value) return
+  demoRecipientLoading.value = true
+  try {
+    const customer = await call('crm.api.omnichannel.ensure_demo_whatsapp_customer', {
+      recipient: recipient.number,
+    })
+    selectedNewChatCustomer.value = customer
+    customerSearch.value = ''
+    customerResults.value = []
+    newChatRecipient.value = recipient.number
+    newChatSubject.value = `WhatsApp Demo - ${recipient.label}`
+    newChatFirstMessage.value = `Halo, ini pesan test dari Summon CRM untuk ${recipient.display}.`
+    toast.success(__('Demo recipient selected'))
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to prepare demo recipient'))
+  } finally {
+    demoRecipientLoading.value = false
+  }
 }
 
 async function startExternalChat() {

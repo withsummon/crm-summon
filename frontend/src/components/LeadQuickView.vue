@@ -121,7 +121,7 @@ const loading = ref(false)
 const lead = ref(null)
 
 const summary = createResource({
-  url: 'crm.api.lead_management.get_lead_uat_summary',
+  url: 'crm.api.lead_management.get_lead_summary',
   makeParams: () => ({ lead: props.leadName }),
 })
 

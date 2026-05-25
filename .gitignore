@@ -11,6 +11,7 @@ crm/www/crm.html
 build
 frontend/coverage
 docs/modules
+docker/whatsapp-webjs/.env
 
 .vscode
 .github/instructions

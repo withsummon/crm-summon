@@ -2,6 +2,8 @@ import json
 import re
 import uuid
 import importlib.util
+import html
+import io
 from decimal import Decimal
 
 import frappe
@@ -94,8 +96,22 @@ GENERAL_AGENT = {
 	"uat": ["Universal chat", "RAG grounded answers", "CRM action execution"],
 }
 
-LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up"}
+LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up", "generate_pdf_report"}
 HIGH_RISK_ACTIONS = {"update_record", "send_communication", "fire_workflow", "export_regulatory_draft"}
+
+AGENT_TOOLS = {
+	"credit_analyst": ["financial_spreading", "ratio_analysis", "dscr_projection", "scenario_simulation", "create_recommendation", "generate_pdf_report"],
+	"relationship_manager": ["next_best_action", "draft_communication", "book_follow_up", "create_task", "generate_pdf_report"],
+	"collection_officer": ["overdue_prioritization", "draft_communication", "book_follow_up", "create_task", "generate_pdf_report"],
+	"document_validator": ["document_completeness_check", "authenticity_flags", "create_note", "generate_pdf_report"],
+	"financial_analyst": ["trend_analysis", "benchmark_comparison", "scenario_simulation", "generate_pdf_report"],
+	"proposal_generator": ["proposal_draft", "pricing_logic", "create_recommendation", "generate_pdf_report"],
+	"risk_analyst": ["risk_signal_scan", "risk_score_explanation", "create_recommendation", "generate_pdf_report"],
+	"customer_support": ["customer_answer_draft", "human_handoff_task", "draft_communication", "generate_pdf_report"],
+	"compliance_checker": ["aml_pep_scan", "suspicious_activity_draft", "export_regulatory_draft", "generate_pdf_report"],
+	"portfolio_monitor": ["portfolio_early_warning_scan", "watchlist_recommendation", "create_task", "generate_pdf_report"],
+	"general": ["rag_answer", "create_task", "create_note", "generate_pdf_report"],
+}
 
 
 def _get_agent(agent_key):
@@ -103,6 +119,10 @@ def _get_agent(agent_key):
 		if agent["key"] == agent_key:
 			return agent
 	return GENERAL_AGENT
+
+
+def _agent_tools(agent_key):
+	return AGENT_TOOLS.get(agent_key) or AGENT_TOOLS["general"]
 
 
 def _doctype_ready(doctype):
@@ -250,19 +270,124 @@ def _audit(agent_key, model, prompt, response, sources=None, tokens=0, cost=Deci
 
 
 def _system_prompt(agent, rag_context, customer=None):
+	tools = ", ".join(_agent_tools(agent["key"]))
 	return (
 		f"You are {agent['name']}, a {agent['role']} for BNI SUMMON CRM.\n"
 		"Answer in the user's language, be concise, professional, and banking-specific.\n"
 		"Use only the provided CRM/RAG sources for factual customer, credit, risk, document, and transaction claims.\n"
 		"If sources are insufficient, say what is missing instead of inventing facts.\n"
-		"Return Markdown with tables when useful. Include a short 'Sources' section referencing source numbers.\n"
+		"Return structured Markdown using these sections unless the user asks for another format:\n"
+		"## Executive Summary\n## Key Findings\n## Recommended Actions\n## Sources\n"
+		"Use Markdown tables when useful. Include source numbers in the Sources section.\n"
 		"Actions must be returned as JSON in a fenced block with _action, payload, and risk_level.\n"
-		"Low-risk actions may create tasks, notes, draft communications, recommendations, or follow-ups.\n"
+		"Low-risk actions may create tasks, notes, draft communications, recommendations, follow-ups, or PDF reports.\n"
+		"When the user asks for a report, laporan, PDF, or export, use _action generate_pdf_report with title, content, reference_doctype, and reference_docname in payload.\n"
 		"High-risk actions must request confirmation.\n\n"
 		f"Customer context: {customer or 'not scoped'}\n"
 		f"Agent UAT obligations: {', '.join(agent.get('uat') or [])}\n\n"
+		f"Available tools: {tools}\n\n"
 		f"RAG sources:\n{rag_context or 'No RAG sources available.'}"
 	)
+
+
+def _markdown_to_report_html(text):
+	escaped = html.escape(text or "").strip()
+	lines = []
+	for line in escaped.splitlines():
+		if line.startswith("### "):
+			lines.append(f"<h3>{line[4:]}</h3>")
+		elif line.startswith("## "):
+			lines.append(f"<h2>{line[3:]}</h2>")
+		elif line.startswith("# "):
+			lines.append(f"<h1>{line[2:]}</h1>")
+		elif line.startswith("- "):
+			lines.append(f"<p>&bull; {line[2:]}</p>")
+		elif line:
+			lines.append(f"<p>{line}</p>")
+		else:
+			lines.append("<br>")
+	return "\n".join(lines)
+
+
+def _create_pdf_report(payload):
+	from frappe.utils.pdf import get_pdf
+
+	title = cstr(payload.get("title") or "AI Agent Report").strip() or "AI Agent Report"
+	content = payload.get("content") or payload.get("report") or payload.get("summary") or ""
+	if not content:
+		frappe.throw(_("PDF report content is required"))
+	report_html = f"""
+		<html>
+			<head>
+				<meta charset="utf-8">
+				<style>
+					body {{ font-family: Arial, sans-serif; color: #0f172a; font-size: 12px; line-height: 1.55; }}
+					h1 {{ color: #0f766e; font-size: 22px; margin-bottom: 8px; }}
+					h2 {{ color: #0f172a; font-size: 16px; margin-top: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }}
+					h3 {{ color: #334155; font-size: 13px; margin-top: 14px; }}
+					p {{ margin: 6px 0; }}
+					.meta {{ color: #64748b; font-size: 10px; margin-bottom: 18px; }}
+				</style>
+			</head>
+			<body>
+				<h1>{html.escape(title)}</h1>
+				<div class="meta">Generated by AI Agent Center on {frappe.utils.now()}</div>
+				{_markdown_to_report_html(content)}
+			</body>
+		</html>
+	"""
+	try:
+		pdf = get_pdf(report_html)
+	except OSError:
+		pdf = _create_reportlab_pdf(title, content)
+	file_name = frappe.scrub(f"{title}-{uuid.uuid4().hex[:8]}") + ".pdf"
+	private_dir = frappe.get_site_path("private", "files")
+	frappe.create_folder(private_dir)
+	file_path = frappe.get_site_path("private", "files", file_name)
+	with open(file_path, "wb") as file:
+		file.write(pdf)
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": file_name,
+			"file_url": f"/private/files/{file_name}",
+			"is_private": 1,
+			"attached_to_doctype": payload.get("reference_doctype"),
+			"attached_to_name": payload.get("reference_docname"),
+		}
+	).insert(ignore_permissions=True)
+	return {"doctype": "File", "name": file_doc.name, "file_url": file_doc.file_url, "file_name": file_doc.file_name}
+
+
+def _create_reportlab_pdf(title, content):
+	from reportlab.lib.pagesizes import A4
+	from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+	from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+	buffer = io.BytesIO()
+	styles = getSampleStyleSheet()
+	styles.add(ParagraphStyle(name="BNITitle", parent=styles["Title"], textColor="#0f766e", fontSize=18, leading=22))
+	styles.add(ParagraphStyle(name="BNIHeading", parent=styles["Heading2"], textColor="#0f172a", fontSize=13, leading=16, spaceBefore=10))
+	styles.add(ParagraphStyle(name="BNIBody", parent=styles["BodyText"], fontSize=10, leading=14, spaceAfter=5))
+	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+	story = [
+		Paragraph(html.escape(title), styles["BNITitle"]),
+		Paragraph(f"Generated by AI Agent Center on {html.escape(frappe.utils.now())}", styles["BNIBody"]),
+		Spacer(1, 10),
+	]
+	for raw_line in cstr(content).splitlines():
+		line = raw_line.strip()
+		if not line:
+			story.append(Spacer(1, 6))
+			continue
+		if line.startswith("#"):
+			story.append(Paragraph(html.escape(line.lstrip("#").strip()), styles["BNIHeading"]))
+		elif line.startswith("- "):
+			story.append(Paragraph(f"&bull; {html.escape(line[2:].strip())}", styles["BNIBody"]))
+		else:
+			story.append(Paragraph(html.escape(line), styles["BNIBody"]))
+	doc.build(story)
+	return buffer.getvalue()
 
 
 def _extract_actions(text):
@@ -342,6 +467,8 @@ def _execute_low_risk_action(agent_key, session_id, action):
 			},
 		)
 		result = {"doctype": "CRM AI Recommendation", "name": result_name}
+	elif action_type == "generate_pdf_report":
+		result = _create_pdf_report(payload)
 	else:
 		result = {"message": "Action queued for manual handling"}
 
@@ -408,7 +535,7 @@ def get_agents():
 			"SELECT MAX(creation) FROM `tabCRM AI Audit Log` WHERE agent_key=%s",
 			(agent["key"],),
 		)[0][0]
-		rows.append({**agent, "model": settings.kimi_model or DEFAULT_KIMI_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
+		rows.append({**agent, "tools": _agent_tools(agent["key"]), "model": settings.kimi_model or DEFAULT_KIMI_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
 	return rows
 
 
@@ -572,7 +699,8 @@ def generate_summary(scope, docname, length="Standard"):
 	prompt = (
 		f"Generate a {length} AI Customer Summary and actionable banking insights for customer {docname}. "
 		"Cover credit exposure, KYC, risk, documents, transactions, relationships, and next best actions. "
-		"Use only sourced CRM/RAG facts."
+		"Use only sourced CRM/RAG facts. Return structured Markdown with these sections: "
+		"## Customer Snapshot, ## Risk Signals, ## Opportunities, ## Recommended Actions, ## Sources."
 	)
 	response = query_agent("risk_analyst", prompt, customer=docname)
 	summary = response["response"]
@@ -703,7 +831,7 @@ def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 		frappe.throw(_("Sandbox prompt is required"))
 	result = call_kimi_chat(
 		[
-			{"role": "system", "content": "You are testing an AI Agent Center prompt in sandbox mode. Do not mutate production data."},
+			{"role": "system", "content": "You are testing an AI Agent Center prompt in sandbox mode. Do not mutate production data. Return structured Markdown with headings, tables, and source notes when useful. Do not return raw JSON unless explicitly requested."},
 			{"role": "user", "content": prompt},
 		],
 		model=model_override,

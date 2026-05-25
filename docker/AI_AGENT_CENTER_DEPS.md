@@ -69,3 +69,26 @@ Expected healthy status:
 If `mineru_command_available` is false, the app dependencies were not installed into the active bench Python environment. Reinstall the CRM app dependencies in the backend image/container, then rerun the status command.
 
 If reindexing times out on Moonshot/Kimi, rerun it once after network/API latency settles. For demos, keep the first indexed dataset small and reindex before the presentation.
+
+## Omnichannel Runtime
+
+Email SMTP should be configured in site config or the Frappe Email Account UI, never in source code. For the demo Gmail sender, configure `mail_server=smtp.gmail.com`, `mail_port=587`, `use_tls=1`, `mail_login`, `mail_password`, `auto_email_id`, and `mail_sender`, then run `bench --site <site-name> clear-cache`.
+
+The WhatsAppWebJS adapter lives in `docker/whatsapp-webjs`.
+
+```bash
+cd docker/whatsapp-webjs
+cp .env.example .env
+# Set API_TOKEN to a long random value.
+docker compose up --build
+```
+
+After scanning the WhatsApp QR code, connect Frappe to the adapter:
+
+```bash
+bench --site <site-name> set-config whatsapp_api_url http://127.0.0.1:3020/send
+bench --site <site-name> set-config whatsapp_api_token <same-token-as-env>
+bench --site <site-name> clear-cache
+```
+
+For production, keep the adapter on a private network or behind HTTPS, and do not expose `/send` publicly.

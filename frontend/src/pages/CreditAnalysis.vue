@@ -173,10 +173,9 @@
                       <td class="py-3 px-4 text-xs font-semibold uppercase text-slate-400">{{ row.statement_type }}</td>
                       <td class="py-3 px-4 font-semibold text-slate-800">{{ row.metric_label }}</td>
                       <td v-for="year in years" :key="`${row.key}-${year}`" class="py-2 px-3 text-right">
-                        <input
+                        <RupiahInput
                           v-if="row.cells[year]"
-                          v-model.number="row.cells[year].adjusted_amount"
-                          type="number"
+                          v-model="row.cells[year].adjusted_amount"
                           class="w-32 rounded border border-slate-200 bg-white px-2 py-1 text-right font-mono text-xs focus:border-teal-600 focus:outline-none"
                         />
                         <span v-else class="text-slate-300">-</span>
@@ -585,6 +584,7 @@ import { Button, FeatherIcon, Badge, FileUploader, usePageMeta, toast, createRes
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import html2pdf from 'html2pdf.js'
+import RupiahInput from '@/components/Controls/RupiahInput.vue'
 
 const MetricCard = {
   props: ['label', 'value', 'icon'],

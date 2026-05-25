@@ -186,15 +186,15 @@
         <div class="mb-3 flex items-center justify-between gap-3">
           <div>
             <div class="text-sm font-semibold text-ink-gray-9">
-              {{ __('Lead UAT Intelligence') }}
+              {{ __('Lead Intelligence') }}
             </div>
             <div class="text-xs text-ink-gray-5">
               {{ __('Score, duplicate, attribution, and assignment context') }}
             </div>
           </div>
-          <Button variant="subtle" size="sm" icon="refresh-cw" @click="refreshUatSummary" />
+          <Button variant="subtle" size="sm" icon="refresh-cw" @click="refreshLeadSummary" />
         </div>
-        <div v-if="uatSummary.loading" class="text-sm text-ink-gray-5">
+        <div v-if="leadSummary.loading" class="text-sm text-ink-gray-5">
           {{ __('Loading...') }}
         </div>
         <div v-else class="flex flex-col gap-4">
@@ -202,13 +202,13 @@
             <div class="rounded border bg-surface-gray-1 p-3">
               <div class="text-xs text-ink-gray-5">{{ __('Score') }}</div>
               <div class="text-xl font-semibold text-ink-gray-9">
-                {{ uatSummary.data?.score?.value || 0 }}
+                {{ leadSummary.data?.score?.value || 0 }}
               </div>
             </div>
             <div class="rounded border bg-surface-gray-1 p-3">
               <div class="text-xs text-ink-gray-5">{{ __('Band') }}</div>
               <Badge
-                :label="uatSummary.data?.score?.band || __('Cold')"
+                :label="leadSummary.data?.score?.band || __('Cold')"
                 variant="subtle"
                 theme="blue"
               />
@@ -216,7 +216,7 @@
             <div class="rounded border bg-surface-gray-1 p-3">
               <div class="text-xs text-ink-gray-5">{{ __('Quality') }}</div>
               <div class="text-sm font-medium text-ink-gray-9">
-                {{ uatSummary.data?.score?.probability || 0 }}%
+                {{ leadSummary.data?.score?.probability || 0 }}%
               </div>
             </div>
           </div>
@@ -225,10 +225,10 @@
               {{ __('Attribution') }}
             </div>
             <div class="grid grid-cols-2 gap-2 text-sm">
-              <div>{{ __('Channel') }}: {{ uatSummary.data?.attribution?.channel || '-' }}</div>
-              <div>{{ __('Source') }}: {{ uatSummary.data?.attribution?.source || '-' }}</div>
-              <div>{{ __('Campaign') }}: {{ uatSummary.data?.attribution?.campaign || '-' }}</div>
-              <div>{{ __('Referrer') }}: {{ uatSummary.data?.attribution?.referrer || '-' }}</div>
+              <div>{{ __('Channel') }}: {{ leadSummary.data?.attribution?.channel || '-' }}</div>
+              <div>{{ __('Source') }}: {{ leadSummary.data?.attribution?.source || '-' }}</div>
+              <div>{{ __('Campaign') }}: {{ leadSummary.data?.attribution?.campaign || '-' }}</div>
+              <div>{{ __('Referrer') }}: {{ leadSummary.data?.attribution?.referrer || '-' }}</div>
             </div>
           </div>
           <div>
@@ -243,9 +243,9 @@
                 @click="refreshDuplicates"
               />
             </div>
-            <div v-if="uatSummary.data?.duplicates?.length" class="flex flex-col gap-2">
+            <div v-if="leadSummary.data?.duplicates?.length" class="flex flex-col gap-2">
               <div
-                v-for="candidate in uatSummary.data.duplicates"
+                v-for="candidate in leadSummary.data.duplicates"
                 :key="candidate.name"
                 class="rounded border p-2 text-sm"
               >
@@ -260,13 +260,13 @@
             </div>
             <div v-else class="text-sm text-ink-gray-5">{{ __('No duplicate candidates') }}</div>
           </div>
-          <div v-if="uatSummary.data?.tags?.length">
+          <div v-if="leadSummary.data?.tags?.length">
             <div class="mb-2 text-xs font-semibold uppercase text-ink-gray-5">
               {{ __('Tags') }}
             </div>
             <div class="flex flex-wrap gap-2">
               <Badge
-                v-for="tag in uatSummary.data.tags"
+                v-for="tag in leadSummary.data.tags"
                 :key="tag.tag"
                 :label="tag.tag"
                 variant="subtle"
@@ -573,21 +573,21 @@ const sections = createResource({
   auto: true,
 })
 
-const uatSummary = createResource({
-  url: 'crm.api.lead_management.get_lead_uat_summary',
-  cache: ['leadUatSummary', props.leadId],
+const leadSummary = createResource({
+  url: 'crm.api.lead_management.get_lead_summary',
+  cache: ['leadSummary', props.leadId],
   params: { lead: props.leadId },
   auto: true,
 })
 
-async function refreshUatSummary() {
+async function refreshLeadSummary() {
   await call('crm.api.lead_management.score_lead', { lead: props.leadId })
-  uatSummary.reload()
+  leadSummary.reload()
 }
 
 async function refreshDuplicates() {
   await call('crm.api.lead_management.preview_duplicates', { lead: props.leadId })
-  uatSummary.reload()
+  leadSummary.reload()
 }
 
 async function triggerStatusChange(value) {
@@ -666,7 +666,7 @@ function beforeStatusChange(data) {
 }
 
 function reloadResources(data) {
-  uatSummary.reload()
+  leadSummary.reload()
   if (Object.hasOwn(data ?? {}, 'lead_owner')) {
     assignees.reload()
   }

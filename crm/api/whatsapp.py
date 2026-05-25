@@ -1,7 +1,10 @@
 import json
+import re
+from urllib.parse import urlparse
 
 import frappe
 from frappe import _
+from frappe.utils import cstr
 from frappe.permissions import add_permission, update_permission_property
 
 from crm.api.doc import get_assigned_users
@@ -9,6 +12,8 @@ from crm.fcrm.doctype.crm_notification.crm_notification import notify_user
 from crm.integrations.api import get_contact_lead_or_deal_from_number
 
 ALLOWED_WHATSAPP_ROLES = ["System Manager", "Sales Manager", "Sales User"]
+MAX_FREE_TEXT_LENGTH = 4096
+MAX_SENDS_PER_USER_PER_MINUTE = 20
 
 
 def validate_access(reference_doctype=None, reference_name=None, permtype="read"):
@@ -92,22 +97,90 @@ def notify_agent(doc):
 
 @frappe.whitelist()
 def is_whatsapp_enabled():
-	if not frappe.db.exists("DocType", "WhatsApp Settings"):
-		return False
-	default_outgoing = frappe.get_cached_value(
-		"WhatsApp Settings", "WhatsApp Settings", "default_outgoing_account"
-	)
-	if not default_outgoing:
-		return False
-	status = frappe.get_cached_value("WhatsApp Account", default_outgoing, "status")
-	return status == "Active"
+	return bool(_get_whatsapp_js_url() or _has_active_whatsapp_account())
 
 
 @frappe.whitelist()
 def is_whatsapp_installed():
-	if not frappe.db.exists("DocType", "WhatsApp Settings"):
+	return bool(_get_whatsapp_js_url() or frappe.db.exists("DocType", "WhatsApp Message"))
+
+
+def _has_active_whatsapp_account():
+	if not frappe.db.exists("DocType", "CRM Omnichannel Channel Account"):
 		return False
-	return True
+	return bool(
+		frappe.db.exists(
+			"CRM Omnichannel Channel Account",
+			{"channel": "WhatsApp", "status": "Active", "credentials_configured": 1},
+		)
+	)
+
+
+def _get_whatsapp_js_url():
+	return (frappe.conf.get("whatsapp_api_url") or "").strip().rstrip("/")
+
+
+def _get_whatsapp_js_headers():
+	token = (frappe.conf.get("whatsapp_api_token") or "").strip()
+	headers = {"Content-Type": "application/json"}
+	if token:
+		headers["Authorization"] = f"Bearer {token}"
+		headers["X-API-Key"] = token
+	return headers
+
+
+def _validate_whatsapp_js_url(url):
+	if not url:
+		frappe.throw(_("WhatsAppWebJS API URL is not configured. Set whatsapp_api_url in site_config.json."))
+	parsed = urlparse(url)
+	if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+		frappe.throw(_("WhatsAppWebJS API URL must be a valid http(s) URL."))
+	host = (parsed.hostname or "").lower()
+	is_local = host in {"localhost", "127.0.0.1", "::1"}
+	if parsed.scheme != "https" and not is_local:
+		frappe.throw(_("WhatsAppWebJS API URL must use HTTPS outside localhost."))
+
+
+def _normalize_whatsapp_number(number):
+	value = re.sub(r"[\s().-]", "", cstr(number or ""))
+	if value.startswith("00"):
+		value = "+" + value[2:]
+	if not re.fullmatch(r"\+?\d{10,15}", value or ""):
+		frappe.throw(_("WhatsApp recipient must be a single phone number with 10-15 digits."))
+	return value
+
+
+def _enforce_whatsapp_rate_limit():
+	try:
+		key = f"crm:wawebjs:send:{frappe.session.user}:{frappe.utils.now_datetime().strftime('%Y%m%d%H%M')}"
+		cache = frappe.cache()
+		redis_key = cache.make_key(key)
+		count = cache.incr(redis_key)
+		cache.expire(redis_key, 90)
+		if int(count or 0) > MAX_SENDS_PER_USER_PER_MINUTE:
+			frappe.throw(_("WhatsApp send rate limit exceeded. Try again in a minute."))
+	except frappe.ValidationError:
+		raise
+	except Exception:
+		pass
+
+
+def _post_whatsapp_js(payload):
+	_get_whatsapp_js_url()
+	whatsapp_url = _get_whatsapp_js_url()
+	_validate_whatsapp_js_url(whatsapp_url)
+	_enforce_whatsapp_rate_limit()
+	import requests
+
+	response = requests.post(whatsapp_url, json=payload, headers=_get_whatsapp_js_headers(), timeout=15)
+	if response.ok:
+		try:
+			res_json = response.json()
+			return res_json.get("id") or res_json.get("messageId") or res_json.get("whatsapp_message_id") or f"wa_js:{frappe.generate_hash(length=12)}"
+		except Exception:
+			return f"wa_js:{frappe.generate_hash(length=12)}"
+	frappe.log_error(f"WhatsAppWebJS API Error ({response.status_code}): {response.text}", "WhatsAppWebJS Send Error")
+	frappe.throw(_("Failed to send WhatsApp message via WhatsAppWebJS: {0}").format(response.text[:300]))
 
 
 @frappe.whitelist()
@@ -263,56 +336,58 @@ def create_whatsapp_message(
 	content_type: str = "text",
 ):
 	validate_access(reference_doctype, reference_name)
-	doc = frappe.new_doc("WhatsApp Message")
+	to = _normalize_whatsapp_number(to)
+	message = cstr(message or "")
+	if len(message) > MAX_FREE_TEXT_LENGTH:
+		frappe.throw(_("WhatsApp message is too long. Keep it under {0} characters.").format(MAX_FREE_TEXT_LENGTH))
+	
+	payload = {
+		"to": to,
+		"phone": to,
+		"number": to,
+		"message": message,
+		"text": message,
+		"reference_doctype": reference_doctype,
+		"reference_name": reference_name,
+	}
+	
+	if attach:
+		file_url = attach
+		if file_url.startswith("/"):
+			base_url = frappe.utils.get_url()
+			file_url = f"{base_url}{file_url}"
+		payload["attachment"] = file_url
+		payload["mediaUrl"] = file_url
+		payload["fileUrl"] = file_url
 
-	if reply_to:
-		if not frappe.db.exists("WhatsApp Message", reply_to):
-			frappe.throw(_("Referenced WhatsApp message does not exist."), frappe.DoesNotExistError)
-		reply_doc = frappe.get_doc("WhatsApp Message", reply_to)
-		if not reply_doc.has_permission("read"):
-			frappe.throw(
-				_("Not permitted to access the referenced WhatsApp message."), frappe.PermissionError
-			)
-		validate_access(reply_doc.reference_doctype, reply_doc.reference_name)
-		doc.update(
-			{
-				"is_reply": True,
-				"reply_to_message_id": reply_doc.message_id,
-			}
-		)
-
-	doc.update(
-		{
-			"reference_doctype": reference_doctype,
-			"reference_name": reference_name,
-			"message": message or attach,
-			"to": to,
-			"attach": attach,
-			"content_type": content_type,
-		}
-	)
-	doc.insert(ignore_permissions=True)
-	return doc.name
+	try:
+		return _post_whatsapp_js(payload)
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "WhatsAppWebJS Send Exception")
+		frappe.throw(_("Error connecting to WhatsAppWebJS server: {0}").format(str(e)))
 
 
 @frappe.whitelist()
 def send_whatsapp_template(reference_doctype: str, reference_name: str, template: str, to: str):
 	validate_access(reference_doctype, reference_name)
-	doc = frappe.new_doc("WhatsApp Message")
-	doc.update(
-		{
-			"reference_doctype": reference_doctype,
-			"reference_name": reference_name,
-			"message_type": "Template",
-			"message": "Template message",
-			"content_type": "text",
-			"use_template": True,
-			"template": template,
-			"to": to,
-		}
-	)
-	doc.insert(ignore_permissions=True)
-	return doc.name
+	to = _normalize_whatsapp_number(to)
+	
+	payload = {
+		"to": to,
+		"phone": to,
+		"number": to,
+		"template": template,
+		"message": f"Template message: {template}",
+		"text": f"Template message: {template}",
+		"reference_doctype": reference_doctype,
+		"reference_name": reference_name,
+	}
+
+	try:
+		return _post_whatsapp_js(payload)
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "WhatsAppWebJS Template Send Exception")
+		frappe.throw(_("Error connecting to WhatsAppWebJS server: {0}").format(str(e)))
 
 
 @frappe.whitelist()

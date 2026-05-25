@@ -87,6 +87,27 @@ def _ensure_lead_source(source, group=None):
 	return source
 
 
+def _ensure_lead_campaign(campaign, source=None, payload=None):
+	campaign = _normalize(campaign)
+	if not campaign:
+		return None
+	if not frappe.db.table_exists("CRM Lead Campaign"):
+		return campaign
+	if not frappe.db.exists("CRM Lead Campaign", campaign):
+		doc = frappe.new_doc("CRM Lead Campaign")
+		doc.campaign_name = campaign
+		if doc.meta.has_field("status"):
+			doc.status = "Active"
+		if source and doc.meta.has_field("source"):
+			doc.source = source
+		payload = _as_dict(payload)
+		for fieldname in ("utm_source", "utm_medium", "utm_campaign"):
+			if doc.meta.has_field(fieldname) and payload.get(fieldname):
+				doc.set(fieldname, payload.get(fieldname))
+		doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
+	return campaign
+
+
 def _lead_status_by_type(status_type, fallback="New"):
 	status = frappe.db.get_value("CRM Lead Status", {"type": status_type}, "name")
 	return status or (fallback if frappe.db.exists("CRM Lead Status", fallback) else None)
@@ -360,6 +381,8 @@ def capture_lead(data=None, channel="Manual", allow_duplicate=False):
 		source = _ensure_lead_source(data.get("source") or channel, _source_group_for_channel(channel))
 		if source:
 			data["source"] = source
+		if data.get("campaign"):
+			data["campaign"] = _ensure_lead_campaign(data.get("campaign"), source, data)
 
 		if data.get("mobile_no") or data.get("phone"):
 			data["mobile_no"] = _normalize_phone(data.get("mobile_no") or data.get("phone"))
@@ -481,7 +504,7 @@ def bulk_tag_leads(leads, tag, color="#0f766e", notes=None):
 
 
 @frappe.whitelist()
-def get_lead_uat_summary(lead):
+def get_lead_summary(lead):
 	doc = frappe.get_doc("CRM Lead", lead)
 	duplicates = preview_duplicates(lead=lead)
 	tags = frappe.get_all(
@@ -518,6 +541,12 @@ def get_lead_uat_summary(lead):
 		"tags": tags,
 		"assignments": assignments,
 	}
+
+
+@frappe.whitelist()
+def get_lead_uat_summary(lead):
+	"""Backward-compatible alias for older frontend bundles."""
+	return get_lead_summary(lead)
 
 
 @frappe.whitelist()
@@ -733,11 +762,16 @@ def mock_ocr_intake(payload=None):
 def delete_lead(name):
 	if not frappe.has_permission("CRM Lead", "write", name):
 		frappe.throw(_("Not allowed to delete Lead"), frappe.PermissionError)
+	try:
+		frappe.delete_doc("CRM Lead", name, ignore_permissions=True)
+		return {"name": name, "deleted": True, "hard_deleted": True}
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "CRM Lead hard delete failed; applying soft delete")
 	lost_status = _lead_status_by_type("Lost", "Lost")
 	closed_status = _lead_status_by_type("Closed", "Closed")
 	status = lost_status or closed_status or "Closed"
 	reason = _lead_lost_reason() or "Auto Closed"
-	updates = {"status": status, "converted": 0}
+	updates = {"status": status, "converted": 1}
 	if lost_status:
 		updates["lost_reason"] = reason
 		updates["lost_notes"] = _("Soft-deleted by user.")
