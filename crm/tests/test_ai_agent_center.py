@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import frappe
 
-from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat
-from crm.api.ai_agent_center import AGENTS, ensure_ai_tables, get_agents, query_agent
+from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, normalize_kimi_model, stream_kimi_chat_events
+from crm.api.ai_agent_center import AGENTS, ensure_ai_tables, get_agents, get_rag_status, query_agent, query_agent_stream
 
 
 class TestAIAgentCenter(TestCase):
@@ -54,6 +54,46 @@ class TestAIAgentCenter(TestCase):
 		self.assertEqual(payload["model"], DEFAULT_KIMI_MODEL)
 		self.assertEqual(payload["thinking"], {"type": "disabled"})
 		self.assertEqual(post.call_args.args[0], "https://api.moonshot.ai/v1/chat/completions")
+
+	def test_legacy_kimi_model_alias_maps_to_kimi_26(self):
+		self.assertEqual(normalize_kimi_model("kimi-k2"), DEFAULT_KIMI_MODEL)
+		self.assertEqual(normalize_kimi_model("kimi-k2-latest"), DEFAULT_KIMI_MODEL)
+
+	def test_kimi_client_streams_delta_events(self):
+		class Response:
+			status_code = 200
+			text = ""
+
+			def iter_lines(self, decode_unicode=True):
+				yield 'data: {"model":"kimi-k2.6","choices":[{"delta":{"content":"hel"}}]}'
+				yield 'data: {"model":"kimi-k2.6","choices":[{"delta":{"content":"lo"}}],"usage":{"total_tokens":4}}'
+				yield "data: [DONE]"
+
+		settings = frappe._dict(
+			{
+				"kimi_api_key": "test-key",
+				"kimi_base_url": "https://api.moonshot.ai/v1",
+				"kimi_model": DEFAULT_KIMI_MODEL,
+				"thinking_mode": "disabled",
+			}
+		)
+
+		with patch("crm.ai.kimi.get_ai_settings", return_value=settings), patch("crm.ai.kimi.requests.post", return_value=Response()) as post:
+			events = list(stream_kimi_chat_events([{"role": "user", "content": "hello"}]))
+
+		self.assertEqual("".join(event.delta for event in events if event.event == "delta"), "hello")
+		self.assertEqual(events[-1].event, "done")
+		self.assertEqual(events[-1].total_tokens, 4)
+		self.assertTrue(json.loads(post.call_args.kwargs["data"])["stream"])
+
+	def test_stream_endpoint_returns_event_stream_response(self):
+		response = query_agent_stream.__wrapped__("general", "hello")
+		self.assertEqual(response.mimetype, "text/event-stream")
+
+	def test_rag_status_reports_counts(self):
+		status = get_rag_status.__wrapped__()
+		self.assertIn("native_raganything_ready", status)
+		self.assertIn("chunk_count", status)
 
 	def test_query_agent_does_not_run_ddl_when_ai_tables_exist(self):
 		ensure_ai_tables()

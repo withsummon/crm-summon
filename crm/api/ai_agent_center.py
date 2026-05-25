@@ -1,13 +1,16 @@
 import json
 import re
 import uuid
+import importlib.util
 from decimal import Decimal
 
 import frappe
 from frappe import _
+from frappe.utils import cstr
+from werkzeug.wrappers import Response
 
-from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, estimate_kimi_cost, get_ai_settings
-from crm.ai.rag import query_rag, reindex_structured_data
+from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, estimate_kimi_cost, get_ai_settings, normalize_kimi_model, stream_kimi_chat_events
+from crm.ai.rag import parser_command_available, query_rag, reindex_structured_data
 
 
 AGENTS = [
@@ -446,6 +449,119 @@ def query_agent(agent_key="general", message=None, session_id=None, customer=Non
 	}
 
 
+def _sse(event, data):
+	return f"event: {event}\ndata: {json.dumps(data, default=str)}\n\n"
+
+
+@frappe.whitelist(methods=["POST"])
+def query_agent_stream(agent_key="general", message=None, session_id=None, customer=None, attachments=None):
+	def generate():
+		try:
+			if not message or not str(message).strip():
+				yield _sse("error", {"message": _("Message is required")})
+				return
+
+			agent = _get_agent(agent_key)
+			current_session = _save_session(agent["key"], customer=customer, session_id=session_id, title=agent["name"])
+			_save_message(current_session, agent["key"], "user", message)
+			yield _sse("meta", {"session_id": current_session, "agent_key": agent["key"]})
+
+			rag = query_rag(message, agent_key=agent["key"], customer=customer)
+			if not rag["passes_guardrail"]:
+				reply = _("I do not have enough grounded CRM/RAG sources to answer that safely. Please index or attach the relevant customer/document data first.")
+				message_id = _save_message(current_session, agent["key"], "assistant", reply, rag["sources"])
+				_audit(agent["key"], DEFAULT_KIMI_MODEL, message, reply, rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
+				frappe.db.commit()
+				yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
+				yield _sse("delta", {"delta": reply})
+				yield _sse(
+					"done",
+					{
+						"response": reply,
+						"session_id": current_session,
+						"message_id": message_id,
+						"sources": rag["sources"],
+						"actions": [],
+						"confidence": rag["confidence"],
+						"model": DEFAULT_KIMI_MODEL,
+						"tokens": 0,
+						"cost": 0,
+					},
+				)
+				return
+
+			settings = get_ai_settings()
+			system_prompt = _system_prompt(agent, rag["context"], customer=customer)
+			messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
+			yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
+
+			content_parts = []
+			stream_meta = frappe._dict({"model": settings.kimi_model or DEFAULT_KIMI_MODEL, "total_tokens": 0, "cost": Decimal("0")})
+			for event in stream_kimi_chat_events(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode):
+				if event.event == "delta":
+					content_parts.append(event.delta)
+					yield _sse("delta", {"delta": event.delta})
+				elif event.event == "done":
+					stream_meta = event
+
+			full_content = "".join(content_parts)
+			actions = _handle_actions(agent["key"], current_session, full_content)
+			reply = _clean_action_blocks(full_content)
+			message_id = _save_message(current_session, agent["key"], "assistant", reply, rag["sources"], stream_meta.total_tokens, stream_meta.cost)
+			_audit(agent["key"], stream_meta.model, message, reply, rag["sources"], stream_meta.total_tokens, stream_meta.cost, rag["confidence"])
+			frappe.db.commit()
+			yield _sse("actions", {"actions": actions})
+			yield _sse(
+				"done",
+				{
+					"response": reply,
+					"session_id": current_session,
+					"message_id": message_id,
+					"sources": rag["sources"],
+					"actions": actions,
+					"confidence": rag["confidence"],
+					"model": stream_meta.model,
+					"tokens": stream_meta.total_tokens,
+					"cost": float(stream_meta.cost),
+				},
+			)
+		except Exception as exc:
+			frappe.log_error(frappe.get_traceback(), "AI Agent Center Stream Error")
+			frappe.db.rollback()
+			yield _sse("error", {"message": cstr(exc)[:500]})
+
+	return Response(
+		generate(),
+		mimetype="text/event-stream",
+		headers={
+			"Cache-Control": "no-cache",
+			"X-Accel-Buffering": "no",
+		},
+	)
+
+
+@frappe.whitelist()
+def get_rag_status():
+	chunk_count = frappe.db.count("CRM AI RAG Chunk") if frappe.db.table_exists("CRM AI RAG Chunk") else 0
+	document_count = frappe.db.count("CRM AI RAG Document") if frappe.db.table_exists("CRM AI RAG Document") else 0
+	raganything_available = importlib.util.find_spec("raganything") is not None
+	mineru_package_available = importlib.util.find_spec("mineru") is not None
+	mineru_command_available = parser_command_available()
+	mineru_available = mineru_package_available and mineru_command_available
+	return {
+		"native_raganything_ready": bool(raganything_available and mineru_available),
+		"fallback_retrieval_ready": chunk_count > 0,
+		"raganything_package_available": raganything_available,
+		"mineru_package_available": mineru_package_available,
+		"mineru_command_available": mineru_command_available,
+		"mineru_parser_available": mineru_available,
+		"chunk_count": chunk_count,
+		"document_count": document_count,
+		"status": "RAGAnything Ready" if raganything_available and mineru_available else "Fallback RAG Ready" if chunk_count else "Not Indexed",
+		"message": _("Install the MinerU CLI command and reindex RAG to enable native RAGAnything parsing.") if raganything_available and not mineru_available else "",
+	}
+
+
 @frappe.whitelist()
 def generate_summary(scope, docname, length="Standard"):
 	if scope not in {"Customer", "customer_360"}:
@@ -599,4 +715,21 @@ def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 
 @frappe.whitelist()
 def reindex_rag(scope=None, docname=None):
-	return reindex_structured_data(scope=scope, docname=docname)
+	return reindex_structured_data(scope=scope, docname=docname, reset_native=True)
+
+
+@frappe.whitelist()
+def save_ai_settings(provider, model, base_url=None, api_key=None):
+	settings = frappe.get_doc("FCRM Settings", "FCRM Settings")
+	settings.ai_provider = provider
+	settings.kimi_model = normalize_kimi_model(model)
+	if base_url is not None:
+		settings.kimi_base_url = (base_url or "https://api.moonshot.ai/v1").rstrip("/")
+	if api_key:
+		if provider == "Gemini":
+			settings.gemini_api_key = api_key
+		else:
+			settings.kimi_api_key = api_key
+	settings.save(ignore_permissions=True)
+	frappe.db.commit()
+	return settings.as_dict()

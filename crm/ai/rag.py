@@ -3,6 +3,8 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import sys
 from functools import partial
 
 import frappe
@@ -31,6 +33,8 @@ STRUCTURED_DOCTYPES = {
 	"CRM Financial Statement": ["name", "customer", "statement_type", "metric", "year", "amount", "auditor", "notes", "modified"],
 	"CRM Site Visit": ["name", "customer", "visit_date", "notes", "report_pdf", "photo_attachment", "modified"],
 	"CRM AI Insight": ["name", "customer", "insight_type", "title", "confidence_score", "status", "suggested_action", "notes", "modified"],
+	"CRM Credit Spread Line": ["name", "application", "customer", "statement_type", "metric_key", "metric_label", "year", "amount", "adjusted_amount", "notes", "modified"],
+	"CRM Credit Analysis Artifact": ["name", "application", "customer", "artifact_type", "title", "status", "payload_json", "modified"],
 }
 
 
@@ -39,6 +43,38 @@ def get_rag_storage_path():
 	if settings.rag_storage_path:
 		return frappe.get_site_path(settings.rag_storage_path) if not os.path.isabs(settings.rag_storage_path) else settings.rag_storage_path
 	return frappe.get_site_path("private", "files", "ai_agent_center_rag")
+
+
+def reset_native_rag_storage():
+	working_dir = os.path.abspath(get_rag_storage_path())
+	site_dir = os.path.abspath(frappe.get_site_path())
+	if os.path.isdir(working_dir) and os.path.basename(working_dir) == "ai_agent_center_rag" and working_dir.startswith(site_dir):
+		shutil.rmtree(working_dir)
+	os.makedirs(working_dir, exist_ok=True)
+
+
+def _current_env_bin_path():
+	return os.path.dirname(sys.executable)
+
+
+def ensure_parser_command_path():
+	env_bin = _current_env_bin_path()
+	path = os.environ.get("PATH") or ""
+	path_parts = [part for part in path.split(os.pathsep) if part]
+	if env_bin and env_bin not in path_parts:
+		os.environ["PATH"] = env_bin + (os.pathsep + path if path else "")
+	return os.environ.get("PATH") or ""
+
+
+def parser_command_available():
+	ensure_parser_command_path()
+	for command in ("mineru", "magic-pdf"):
+		if shutil.which(command):
+			return True
+		env_command = os.path.join(_current_env_bin_path(), command)
+		if os.path.exists(env_command) and os.access(env_command, os.X_OK):
+			return True
+	return False
 
 
 def ensure_rag_tables():
@@ -195,7 +231,7 @@ def _local_embedding_func():
 	async def embed(texts):
 		if isinstance(texts, str):
 			texts = [texts]
-		return model.encode(list(texts), normalize_embeddings=True).tolist()
+		return model.encode(list(texts), normalize_embeddings=True)
 
 	dim = len(model.encode(["dimension probe"], normalize_embeddings=True)[0])
 	return EmbeddingFunc(embedding_dim=dim, max_token_size=8192, func=embed)
@@ -204,6 +240,7 @@ def _local_embedding_func():
 def get_raganything_instance():
 	from raganything import RAGAnything, RAGAnythingConfig
 
+	ensure_parser_command_path()
 	settings = get_ai_settings()
 	working_dir = get_rag_storage_path()
 	os.makedirs(working_dir, exist_ok=True)
@@ -215,7 +252,7 @@ def get_raganything_instance():
 		for row in history_messages or []:
 			messages.append(row)
 		messages.append({"role": "user", "content": prompt})
-		return call_kimi_chat(messages, thinking_mode=settings.thinking_mode).content
+		return call_kimi_chat(messages, thinking_mode=settings.thinking_mode, timeout=180).content
 
 	def vision_model_func(prompt, system_prompt=None, history_messages=None, image_data=None, messages=None, **kwargs):
 		if messages:
@@ -242,7 +279,7 @@ def get_raganything_instance():
 	return RAGAnything(config=config, llm_model_func=llm_model_func, vision_model_func=vision_model_func, embedding_func=_local_embedding_func())
 
 
-def reindex_structured_data(scope=None, docname=None, agent_key=None):
+def reindex_structured_data(scope=None, docname=None, agent_key=None, reset_native=False):
 	ensure_rag_tables()
 	customer = docname if scope in ("Customer", "customer_360") else None
 	content_list = collect_structured_content(customer=customer)
@@ -251,6 +288,8 @@ def reindex_structured_data(scope=None, docname=None, agent_key=None):
 
 	rag_status = "fallback_indexed"
 	try:
+		if reset_native:
+			reset_native_rag_storage()
 		rag = get_raganything_instance()
 		if content_list:
 			_run_async(
@@ -314,8 +353,38 @@ def retrieve_sources(query, customer=None, limit=8):
 	return results
 
 
+def is_conversational_query(query):
+	q = re.sub(r"[^\w\s]", "", (query or "").strip().lower())
+	greetings = {
+		"hello", "helo", "hi", "halo", "hey", "hallo", "hy", "helow", "hellow",
+		"apa kabar", "apa kabarnya", "how are you", "who are you",
+		"siapa kamu", "siapa anda", "siapa", "kamu siapa", "anda siapa",
+		"selamat pagi", "selamat siang", "selamat sore", "selamat malam",
+		"pagi", "siang", "sore", "malam",
+		"good morning", "good afternoon", "good evening", "good night",
+		"terima kasih", "terimakasih", "thank you", "thanks", "tengkyu", "makasih",
+		"test", "testing", "ping", "p", "assalamualaikum", "kum", "wr", "wb"
+	}
+	if q in greetings:
+		return True
+	words = [w for w in q.split() if w]
+	if len(words) <= 2 and all(any(g in w for g in greetings) or len(w) <= 3 for w in words):
+		return True
+	return False
+
+
 def query_rag(query, agent_key=None, customer=None):
 	settings = get_ai_settings()
+	from frappe.utils import flt
+
+	if is_conversational_query(query):
+		return {
+			"context": "User greeted the assistant or initiated a generic conversation. Respond politely in Indonesian/English, introduce yourself as the BNI CRM AI Agent Co-pilot, and ask how you can help with BNI CRM Core, credit analysis, portfolio monitoring, or omnichannel communications today.",
+			"sources": [{"title": "Conversational Greeting", "excerpt": "General greeting/conversation bypass."}],
+			"confidence": 1.0,
+			"passes_guardrail": True,
+		}
+
 	sources = retrieve_sources(query, customer=customer)
 	if not sources:
 		reindex_structured_data(scope="customer_360" if customer else "crm", docname=customer, agent_key=agent_key)
@@ -323,9 +392,13 @@ def query_rag(query, agent_key=None, customer=None):
 
 	context = "\n\n".join(f"[{idx + 1}] {source['title']}\n{source['excerpt']}" for idx, source in enumerate(sources))
 	confidence = min(0.95, 0.2 + (len(sources) * 0.1))
+	
+	threshold = flt(settings.guardrail_confidence_threshold)
+	passes = len(sources) > 0 and confidence >= threshold
+
 	return {
 		"context": context,
 		"sources": sources,
 		"confidence": confidence,
-		"passes_guardrail": confidence >= settings.guardrail_confidence_threshold,
+		"passes_guardrail": passes,
 	}

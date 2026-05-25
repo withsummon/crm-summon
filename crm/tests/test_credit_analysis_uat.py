@@ -24,7 +24,7 @@ from crm.api.credit_analysis import (
 	save_spreading,
 	submit_memo_for_approval,
 )
-from crm.api.credit import create_credit_application
+from crm.api.credit import create_credit_application, create_or_update_customer360_record
 
 
 class TestCreditAnalysisUAT(TestCase):
@@ -33,7 +33,7 @@ class TestCreditAnalysisUAT(TestCase):
 			self.skipTest("Customer doctype is not installed")
 		if not frappe.db.table_exists("CRM Credit Application"):
 			self.skipTest("Credit doctypes are not migrated")
-		self.created = {"CRM Credit Application": [], "Customer": [], "CRM Collateral": []}
+		self.created = {"CRM Credit Application": [], "Customer": [], "CRM Collateral": [], "CRM Task": []}
 		self.customer = self._make_customer()
 		self.application = frappe.get_doc(
 			{
@@ -68,7 +68,7 @@ class TestCreditAnalysisUAT(TestCase):
 	def tearDown(self):
 		try:
 			delete_credit_analysis_artifacts(self.created.get("CRM Credit Application", []))
-			for doctype in ("CRM Collateral", "CRM Credit Application", "Customer"):
+			for doctype in ("CRM Task", "CRM Collateral", "CRM Credit Application", "Customer"):
 				for name in self.created.get(doctype, []):
 					if frappe.db.exists(doctype, name):
 						frappe.delete_doc(doctype, name, ignore_permissions=True, force=True)
@@ -277,6 +277,46 @@ class TestCreditAnalysisUAT(TestCase):
 		self.assertEqual(len(workspace["spreading"]), 6)
 		self.assertGreaterEqual(len(workspace["proof"]), 20)
 
+	def test_create_credit_application_accepts_large_idr_values(self):
+		payload = {
+			"borrower_name": f"BNI Large Applicant {frappe.generate_hash(length=8)}",
+			"borrower_type": "Company",
+			"facility_type": "Working Capital",
+			"requested_amount": 125000000000,
+			"status": "Credit Analysis",
+			"financial_year": 2025,
+			"revenue": 600000000000,
+			"ebitda": 90000000000,
+			"net_profit": 42000000000,
+			"total_assets": 850000000000,
+			"total_liabilities": 510000000000,
+			"equity": 340000000000,
+		}
+
+		application = create_credit_application(payload)
+		self.created["CRM Credit Application"].append(application.name)
+		self.created["Customer"].append(application.borrower)
+
+		self.assertIn(application.status, {"Credit Analysis", "In Progress"})
+		self.assertEqual(int(application.revenue), payload["revenue"])
+
+	def test_customer360_task_modal_ignores_invalid_optional_assignee(self):
+		task = create_or_update_customer360_record(
+			"CRM Task",
+			{
+				"title": "Follow up customer documents",
+				"assigned_to": "bni",
+				"priority": "Medium",
+				"status": "Todo",
+				"reference_doctype": "Customer",
+				"reference_docname": self.customer.name,
+			},
+		)
+
+		self.created["CRM Task"].append(task.get("name"))
+		self.assertFalse(task.get("assigned_to"))
+		self.assertEqual(task.get("reference_docname"), self.customer.name)
+
 	def test_statement_file_import_persists_real_spreading_rows(self):
 		file_url = self._write_xlsx(f"credit-analysis-{frappe.generate_hash(length=8)}.xlsx", self._spread_rows([2022, 2023, 2024]))
 
@@ -286,6 +326,8 @@ class TestCreditAnalysisUAT(TestCase):
 		self.assertEqual(result["import_type"], "xlsx")
 		self.assertGreaterEqual(result["row_count"], 60)
 		self.assertTrue(result["workspace"]["ratios"])
+		self.assertEqual(result["workspace"]["extraction"]["cell_count"], result["row_count"])
+		self.assertGreaterEqual(len(result["workspace"]["extraction"]["review_cells"]), 60)
 		self.assertTrue(all(row["source"] == file_url for row in result["workspace"]["spreading"]))
 
 	def test_pdf_import_without_ai_config_fails_without_seeded_rows(self):
