@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:type_name",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "type_name",
+  "active",
+  "column_break_top",
+  "business_hours_only",
+  "color",
+  "section_break_sla",
+  "sla_matrix_json",
+  "default_template"
+ ],
+ "fields": [
+  {"fieldname": "type_name", "fieldtype": "Data", "in_list_view": 1, "label": "Type Name", "reqd": 1, "unique": 1},
+  {"default": "1", "fieldname": "active", "fieldtype": "Check", "in_list_view": 1, "label": "Active"},
+  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+  {"default": "1", "fieldname": "business_hours_only", "fieldtype": "Check", "label": "Business Hours Only"},
+  {"fieldname": "color", "fieldtype": "Data", "label": "Color"},
+  {"fieldname": "section_break_sla", "fieldtype": "Section Break", "label": "SLA Matrix"},
+  {"fieldname": "sla_matrix_json", "fieldtype": "Long Text", "label": "SLA Matrix (JSON: priority -> minutes)"},
+  {"fieldname": "default_template", "fieldtype": "Link", "label": "Default Template", "options": "CRM Task Template"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Task Type",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Sales User"}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -312,6 +312,8 @@ def create_bni_uat_seed():
 		_append_record(records, "Customer", customer.get("name"))
 		_create_customer_records(customer, sample_row, index, records)
 
+	_create_demo_products(records)
+
 	_store_seed_records(records)
 	frappe.db.commit()
 	return {
@@ -338,6 +340,7 @@ def clear_bni_uat_seed():
 
 	delete_order = [
 		"CRM Collateral",
+		"CRM Product",
 		"CRM Credit Application",
 		"CRM Bureau Report",
 		"CRM Credit Facility",
@@ -365,3 +368,210 @@ def clear_bni_uat_seed():
 	frappe.db.set_default(BNI_UAT_SEED_STATE_KEY, None)
 	frappe.db.commit()
 	return {"cleared": True, "records": records}
+
+
+# ── Product Configuration seed (Module 20) ────────────────────────
+
+DEMO_PRODUCTS = [
+	{
+		"product_code": "KMK-001",
+		"product_name": "Kredit Modal Kerja Standard",
+		"product_type": "Working Capital",
+		"status": "Active",
+		"currency": "IDR",
+		"marketing_tagline": "Working capital that grows with your business.",
+		"description": "Revolving working capital line for established SMEs and corporates.",
+		"min_amount": 500_000_000,
+		"max_amount": 25_000_000_000,
+		"min_tenor_months": 6,
+		"max_tenor_months": 36,
+		"tenor_increment_months": 3,
+		"repayment_frequency": "Monthly",
+		"grace_period_days": 7,
+		"effective_date_offset": -180,
+		"version": 3,
+		"interest_tiers": [
+			{"tenor_from": 6, "tenor_to": 12, "segment": "SME", "rate_type": "Effective", "rate_pct": 11.5, "risk_premium_pct": 0.5},
+			{"tenor_from": 13, "tenor_to": 24, "segment": "SME", "rate_type": "Effective", "rate_pct": 12.0, "risk_premium_pct": 0.75},
+			{"tenor_from": 6, "tenor_to": 36, "segment": "Corporate", "rate_type": "Effective", "rate_pct": 10.25, "risk_premium_pct": 0.25},
+		],
+		"fees": [
+			{"fee_type": "Provision", "calc_mode": "Percent", "value": 1.0, "min_cap": 2_500_000, "trigger_event": "Origination"},
+			{"fee_type": "Admin", "calc_mode": "Fixed", "value": 1_500_000, "trigger_event": "Origination"},
+			{"fee_type": "Late", "calc_mode": "Percent", "value": 2.0, "trigger_event": "Default"},
+		],
+		"eligibility_rules": [
+			{"criterion": "Min Vintage Years", "operator": ">=", "value": "2"},
+			{"criterion": "Min Credit Score", "operator": ">=", "value": "650"},
+			{"criterion": "Industry Blacklist", "operator": "not in", "value": "Gambling, Tobacco"},
+		],
+		"document_requirements": [
+			{"document_type": "NPWP", "mandatory": 1, "expiry_months": 0},
+			{"document_type": "SIUP", "mandatory": 1, "expiry_months": 12},
+			{"document_type": "Audited Financials (2y)", "mandatory": 1},
+			{"document_type": "Bank Statements (6m)", "mandatory": 1},
+		],
+		"approval_tiers": [
+			{"amount_from": 0, "amount_to": 2_000_000_000, "approver_role": "Sales Manager", "sequence": 1},
+			{"amount_from": 2_000_000_001, "amount_to": 10_000_000_000, "approver_role": "Sales Manager", "sequence": 1, "parallel": 0},
+		],
+	},
+	{
+		"product_code": "KI-002",
+		"product_name": "Kredit Investasi",
+		"product_type": "Investment",
+		"status": "Active",
+		"currency": "IDR",
+		"marketing_tagline": "Long-tenor investment financing with collateral.",
+		"min_amount": 1_000_000_000,
+		"max_amount": 100_000_000_000,
+		"min_tenor_months": 12,
+		"max_tenor_months": 120,
+		"tenor_increment_months": 6,
+		"repayment_frequency": "Monthly",
+		"grace_period_days": 14,
+		"effective_date_offset": -365,
+		"version": 5,
+		"interest_tiers": [
+			{"tenor_from": 12, "tenor_to": 60, "rate_type": "Annuity", "rate_pct": 10.75, "risk_premium_pct": 0.5},
+			{"tenor_from": 61, "tenor_to": 120, "rate_type": "Annuity", "rate_pct": 11.25, "risk_premium_pct": 0.75},
+		],
+		"fees": [
+			{"fee_type": "Provision", "calc_mode": "Percent", "value": 0.75, "min_cap": 5_000_000, "trigger_event": "Origination"},
+			{"fee_type": "Admin", "calc_mode": "Fixed", "value": 3_500_000, "trigger_event": "Origination"},
+			{"fee_type": "Prepay", "calc_mode": "Percent", "value": 1.5, "trigger_event": "Prepayment"},
+		],
+		"eligibility_rules": [
+			{"criterion": "Min Vintage Years", "operator": ">=", "value": "5"},
+			{"criterion": "Min Credit Score", "operator": ">=", "value": "700"},
+		],
+		"document_requirements": [
+			{"document_type": "NPWP", "mandatory": 1},
+			{"document_type": "Akta Pendirian", "mandatory": 1},
+			{"document_type": "Sertifikat Jaminan", "mandatory": 1},
+			{"document_type": "Appraisal Report", "mandatory": 1, "expiry_months": 6},
+		],
+		"approval_tiers": [
+			{"amount_from": 0, "amount_to": 10_000_000_000, "approver_role": "Sales Manager", "sequence": 1},
+			{"amount_from": 10_000_000_001, "amount_to": 50_000_000_000, "approver_role": "System Manager", "sequence": 2},
+		],
+	},
+	{
+		"product_code": "KKB-003",
+		"product_name": "Kredit Kendaraan Bermotor",
+		"product_type": "Consumer",
+		"status": "Active",
+		"currency": "IDR",
+		"marketing_tagline": "Drive home today with flexible auto financing.",
+		"min_amount": 50_000_000,
+		"max_amount": 1_500_000_000,
+		"min_tenor_months": 12,
+		"max_tenor_months": 60,
+		"tenor_increment_months": 12,
+		"repayment_frequency": "Monthly",
+		"effective_date_offset": -90,
+		"version": 2,
+		"interest_tiers": [
+			{"tenor_from": 12, "tenor_to": 36, "rate_type": "Flat", "rate_pct": 6.5},
+			{"tenor_from": 37, "tenor_to": 60, "rate_type": "Flat", "rate_pct": 7.25},
+		],
+		"fees": [
+			{"fee_type": "Admin", "calc_mode": "Fixed", "value": 750_000, "trigger_event": "Origination"},
+			{"fee_type": "Prepay", "calc_mode": "Percent", "value": 2.0, "trigger_event": "Prepayment"},
+		],
+		"eligibility_rules": [
+			{"criterion": "Min Age", "operator": ">=", "value": "21"},
+			{"criterion": "Min Income", "operator": ">=", "value": "5000000"},
+		],
+		"document_requirements": [
+			{"document_type": "KTP", "mandatory": 1},
+			{"document_type": "Slip Gaji 3 bulan", "mandatory": 1},
+			{"document_type": "Faktur Kendaraan", "mandatory": 1},
+		],
+		"approval_tiers": [
+			{"amount_from": 0, "amount_to": 500_000_000, "approver_role": "Sales User", "sequence": 1},
+			{"amount_from": 500_000_001, "amount_to": 1_500_000_000, "approver_role": "Sales Manager", "sequence": 1},
+		],
+	},
+	{
+		"product_code": "KPR-004",
+		"product_name": "Kredit Pemilikan Rumah",
+		"product_type": "Mortgage",
+		"status": "Draft",
+		"currency": "IDR",
+		"marketing_tagline": "Own your dream home with competitive rates.",
+		"min_amount": 200_000_000,
+		"max_amount": 10_000_000_000,
+		"min_tenor_months": 60,
+		"max_tenor_months": 240,
+		"tenor_increment_months": 12,
+		"repayment_frequency": "Monthly",
+		"interest_tiers": [
+			{"tenor_from": 60, "tenor_to": 120, "rate_type": "Annuity", "rate_pct": 8.5},
+		],
+		"fees": [
+			{"fee_type": "Provision", "calc_mode": "Percent", "value": 1.0, "trigger_event": "Origination"},
+		],
+		"document_requirements": [
+			{"document_type": "KTP", "mandatory": 1},
+			{"document_type": "Sertifikat Tanah", "mandatory": 1},
+		],
+	},
+	{
+		"product_code": "KMK-LEGACY-005",
+		"product_name": "Kredit Modal Kerja Legacy",
+		"product_type": "Working Capital",
+		"status": "Retired",
+		"currency": "IDR",
+		"marketing_tagline": "Replaced by KMK-001 Standard.",
+		"min_amount": 100_000_000,
+		"max_amount": 5_000_000_000,
+		"min_tenor_months": 6,
+		"max_tenor_months": 24,
+		"effective_date_offset": -730,
+		"retirement_date_offset": -90,
+		"retirement_notes": "Superseded by KMK-001. Existing facilities honor original terms until maturity.",
+		"version": 4,
+		"interest_tiers": [
+			{"tenor_from": 6, "tenor_to": 24, "rate_type": "Effective", "rate_pct": 13.0},
+		],
+		"fees": [
+			{"fee_type": "Provision", "calc_mode": "Percent", "value": 1.25, "trigger_event": "Origination"},
+		],
+	},
+]
+
+
+def _create_demo_products(records):
+	if not frappe.db.table_exists("CRM Product"):
+		return
+	for spec in DEMO_PRODUCTS:
+		code = spec["product_code"]
+		if frappe.db.exists("CRM Product", code):
+			continue
+		doc = frappe.new_doc("CRM Product")
+		for f in (
+			"product_code", "product_name", "product_type", "status", "currency",
+			"marketing_tagline", "description", "min_amount", "max_amount",
+			"min_tenor_months", "max_tenor_months", "tenor_increment_months",
+			"repayment_frequency", "grace_period_days", "version", "retirement_notes",
+		):
+			if f in spec:
+				doc.set(f, spec[f])
+		if spec.get("effective_date_offset") is not None:
+			doc.effective_date = add_days(nowdate(), spec["effective_date_offset"])
+		if spec.get("retirement_date_offset") is not None:
+			doc.retirement_date = add_days(nowdate(), spec["retirement_date_offset"])
+		for row in spec.get("interest_tiers") or []:
+			doc.append("interest_tiers", row)
+		for row in spec.get("fees") or []:
+			doc.append("fees", row)
+		for row in spec.get("eligibility_rules") or []:
+			doc.append("eligibility_rules", row)
+		for row in spec.get("document_requirements") or []:
+			doc.append("document_requirements", row)
+		for row in spec.get("approval_tiers") or []:
+			doc.append("approval_tiers", row)
+		doc.insert(ignore_permissions=True)
+		_append_record(records, "CRM Product", doc.name)
+

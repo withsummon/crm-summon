@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:rule_name",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "active",
+  "column_break_top",
+  "task_type",
+  "level",
+  "after_minutes_past_due",
+  "action",
+  "recipient_user",
+  "recipient_role"
+ ],
+ "fields": [
+  {"fieldname": "rule_name", "fieldtype": "Data", "in_list_view": 1, "label": "Rule Name", "reqd": 1, "unique": 1},
+  {"default": "1", "fieldname": "active", "fieldtype": "Check", "in_list_view": 1, "label": "Active"},
+  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+  {"fieldname": "task_type", "fieldtype": "Link", "in_list_view": 1, "label": "Task Type", "options": "CRM Task Type"},
+  {"default": "1", "fieldname": "level", "fieldtype": "Int", "in_list_view": 1, "label": "Level"},
+  {"default": "0", "fieldname": "after_minutes_past_due", "fieldtype": "Int", "in_list_view": 1, "label": "Minutes Past Due"},
+  {"default": "notify", "fieldname": "action", "fieldtype": "Select", "in_list_view": 1, "label": "Action", "options": "notify\nreassign\nflag"},
+  {"fieldname": "recipient_user", "fieldtype": "Link", "label": "Recipient User", "options": "User"},
+  {"fieldname": "recipient_role", "fieldtype": "Data", "label": "Recipient Role"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Task Escalation Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Sales User"}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -192,13 +192,7 @@ const routes = [
       {
         path: 'product-configuration',
         name: 'Product Configuration',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Product Configuration',
-          subtitle: 'Item',
-          icon: 'package',
-          sourcePath: '/app/item',
-        },
+        component: () => import('@/pages/ProductConfiguration.vue'),
       },
     ],
   },
@@ -241,13 +235,7 @@ const routes = [
       {
         path: 'notification-center',
         name: 'Notification Center',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Notification Center',
-          subtitle: 'Notification',
-          icon: 'bell',
-          sourcePath: '/app/notification',
-        },
+        component: () => import('@/pages/NotificationCenter.vue'),
       },
       {
         path: 'drive/:pathMatch(.*)*',
@@ -402,17 +390,17 @@ const routes = [
       {
         path: 'customer-portal',
         name: 'Customer Portal',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Customer Portal',
-          subtitle: 'Helpdesk',
-          icon: 'life-buoy',
-          sourcePath: '/helpdesk',
-        },
+        component: () => import('@/pages/CustomerPortalFrame.vue'),
       },
     ],
   },
   // ─── Shared / Utility Routes ─────────────────────────────
+  {
+    path: '/customer-portal',
+    name: 'Customer Portal Web',
+    component: () => import('@/pages/CustomerPortal.vue'),
+    meta: { standalone: true },
+  },
   {
     path: '/data-import',
     name: 'DataImportList',
@@ -434,6 +422,11 @@ const routes = [
     path: '/welcome',
     name: 'Welcome',
     component: () => import('@/pages/Welcome.vue'),
+  },
+  {
+    path: '/modules/committee-approval',
+    name: 'Committee Approval',
+    component: () => import('@/pages/CommitteeApproval.vue'),
   },
   {
     path: '/modules/:moduleSlug',

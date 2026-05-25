@@ -352,7 +352,7 @@ export const summonModules = [
     description:
       'Multi-level voting, quorum tracking, committee scheduling, e-signature, and decision recording.',
     priority: 'High',
-    status: 'planned',
+    status: 'available',
     href: '/crm/modules/committee-approval',
     group: 'Lending & Risk',
     icon: 'users',

@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "title",
+  "committee",
+  "column_break_top",
+  "scheduled_at",
+  "duration_minutes",
+  "status",
+  "section_break_body",
+  "location",
+  "agenda_json",
+  "attendees_json",
+  "notes"
+ ],
+ "fields": [
+  {"default": "CRM-COMM-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-COMM-.YYYY.-"},
+  {"fieldname": "title", "fieldtype": "Data", "in_list_view": 1, "in_global_search": 1, "label": "Title", "reqd": 1},
+  {"fieldname": "committee", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Committee", "options": "CRM Committee", "reqd": 1},
+  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+  {"fieldname": "scheduled_at", "fieldtype": "Datetime", "in_list_view": 1, "label": "Scheduled At", "reqd": 1},
+  {"default": "60", "fieldname": "duration_minutes", "fieldtype": "Int", "label": "Duration (min)"},
+  {"default": "Scheduled", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "in_standard_filter": 1, "label": "Status", "options": "Scheduled\nIn Progress\nCompleted\nCancelled"},
+  {"fieldname": "section_break_body", "fieldtype": "Section Break"},
+  {"fieldname": "location", "fieldtype": "Data", "label": "Location"},
+  {"fieldname": "agenda_json", "fieldtype": "Long Text", "label": "Agenda (JSON)"},
+  {"fieldname": "attendees_json", "fieldtype": "Long Text", "label": "Attendees (JSON)"},
+  {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes / Minutes"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Committee Meeting",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Sales User"}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

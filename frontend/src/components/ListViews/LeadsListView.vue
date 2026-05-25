@@ -87,6 +87,27 @@
           <div v-else-if="column.key === 'mobile_no' && item">
             <PhoneIcon class="h-4 w-4" />
           </div>
+          <div v-else-if="column.key === 'capture_channel' && item">
+            <Badge
+              v-if="item.label"
+              :label="item.short || item.label"
+              variant="subtle"
+              theme="gray"
+              size="sm"
+              class="text-[10px]"
+            />
+          </div>
+          <div v-else-if="column.key === 'lead_score_band' && item">
+            <Badge
+              v-if="item.label"
+              :label="item.label"
+              variant="subtle"
+              :theme="item.theme || 'blue'"
+              size="sm"
+              class="cursor-pointer"
+              @click.stop="emit('openScoring', row.name)"
+            />
+          </div>
         </template>
         <template #default="{ label }">
           <div
@@ -179,6 +200,20 @@
             "
           />
           <div
+            v-else-if="column.key === 'lead_name' && label"
+            class="flex items-center gap-1 truncate text-base"
+            @mouseenter="emit('previewLead', { name: row.name, event: $event })"
+          >
+            <span class="truncate">{{ getLabel(label, column) }}</span>
+            <Button
+              variant="ghosted"
+              class="!h-4 !w-4 opacity-0 group-hover:opacity-100"
+              @click.stop="emit('previewLead', { name: row.name, event: $event })"
+            >
+              <FeatherIcon name="eye" class="h-3 w-3 text-ink-gray-4" />
+            </Button>
+          </div>
+          <div
             v-else-if="label"
             class="truncate text-base"
             @click="
@@ -224,6 +259,7 @@
 import HeartIcon from '@/components/Icons/HeartIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
+import EyeIcon from '@/components/Icons/EyeIcon.vue'
 import RatingInput from '@/components/Controls/RatingInput.vue'
 import MultipleAvatar from '@/components/MultipleAvatar.vue'
 import ListBulkActions from '@/components/ListBulkActions.vue'
@@ -266,6 +302,8 @@ const emit = defineEmits([
   'applyLikeFilter',
   'likeDoc',
   'selectionsChanged',
+  'previewLead',
+  'openScoring',
 ])
 
 const route = useRoute()

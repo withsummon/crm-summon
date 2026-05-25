@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "creation": "2026-05-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "amount_from",
+  "amount_to",
+  "approver_role",
+  "sequence",
+  "parallel",
+  "effective_from",
+  "effective_to"
+ ],
+ "fields": [
+  {"fieldname": "amount_from", "fieldtype": "Currency", "label": "Amount From", "in_list_view": 1, "columns": 2, "reqd": 1},
+  {"fieldname": "amount_to", "fieldtype": "Currency", "label": "Amount To", "in_list_view": 1, "columns": 2},
+  {"fieldname": "approver_role", "fieldtype": "Link", "label": "Approver Role", "options": "Role", "in_list_view": 1, "columns": 3, "reqd": 1},
+  {"fieldname": "sequence", "fieldtype": "Int", "label": "Seq", "in_list_view": 1, "columns": 1, "default": "1"},
+  {"default": "0", "fieldname": "parallel", "fieldtype": "Check", "label": "Parallel", "in_list_view": 1, "columns": 1},
+  {"fieldname": "effective_from", "fieldtype": "Date", "label": "Effective From"},
+  {"fieldname": "effective_to", "fieldtype": "Date", "label": "Effective To"}
+ ],
+ "links": [],
+ "modified": "2026-05-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Product Approval Tier",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": [],
+ "translated_doctype": 1
+}

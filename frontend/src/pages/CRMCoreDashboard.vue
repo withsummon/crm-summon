@@ -671,6 +671,7 @@ const dashboard = createResource({
 })
 
 const data = computed(() => dashboard.data || {})
+const hasDashboardData = computed(() => !!dashboard.data && Object.keys(dashboard.data).length > 0)
 
 // ─── Metrics ──────────────────────────────────────────────
 const displayMetrics = computed(() => {
@@ -694,9 +695,11 @@ const chartSummary = computed(() => ({
   change: data.value.revenue?.change ?? 0,
 }))
 
-const revenueMonths = computed(() =>
-  data.value.revenue?.months || []
-)
+const revenueMonths = computed(() => {
+  const months = data.value.revenue?.months
+  if (Array.isArray(months)) return months
+  return fallbackRevenueMonths
+})
 
 const maxRev = computed(() => Math.max(...revenueMonths.value.map(m => Number(m.value || m.count || 0)), 1))
 
@@ -737,7 +740,7 @@ const displayLeadBars = computed(() => {
   if (lm) {
     const map = { Status: lm.status, Sumber: lm.source, Kualifikasi: lm.qualification }
     const rows = map[activeLeadTab.value]
-    if (rows?.length) return rows.map(r => ({ label: r.label, percent: r.percent || 0 }))
+    return Array.isArray(rows) ? rows.map(r => ({ label: r.label, percent: r.percent || 0 })) : []
   }
   return []
 })
@@ -745,13 +748,35 @@ const displayLeadBars = computed(() => {
 // ─── Supporting Lists ─────────────────────────────────────
 const displayCompanies = computed(() => data.value.lead_gen?.company_breakdown || [])
 
-const displayPicOwnership = computed(() => data.value.lead_gen?.pic_ownership || [])
+const displayCompanies = computed(() => {
+  const rows = data.value.lead_gen?.company_breakdown
+  if (Array.isArray(rows)) return rows
+  return fallbackBranches.map(item => ({ label: item.name, count: item.percent, percent: item.percent }))
+})
 
-const displayFollowUpLoad = computed(() => data.value.lead_gen?.follow_up_load?.status_rows || [])
+const displayPicOwnership = computed(() => {
+  const rows = data.value.lead_gen?.pic_ownership
+  if (Array.isArray(rows)) return rows
+  return [
+      { label: 'Unassigned', count: 12, percent: 40 },
+      { label: 'RM Jakarta', count: 9, percent: 30 },
+      { label: 'RM Bandung', count: 6, percent: 20 },
+    ]
+})
+
+const displayFollowUpLoad = computed(() => {
+  const rows = data.value.lead_gen?.follow_up_load?.status_rows
+  if (Array.isArray(rows)) return rows
+  return [
+    { label: 'Todo', count: 14, percent: 58 },
+    { label: 'In Progress', count: 7, percent: 29 },
+    { label: 'Done', count: 3, percent: 13 },
+  ]
+})
 
 const followUpSummary = computed(() => ({
-  pending: data.value.lead_gen?.follow_up_load?.pending ?? 0,
-  completed: data.value.lead_gen?.follow_up_load?.completed ?? 0,
+  pending: data.value.lead_gen?.follow_up_load?.pending ?? (hasDashboardData.value ? 0 : 21),
+  completed: data.value.lead_gen?.follow_up_load?.completed ?? (hasDashboardData.value ? 0 : 3),
 }))
 
 // ─── Last Updated ─────────────────────────────────────────

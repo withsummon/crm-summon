@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "task",
+  "rule",
+  "level",
+  "fired_at",
+  "column_break_top",
+  "action",
+  "recipient_user",
+  "acknowledged_at",
+  "acknowledged_by"
+ ],
+ "fields": [
+  {"fieldname": "task", "fieldtype": "Link", "in_list_view": 1, "label": "Task", "options": "CRM Task", "reqd": 1},
+  {"fieldname": "rule", "fieldtype": "Link", "label": "Rule", "options": "CRM Task Escalation Rule"},
+  {"default": "1", "fieldname": "level", "fieldtype": "Int", "in_list_view": 1, "label": "Level"},
+  {"fieldname": "fired_at", "fieldtype": "Datetime", "in_list_view": 1, "label": "Fired At"},
+  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+  {"fieldname": "action", "fieldtype": "Select", "label": "Action", "options": "notify\nreassign\nflag"},
+  {"fieldname": "recipient_user", "fieldtype": "Link", "label": "Recipient", "options": "User"},
+  {"fieldname": "acknowledged_at", "fieldtype": "Datetime", "label": "Acknowledged At"},
+  {"fieldname": "acknowledged_by", "fieldtype": "Link", "label": "Acknowledged By", "options": "User"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Task Escalation Event",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"read": 1, "role": "Sales User", "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "fired_at",
+ "sort_order": "DESC",
+ "states": []
+}

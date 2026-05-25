@@ -34,7 +34,7 @@ class CRMNotification(Document):
 
 def notify_user(notification):
 	"""
-	Notify the assigned user
+	Notify the assigned user via in-app and email
 	"""
 	notification = frappe._dict(notification)
 	if notification.owner == notification.assigned_to:
@@ -55,4 +55,26 @@ def notify_user(notification):
 
 	if frappe.db.exists("CRM Notification", values):
 		return
-	frappe.get_doc(values).insert(ignore_permissions=True)
+	notif_doc = frappe.get_doc(values)
+	notif_doc.insert(ignore_permissions=True)
+
+	# Email delivery
+	if _should_email(notification.notification_type, notification.assigned_to):
+		try:
+			frappe.sendmail(
+				recipients=notification.assigned_to,
+				subject=notification.notification_text or f"CRM {notification.notification_type}",
+				message=notification.message or notification.notification_text,
+				reference_doctype="CRM Notification",
+				reference_name=notif_doc.name,
+			)
+		except Exception:
+			pass
+
+
+def _should_email(notification_type, user):
+	pref = frappe.db.get_value("CRM Notification Preference", {"user": user, "type": notification_type}, "email")
+	if pref is not None:
+		return bool(pref)
+	# Default: email for all except WhatsApp
+	return notification_type != "WhatsApp"
