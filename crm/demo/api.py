@@ -24,7 +24,7 @@ def create_demo_data(_args: dict | None = None):
 	source of truth.
 	"""
 	if _args is not None and not _args.get("setup_demo"):
-		return {"created": False, "message": "Demo data was not requested."}
+		return {"created": False, "message": frappe._("Demo data was not requested.")}
 
 	if frappe.db.get_default(DEMO_STATE_KEY):
 		_clear_legacy_demo_data()
