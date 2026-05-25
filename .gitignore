@@ -20,5 +20,6 @@ CLAUDE.md
 AGENTS.md
 .claude
 .pi
+my-frappe-bench/
 *.md
 module/

@@ -1,5 +1,6 @@
 import frappe
 from unittest import TestCase
+from unittest.mock import patch
 
 from crm.api.credit import (
 	create_or_update_customer360_record,
@@ -101,6 +102,10 @@ class TestCreditAPI(TestCase):
 		self.assertEqual(customer_360["summary"]["total_outstanding"], 25000000)
 		self.assertEqual(customer_360["summary"]["risk_grade"], "KOL-1")
 		self.assertEqual(len(customer_360["tasks"]), 1)
+
+	def test_credit_queue_empty_state_does_not_return_demo_rows(self):
+		with patch("crm.api.credit._doctype_ready", return_value=True), patch("crm.api.credit.frappe.get_all", return_value=[]):
+			self.assertEqual(get_credit_application_queue(), [])
 
 	def test_customer_360_new_uat_records_are_aggregated(self):
 		customer = self.make_customer()

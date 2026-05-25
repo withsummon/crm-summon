@@ -2,7 +2,10 @@
 # See license.txt
 
 import frappe
-from frappe.tests import IntegrationTestCase
+try:
+	from frappe.tests import IntegrationTestCase
+except ImportError:
+	from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from crm.integrations.api import (
 	add_note_to_call_log,

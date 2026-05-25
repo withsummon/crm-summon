@@ -161,7 +161,7 @@ export const summonModules = [
     description:
       'Unified inbox for WhatsApp, email, SMS, in-app messaging, templates, AI replies, and routing.',
     priority: 'Medium',
-    status: 'partial',
+    status: 'available',
     href: '/crm/channels-portal/omnichannel-communication',
     routeName: 'Omnichannel Communication',
     group: 'Channels & Portal',
@@ -172,6 +172,8 @@ export const summonModules = [
       'Email Conversations',
       'In-App Chat',
       'Message Templates',
+      'SLA & Routing',
+      'Customer Context',
     ],
   },
   {
@@ -237,7 +239,8 @@ export const summonModules = [
       'Granular permissions, approval rights, branch restrictions, and data visibility rules.',
     priority: 'High',
     status: 'available',
-    routeName: 'User List',
+    routeName: 'RBAC Admin',
+    href: '/crm/admin-platform/rbac',
     group: 'Admin & Platform',
     icon: 'shield',
     features: [

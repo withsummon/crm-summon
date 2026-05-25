@@ -17,8 +17,8 @@ const _settings = createDocumentResource({
 export function getSettings() {
   function setupBrand() {
     brand.name = settings.value?.brand_name || 'BNI CRM'
-    brand.logo = settings.value?.brand_logo || '/assets/crm/images/logo.svg'
-    brand.favicon = settings.value?.favicon || '/icon.svg'
+    brand.logo = settings.value?.brand_logo || '/assets/crm/images/bni-logo.png'
+    brand.favicon = settings.value?.favicon || '/assets/crm/images/bni-logo.png'
   }
 
   return {

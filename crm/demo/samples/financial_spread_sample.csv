@@ -1,0 +1,70 @@
+statement_type,metric_label,year,amount
+P&L,Pendapatan / Sales,2022,8500000000000
+P&L,Pendapatan / Sales,2023,9200000000000
+P&L,Pendapatan / Sales,2024,10100000000000
+P&L,Beban Pokok Penjualan,2022,5950000000000
+P&L,Beban Pokok Penjualan,2023,6440000000000
+P&L,Beban Pokok Penjualan,2024,7070000000000
+P&L,Laba Kotor,2022,2550000000000
+P&L,Laba Kotor,2023,2760000000000
+P&L,Laba Kotor,2024,3030000000000
+P&L,Beban Operasional,2022,1100000000000
+P&L,Beban Operasional,2023,1200000000000
+P&L,Beban Operasional,2024,1300000000000
+P&L,EBITDA,2022,1450000000000
+P&L,EBITDA,2023,1560000000000
+P&L,EBITDA,2024,1730000000000
+P&L,Beban Bunga,2022,380000000000
+P&L,Beban Bunga,2023,410000000000
+P&L,Beban Bunga,2024,450000000000
+P&L,Pajak,2022,220000000000
+P&L,Pajak,2023,250000000000
+P&L,Pajak,2024,280000000000
+P&L,Laba Bersih,2022,850000000000
+P&L,Laba Bersih,2023,900000000000
+P&L,Laba Bersih,2024,1000000000000
+Balance Sheet,Kas dan Setara Kas,2022,1200000000000
+Balance Sheet,Kas dan Setara Kas,2023,1350000000000
+Balance Sheet,Kas dan Setara Kas,2024,1500000000000
+Balance Sheet,Piutang Usaha,2022,1800000000000
+Balance Sheet,Piutang Usaha,2023,1950000000000
+Balance Sheet,Piutang Usaha,2024,2100000000000
+Balance Sheet,Persediaan,2022,950000000000
+Balance Sheet,Persediaan,2023,1050000000000
+Balance Sheet,Persediaan,2024,1150000000000
+Balance Sheet,Aset Lancar,2022,3950000000000
+Balance Sheet,Aset Lancar,2023,4350000000000
+Balance Sheet,Aset Lancar,2024,4750000000000
+Balance Sheet,Total Aset,2022,12500000000000
+Balance Sheet,Total Aset,2023,13800000000000
+Balance Sheet,Total Aset,2024,15200000000000
+Balance Sheet,Utang Usaha,2022,1100000000000
+Balance Sheet,Utang Usaha,2023,1200000000000
+Balance Sheet,Utang Usaha,2024,1350000000000
+Balance Sheet,Liabilitas Jangka Pendek,2022,1800000000000
+Balance Sheet,Liabilitas Jangka Pendek,2023,2000000000000
+Balance Sheet,Liabilitas Jangka Pendek,2024,2200000000000
+Balance Sheet,Pinjaman Berbunga,2022,3500000000000
+Balance Sheet,Pinjaman Berbunga,2023,3800000000000
+Balance Sheet,Pinjaman Berbunga,2024,4200000000000
+Balance Sheet,Total Liabilitas,2022,6500000000000
+Balance Sheet,Total Liabilitas,2023,7100000000000
+Balance Sheet,Total Liabilitas,2024,7800000000000
+Balance Sheet,Ekuitas,2022,6000000000000
+Balance Sheet,Ekuitas,2023,6700000000000
+Balance Sheet,Ekuitas,2024,7400000000000
+Cash Flow,Arus Kas Operasi,2022,1200000000000
+Cash Flow,Arus Kas Operasi,2023,1300000000000
+Cash Flow,Arus Kas Operasi,2024,1450000000000
+Cash Flow,Belanja Modal,2022,450000000000
+Cash Flow,Belanja Modal,2023,500000000000
+Cash Flow,Belanja Modal,2024,550000000000
+Cash Flow,Arus Kas Pendanaan,2022,300000000000
+Cash Flow,Arus Kas Pendanaan,2023,350000000000
+Cash Flow,Arus Kas Pendanaan,2024,400000000000
+Cash Flow,Arus Kas Periode Berjalan,2022,1050000000000
+Cash Flow,Arus Kas Periode Berjalan,2023,1150000000000
+Cash Flow,Arus Kas Periode Berjalan,2024,1300000000000
+Cash Flow,Kas Akhir Periode,2022,1200000000000
+Cash Flow,Kas Akhir Periode,2023,1350000000000
+Cash Flow,Kas Akhir Periode,2024,1500000000000

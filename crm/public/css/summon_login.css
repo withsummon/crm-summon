@@ -21,9 +21,9 @@ img.app-logo,
 .page-card .login-content::before {
   content: '';
   display: block;
-  width: 72px;
-  height: 67px;
-  background-image: url('/assets/crm/images/logo.svg');
+  width: 180px;
+  height: 56px;
+  background-image: url('/assets/crm/images/bni-logo.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -54,9 +54,9 @@ img.app-logo,
 .navbar .navbar-brand::before {
   content: '';
   display: inline-block;
-  width: 32px;
-  height: 30px;
-  background-image: url('/assets/crm/images/logo.svg');
+  width: 86px;
+  height: 28px;
+  background-image: url('/assets/crm/images/bni-logo.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

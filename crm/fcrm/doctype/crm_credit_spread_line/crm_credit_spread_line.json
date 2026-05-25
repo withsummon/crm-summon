@@ -1,0 +1,43 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["naming_series", "application", "customer", "statement_type", "metric_key", "metric_label", "year", "column_break_amount", "amount", "adjusted_amount", "confidence", "source", "notes"],
+ "fields": [
+  {"default": "CRM-CAS-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-CAS-.YYYY.-"},
+  {"fieldname": "application", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Credit Application", "options": "CRM Credit Application", "reqd": 1},
+  {"fieldname": "customer", "fieldtype": "Link", "in_standard_filter": 1, "label": "Customer", "options": "Customer"},
+  {"fieldname": "statement_type", "fieldtype": "Select", "in_list_view": 1, "label": "Statement Type", "options": "P&L\nBalance Sheet\nCash Flow\nOther", "reqd": 1},
+  {"fieldname": "metric_key", "fieldtype": "Data", "label": "Metric Key", "reqd": 1},
+  {"fieldname": "metric_label", "fieldtype": "Data", "in_list_view": 1, "label": "Metric Label", "reqd": 1},
+  {"fieldname": "year", "fieldtype": "Int", "in_list_view": 1, "label": "Year", "reqd": 1},
+  {"fieldname": "column_break_amount", "fieldtype": "Column Break"},
+  {"fieldname": "amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Original Amount"},
+  {"fieldname": "adjusted_amount", "fieldtype": "Currency", "label": "Adjusted Amount"},
+  {"fieldname": "confidence", "fieldtype": "Percent", "label": "Extraction Confidence"},
+  {"fieldname": "source", "fieldtype": "Data", "label": "Source"},
+  {"fieldname": "notes", "fieldtype": "Text", "label": "Notes"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Credit Spread Line",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales User", "share": 1, "write": 1}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "metric_label",
+ "track_changes": 1
+}

@@ -12,7 +12,7 @@ const requiresCrmRole = (route) => {
   
   const flatCrmRoutes = [
     'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
-    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Desk'
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center'
   ]
   if (flatCrmRoutes.includes(route.name)) return true
   
@@ -149,8 +149,13 @@ const routes = [
       },
       {
         path: 'ai-desk',
-        name: 'AI Desk',
-        component: () => import('@/pages/AIDesk.vue'),
+        redirect: { name: 'AI Agent Center' },
+      },
+      {
+        path: 'ai-agent-center',
+        name: 'AI Agent Center',
+        alias: 'ai-agent',
+        component: () => import('@/pages/AIAgentCenter.vue'),
       },
     ],
   },
@@ -182,13 +187,7 @@ const routes = [
       {
         path: 'portfolio-monitoring',
         name: 'Portfolio Monitoring',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Portfolio Monitoring',
-          subtitle: 'Insights',
-          icon: 'pie-chart',
-          sourcePath: '/insights/dashboards',
-        },
+        component: () => import('@/pages/PortfolioMonitoring.vue'),
       },
       {
         path: 'product-configuration',
@@ -302,6 +301,11 @@ const routes = [
       },
       // RBAC Routes
       {
+        path: 'rbac',
+        name: 'RBAC Admin',
+        component: () => import('@/modules/rbac/pages/RBACAdmin.vue'),
+      },
+      {
         path: 'users',
         name: 'User List',
         component: () => import('@/modules/rbac/pages/UserList.vue'),
@@ -328,6 +332,36 @@ const routes = [
         component: () => import('@/modules/rbac/pages/UserPermissions.vue'),
       },
       {
+        path: 'branches',
+        name: 'RBAC Branches',
+        component: () => import('@/modules/rbac/pages/BranchManagement.vue'),
+      },
+      {
+        path: 'approval-matrix',
+        name: 'RBAC Approval Matrix',
+        component: () => import('@/modules/rbac/pages/ApprovalMatrix.vue'),
+      },
+      {
+        path: 'field-permissions',
+        name: 'RBAC Field Permissions',
+        component: () => import('@/modules/rbac/pages/FieldPermissions.vue'),
+      },
+      {
+        path: 'delegations',
+        name: 'RBAC Delegations',
+        component: () => import('@/modules/rbac/pages/Delegations.vue'),
+      },
+      {
+        path: 'sod-rules',
+        name: 'RBAC SoD',
+        component: () => import('@/modules/rbac/pages/SoDRules.vue'),
+      },
+      {
+        path: 'jit-requests',
+        name: 'RBAC JIT',
+        component: () => import('@/modules/rbac/pages/JITRequests.vue'),
+      },
+      {
         path: 'audit-trail',
         name: 'Audit Trail',
         component: () => import('@/modules/admin/pages/AuditTrail.vue'),
@@ -351,13 +385,7 @@ const routes = [
       {
         path: 'omnichannel-communication',
         name: 'Omnichannel Communication',
-        component: () => import('@/pages/EmbeddedAppPage.vue'),
-        props: {
-          title: 'Omnichannel Communication',
-          subtitle: 'ClefinCode Chat',
-          icon: 'message-square',
-          sourcePath: '/app/clefincode-chat-channel',
-        },
+        component: () => import('@/pages/OmnichannelWorkspace.vue'),
       },
       {
         path: 'customer-portal',
@@ -422,7 +450,8 @@ const routes = [
   { path: '/tasks', redirect: '/crm-core/tasks' },
   { path: '/calendar', redirect: '/crm-core/calendar' },
   { path: '/call-logs', redirect: '/crm-core/call-logs' },
-  { path: '/ai-desk', redirect: '/crm-core/ai-desk' },
+  { path: '/ai-desk', redirect: '/crm-core/ai-agent-center' },
+  { path: '/ai-agent-center', redirect: '/crm-core/ai-agent-center' },
   // Drive legacy CRM redirects now land on the iframe-based Document Management page.
   { path: '/drive', redirect: '/operations/document-management' },
   { path: '/drive/:pathMatch(.*)*', redirect: '/operations/document-management' },
@@ -446,10 +475,25 @@ let router = createRouter({
 router.beforeEach(async (to, from, next) => {
   router.previousRoute = from
 
-  const { isLoggedIn } = sessionStore()
+  const session = sessionStore()
+  const loggedIn = session.isLoggedIn
   const { users, isCrmUser } = usersStore()
 
-  if (isLoggedIn && !users.fetched) {
+  // Send state to backend for console debugging
+  try {
+    fetch('/api/method/crm.www.crm.debug_log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Frappe-CSRF-Token': window.csrf_token || ''
+      },
+      body: JSON.stringify({
+        message: `GUARD EVAL: to=${to.name} (${to.fullPath}), from=${from.name} (${from.fullPath}), loggedIn=${loggedIn}, session.user=${session.user}, window.user=${window.user}, cookie_user_id=${(document.cookie.match(/user_id=([^;]+)/) || [])[1]}`
+      })
+    }).catch(() => {})
+  } catch (e) {}
+
+  if (loggedIn && !users.fetched) {
     try {
       await users.promise
     } catch (error) {
@@ -463,16 +507,16 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.name === 'Not Permitted') {
     next()
-  } else if (isLoggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
+  } else if (loggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
     next({ name: 'Not Permitted' })
-  } else if (to.name === 'CRM Dispatcher' && isLoggedIn) {
+  } else if (to.name === 'CRM Dispatcher' && loggedIn) {
     const { views, getDefaultView } = viewsStore()
     await views.promise
 
     let defaultView = getDefaultView()
     if (!defaultView) {
       if (!isCrmUser()) {
-        next({ name: 'Home' })
+        next({ name: 'Not Permitted' })
       } else {
         next({ name: 'CRM Core Dashboard' })
       }
@@ -491,7 +535,7 @@ router.beforeEach(async (to, from, next) => {
     } else {
       next({ name: route_name, params: { viewType: type } })
     }
-  } else if (!isLoggedIn) {
+  } else if (!loggedIn) {
     window.location.href = `/login?redirect-to=${encodeURIComponent(`/crm${to.fullPath}`)}`
     next(false)
   } else if (to.matched.length === 0) {
@@ -513,7 +557,8 @@ router.beforeEach(async (to, from, next) => {
     ].includes(to.name) &&
     !to.query?.view
   ) {
-    const { views, standardViews, getDefaultView } = viewsStore()
+    const viewsStoreInstance = viewsStore()
+    const { views, getDefaultView } = viewsStoreInstance
     await views.promise
 
     const viewType = to.params?.viewType ?? ''
@@ -547,7 +592,8 @@ router.beforeEach(async (to, from, next) => {
       }
 
       for (const viewType of standardViewTypes) {
-        const standardView = standardViews.value?.[doctype + ' ' + viewType]
+        const standardViews = viewsStoreInstance.standardViews
+        const standardView = (standardViews?.[doctype + ' ' + viewType]) || (standardViews?.value?.[doctype + ' ' + viewType])
         if (standardView?.is_default) {
           defaultViewType = viewType
           break

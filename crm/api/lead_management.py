@@ -662,7 +662,7 @@ def _write_export_file(rows, format="CSV"):
 	filename = f"lead-export-{frappe.generate_hash(length=8)}.{extension}"
 	if format == "PDF":
 		content = "Lead Export\n\n" + content
-	file_doc = save_file(filename, content.encode(), "CRM Lead Export Job", None, is_private=1)
+	file_doc = save_file(filename, content.encode(), "CRM Lead Export Job", "", is_private=1)
 	return file_doc.file_url
 
 

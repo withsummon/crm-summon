@@ -265,4 +265,9 @@ function setActiveTab(tabName) {
 }
 
 watch(activeSettingsPage, (activePage) => setActiveTab(activePage))
+watch(showSettings, (opened) => {
+  if (opened) {
+    setActiveTab(activeSettingsPage.value)
+  }
+})
 </script>
