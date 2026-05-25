@@ -1,20 +1,28 @@
 <template>
   <div class="flex flex-1 flex-col min-h-0 bg-gray-50 font-sans select-none">
-    <LayoutHeader>
-      <div class="flex items-center gap-2 flex-1">
-        <FeatherIcon name="link" class="h-4 w-4 text-teal-600" />
-        <span class="font-semibold text-gray-800 text-sm">API & Integration Center</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <button @click="runHealthCheck" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-          <FeatherIcon name="activity" class="h-3.5 w-3.5" />
-          Health Check
-        </button>
-        <button @click="openAddModal" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
-          <FeatherIcon name="plus" class="h-3.5 w-3.5" />
-          Add Integration
-        </button>
-      </div>
+    <LayoutHeader stretch-left>
+      <template #left-header>
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+            <FeatherIcon name="link" class="h-4 w-4 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-lg font-semibold text-ink-gray-9">API & Integration Center</h1>
+          </div>
+        </div>
+      </template>
+      <template #right-header>
+        <div class="flex items-center gap-2">
+          <button @click="runHealthCheck" class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white">
+            <FeatherIcon name="activity" class="h-3.5 w-3.5" />
+            Health Check
+          </button>
+          <button @click="showAddModal = true" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+            <FeatherIcon name="plus" class="h-3.5 w-3.5" />
+            Add Integration
+          </button>
+        </div>
+      </template>
     </LayoutHeader>
 
     <div class="flex flex-1 min-h-0 overflow-hidden">
@@ -82,7 +90,7 @@
               <h2 class="text-base font-semibold text-gray-800">API Management Console</h2>
               <p class="text-xs text-gray-500 mt-0.5">Manage API endpoints, keys, versioning, and usage metrics</p>
             </div>
-            <button @click="showToast('API key generated')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">
+            <button @click="openGenKeyModal" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">
               <FeatherIcon name="key" class="h-3.5 w-3.5" />Generate Key
             </button>
           </div>
@@ -147,6 +155,44 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <!-- Custom Integrations CRUD -->
+          <div class="mt-5 bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h3 class="text-sm font-medium text-gray-700">Custom Integrations</h3>
+              <button @click="showAddModal = true" class="flex items-center gap-1.5 text-xs font-medium text-teal-600 hover:text-teal-700">
+                <FeatherIcon name="plus" class="h-3.5 w-3.5" />Add New
+              </button>
+            </div>
+            <div v-if="userIntegrations.length === 0" class="flex flex-col items-center justify-center py-10 text-gray-400">
+              <FeatherIcon name="link" class="h-8 w-8 mb-2 opacity-30" />
+              <p class="text-xs">No custom integrations yet. Click "Add Integration" to get started.</p>
+            </div>
+            <div v-else class="divide-y divide-gray-50">
+              <div v-for="intg in userIntegrations" :key="intg.id" class="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+                  <FeatherIcon name="link-2" class="h-4 w-4 text-teal-600" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-800">{{ intg.name }}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">Active</span>
+                    <span class="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-medium">{{ intg.type }}</span>
+                  </div>
+                  <p class="text-[10px] font-mono text-gray-400 truncate mt-0.5">{{ intg.baseUrl }}</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{{ intg.authType }}</span>
+                  <button @click="editIntegration(intg)" class="p-1 text-gray-300 hover:text-teal-600 rounded hover:bg-teal-50 transition-colors opacity-0 group-hover:opacity-100">
+                    <FeatherIcon name="edit-2" class="h-3.5 w-3.5" />
+                  </button>
+                  <button @click="deleteTarget = intg; showDeleteIntg = true" class="p-1 text-gray-300 hover:text-red-500 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
+                    <FeatherIcon name="trash-2" class="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1008,6 +1054,117 @@
       </div>
     </div>
 
+    <!-- Add / Edit Integration Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="closeIntgModal">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-base font-bold text-gray-800">{{ editingIntg ? 'Edit Integration' : 'Add Integration' }}</h3>
+          <button @click="closeIntgModal"><FeatherIcon name="x" class="h-4 w-4 text-gray-400" /></button>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Integration Name <span class="text-red-400">*</span></label>
+            <input v-model="intgForm.name" type="text" placeholder="e.g. SLIK OJK Connector" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500" @keyup.enter="saveIntegration" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Base URL <span class="text-red-400">*</span></label>
+            <input v-model="intgForm.baseUrl" type="url" placeholder="https://api.example.com" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-teal-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Type</label>
+            <select v-model="intgForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+              <option value="Banking">Banking</option>
+              <option value="Communication">Communication</option>
+              <option value="E-Signature">E-Signature</option>
+              <option value="Analytics">Analytics</option>
+              <option value="ERP">ERP</option>
+              <option value="Custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1.5">Auth Type</label>
+            <select v-model="intgForm.authType" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+              <option value="Bearer Token">Bearer Token</option>
+              <option value="API Key">API Key</option>
+              <option value="OAuth 2.0">OAuth 2.0</option>
+              <option value="None">None</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-5 flex gap-2">
+          <button @click="closeIntgModal" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button @click="saveIntegration" :disabled="!intgForm.name || !intgForm.baseUrl" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors">
+            {{ editingIntg ? 'Save Changes' : 'Add Integration' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Integration Confirmation -->
+    <div v-if="showDeleteIntg" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showDeleteIntg = false">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <FeatherIcon name="trash-2" class="h-5 w-5 text-red-500" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Delete Integration</h3>
+            <p class="text-xs text-gray-500 mt-0.5">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 mb-5">
+          <p class="text-xs font-semibold text-gray-800">{{ deleteTarget?.name }}</p>
+          <p class="text-[10px] font-mono text-gray-400 mt-0.5">{{ deleteTarget?.baseUrl }}</p>
+        </div>
+        <div class="flex gap-2">
+          <button @click="showDeleteIntg = false; deleteTarget = null" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button @click="deleteIntegration" class="flex-1 rounded-lg bg-red-500 py-2 text-sm font-semibold text-white hover:bg-red-600 transition-colors">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate Key Modal -->
+    <div v-if="showGenKeyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showGenKeyModal = false">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-base font-bold text-gray-800">API Key Generated</h3>
+          <button @click="showGenKeyModal = false"><FeatherIcon name="x" class="h-4 w-4 text-gray-400" /></button>
+        </div>
+        <div class="space-y-3">
+          <div class="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5">
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-0.5">Key Name</p>
+            <p class="text-xs font-semibold text-gray-800">{{ generatedKeyName }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1.5">API Key <span class="text-amber-500 normal-case font-normal">(copy now — shown once)</span></p>
+            <div class="flex items-center gap-2 rounded-lg bg-teal-50 border border-teal-200 px-3 py-2.5">
+              <code class="text-[11px] font-mono text-teal-800 flex-1 break-all select-all">{{ generatedKey }}</code>
+              <button @click="copyGeneratedKey" class="shrink-0 text-[10px] font-bold text-teal-700 hover:underline whitespace-nowrap">{{ keyCopied ? '✓ Copied' : 'Copy' }}</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
+              <p class="text-[10px] text-gray-400">Prefix</p>
+              <p class="font-semibold text-gray-700 font-mono mt-0.5">sk_live_****</p>
+            </div>
+            <div class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
+              <p class="text-[10px] text-gray-400">Created</p>
+              <p class="font-semibold text-gray-700 mt-0.5">Just now</p>
+            </div>
+            <div class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
+              <p class="text-[10px] text-gray-400">Expires</p>
+              <p class="font-semibold text-gray-700 mt-0.5">Never</p>
+            </div>
+            <div class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
+              <p class="text-[10px] text-gray-400">Scope</p>
+              <p class="font-semibold text-gray-700 mt-0.5">Full Access</p>
+            </div>
+          </div>
+        </div>
+        <button @click="showGenKeyModal = false" class="mt-5 w-full rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Close</button>
+      </div>
+    </div>
+
     <!-- Toast -->
     <transition enter-active-class="transition duration-200 ease-out" enter-from-class="translate-y-2 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-2 opacity-0">
       <div v-if="toast" class="fixed bottom-6 right-6 bg-gray-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg z-50 flex items-center gap-2">
@@ -1363,5 +1520,67 @@ function statusClass(s) {
 
 // ── Health check ───────────────────────────────
 function runHealthCheck() { showToast('Health check complete: 14 OK, 3 warnings, 1 error') }
-function openAddModal() { showToast('Add Integration wizard opened') }
+
+// ── Custom Integrations CRUD ───────────────────
+const showAddModal = ref(false)
+const showDeleteIntg = ref(false)
+const editingIntg = ref(null)
+const deleteTarget = ref(null)
+const intgForm = ref({ name: '', baseUrl: '', type: 'Custom', authType: 'Bearer Token' })
+
+const userIntegrations = ref([
+  { id: 1, name: 'BI Reporting Connector', baseUrl: 'https://bi.internal/api', type: 'Analytics', authType: 'Bearer Token' },
+  { id: 2, name: 'BPJS Health API', baseUrl: 'https://api.bpjs-kesehatan.go.id', type: 'Custom', authType: 'API Key' },
+])
+
+function editIntegration(intg) {
+  editingIntg.value = intg
+  intgForm.value = { name: intg.name, baseUrl: intg.baseUrl, type: intg.type, authType: intg.authType }
+  showAddModal.value = true
+}
+
+function saveIntegration() {
+  if (!intgForm.value.name || !intgForm.value.baseUrl) return
+  if (editingIntg.value) {
+    Object.assign(editingIntg.value, intgForm.value)
+    showToast('Integration updated')
+  } else {
+    userIntegrations.value.unshift({ id: Date.now(), ...intgForm.value })
+    showToast('Integration added successfully')
+  }
+  closeIntgModal()
+}
+
+function closeIntgModal() {
+  showAddModal.value = false
+  editingIntg.value = null
+  intgForm.value = { name: '', baseUrl: '', type: 'Custom', authType: 'Bearer Token' }
+}
+
+function deleteIntegration() {
+  if (!deleteTarget.value) return
+  userIntegrations.value = userIntegrations.value.filter(i => i.id !== deleteTarget.value.id)
+  showToast('Integration deleted')
+  showDeleteIntg.value = false
+  deleteTarget.value = null
+}
+
+// ── Generate Key Modal ──────────────────────────
+const showGenKeyModal = ref(false)
+const generatedKey = ref('')
+const generatedKeyName = ref('')
+const keyCopied = ref(false)
+
+function openGenKeyModal() {
+  generatedKeyName.value = `Live API Key ${new Date().toLocaleDateString('id-ID')}`
+  generatedKey.value = 'sk_live_' + [...Array(32)].map(() => Math.random().toString(36)[2]).join('')
+  keyCopied.value = false
+  showGenKeyModal.value = true
+}
+
+function copyGeneratedKey() {
+  navigator.clipboard?.writeText(generatedKey.value).catch(() => {})
+  keyCopied.value = true
+  setTimeout(() => { keyCopied.value = false }, 2000)
+}
 </script>
