@@ -63,7 +63,7 @@ def _create_customer_records(customer, sample_row, index, records):
 			"borrower": customer_name,
 			"borrower_name": display_name,
 			"borrower_type": "Company",
-			"status": "In Progress" if index % 2 == 0 else "Pending Review",
+			"status": "Credit Analysis" if index % 2 == 0 else "Document Review",
 			"facility_type": "Working Capital",
 			"requested_amount": 5000000000 + (index * 750000000),
 			"employer_name": display_name,
@@ -574,4 +574,3 @@ def _create_demo_products(records):
 			doc.append("approval_tiers", row)
 		doc.insert(ignore_permissions=True)
 		_append_record(records, "CRM Product", doc.name)
-
