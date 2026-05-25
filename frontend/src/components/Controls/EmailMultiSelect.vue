@@ -101,6 +101,19 @@
   </div>
 </template>
 
+<script>
+function translate(message, replace) {
+  const translator = window.__
+  if (typeof translator === 'function') {
+    return translator(message, replace)
+  }
+  if (!replace) return message
+  return String(message).replace(/{(\d+)}/g, (match, number) => {
+    return typeof replace[number] !== 'undefined' ? replace[number] : match
+  })
+}
+</script>
+
 <script setup>
 // Generic multi-source (users / contacts / free) multi-select email-like input
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -119,17 +132,6 @@ import {
 import { ref, computed, nextTick } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 
-function translate(message, replace) {
-  const translator = window.__
-  if (typeof translator === 'function') {
-    return translator(message, replace)
-  }
-  if (!replace) return message
-  return String(message).replace(/{(\d+)}/g, (match, number) => {
-    return typeof replace[number] !== 'undefined' ? replace[number] : match
-  })
-}
-
 const props = defineProps({
   // Behaviour
   mode: { type: String, default: null }, // 'users' | 'contacts' | 'free' (fallback to legacy flags)
@@ -139,13 +141,7 @@ const props = defineProps({
   validate: { type: Function, default: null },
   errorMessage: {
     type: Function,
-    default: (value) => {
-      const translator = window.__
-      if (typeof translator === 'function') {
-        return translator('{0} is an Invalid Value', [value])
-      }
-      return `{0} is an Invalid Value`.replace('{0}', value)
-    },
+    default: (value) => translate('{0} is an Invalid Value', [value]),
   },
   emptyPlaceholder: { type: String, default: 'No results found' },
   // UI
