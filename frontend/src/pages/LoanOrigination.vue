@@ -14,7 +14,7 @@
       <template #right-header>
         <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
           <FeatherIcon name="plus" class="h-3.5 w-3.5" />
-          {{ __('New Application') }}
+          {{ __('New Loan Application') }}
         </button>
       </template>
     </LayoutHeader>
@@ -34,12 +34,17 @@
         <div
           v-for="app in filteredApps" :key="app.id"
           @click="selectApp(app)"
-          class="p-3 rounded-lg cursor-pointer border transition-all"
+          class="group p-3 rounded-lg cursor-pointer border transition-all"
           :class="selected?.id === app.id ? 'bg-teal-50 border-teal-200' : 'border-transparent hover:bg-slate-50'"
         >
           <div class="flex items-start justify-between gap-1">
             <span class="text-xs font-semibold text-slate-800 truncate">{{ app.borrower_name }}</span>
-            <span class="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold" :class="statusBadge(app.status)">{{ app.status }}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <span class="rounded-full px-1.5 py-0.5 text-[9px] font-bold" :class="statusBadge(app.status)">{{ app.status }}</span>
+              <button @click.stop="confirmDelete(app)" class="bg-red-50 transition-opacity p-0.5 rounded hover:bg-red-600 text-red-500 hover:text-gray-300">
+                <FeatherIcon name="trash-2" class="h-3 w-3" />
+              </button>
+            </div>
           </div>
           <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ app.id }} · {{ app.facility_type }}</div>
           <div class="flex gap-0.5 mt-2">
@@ -767,6 +772,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div v-if="deleteTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="deleteTarget = null">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+          <FeatherIcon name="trash-2" class="h-5 w-5 text-red-500" />
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-800">{{ __('Delete Application') }}</h3>
+          <p class="text-xs text-gray-500 mt-0.5">{{ __('This action cannot be undone.') }}</p>
+        </div>
+      </div>
+      <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 mb-5">
+        <p class="text-xs font-semibold text-gray-800">{{ deleteTarget?.borrower_name }}</p>
+        <p class="text-[10px] text-gray-400 mt-0.5">{{ deleteTarget?.id }} · {{ deleteTarget?.facility_type || 'No facility selected' }}</p>
+      </div>
+      <div class="flex gap-2">
+        <button @click="deleteTarget = null" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">{{ __('Cancel') }}</button>
+        <button @click="deleteApp" class="flex-1 rounded-lg bg-red-500 py-2 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{{ __('Delete') }}</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -818,6 +846,7 @@ const saving = ref(false)
 const autoSaved = ref(false)
 const showModal = ref(false)
 const newApp = ref({ borrower_name: '', borrower_type: 'Individual' })
+const deleteTarget = ref(null)
 const npwpStatus = ref('')
 const ocrResult = ref(null)
 const uploadProgress = ref(0)
@@ -1100,6 +1129,20 @@ function fakeUpload() {
       setTimeout(() => { uploadProgress.value = 0; uploadingFile.value = '' }, 800)
     }
   }, 200)
+}
+
+function confirmDelete(app) {
+  deleteTarget.value = app
+}
+
+function deleteApp() {
+  if (!deleteTarget.value) return
+  apps.value = apps.value.filter(a => a.id !== deleteTarget.value.id)
+  if (selected.value?.id === deleteTarget.value.id) {
+    selected.value = null
+    currentStep.value = 1
+  }
+  deleteTarget.value = null
 }
 
 // Auto-save every 30s when step <= 3
