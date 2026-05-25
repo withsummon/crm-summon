@@ -399,10 +399,14 @@ def create_task(payload):
 	doc.reference_docname = payload.get("reference_docname")
 	doc.parent_task = payload.get("parent_task")
 	doc.started_at = _now() if doc.status == "In Progress" else None
-	doc.insert(ignore_permissions=True)
-	# Mirror primary into assignees table
 	if doc.assigned_to:
-		_replace_assignees(doc, [doc.assigned_to])
+		doc.append("assignees", {
+			"user": doc.assigned_to,
+			"user_name": _user_full_name(doc.assigned_to),
+			"role": "Assignee",
+			"primary": 1,
+		})
+	doc.insert(ignore_permissions=True)
 	_sla_persist(doc)
 	frappe.db.commit()
 	return doc.name

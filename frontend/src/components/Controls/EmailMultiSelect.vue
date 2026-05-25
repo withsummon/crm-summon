@@ -101,6 +101,19 @@
   </div>
 </template>
 
+<script>
+function translate(message, replace) {
+  const translator = window.__
+  if (typeof translator === 'function') {
+    return translator(message, replace)
+  }
+  if (!replace) return message
+  return String(message).replace(/{(\d+)}/g, (match, number) => {
+    return typeof replace[number] !== 'undefined' ? replace[number] : match
+  })
+}
+</script>
+
 <script setup>
 // Generic multi-source (users / contacts / free) multi-select email-like input
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -128,9 +141,9 @@ const props = defineProps({
   validate: { type: Function, default: null },
   errorMessage: {
     type: Function,
-    default: (value) => __('{0} is an Invalid Value', [value]),
+    default: (value) => translate('{0} is an Invalid Value', [value]),
   },
-  emptyPlaceholder: { type: String, default: __('No results found') },
+  emptyPlaceholder: { type: String, default: 'No results found' },
   // UI
   variant: { type: String, default: 'subtle' },
   placeholder: { type: String, default: '' },
@@ -237,8 +250,8 @@ const options = computed(() => {
 
 const showSearchIcon = computed(() => effectiveMode.value !== 'free')
 const emptyStateText = computed(() => {
-  if (effectiveMode.value === 'free') return __(props.emptyPlaceholder)
-  return options.value.length ? '' : __(props.emptyPlaceholder)
+  if (effectiveMode.value === 'free') return translate(props.emptyPlaceholder)
+  return options.value.length ? '' : translate(props.emptyPlaceholder)
 })
 
 function addValue(input) {
@@ -251,7 +264,7 @@ function addValue(input) {
     .filter(Boolean)
   for (const email of parts) {
     if (values.value?.includes(email)) {
-      info.value = __('Email already exists')
+      info.value = translate('Email already exists')
       continue
     }
     if (props.validate && !props.validate(email)) {

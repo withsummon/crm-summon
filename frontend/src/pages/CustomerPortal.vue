@@ -1146,7 +1146,6 @@
 </template>
 
 <script setup>
-/* global frappe */
 import { ref, reactive, computed, h, nextTick, onMounted } from 'vue'
 import { Badge, Button, Dialog, FeatherIcon, LoadingIndicator, call, createResource, toast } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
@@ -1394,8 +1393,8 @@ async function uploadDoc(event, doc) {
     const data = await res.json()
     const fileUrl = data.message?.file_url
     if (!fileUrl) throw new Error()
-    const updated = await frappe.call('crm.api.portal.update_document_file', { document_name: doc.name, file_url: fileUrl, customer: null })
-    Object.assign(doc, updated.message || {})
+    const updated = await call('crm.api.portal.update_document_file', { document_name: doc.name, file_url: fileUrl, customer: null })
+    Object.assign(doc, updated || {})
     toast.success('Document uploaded successfully')
   } catch (e) {
     toast.error(__('Upload failed: ') + (e?.message || ''))
@@ -1409,12 +1408,14 @@ async function submitTicket() {
   if (!ticketForm.subject || !ticketForm.category) return
   ticketSubmitting.value = true
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.submit_ticket',
-      args: { category: ticketForm.category, subject: ticketForm.subject, description: ticketForm.description, customer: null },
+    const res = await call('crm.api.portal.submit_ticket', {
+      category: ticketForm.category,
+      subject: ticketForm.subject,
+      description: ticketForm.description,
+      customer: null,
     })
-    if (ticketAttachment.value && res.message?.name) {
-      await uploadAttachment(ticketAttachment.value, res.message.doctype || 'HD Ticket', res.message.name)
+    if (ticketAttachment.value && res?.name) {
+      await uploadAttachment(ticketAttachment.value, res.doctype || 'HD Ticket', res.name)
     }
     toast.success('Ticket submitted')
     Object.assign(ticketForm, { category: '', subject: '', description: '' })
@@ -1432,12 +1433,14 @@ async function submitTopup() {
   if (!topupAmount.value || !topupPurpose.value) return
   topupSubmitting.value = true
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.submit_topup_request',
-      args: { facility_name: topupFacility.value?.name, amount: topupAmount.value, purpose: topupPurpose.value, customer: null },
+    const res = await call('crm.api.portal.submit_topup_request', {
+      facility_name: topupFacility.value?.name,
+      amount: topupAmount.value,
+      purpose: topupPurpose.value,
+      customer: null,
     })
-    topupAppName.value = res.message?.application_name
-    topupApp.value = res.message?.application || null
+    topupAppName.value = res?.application_name
+    topupApp.value = res?.application || null
     topupSubmitted.value = true
   } catch (e) {
     toast.error(__('Top-up request failed: ') + (e?.message || ''))
@@ -1498,15 +1501,12 @@ async function submitNewDocument() {
     const uploadData = await uploadRes.json()
     const fileUrl = uploadData.message?.file_url
     if (!fileUrl) throw new Error('upload failed')
-    await frappe.call({
-      method: 'crm.api.portal.upload_document',
-      args: {
-        title: newDoc.title,
-        document_type: newDoc.document_type,
-        file_url: fileUrl,
-        application_name: docApplicationName.value,
-        customer: null,
-      },
+    await call('crm.api.portal.upload_document', {
+      title: newDoc.title,
+      document_type: newDoc.document_type,
+      file_url: fileUrl,
+      application_name: docApplicationName.value,
+      customer: null,
     })
     toast.success('Document uploaded')
     showNewDocDialog.value = false
@@ -1527,11 +1527,8 @@ async function askAssistant(text) {
   assistantLoading.value = true
   scrollAssistantToBottom()
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.ask_assistant',
-      args: { message, customer: null },
-    })
-    const answer = res.message?.answer || "I couldn't reach the assistant. Try again in a moment."
+    const res = await call('crm.api.portal.ask_assistant', { message, customer: null })
+    const answer = res?.answer || "I couldn't reach the assistant. Try again in a moment."
     assistantMessages.value.push({ role: 'assistant', content: answer })
   } catch (e) {
     assistantMessages.value.push({
@@ -1562,7 +1559,7 @@ function viewTopupApp() {
 
 async function seedSampleData() {
   try {
-    await frappe.call({ method: 'crm.api.portal.seed_portal_sample_data', args: { customer: null } })
+    await call('crm.api.portal.seed_portal_sample_data', { customer: null })
     toast.success('Sample data loaded')
     allApps.reload()
     docs.reload()
@@ -1585,12 +1582,13 @@ async function advanceApplication() {
   if (!selectedApp.value || selectedApp.value.stage_index >= STAGES.length) return
   const nextStage = STAGES[selectedApp.value.stage_index]
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.update_application',
-      args: { name: selectedApp.value.name, fields: JSON.stringify({ status: nextStage }), customer: null },
+    const res = await call('crm.api.portal.update_application', {
+      name: selectedApp.value.name,
+      fields: JSON.stringify({ status: nextStage }),
+      customer: null,
     })
-    if (res.message) {
-      Object.assign(selectedApp.value, _normalizeApplication(res.message))
+    if (res) {
+      Object.assign(selectedApp.value, _normalizeApplication(res))
     }
     toast.success(`Application advanced to ${selectedApp.value.stage_label}`)
     allApps.reload()
@@ -1602,12 +1600,13 @@ async function advanceApplication() {
 async function completeApplication() {
   if (!selectedApp.value) return
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.update_application',
-      args: { name: selectedApp.value.name, fields: JSON.stringify({ status: 'Active' }), customer: null },
+    const res = await call('crm.api.portal.update_application', {
+      name: selectedApp.value.name,
+      fields: JSON.stringify({ status: 'Active' }),
+      customer: null,
     })
-    if (res.message) {
-      Object.assign(selectedApp.value, _normalizeApplication(res.message))
+    if (res) {
+      Object.assign(selectedApp.value, _normalizeApplication(res))
     }
     toast.success('Application completed')
     allApps.reload()
@@ -1619,7 +1618,7 @@ async function completeApplication() {
 async function cancelApplication(app) {
   if (!confirm(__('Cancel this application?'))) return
   try {
-    await frappe.call({ method: 'crm.api.portal.cancel_application', args: { name: app.name, customer: null } })
+    await call('crm.api.portal.cancel_application', { name: app.name, customer: null })
     toast.success('Application cancelled')
     allApps.reload()
     if (selectedApp.value?.name === app.name) selectedApp.value = null
@@ -1637,12 +1636,13 @@ async function submitEditApp() {
   if (!editApp.name) return
   editAppSubmitting.value = true
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.update_application',
-      args: { name: editApp.name, fields: JSON.stringify({ requested_amount: Number(editApp.requested_amount), purpose: editApp.purpose, notes: editApp.notes }), customer: null },
+    const res = await call('crm.api.portal.update_application', {
+      name: editApp.name,
+      fields: JSON.stringify({ requested_amount: Number(editApp.requested_amount), purpose: editApp.purpose, notes: editApp.notes }),
+      customer: null,
     })
-    if (res.message && selectedApp.value?.name === editApp.name) {
-      Object.assign(selectedApp.value, _normalizeApplication(res.message))
+    if (res && selectedApp.value?.name === editApp.name) {
+      Object.assign(selectedApp.value, _normalizeApplication(res))
     }
     toast.success('Application updated')
     showEditAppDialog.value = false
@@ -1656,11 +1656,8 @@ async function submitEditApp() {
 
 async function approveDoc(doc) {
   try {
-    const res = await frappe.call({
-      method: 'crm.api.portal.update_document_file',
-      args: { document_name: doc.name, file_url: doc.file || '', customer: null },
-    })
-    if (res.message) Object.assign(doc, res.message)
+    const res = await call('crm.api.portal.update_document_file', { document_name: doc.name, file_url: doc.file || '', customer: null })
+    if (res) Object.assign(doc, res)
     toast.success('Document approved')
   } catch (e) {
     toast.error(__('Approve failed: ') + (e?.message || ''))
@@ -1670,7 +1667,7 @@ async function approveDoc(doc) {
 async function deleteDocument(doc) {
   if (!confirm(__('Delete this document?'))) return
   try {
-    await frappe.call({ method: 'crm.api.portal.delete_document', args: { name: doc.name, customer: null } })
+    await call('crm.api.portal.delete_document', { name: doc.name, customer: null })
     toast.success('Document deleted')
     docs.reload()
   } catch (e) {
@@ -1681,7 +1678,7 @@ async function deleteDocument(doc) {
 async function closeTicket(ticket) {
   if (!confirm(__('Close this ticket?'))) return
   try {
-    await frappe.call({ method: 'crm.api.portal.close_ticket', args: { name: ticket.name, customer: null } })
+    await call('crm.api.portal.close_ticket', { name: ticket.name, customer: null })
     toast.success('Ticket closed')
     tickets.reload()
   } catch (e) {
@@ -1698,9 +1695,10 @@ async function submitEditTicket() {
   if (!editTicket.name) return
   editTicketSubmitting.value = true
   try {
-    await frappe.call({
-      method: 'crm.api.portal.update_ticket',
-      args: { name: editTicket.name, fields: JSON.stringify({ subject: editTicket.subject, description: editTicket.description }), customer: null },
+    await call('crm.api.portal.update_ticket', {
+      name: editTicket.name,
+      fields: JSON.stringify({ subject: editTicket.subject, description: editTicket.description }),
+      customer: null,
     })
     toast.success('Ticket updated')
     showEditTicketDialog.value = false
