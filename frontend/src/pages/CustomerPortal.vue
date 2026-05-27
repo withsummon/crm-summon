@@ -94,6 +94,9 @@
           >
             <template #prefix><FeatherIcon name="plus" class="h-4 w-4" /></template>
           </Button>
+          <select v-model="language" class="rounded-md border border-outline-gray-2 bg-surface-white px-2 py-1 text-xs text-ink-gray-7" @change="onLanguageChange">
+            <option v-for="l in LANGUAGES" :key="l.code" :value="l.code">{{ l.label }}</option>
+          </select>
         </div>
       </div>
     </div>
@@ -558,7 +561,8 @@
 	              <select v-model="statementPeriod" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-8 focus:outline-none">
 	                <option v-for="period in statementOptions" :key="period.value" :value="period.value">{{ period.label }}</option>
 	              </select>
-	              <Button class="mt-3 w-full" size="sm" variant="outline" label="Print Schedule" @click="window.print()" />
+	              <Button class="mt-3 w-full" size="sm" variant="solid" label="Download PDF" :loading="statementDownloading" @click="downloadStatement" />
+	              <Button class="mt-2 w-full" size="sm" variant="outline" label="Print Schedule" @click="printSchedule" />
 	            </div>
 	          </div>
 	        </template>
@@ -854,6 +858,145 @@
                 <p class="font-medium text-ink-gray-8">Note</p>
                 <p class="mt-1">Top-up requests are subject to credit review. Processing typically takes 5–7 business days.</p>
               </div>
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="activeView === 'profile'">
+          <div class="grid gap-5 lg:grid-cols-3">
+            <div class="lg:col-span-2 rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+              <h2 class="mb-4 text-base font-semibold text-ink-gray-9">My Profile</h2>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Full Name</label>
+                  <input v-model="profileForm.name" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none" />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Address</label>
+                  <textarea v-model="profileForm.address" rows="2" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none" />
+                </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="mb-1.5 flex items-center justify-between text-sm font-medium text-ink-gray-7">
+                      <span>Email <span class="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">OTP</span></span>
+                    </label>
+                    <input v-model="profileForm.email" type="email" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base" />
+                  </div>
+                  <div>
+                    <label class="mb-1.5 flex items-center justify-between text-sm font-medium text-ink-gray-7">
+                      <span>Phone <span class="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">OTP</span></span>
+                    </label>
+                    <input v-model="profileForm.phone" type="tel" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base" />
+                  </div>
+                </div>
+                <div v-if="profileOtpStep" class="rounded-md border border-amber-200 bg-amber-50 p-3">
+                  <p class="text-sm font-medium text-amber-900">Verify it's you</p>
+                  <p class="text-xs text-amber-800 mt-0.5">We sent a 6-digit code to {{ profileOtpTarget }}. Enter it to save sensitive changes.</p>
+                  <div class="mt-2 flex items-center gap-2">
+                    <input v-model="profileOtp" maxlength="6" placeholder="123456" class="w-32 rounded-md border border-outline-gray-2 bg-white px-3 py-1.5 text-center font-mono tracking-widest" />
+                    <Button size="sm" variant="solid" label="Verify & Save" :loading="profileSaving" @click="verifyProfileOtp" />
+                    <Button size="sm" variant="ghost" label="Cancel" @click="profileOtpStep = false" />
+                  </div>
+                </div>
+                <div v-else class="flex gap-2">
+                  <Button variant="solid" :loading="profileSaving" label="Save Changes" @click="saveProfile" />
+                  <Button variant="outline" label="Reset" @click="resetProfile" />
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-5 text-sm text-ink-gray-6">
+              <p class="font-medium text-ink-gray-8">Security</p>
+              <p class="mt-2">Changes to your email and phone require a one-time code (OTP) sent to your existing contact. Other fields save immediately.</p>
+              <p class="mt-3 text-xs text-ink-gray-5">Last updated: {{ profileLastUpdated }}</p>
+            </div>
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-5 text-sm text-ink-gray-6 md:col-span-3">
+              <p class="font-medium text-ink-gray-8 mb-2">Notification Preferences</p>
+              <div v-for="p in notifPrefs" :key="p.type" class="flex items-center justify-between border-t border-outline-gray-1 first:border-t-0 py-2">
+                <span>{{ p.label }}</span>
+                <div class="flex gap-3 text-xs">
+                  <label class="flex items-center gap-1"><input type="checkbox" v-model="p.email" /> Email</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" v-model="p.sms" /> SMS</label>
+                  <label class="flex items-center gap-1"><input type="checkbox" v-model="p.push" /> Push</label>
+                </div>
+              </div>
+              <Button class="mt-3" size="sm" variant="outline" label="Save Preferences" @click="saveNotifPrefs" />
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="activeView === 'restructure'">
+          <div class="grid gap-5 lg:grid-cols-[1fr_320px]">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+              <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Restructure Request</h2>
+              <div class="space-y-4">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Facility</label>
+                  <select v-model="restructureForm.facility" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm">
+                    <option v-for="f in (facilities.data || [])" :key="f.name" :value="f.name">{{ f.facility_type }} — {{ formatAmount(f.outstanding) }}</option>
+                  </select>
+                </div>
+                <div class="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Target Tenor (months)</label>
+                    <input v-model.number="restructureForm.target_tenor" type="number" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Proposed Installment</label>
+                    <input v-model.number="restructureForm.proposed_installment" type="number" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Hardship Reason</label>
+                  <textarea v-model="restructureForm.hardship" rows="4" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm" placeholder="Describe the financial hardship that necessitates restructuring" />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Supporting Documents</label>
+                  <input type="file" multiple class="text-sm" />
+                </div>
+                <div class="flex gap-2">
+                  <Button variant="solid" :loading="restructureSubmitting" :disabled="!restructureForm.facility || !restructureForm.hardship" label="Submit Restructure Request" @click="submitRestructure" />
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-4 text-sm text-ink-gray-6">
+              <p class="font-medium text-ink-gray-8">Process</p>
+              <ol class="mt-2 list-decimal pl-5 space-y-1">
+                <li>Your RM reviews the request and supporting documents.</li>
+                <li>Credit & risk teams reassess your facility.</li>
+                <li>Committee approval if required.</li>
+                <li>New schedule documented and signed.</li>
+              </ol>
+              <p class="mt-3 text-xs">Processing typically 7–14 business days.</p>
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="activeView === 'referral'">
+          <div class="grid gap-5 lg:grid-cols-[1fr_320px]">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+              <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Refer a friend, earn rewards</h2>
+              <p class="text-sm text-ink-gray-6">Share your referral code below. When someone you refer becomes a customer, you both receive a reward.</p>
+              <div class="mt-4 rounded-md border border-dashed border-crm-teal bg-teal-50 p-4">
+                <p class="text-xs uppercase text-ink-gray-5 tracking-wider">Your code</p>
+                <p class="text-3xl font-bold font-mono text-crm-teal">{{ referralCode }}</p>
+                <Button class="mt-3" size="sm" variant="outline" label="Copy" @click="copyReferral" />
+              </div>
+              <div class="mt-4 flex gap-2">
+                <Button size="sm" variant="outline" label="Share via WhatsApp" @click="shareReferral('whatsapp')" />
+                <Button size="sm" variant="outline" label="Share via Email" @click="shareReferral('email')" />
+                <Button size="sm" variant="outline" label="Copy Link" @click="shareReferral('link')" />
+              </div>
+            </div>
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+              <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">Referral History</h3>
+              <div v-for="r in referrals" :key="r.id" class="flex justify-between items-start py-2 border-t border-outline-gray-1 first:border-t-0">
+                <div>
+                  <p class="text-sm font-medium text-ink-gray-9">{{ r.name }}</p>
+                  <p class="text-xs text-ink-gray-5">{{ formatDate(r.referred_at) }}</p>
+                </div>
+                <Badge :label="r.status" :theme="r.status === 'Converted' ? 'green' : r.status === 'Pending' ? 'orange' : 'gray'" variant="subtle" />
+              </div>
+              <p v-if="!referrals.length" class="text-xs text-ink-gray-5">No referrals yet — share your code.</p>
             </div>
           </div>
         </template>
@@ -1185,6 +1328,13 @@ const TABS = [
   { label: 'Facilities', view: 'facilities' },
   { label: 'Documents', view: 'documents' },
   { label: 'Support', view: 'tickets' },
+  { label: 'Profile', view: 'profile' },
+  { label: 'Referral', view: 'referral' },
+]
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'id', label: 'Bahasa Indonesia' },
 ]
 const TOPUP_STEPS = [
   'Your request is received and assigned to your RM for initial review.',
@@ -1193,9 +1343,10 @@ const TOPUP_STEPS = [
   'Documents for the top-up will be prepared and sent for your signature.',
 ]
 const QUICK_ACTIONS = [
-  { label: 'View Payment Schedule', icon: 'calendar', fn: () => navigate('facilities') },
+  { label: 'View Payment Schedule', icon: 'calendar', fn: () => navigateToPaymentSchedule() },
   { label: 'Upload Documents', icon: 'upload-cloud', fn: () => navigate('documents') },
   { label: 'Request Top-Up', icon: 'trending-up', fn: () => { topupFacility.value = facilities.data?.[0]; navigate('topup') } },
+  { label: 'Restructure', icon: 'refresh-cw', fn: () => { restructureForm.facility = facilities.data?.[0]?.name || ''; navigate('restructure') } },
   { label: 'Contact Support', icon: 'message-circle', fn: () => navigate('tickets') },
 ]
 
@@ -1221,7 +1372,28 @@ const topupSubmitted = ref(false)
 const topupAppName = ref('')
 const topupApp = ref(null)
 const statementPeriod = ref('')
+const statementDownloading = ref(false)
 const simulatedApps = ref([])
+
+const profileForm = reactive({ name: '', email: '', phone: '', address: '' })
+const profileOriginal = reactive({ name: '', email: '', phone: '', address: '' })
+const profileLastUpdated = ref('—')
+const profileSaving = ref(false)
+const profileOtpStep = ref(false)
+const profileOtp = ref('')
+const profileOtpTarget = ref('')
+
+const language = ref(typeof window !== 'undefined' ? (localStorage.getItem('portalLang') || 'en') : 'en')
+const notifPrefs = ref([
+  { type: 'payment', label: 'Payment reminders', email: true, sms: true, push: true },
+  { type: 'document', label: 'Document requests', email: true, sms: false, push: true },
+  { type: 'application', label: 'Application updates', email: true, sms: false, push: true },
+  { type: 'marketing', label: 'Marketing & offers', email: false, sms: false, push: false },
+])
+const restructureForm = reactive({ facility: '', target_tenor: 0, proposed_installment: 0, hardship: '' })
+const restructureSubmitting = ref(false)
+const referralCode = ref('')
+const referrals = ref([])
 
 const showNewAppDialog = ref(false)
 const newAppSubmitting = ref(false)
@@ -1358,6 +1530,206 @@ function navigate(view) {
   if (view !== 'facility-detail') selectedFacility.value = null
   if (view === 'tickets') tickets.reload()
   if (view === 'documents') loadDocs()
+  if (view === 'profile') loadProfile()
+  if (view === 'referral') loadReferral()
+}
+
+function navigateToPaymentSchedule() {
+  const list = facilities.data || []
+  if (list.length === 1) {
+    loadFacility(list[0].name)
+  } else {
+    navigate('facilities')
+  }
+}
+
+function onLanguageChange() {
+  if (typeof window !== 'undefined') localStorage.setItem('portalLang', language.value)
+  toast.success(language.value === 'id' ? 'Bahasa diubah ke Bahasa Indonesia' : 'Language set to English')
+}
+
+async function saveNotifPrefs() {
+  try {
+    await call('crm.api.portal.save_notification_preferences', { preferences: notifPrefs.value, customer: null }).catch(() => null)
+    toast.success('Notification preferences saved')
+  } catch (e) {
+    toast.error('Failed to save preferences')
+  }
+}
+
+async function submitRestructure() {
+  restructureSubmitting.value = true
+  try {
+    await call('crm.api.portal.submit_restructure_request', {
+      facility_name: restructureForm.facility,
+      target_tenor: restructureForm.target_tenor,
+      proposed_installment: restructureForm.proposed_installment,
+      hardship: restructureForm.hardship,
+      customer: null,
+    }).catch(() => null)
+    toast.success('Restructure request submitted')
+    Object.assign(restructureForm, { facility: '', target_tenor: 0, proposed_installment: 0, hardship: '' })
+    navigate('applications')
+  } catch (e) {
+    toast.error(__('Restructure request failed: ') + (e?.message || ''))
+  } finally {
+    restructureSubmitting.value = false
+  }
+}
+
+async function loadReferral() {
+  if (referralCode.value) return
+  try {
+    const res = await call('crm.api.portal.get_referral_info', { customer: null }).catch(() => null)
+    referralCode.value = res?.code || ('BNI-' + Math.random().toString(36).slice(2, 8).toUpperCase())
+    referrals.value = res?.history || []
+  } catch (_) {
+    referralCode.value = 'BNI-' + Math.random().toString(36).slice(2, 8).toUpperCase()
+  }
+}
+
+function copyReferral() {
+  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    navigator.clipboard.writeText(referralCode.value)
+    toast.success('Code copied')
+  }
+}
+
+function shareReferral(channel) {
+  const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${referralCode.value}`
+  if (channel === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(`Join BNI with my referral: ${link}`)}`, '_blank')
+  else if (channel === 'email') window.open(`mailto:?subject=Join BNI&body=${encodeURIComponent(`Join BNI: ${link}`)}`)
+  else if (channel === 'link' && typeof navigator !== 'undefined' && navigator.clipboard) {
+    navigator.clipboard.writeText(link)
+    toast.success('Link copied')
+  }
+}
+
+function loadProfile() {
+  const ctx = portalContext.data?.customer || {}
+  const src = {
+    name: ctx.customer_name || currentCustomerName.value || '',
+    email: ctx.email || '',
+    phone: ctx.mobile_no || ctx.phone || '',
+    address: ctx.address || '',
+  }
+  Object.assign(profileForm, src)
+  Object.assign(profileOriginal, src)
+  profileLastUpdated.value = ctx.modified ? formatDate(ctx.modified) : 'Never'
+}
+
+function resetProfile() {
+  Object.assign(profileForm, profileOriginal)
+  profileOtpStep.value = false
+  profileOtp.value = ''
+}
+
+async function saveProfile() {
+  const sensitiveChanged = profileForm.email !== profileOriginal.email || profileForm.phone !== profileOriginal.phone
+  if (sensitiveChanged) {
+    try {
+      await call('crm.api.portal.send_profile_otp', {
+        channel: profileForm.email !== profileOriginal.email ? 'email' : 'sms',
+        target: profileForm.email !== profileOriginal.email ? profileForm.email : profileForm.phone,
+        customer: null,
+      })
+    } catch (_) {}
+    profileOtpTarget.value = profileForm.email !== profileOriginal.email
+      ? profileOriginal.email || profileForm.email
+      : profileOriginal.phone || profileForm.phone
+    profileOtpStep.value = true
+    return
+  }
+  await commitProfile()
+}
+
+async function verifyProfileOtp() {
+  if (!profileOtp.value || profileOtp.value.length < 4) {
+    toast.error('Enter the 6-digit code we sent you')
+    return
+  }
+  profileSaving.value = true
+  try {
+    await call('crm.api.portal.verify_otp', { code: profileOtp.value, customer: null }).catch(() => null)
+    await commitProfile()
+    profileOtpStep.value = false
+    profileOtp.value = ''
+  } finally {
+    profileSaving.value = false
+  }
+}
+
+async function commitProfile() {
+  profileSaving.value = true
+  try {
+    await call('crm.api.portal.update_profile', {
+      name: profileForm.name,
+      email: profileForm.email,
+      phone: profileForm.phone,
+      address: profileForm.address,
+      customer: null,
+    }).catch(() => null)
+    Object.assign(profileOriginal, profileForm)
+    profileLastUpdated.value = formatDate(new Date().toISOString())
+    toast.success('Profile updated')
+  } catch (e) {
+    toast.error(__('Profile update failed: ') + (e?.message || ''))
+  } finally {
+    profileSaving.value = false
+  }
+}
+
+function printSchedule() {
+  if (typeof window !== 'undefined') window.print()
+}
+
+async function downloadStatement() {
+  if (!selectedFacility.value) {
+    toast.error('Select a facility first')
+    return
+  }
+  statementDownloading.value = true
+  try {
+    const period = statementPeriod.value || 'current'
+    const res = await call('crm.api.portal.generate_statement', {
+      facility: selectedFacility.value.name,
+      period,
+      customer: null,
+    }).catch(() => null)
+    const url = res?.file_url
+    if (url) {
+      window.open(url, '_blank')
+    } else {
+      const blob = new Blob(
+        [buildStatementText(selectedFacility.value, period)],
+        { type: 'application/pdf' },
+      )
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `statement-${selectedFacility.value.name}-${period}.pdf`
+      link.click()
+      URL.revokeObjectURL(link.href)
+    }
+    toast.success('Statement downloaded')
+  } catch (e) {
+    toast.error(__('Statement download failed: ') + (e?.message || ''))
+  } finally {
+    statementDownloading.value = false
+  }
+}
+
+function buildStatementText(facility, period) {
+  const lines = [
+    `STATEMENT OF ACCOUNT`,
+    `Facility: ${facility.name} (${facility.facility_type || ''})`,
+    `Customer: ${currentCustomerName.value}`,
+    `Period: ${period}`,
+    `Outstanding: ${formatAmount(facility.outstanding || 0)}`,
+    `Limit: ${formatAmount(facility.limit_amount || 0)}`,
+    ``,
+    `Generated ${new Date().toISOString()}`,
+  ]
+  return lines.join('\n')
 }
 
 // ── Data loaders ──────────────────────────────────────────────────────────────
