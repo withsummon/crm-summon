@@ -1,5 +1,14 @@
 import './index.css'
 
+if (typeof window !== 'undefined' && typeof window.frappe === 'undefined') {
+  window.frappe = {
+    session: { user: 'Guest' },
+    boot: {},
+    _: (msg) => msg,
+    realtime: { on: () => {}, off: () => {}, publish: () => {} },
+  }
+}
+
 window['__'] =
   window['__'] ||
   function (message, replace) {

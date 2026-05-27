@@ -546,6 +546,7 @@ const isLoading = computed(() => list.value?.loading)
 
 function reload() {
   if (isLoading.value) return
+  if (!list.value || typeof list.value.reload !== 'function') return
   list.value.params = getParams()
   list.value.reload()
 }

@@ -411,6 +411,7 @@
                   <th class="px-4 py-2.5 font-medium text-center">{{ __('Overdue') }}</th>
                   <th class="px-4 py-2.5 font-medium text-center">{{ __('Blocked') }}</th>
                   <th class="px-4 py-2.5 font-medium text-center">{{ __('Capacity') }}</th>
+                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Logged') }}</th>
                   <th class="px-4 py-2.5 font-medium">{{ __('Load') }}</th>
                 </tr>
               </thead>
@@ -437,6 +438,7 @@
                     <Badge :label="String(row.blocked)" :theme="row.blocked ? 'orange' : 'gray'" variant="subtle" />
                   </td>
                   <td class="px-4 py-3 text-center text-ink-gray-7">{{ row.capacity }}</td>
+                  <td class="px-4 py-3 text-center text-ink-gray-7">{{ row.logged_hours != null ? row.logged_hours + 'h' : (row.logged_minutes ? Math.round(row.logged_minutes / 60) + 'h' : '—') }}</td>
                   <td class="px-4 py-3">
                     <div class="h-2 w-32 overflow-hidden rounded-full bg-surface-gray-2">
                       <div
@@ -709,6 +711,43 @@
               <input type="datetime-local" v-model="createForm.due_date" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm" />
             </div>
           </div>
+          <div class="rounded-md border border-outline-gray-1 p-3">
+            <label class="flex items-center gap-2 text-sm font-medium text-ink-gray-7">
+              <input type="checkbox" v-model="createForm.recurring" class="rounded" />
+              {{ __('Repeat this task') }}
+            </label>
+            <div v-if="createForm.recurring" class="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">Frequency</label>
+                <select v-model="createForm.recurrence_freq" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm">
+                  <option>Daily</option>
+                  <option>Weekly</option>
+                  <option>Monthly</option>
+                  <option>Custom</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">Every</label>
+                <input type="number" min="1" v-model.number="createForm.recurrence_interval" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">Ends</label>
+                <select v-model="createForm.recurrence_end_type" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm">
+                  <option value="never">Never</option>
+                  <option value="date">On date</option>
+                  <option value="count">After N occurrences</option>
+                </select>
+              </div>
+              <div v-if="createForm.recurrence_end_type === 'date'">
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">End Date</label>
+                <input type="date" v-model="createForm.recurrence_end_date" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm" />
+              </div>
+              <div v-else-if="createForm.recurrence_end_type === 'count'">
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">Count</label>
+                <input type="number" min="1" v-model.number="createForm.recurrence_end_count" class="mt-1 w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm" />
+              </div>
+            </div>
+          </div>
         </div>
       </template>
       <template #actions="{ close }">
@@ -924,7 +963,19 @@ const swimlane = ref('off')
 const drawer = reactive({ open: false, taskName: null })
 
 const createDialog = ref(false)
-const createForm = reactive({ title: '', priority: 'Medium', task_type: '', assigned_to: '', due_date: '' })
+const createForm = reactive({
+  title: '',
+  priority: 'Medium',
+  task_type: '',
+  assigned_to: '',
+  due_date: '',
+  recurring: false,
+  recurrence_freq: 'Weekly',
+  recurrence_interval: 1,
+  recurrence_end_type: 'never',
+  recurrence_end_date: '',
+  recurrence_end_count: 10,
+})
 
 const applyDialog = reactive({ open: false, template: null, target_doctype: '', target_name: '', due_in_days: 7 })
 const templateDialog = reactive({ open: false, editing: false, data: {}, checklistText: '', subtasksText: '' })
@@ -1154,6 +1205,12 @@ function openCreateDialog() {
   createForm.task_type = ''
   createForm.assigned_to = ctx.data?.user || ''
   createForm.due_date = ''
+  createForm.recurring = false
+  createForm.recurrence_freq = 'Weekly'
+  createForm.recurrence_interval = 1
+  createForm.recurrence_end_type = 'never'
+  createForm.recurrence_end_date = ''
+  createForm.recurrence_end_count = 10
   createDialog.value = true
 }
 
@@ -1162,6 +1219,21 @@ async function submitCreate() {
     const payload = { ...createForm }
     if (!payload.due_date) delete payload.due_date
     if (!payload.task_type) delete payload.task_type
+    if (payload.recurring) {
+      payload.recurrence_rule = {
+        freq: payload.recurrence_freq,
+        interval: payload.recurrence_interval,
+        end_type: payload.recurrence_end_type,
+        end_date: payload.recurrence_end_date || null,
+        end_count: payload.recurrence_end_count || null,
+      }
+    }
+    delete payload.recurring
+    delete payload.recurrence_freq
+    delete payload.recurrence_interval
+    delete payload.recurrence_end_type
+    delete payload.recurrence_end_date
+    delete payload.recurrence_end_count
     await createResource({ url: 'crm.api.tasks.create_task', makeParams: () => ({ payload: JSON.stringify(payload) }) }).submit()
     toast.success(__('Task created'))
     onTaskChanged()

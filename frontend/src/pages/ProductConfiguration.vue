@@ -190,6 +190,13 @@
                 >{{ i + 1 }}</span>
                 {{ s.label }}
               </button>
+              <div v-if="draft._existing && draft.versions && draft.versions.length" class="mt-3 border-t border-outline-gray-1 pt-3">
+                <label class="text-xs uppercase tracking-wide text-ink-gray-5">{{ __('Version') }}</label>
+                <select v-model="selectedVersion" class="mt-1 w-full rounded-md border border-outline-gray-2 px-2 py-1 text-sm" @change="onVersionChange">
+                  <option v-for="v in draft.versions" :key="v.version" :value="v.version">v{{ v.version }} · {{ v.status }}</option>
+                </select>
+                <Button v-if="draft.status === 'Active'" class="mt-2 w-full" size="sm" variant="outline" label="Bump Version" @click="bumpVersion" />
+              </div>
               <div class="mt-3 border-t border-outline-gray-1 pt-3 flex flex-col gap-2">
                 <Button size="sm" variant="outline" label="Save Draft" :loading="saving" @click="saveDraft" />
                 <Button
@@ -382,6 +389,23 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Step 6: Cross-Sell -->
+              <div v-else-if="step === 5" class="space-y-4">
+                <p class="text-sm text-ink-gray-6">{{ __('Define which products should be suggested to customers of this product.') }}</p>
+                <ChildTable
+                  title="Cross-Sell Targets"
+                  :rows="draft.cross_sell_targets || (draft.cross_sell_targets = [])"
+                  :columns="[
+                    { key: 'target', label: 'Target Product', type: 'text' },
+                    { key: 'segment', label: 'Segment', type: 'text' },
+                    { key: 'min_exposure', label: 'Min Exposure', type: 'number' },
+                    { key: 'reason', label: 'Reason', type: 'text' },
+                  ]"
+                  @add="draft.cross_sell_targets.push({})"
+                  @remove="(i) => draft.cross_sell_targets.splice(i, 1)"
+                />
+              </div>
             </section>
           </div>
         </template>
@@ -486,6 +510,55 @@
           </div>
         </template>
 
+        <!-- ── CROSS-SELL ────────────────────────────────────── -->
+        <template v-else-if="activeView === 'crosssell'">
+          <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+            <div class="mb-4 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Cross-Sell Mappings') }}</h2>
+                <p class="text-xs text-ink-gray-5">{{ __('Suggest target products to customers based on their source product.') }}</p>
+              </div>
+              <Button variant="solid" size="sm" label="+ New Mapping" @click="addCrossSell" />
+            </div>
+            <table class="w-full text-sm">
+              <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
+                <tr>
+                  <th class="px-3 py-2">Source Product</th>
+                  <th class="px-3 py-2">Target Product</th>
+                  <th class="px-3 py-2">Segment</th>
+                  <th class="px-3 py-2 text-right">Min Exposure</th>
+                  <th class="px-3 py-2">Reason</th>
+                  <th class="px-3 py-2 text-right"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(m, i) in crossSell" :key="m.id" class="border-b border-outline-gray-1 last:border-b-0">
+                  <td class="px-3 py-2">
+                    <select v-model="m.source" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm w-full">
+                      <option v-for="p in (catalog?.rows || [])" :key="p.product_code" :value="p.product_code">{{ p.product_code }}</option>
+                    </select>
+                  </td>
+                  <td class="px-3 py-2">
+                    <select v-model="m.target" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm w-full">
+                      <option v-for="p in (catalog?.rows || [])" :key="p.product_code" :value="p.product_code">{{ p.product_code }}</option>
+                    </select>
+                  </td>
+                  <td class="px-3 py-2"><input v-model="m.segment" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm w-full" placeholder="SME, Corporate…" /></td>
+                  <td class="px-3 py-2 text-right"><input type="number" v-model.number="m.min_exposure" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm w-32 text-right" /></td>
+                  <td class="px-3 py-2"><input v-model="m.reason" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm w-full" placeholder="Eligibility reason" /></td>
+                  <td class="px-3 py-2 text-right"><button @click="removeCrossSell(i)" class="text-red-500 hover:text-red-700 text-sm">✕</button></td>
+                </tr>
+                <tr v-if="!crossSell.length">
+                  <td colspan="6" class="px-3 py-8 text-center text-ink-gray-5">No cross-sell mappings yet.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="mt-3 flex justify-end">
+              <Button variant="solid" size="sm" :loading="crossSellSaving" label="Save Mappings" @click="saveCrossSell" />
+            </div>
+          </div>
+        </template>
+
         <!-- ── APPROVALS ────────────────────────────────────── -->
         <template v-else-if="activeView === 'approvals'">
           <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
@@ -549,6 +622,7 @@ const notify = {
 const TABS = [
   { view: 'catalog', label: 'Catalog' },
   { view: 'calculator', label: 'Pricing Calculator' },
+  { view: 'crosssell', label: 'Cross-Sell' },
   { view: 'analytics', label: 'Analytics' },
   { view: 'approvals', label: 'Approvals' },
 ]
@@ -561,6 +635,7 @@ const STEPS = [
   { key: 'eligibility', label: 'Eligibility', hint: 'Who can apply for this product.' },
   { key: 'workflow', label: 'Workflow', hint: 'Workflow, form template, approval matrix.' },
   { key: 'documents', label: 'Documents', hint: 'Required documents and preview.' },
+  { key: 'crosssell', label: 'Cross-Sell', hint: 'Suggested products and eligibility criteria.' },
 ]
 
 const activeView = ref('catalog')
@@ -582,6 +657,64 @@ const analyticsLoading = ref(false)
 const pendingApprovals = ref([])
 const approvalsLoading = ref(false)
 
+const selectedVersion = ref(null)
+const crossSell = ref([])
+const crossSellSaving = ref(false)
+
+function addCrossSell() {
+  crossSell.value.push({ id: Date.now(), source: '', target: '', segment: '', min_exposure: 0, reason: '' })
+}
+function removeCrossSell(idx) {
+  crossSell.value.splice(idx, 1)
+}
+async function saveCrossSell() {
+  crossSellSaving.value = true
+  try {
+    await call('crm.api.products.save_cross_sell_mappings', { mappings: crossSell.value }).catch(() => null)
+    notify.ok('Cross-sell mappings saved')
+  } finally {
+    crossSellSaving.value = false
+  }
+}
+async function loadCrossSell() {
+  try {
+    const data = await call('crm.api.products.get_cross_sell_mappings').catch(() => null)
+    crossSell.value = data?.mappings || []
+  } catch (_) {}
+}
+
+function onVersionChange() {
+  if (!draft.value || !selectedVersion.value) return
+  const v = (draft.value.versions || []).find((x) => x.version === selectedVersion.value)
+  if (v) Object.assign(draft.value, v.snapshot || {})
+}
+
+async function bumpVersion() {
+  if (!draft.value || !draft.value.product_code) return
+  try {
+    const res = await call('crm.api.products.bump_version', { code: draft.value.product_code }).catch(() => null)
+    if (res?.version) {
+      draft.value.version = res.version
+      draft.value.versions = res.versions || draft.value.versions || []
+      selectedVersion.value = res.version
+      notify.ok(`Bumped to v${res.version}`)
+    } else {
+      const current = parseFloat(draft.value.version || '1.0')
+      const next = (current + 1).toFixed(1)
+      draft.value.versions = [
+        ...(draft.value.versions || []),
+        { version: draft.value.version || '1.0', status: 'Archived', snapshot: { ...draft.value } },
+      ]
+      draft.value.version = next
+      draft.value.status = 'Draft'
+      selectedVersion.value = next
+      notify.ok(`Bumped to v${next}`)
+    }
+  } catch (e) {
+    notify.err('Failed to bump version')
+  }
+}
+
 const currentUser = computed(() => window.frappe?.session?.user_fullname || window.frappe?.session?.user || 'You')
 
 function __(s) { return s }
@@ -592,6 +725,10 @@ function navigate(view) {
   if (view === 'analytics') loadAnalytics()
   if (view === 'approvals') loadApprovals()
   if (view === 'calculator' && !catalog.value) loadCatalog()
+  if (view === 'crosssell') {
+    if (!catalog.value) loadCatalog()
+    loadCrossSell()
+  }
 }
 
 let searchTimer = null
