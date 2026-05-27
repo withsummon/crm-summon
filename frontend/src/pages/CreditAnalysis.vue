@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full bg-slate-50 font-sans">
-    <div v-if="!routeApplication" class="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0">
+    <div v-if="!routeApplication && (!isMobile || !selectedApp)" class="w-full md:w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 h-full">
       <div class="p-4 border-b border-slate-200">
         <h2 class="text-lg font-bold text-slate-800 mb-3">{{ __('Credit Analysis Queue') }}</h2>
         <div class="relative">
@@ -43,7 +43,7 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div v-if="!isMobile || selectedApp" class="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <div v-if="!selectedApp" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
         <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
           <FeatherIcon name="file-text" class="h-10 w-10 text-slate-300" />
@@ -85,6 +85,11 @@
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
+            <Button v-if="isMobile && !routeApplication" variant="outline" :label="__('Back to Queue')" @click="selectedApp = null">
+              <template #prefix>
+                <FeatherIcon name="chevron-left" class="h-4 w-4" />
+              </template>
+            </Button>
             <Button v-if="routeApplication" variant="outline" :label="__('Back to List')" @click="goToCreditList">
               <template #prefix>
                 <FeatherIcon name="arrow-left" class="h-4 w-4" />
@@ -617,7 +622,7 @@
 
 <script setup>
 import { Button, FeatherIcon, Badge, FileUploader, usePageMeta, toast, createResource, call } from 'frappe-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import html2pdf from 'html2pdf.js'
 import RupiahInput from '@/components/Controls/RupiahInput.vue'
@@ -649,6 +654,10 @@ const InfoRow = {
 const searchQuery = ref('')
 const selectedApp = ref(null)
 const activeTab = ref('spreading')
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 const memoContent = ref('')
 const spreadRows = ref([])
 const importResult = ref(null)
@@ -1038,8 +1047,14 @@ async function exportMemo() {
 }
 
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   if (routeApplication.value) loadRouteApplication()
   else if (queue.data?.length && !selectedApp.value) selectApp(queue.data[0])
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 watch(routeApplication, () => {

@@ -383,7 +383,7 @@ function getIcon(routeName, icon) {
 
 // onboarding - disabled, always mark as completed
 const { users, isManager } = usersStore()
-const { isOnboardingStepsCompleted } = useOnboarding('frappecrm')
+const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
 onMounted(async () => {
   await users.promise

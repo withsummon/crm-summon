@@ -40,12 +40,11 @@ const routes = [
       {
         path: 'dashboard',
         name: 'CRM Core Dashboard',
-        component: () => import('@/pages/CRMCoreDashboard.vue'),
+        component: () => import('@/pages/ExecutiveDashboard.vue'),
       },
       {
         path: 'executive-dashboard',
-        name: 'Executive Dashboard',
-        component: () => import('@/pages/ExecutiveDashboard.vue'),
+        redirect: { name: 'CRM Core Dashboard' },
       },
       {
         path: 'insights-dashboard',
