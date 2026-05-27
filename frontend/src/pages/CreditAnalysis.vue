@@ -95,7 +95,7 @@
                 <FeatherIcon name="arrow-left" class="h-4 w-4" />
               </template>
             </Button>
-            
+
             <!-- Dynamic Credit Flow Action Bar -->
             <template v-if="currentFlowState.data?.ok && currentFlowState.data.available_actions?.length">
               <Button
@@ -110,7 +110,7 @@
             </template>
             
             <!-- Fallback Static Buttons -->
-            <template v-else>
+            <template v-else-if="!workflowSteps.data?.length">
               <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
               <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
                 <template #prefix>
@@ -614,6 +614,66 @@
               </table>
             </section>
           </div>
+
+          <!-- Workflow Form Step (dynamic from workflow form config) -->
+          <div v-else-if="activeStepConfig" class="space-y-5">
+            <section
+              v-for="section in activeStepConfig.sections"
+              :key="section.sectionId"
+              class="bg-white border border-slate-200 rounded-lg shadow-sm"
+            >
+              <div class="p-4 border-b border-slate-200">
+                <h3 class="font-bold text-slate-800">{{ section.label }}</h3>
+                <p v-if="section.description" class="text-xs text-slate-500 mt-1">{{ section.description }}</p>
+              </div>
+              <div class="p-4 space-y-4">
+                <div
+                  v-for="field in stepFields(section.sectionId)"
+                  :key="field.fieldname"
+                  class="flex flex-col gap-1.5"
+                >
+                  <label class="text-xs font-semibold text-slate-700">
+                    {{ field.label }}
+                    <span v-if="field.mandatory" class="text-red-500 ml-0.5">*</span>
+                  </label>
+                  <input
+                    v-if="['Data', 'Int', 'Float', 'Currency'].includes(getFieldType(field.fieldname))"
+                    v-model="workflowFormData[field.fieldname]"
+                    type="text"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <select
+                    v-else-if="getFieldType(field.fieldname) === 'Select'"
+                    v-model="workflowFormData[field.fieldname]"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none bg-white"
+                    :disabled="field.readOnly"
+                  >
+                    <option value="">{{ __('Pilih...') }}</option>
+                  </select>
+                  <textarea
+                    v-else-if="['Small Text', 'Text'].includes(getFieldType(field.fieldname))"
+                    v-model="workflowFormData[field.fieldname]"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <input
+                    v-else
+                    v-model="workflowFormData[field.fieldname]"
+                    type="text"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <p v-if="!field.visible" class="text-[10px] text-amber-600 italic">
+                    {{ __('(Field tersembunyi)') }}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -662,21 +722,48 @@ const memoContent = ref('')
 const spreadRows = ref([])
 const importResult = ref(null)
 const busy = ref(false)
+const workflowFormData = ref({})
 const route = useRoute()
 const router = useRouter()
 const routeApplication = computed(() => String(route.params.applicationId || ''))
 
-const tabs = [
-  { key: 'spreading', label: 'Financial Spreading' },
-  { key: 'extraction', label: 'AI Extraction' },
-  { key: 'ratios', label: 'Ratios & Trends' },
-  { key: 'dscr', label: 'DSCR & Cashflow' },
-  { key: 'benchmark', label: 'Benchmark & Peers' },
-  { key: 'risk', label: 'Risk Grade' },
-  { key: 'scenarios', label: 'Scenarios & Sensitivity' },
-  { key: 'collateral', label: 'Collateral & News' },
-  { key: 'memo', label: 'Memo & Approval' },
-]
+const workflowSteps = createResource({
+  url: 'crm.api.credit_analysis.get_workflow_step_configs',
+  makeParams() {
+    return { application_id: selectedApp.value?.name }
+  },
+  auto: false,
+  onSuccess() {
+    const steps = workflowSteps.data || []
+    if (steps.length) {
+      activeTab.value = steps[0].step_id
+    }
+  },
+})
+
+const activeStepConfig = computed(() => {
+  const steps = workflowSteps.data || []
+  return steps.find((s) => s.step_id === activeTab.value) || null
+})
+
+const tabs = computed(() => {
+  const steps = workflowSteps.data || []
+  const fallback = [
+    { key: 'spreading', label: 'Financial Spreading' },
+    { key: 'extraction', label: 'AI Extraction' },
+    { key: 'ratios', label: 'Ratios & Trends' },
+    { key: 'dscr', label: 'DSCR & Cashflow' },
+    { key: 'benchmark', label: 'Benchmark & Peers' },
+    { key: 'risk', label: 'Risk Grade' },
+    { key: 'scenarios', label: 'Scenarios & Sensitivity' },
+    { key: 'collateral', label: 'Collateral & News' },
+    { key: 'memo', label: 'Memo & Approval' },
+  ]
+  if (steps.length) {
+    return steps.map((s) => ({ key: s.step_id, label: s.label }))
+  }
+  return fallback
+})
 
 const queue = createResource({
   url: 'crm.api.credit.get_credit_application_queue',
@@ -777,9 +864,11 @@ function selectApp(app) {
   selectedApp.value = app
   activeTab.value = 'spreading'
   importResult.value = null
+  workflowFormData.value = {}
   analysis.fetch()
   if (app && app.name) {
     currentFlowState.submit()
+    workflowSteps.submit()
   }
 }
 
@@ -926,10 +1015,24 @@ async function generateSummary() {
   await runAction(() => call('crm.api.credit_analysis.generate_credit_summary', { application_id: selectedApp.value.name }), __('AI executive summary generated'))
 }
 
+function stripMarkdown(text) {
+  if (!text) return text
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^-\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 async function generateMemo() {
   await runAction(async () => {
     const result = await call('crm.api.credit_analysis.generate_credit_memo', { application_id: selectedApp.value.name })
-    memoContent.value = result.content || memoContent.value
+    memoContent.value = stripMarkdown(result.content) || memoContent.value
     return result
   }, __('AI credit memo generated'))
 }
@@ -962,9 +1065,9 @@ async function handleFlowAction(action) {
       toast.error(res.message || __('Action execution failed.'))
     } else {
       toast.success(__('Action applied successfully.'))
-      // Refresh state
       queue.fetch()
       currentFlowState.submit()
+      workflowSteps.submit()
     }
   } catch (e) {
     toast.error(e.message || __('Action failed.'))
@@ -1044,6 +1147,27 @@ async function exportMemo() {
   } finally {
     busy.value = false
   }
+}
+
+function stepFields(sectionId) {
+  if (!activeStepConfig.value) return []
+  return (activeStepConfig.value.fields || []).filter((f) => f.placement === sectionId && f.visible !== false)
+}
+
+function getFieldType(fieldname) {
+  const map = {
+    borrower: 'Link', borrower_name: 'Data', borrower_type: 'Select',
+    requested_amount: 'Currency', facility_type: 'Data', risk_grade: 'Data',
+    purpose: 'Small Text', credit_limit: 'Currency', plafond: 'Currency',
+    tenor_months: 'Int', interest_rate: 'Float', repayment_scheme: 'Data',
+    collateral_type: 'Data', collateral_value: 'Currency', ltv_percent: 'Float',
+    coverage_ratio: 'Float', collateral_description: 'Small Text',
+    revenue: 'Currency', ebitda: 'Currency', net_profit: 'Currency',
+    total_assets: 'Currency', total_liabilities: 'Currency', equity: 'Currency',
+    der: 'Float', current_ratio: 'Float',
+    branch: 'Data', segment: 'Data', priority: 'Data', npwp: 'Data',
+  }
+  return map[fieldname] || 'Data'
 }
 
 onMounted(() => {

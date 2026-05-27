@@ -174,13 +174,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Lending Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Lending Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Lending & Risk' },
+        redirect: { name: 'Loan Origination System' },
       },
       {
         path: 'loan-origination-system',
@@ -265,13 +259,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Operations Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Operations Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Operations' },
+        redirect: { name: 'Document Management' },
       },
       {
         path: 'document-management',
@@ -300,12 +288,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Admin Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Admin Dashboard',
-        component: () => import('@/pages/AdminPlatform.vue'),
+        redirect: { name: 'Reporting & BI' },
       },
       {
         path: 'workflow-engine',
@@ -411,13 +394,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Channels Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Channels Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Channels & Portal' },
+        redirect: { name: 'Omnichannel Workspace' },
       },
       {
         path: 'omnichannel-workspace',

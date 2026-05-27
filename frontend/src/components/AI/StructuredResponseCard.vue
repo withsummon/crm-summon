@@ -109,16 +109,71 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
 })
 
-const resolved = computed(() => props.response || {
-  title: __('Output AI'),
-  executive_summary: props.fallback || __('Tidak ada output terstruktur.'),
-  confidence: 0,
-  sections: [],
-  recommendations: [],
-  risks: [],
-  actions: [],
-  sources: [],
-  limitations: props.fallback ? [__('Output ini berasal dari fallback plain text.')] : [],
+function cleanDisplayText(text) {
+  if (!text) return text
+  // If it looks like JSON, format as readable text
+  if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+    try {
+      const obj = JSON.parse(text)
+      return formatJsonAsText(obj)
+    } catch {
+      // not valid JSON, continue
+    }
+  }
+  // Strip markdown syntax
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^-\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function formatJsonAsText(obj) {
+  if (typeof obj === 'string') return obj
+  if (typeof obj !== 'object' || obj === null) return String(obj)
+  const parts = []
+  for (const [key, value] of Object.entries(obj)) {
+    const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    if (Array.isArray(value)) {
+      parts.push(`${label}: ${value.join(', ')}`)
+    } else if (typeof value === 'object' && value !== null) {
+      // skip nested objects for brevity; include reasoning directly
+      if (key === 'reasoning') parts.push(`${label}: ${value}`)
+    } else {
+      parts.push(`${label}: ${value}`)
+    }
+  }
+  return parts.join('\n')
+}
+
+const resolved = computed(() => {
+  if (!props.response) {
+    return {
+      title: __('Output AI'),
+      executive_summary: props.fallback || __('Tidak ada output terstruktur.'),
+      confidence: 0,
+      sections: [],
+      recommendations: [],
+      risks: [],
+      actions: [],
+      sources: [],
+      limitations: props.fallback ? [__('Output ini berasal dari fallback plain text.')] : [],
+    }
+  }
+  const raw = props.response
+  return {
+    ...raw,
+    executive_summary: cleanDisplayText(raw.executive_summary),
+    sections: (raw.sections || []).map((s) => ({
+      ...s,
+      summary: cleanDisplayText(s.summary),
+    })),
+  }
 })
 
 const confidence = computed(() => {

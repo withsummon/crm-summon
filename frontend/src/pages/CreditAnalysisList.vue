@@ -133,7 +133,26 @@
     </div>
 
     <!-- Create Credit Application Dialog - comprehensive form aligned with 07_CreditAnalysis -->
-    <Dialog v-model="showCreateDialog" :options="{ title: __('New Credit Analysis Application'), size: '4xl' }">
+    <Dialog v-model="showCreateDialog" :options="{ size: '4xl' }">
+      <template #body-title>
+        <div class="flex items-center justify-between gap-4 w-full">
+          <span>{{ __('New Credit Analysis Application') }}</span>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">{{ __('Workflow:') }}</label>
+            <select
+              v-model="newApp.workflow"
+              class="px-2 py-1.5 text-xs rounded-lg border border-slate-300 text-slate-700 bg-white"
+            >
+              <option value="">{{ __('Standar') }}</option>
+              <option
+                v-for="wf in (workflows.data || [])"
+                :key="wf.name"
+                :value="wf.name"
+              >{{ wf.title }}</option>
+            </select>
+          </div>
+        </div>
+      </template>
       <template #body-content>
         <div class="pt-2">
           <!-- Tab Navigation -->
@@ -149,251 +168,290 @@
             </button>
           </div>
 
-          <!-- Tab: Borrower Information -->
-          <div v-if="activeCreateTab === 'borrower'" class="space-y-4">
-            <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
-              {{ __('Basic borrower identification. Required fields: Borrower Name, Borrower Type, Facility Type, Requested Amount.') }}
-            </div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FieldGroup :label="__('Existing Customer ID')" hint="Optional — link to an existing Customer record">
-                <Link v-model="newApp.borrower" doctype="Customer" :placeholder="__('Search customer')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Borrower Name')" required>
-                <input v-model="newApp.borrower_name" class="form-input" :placeholder="__('Full legal name')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Borrower Type')" required>
-                <select v-model="newApp.borrower_type" class="form-input">
-                  <option value="Company">{{ __('Company / Badan Usaha') }}</option>
-                  <option value="Individual">{{ __('Individual / Perorangan') }}</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Industry / Sektor Usaha')">
-                <input v-model="newApp.industry" class="form-input" :placeholder="__('e.g. Financial Services')" />
-              </FieldGroup>
-              <FieldGroup :label="__('KBLI Code')">
-                <input v-model="newApp.kbli" class="form-input" :placeholder="__('e.g. 6419')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Employer / Affiliation')">
-                <input v-model="newApp.employer_name" class="form-input" :placeholder="__('PT ... Tbk')" />
-              </FieldGroup>
-              <FieldGroup :label="__('PT Tbk Ticker')">
-                <input v-model="newApp.public_company_ticker" class="form-input uppercase" :placeholder="__('e.g. BBNI')" />
-              </FieldGroup>
-              <FieldGroup :label="__('NPWP')">
-                <input v-model="newApp.npwp" class="form-input" placeholder="XX.XXX.XXX.X-XXX.XXX" />
-              </FieldGroup>
-            </div>
-            <!-- File Upload for Financial Spread -->
-            <div class="mt-6 rounded-lg border border-dashed border-teal-200 bg-teal-50/40 p-4">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <h4 class="font-semibold text-sm text-teal-800">{{ __('Upload Financial Statements (Optional)') }}</h4>
-                  <p class="mt-1 text-xs text-teal-600">{{ __('Upload PDF / Excel to auto-fill the financial spread. Data will be imported when the application is created.') }}</p>
-                  <div v-if="newApp.spread_file_url" class="mt-2 flex items-center gap-2 text-xs text-teal-700">
-                    <FeatherIcon name="check-circle" class="h-4 w-4" />
-                    <span>{{ __('File uploaded:') }} {{ newApp.spread_file_name || newApp.spread_file_url }}</span>
+          <!-- Static hardcoded tabs (no workflow selected) -->
+          <template v-if="!activeWorkflowSteps.length">
+            <div v-if="activeCreateTab === 'borrower'" class="space-y-4">
+              <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
+                {{ __('Basic borrower identification. Required fields: Borrower Name, Borrower Type, Facility Type, Requested Amount.') }}
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FieldGroup :label="__('Existing Customer ID')" hint="Optional — link to an existing Customer record">
+                  <Link v-model="newApp.borrower" doctype="Customer" :placeholder="__('Search customer')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Borrower Name')" required>
+                  <input v-model="newApp.borrower_name" class="form-input" :placeholder="__('Full legal name')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Borrower Type')" required>
+                  <select v-model="newApp.borrower_type" class="form-input">
+                    <option value="Company">{{ __('Company / Badan Usaha') }}</option>
+                    <option value="Individual">{{ __('Individual / Perorangan') }}</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Industry / Sektor Usaha')">
+                  <input v-model="newApp.industry" class="form-input" :placeholder="__('e.g. Financial Services')" />
+                </FieldGroup>
+                <FieldGroup :label="__('KBLI Code')">
+                  <input v-model="newApp.kbli" class="form-input" :placeholder="__('e.g. 6419')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Employer / Affiliation')">
+                  <input v-model="newApp.employer_name" class="form-input" :placeholder="__('PT ... Tbk')" />
+                </FieldGroup>
+                <FieldGroup :label="__('PT Tbk Ticker')">
+                  <input v-model="newApp.public_company_ticker" class="form-input uppercase" :placeholder="__('e.g. BBNI')" />
+                </FieldGroup>
+                <FieldGroup :label="__('NPWP')">
+                  <input v-model="newApp.npwp" class="form-input" placeholder="XX.XXX.XXX.X-XXX.XXX" />
+                </FieldGroup>
+              </div>
+              <!-- File Upload for Financial Spread -->
+              <div class="mt-6 rounded-lg border border-dashed border-teal-200 bg-teal-50/40 p-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <h4 class="font-semibold text-sm text-teal-800">{{ __('Upload Financial Statements (Optional)') }}</h4>
+                    <p class="mt-1 text-xs text-teal-600">{{ __('Upload PDF / Excel to auto-fill the financial spread. Data will be imported when the application is created.') }}</p>
+                    <div v-if="newApp.spread_file_url" class="mt-2 flex items-center gap-2 text-xs text-teal-700">
+                      <FeatherIcon name="check-circle" class="h-4 w-4" />
+                      <span>{{ __('File uploaded:') }} {{ newApp.spread_file_name || newApp.spread_file_url }}</span>
+                    </div>
                   </div>
+                  <FileUploader
+                    :upload-args="{ private: true }"
+                    @success="onSpreadFileUploaded"
+                  >
+                    <template #default="{ openFileSelector, uploading }">
+                      <Button variant="outline" size="sm" :loading="uploading" :label="newApp.spread_file_url ? __('Replace File') : __('Choose File')" @click="openFileSelector">
+                        <template #prefix>
+                          <FeatherIcon :name="newApp.spread_file_url ? 'refresh-cw' : 'upload-cloud'" class="h-4 w-4" />
+                        </template>
+                      </Button>
+                    </template>
+                  </FileUploader>
                 </div>
-                <FileUploader
-                  :upload-args="{ private: true }"
-                  @success="onSpreadFileUploaded"
-                >
-                  <template #default="{ openFileSelector, uploading }">
-                    <Button variant="outline" size="sm" :loading="uploading" :label="newApp.spread_file_url ? __('Replace File') : __('Choose File')" @click="openFileSelector">
-                      <template #prefix>
-                        <FeatherIcon :name="newApp.spread_file_url ? 'refresh-cw' : 'upload-cloud'" class="h-4 w-4" />
-                      </template>
-                    </Button>
-                  </template>
-                </FileUploader>
               </div>
             </div>
-          </div>
 
-          <!-- Tab: Facility & Limit -->
-          <div v-else-if="activeCreateTab === 'facility'" class="space-y-4">
-            <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
-              {{ __('Credit facility structure, limit, tenor, and pricing. This data will be pre-filled in the Financial Spreading worksheet.') }}
+            <div v-else-if="activeCreateTab === 'facility'" class="space-y-4">
+              <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
+                {{ __('Credit facility structure, limit, tenor, and pricing. This data will be pre-filled in the Financial Spreading worksheet.') }}
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FieldGroup :label="__('Facility Type / Jenis Kredit')" required>
+                  <select v-model="newApp.facility_type" class="form-input">
+                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value="Working Capital">Working Capital (Modal Kerja)</option>
+                    <option value="Working Capital — Revolving">Working Capital — Revolving</option>
+                    <option value="Working Capital — Non-Revolving">Working Capital — Non-Revolving</option>
+                    <option value="Investment Loan">Investment Loan (Kredit Investasi)</option>
+                    <option value="Consumer Loan">Consumer Loan (KPR/KKB)</option>
+                    <option value="Trade Finance">Trade Finance (L/C, SKBDN)</option>
+                    <option value="Multipurpose">Multipurpose (Multiguna)</option>
+                    <option value="Syndicated">Syndicated Loan</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Requested Amount (IDR)')" required>
+                  <RupiahInput v-model="newApp.requested_amount" :placeholder="__('e.g. 5.000.000.000')" />
+                  <div v-if="newApp.requested_amount" class="mt-1 text-xs text-teal-700 font-semibold">{{ formatCurrency(newApp.requested_amount) }}</div>
+                </FieldGroup>
+                <FieldGroup :label="__('Credit Limit (IDR)')">
+                  <RupiahInput v-model="newApp.credit_limit" />
+                </FieldGroup>
+                <FieldGroup :label="__('Plafond (IDR)')">
+                  <RupiahInput v-model="newApp.plafond" />
+                </FieldGroup>
+                <FieldGroup :label="__('Tenor (months) / Jangka Waktu')">
+                  <input v-model.number="newApp.tenor_months" type="number" class="form-input" placeholder="12" />
+                </FieldGroup>
+                <FieldGroup :label="__('Interest Rate (% p.a.)')">
+                  <input v-model.number="newApp.interest_rate" type="number" step="0.01" class="form-input" placeholder="11.00" />
+                </FieldGroup>
+                <FieldGroup :label="__('Repayment Scheme')">
+                  <select v-model="newApp.repayment_scheme" class="form-input">
+                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value="Annuity">Annuity</option>
+                    <option value="Flat">Flat</option>
+                    <option value="Bullet">Bullet</option>
+                    <option value="Revolving">Revolving Draw-down</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Application Status')">
+                  <select v-model="newApp.status" class="form-input">
+                    <option value="Draft">Draft</option>
+                    <option value="Application Received">Application Received</option>
+                    <option value="Document Review">Document Review</option>
+                    <option value="Credit Analysis">Credit Analysis</option>
+                    <option value="Committee Approval">Committee Approval</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Risk Grade (if known)')">
+                  <input v-model="newApp.risk_grade" class="form-input" placeholder="A / B+ / B / C" />
+                </FieldGroup>
+                <FieldGroup :label="__('Submission Date')">
+                  <input v-model="newApp.submission_date" type="date" class="form-input" />
+                </FieldGroup>
+              </div>
             </div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FieldGroup :label="__('Facility Type / Jenis Kredit')" required>
-                <select v-model="newApp.facility_type" class="form-input">
-                  <option value="">{{ __('-- Select --') }}</option>
-                  <option value="Working Capital">Working Capital (Modal Kerja)</option>
-                  <option value="Working Capital — Revolving">Working Capital — Revolving</option>
-                  <option value="Working Capital — Non-Revolving">Working Capital — Non-Revolving</option>
-                  <option value="Investment Loan">Investment Loan (Kredit Investasi)</option>
-                  <option value="Consumer Loan">Consumer Loan (KPR/KKB)</option>
-                  <option value="Trade Finance">Trade Finance (L/C, SKBDN)</option>
-                  <option value="Multipurpose">Multipurpose (Multiguna)</option>
-                  <option value="Syndicated">Syndicated Loan</option>
-                  <option value="Other">Other</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Requested Amount (IDR)')" required>
-                <RupiahInput v-model="newApp.requested_amount" :placeholder="__('e.g. 5.000.000.000')" />
-                <div v-if="newApp.requested_amount" class="mt-1 text-xs text-teal-700 font-semibold">{{ formatCurrency(newApp.requested_amount) }}</div>
-              </FieldGroup>
-              <FieldGroup :label="__('Credit Limit (IDR)')">
-                <RupiahInput v-model="newApp.credit_limit" />
-              </FieldGroup>
-              <FieldGroup :label="__('Plafond (IDR)')">
-                <RupiahInput v-model="newApp.plafond" />
-              </FieldGroup>
-              <FieldGroup :label="__('Tenor (months) / Jangka Waktu')">
-                <input v-model.number="newApp.tenor_months" type="number" class="form-input" placeholder="12" />
-              </FieldGroup>
-              <FieldGroup :label="__('Interest Rate (% p.a.)')">
-                <input v-model.number="newApp.interest_rate" type="number" step="0.01" class="form-input" placeholder="11.00" />
-              </FieldGroup>
-              <FieldGroup :label="__('Repayment Scheme')">
-                <select v-model="newApp.repayment_scheme" class="form-input">
-                  <option value="">{{ __('-- Select --') }}</option>
-                  <option value="Annuity">Annuity</option>
-                  <option value="Flat">Flat</option>
-                  <option value="Bullet">Bullet</option>
-                  <option value="Revolving">Revolving Draw-down</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Application Status')">
-                <select v-model="newApp.status" class="form-input">
-                  <option value="Draft">Draft</option>
-                  <option value="Application Received">Application Received</option>
-                  <option value="Document Review">Document Review</option>
-                  <option value="Credit Analysis">Credit Analysis</option>
-                  <option value="Committee Approval">Committee Approval</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Risk Grade (if known)')">
-                <input v-model="newApp.risk_grade" class="form-input" placeholder="A / B+ / B / C" />
-              </FieldGroup>
-              <FieldGroup :label="__('Submission Date')">
-                <input v-model="newApp.submission_date" type="date" class="form-input" />
-              </FieldGroup>
-            </div>
-          </div>
 
-          <!-- Tab: Collateral -->
-          <div v-else-if="activeCreateTab === 'collateral'" class="space-y-4">
-            <div class="rounded-lg bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-700">
-              {{ __('Collateral details will be editable after creation in the Collateral tab. Provide a summary here for the initial application.') }}
+            <div v-else-if="activeCreateTab === 'collateral'" class="space-y-4">
+              <div class="rounded-lg bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-700">
+                {{ __('Collateral details will be editable after creation in the Collateral tab. Provide a summary here for the initial application.') }}
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FieldGroup :label="__('Primary Collateral Type')">
+                  <select v-model="newApp.collateral_type" class="form-input">
+                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value="Property">Property / Real Estate</option>
+                    <option value="Vehicle">Vehicle / Kendaraan</option>
+                    <option value="Inventory">Inventory / Persediaan</option>
+                    <option value="Receivables">Receivables / Piutang</option>
+                    <option value="Equipment">Equipment / Mesin</option>
+                    <option value="Cash Deposit">Cash Deposit / Deposito</option>
+                    <option value="Guarantee">Bank Guarantee / Aval</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Collateral Value (IDR)')">
+                  <RupiahInput v-model="newApp.collateral_value" />
+                </FieldGroup>
+                <FieldGroup :label="__('LTV % (Loan to Value)')">
+                  <input v-model.number="newApp.ltv_percent" type="number" step="0.1" class="form-input" placeholder="80" />
+                </FieldGroup>
+                <FieldGroup :label="__('Coverage Ratio (Collateral/Loan)')">
+                  <input v-model.number="newApp.coverage_ratio" type="number" step="0.01" class="form-input" placeholder="1.25" />
+                </FieldGroup>
+              </div>
+              <FieldGroup :label="__('Collateral Description')">
+                <textarea v-model="newApp.collateral_description" rows="3" class="form-input" :placeholder="__('Describe collateral assets...')" />
+              </FieldGroup>
             </div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FieldGroup :label="__('Primary Collateral Type')">
-                <select v-model="newApp.collateral_type" class="form-input">
-                  <option value="">{{ __('-- Select --') }}</option>
-                  <option value="Property">Property / Real Estate</option>
-                  <option value="Vehicle">Vehicle / Kendaraan</option>
-                  <option value="Inventory">Inventory / Persediaan</option>
-                  <option value="Receivables">Receivables / Piutang</option>
-                  <option value="Equipment">Equipment / Mesin</option>
-                  <option value="Cash Deposit">Cash Deposit / Deposito</option>
-                  <option value="Guarantee">Bank Guarantee / Aval</option>
-                  <option value="Other">Other</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Collateral Value (IDR)')">
-                <RupiahInput v-model="newApp.collateral_value" />
-              </FieldGroup>
-              <FieldGroup :label="__('LTV % (Loan to Value)')">
-                <input v-model.number="newApp.ltv_percent" type="number" step="0.1" class="form-input" placeholder="80" />
-              </FieldGroup>
-              <FieldGroup :label="__('Coverage Ratio (Collateral/Loan)')">
-                <input v-model.number="newApp.coverage_ratio" type="number" step="0.01" class="form-input" placeholder="1.25" />
-              </FieldGroup>
-            </div>
-            <FieldGroup :label="__('Collateral Description')">
-              <textarea v-model="newApp.collateral_description" rows="3" class="form-input" :placeholder="__('Describe collateral assets...')" />
-            </FieldGroup>
-          </div>
 
-          <!-- Tab: Financial Summary -->
-          <div v-else-if="activeCreateTab === 'financials'" class="space-y-4">
-            <div class="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 text-xs text-slate-600">
-              {{ __('Key financial indicators for initial application. Detailed financial spreading will be input in the analysis workspace after creation.') }}
+            <div v-else-if="activeCreateTab === 'financials'" class="space-y-4">
+              <div class="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3 text-xs text-slate-600">
+                {{ __('Key financial indicators for initial application. Detailed financial spreading will be input in the analysis workspace after creation.') }}
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <FieldGroup :label="__('Revenue / Penjualan (Latest Year IDR)')">
+                  <RupiahInput v-model="newApp.revenue" />
+                </FieldGroup>
+                <FieldGroup :label="__('EBITDA (IDR)')">
+                  <RupiahInput v-model="newApp.ebitda" />
+                </FieldGroup>
+                <FieldGroup :label="__('Net Profit / Laba Bersih (IDR)')">
+                  <RupiahInput v-model="newApp.net_profit" />
+                </FieldGroup>
+                <FieldGroup :label="__('Total Assets (IDR)')">
+                  <RupiahInput v-model="newApp.total_assets" />
+                </FieldGroup>
+                <FieldGroup :label="__('Total Liabilities (IDR)')">
+                  <RupiahInput v-model="newApp.total_liabilities" />
+                </FieldGroup>
+                <FieldGroup :label="__('Equity / Modal (IDR)')">
+                  <RupiahInput v-model="newApp.equity" />
+                </FieldGroup>
+                <FieldGroup :label="__('Financial Year')">
+                  <input v-model.number="newApp.financial_year" type="number" class="form-input" :placeholder="String(new Date().getFullYear() - 1)" />
+                </FieldGroup>
+                <FieldGroup :label="__('Current Ratio')">
+                  <input v-model.number="newApp.current_ratio" type="number" step="0.01" class="form-input" placeholder="1.50" />
+                </FieldGroup>
+                <FieldGroup :label="__('Debt to Equity (DER)')">
+                  <input v-model.number="newApp.der" type="number" step="0.01" class="form-input" placeholder="1.80" />
+                </FieldGroup>
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FieldGroup :label="__('Auditor')">
+                  <input v-model="newApp.auditor" class="form-input" :placeholder="__('e.g. KAP Deloitte Indonesia')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Audit Status')">
+                  <select v-model="newApp.audit_status" class="form-input">
+                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value="Audited">Audited</option>
+                    <option value="Reviewed">Reviewed (Limited)</option>
+                    <option value="Compiled">Compiled (Unaudited)</option>
+                    <option value="Management">Management Accounts</option>
+                  </select>
+                </FieldGroup>
+              </div>
             </div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <FieldGroup :label="__('Revenue / Penjualan (Latest Year IDR)')">
-                <RupiahInput v-model="newApp.revenue" />
-              </FieldGroup>
-              <FieldGroup :label="__('EBITDA (IDR)')">
-                <RupiahInput v-model="newApp.ebitda" />
-              </FieldGroup>
-              <FieldGroup :label="__('Net Profit / Laba Bersih (IDR)')">
-                <RupiahInput v-model="newApp.net_profit" />
-              </FieldGroup>
-              <FieldGroup :label="__('Total Assets (IDR)')">
-                <RupiahInput v-model="newApp.total_assets" />
-              </FieldGroup>
-              <FieldGroup :label="__('Total Liabilities (IDR)')">
-                <RupiahInput v-model="newApp.total_liabilities" />
-              </FieldGroup>
-              <FieldGroup :label="__('Equity / Modal (IDR)')">
-                <RupiahInput v-model="newApp.equity" />
-              </FieldGroup>
-              <FieldGroup :label="__('Financial Year')">
-                <input v-model.number="newApp.financial_year" type="number" class="form-input" :placeholder="String(new Date().getFullYear() - 1)" />
-              </FieldGroup>
-              <FieldGroup :label="__('Current Ratio')">
-                <input v-model.number="newApp.current_ratio" type="number" step="0.01" class="form-input" placeholder="1.50" />
-              </FieldGroup>
-              <FieldGroup :label="__('Debt to Equity (DER)')">
-                <input v-model.number="newApp.der" type="number" step="0.01" class="form-input" placeholder="1.80" />
-              </FieldGroup>
-            </div>
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FieldGroup :label="__('Auditor')">
-                <input v-model="newApp.auditor" class="form-input" :placeholder="__('e.g. KAP Deloitte Indonesia')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Audit Status')">
-                <select v-model="newApp.audit_status" class="form-input">
-                  <option value="">{{ __('-- Select --') }}</option>
-                  <option value="Audited">Audited</option>
-                  <option value="Reviewed">Reviewed (Limited)</option>
-                  <option value="Compiled">Compiled (Unaudited)</option>
-                  <option value="Management">Management Accounts</option>
-                </select>
-              </FieldGroup>
-            </div>
-          </div>
 
-          <!-- Tab: Analyst & Approval -->
-          <div v-else-if="activeCreateTab === 'analyst'" class="space-y-4">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FieldGroup :label="__('Relationship Manager (RM)')">
-                <input v-model="newApp.relationship_manager" class="form-input" :placeholder="__('RM name or user ID')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Analyst / Credit Officer')">
-                <input v-model="newApp.analyst" class="form-input" :placeholder="__('Analyst name or user ID')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Branch / Unit Kerja')">
-                <input v-model="newApp.branch" class="form-input" :placeholder="__('e.g. Jakarta Pusat')" />
-              </FieldGroup>
-              <FieldGroup :label="__('Segment / Portfolio')">
-                <select v-model="newApp.segment" class="form-input">
-                  <option value="">{{ __('-- Select --') }}</option>
-                  <option value="Corporate">Corporate</option>
-                  <option value="Commercial">Commercial (Menengah)</option>
-                  <option value="SME">SME (Usaha Kecil)</option>
-                  <option value="Micro">Micro</option>
-                  <option value="Consumer">Consumer / Retail</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Priority / SLA Level')">
-                <select v-model="newApp.priority" class="form-input">
-                  <option value="Normal">Normal</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup :label="__('Target Decision Date')">
-                <input v-model="newApp.target_date" type="date" class="form-input" />
+            <div v-else-if="activeCreateTab === 'analyst'" class="space-y-4">
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FieldGroup :label="__('Relationship Manager (RM)')">
+                  <input v-model="newApp.relationship_manager" class="form-input" :placeholder="__('RM name or user ID')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Analyst / Credit Officer')">
+                  <input v-model="newApp.analyst" class="form-input" :placeholder="__('Analyst name or user ID')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Branch / Unit Kerja')">
+                  <input v-model="newApp.branch" class="form-input" :placeholder="__('e.g. Jakarta Pusat')" />
+                </FieldGroup>
+                <FieldGroup :label="__('Segment / Portfolio')">
+                  <select v-model="newApp.segment" class="form-input">
+                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value="Corporate">Corporate</option>
+                    <option value="Commercial">Commercial (Menengah)</option>
+                    <option value="SME">SME (Usaha Kecil)</option>
+                    <option value="Micro">Micro</option>
+                    <option value="Consumer">Consumer / Retail</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Priority / SLA Level')">
+                  <select v-model="newApp.priority" class="form-input">
+                    <option value="Normal">Normal</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </FieldGroup>
+                <FieldGroup :label="__('Target Decision Date')">
+                  <input v-model="newApp.target_date" type="date" class="form-input" />
+                </FieldGroup>
+              </div>
+              <FieldGroup :label="__('Internal Notes / Catatan Analisa')">
+                <textarea v-model="newApp.internal_notes" rows="4" class="form-input" :placeholder="__('Internal analyst notes, risk observations, conditions...')" />
               </FieldGroup>
             </div>
-            <FieldGroup :label="__('Internal Notes / Catatan Analisa')">
-              <textarea v-model="newApp.internal_notes" rows="4" class="form-input" :placeholder="__('Internal analyst notes, risk observations, conditions...')" />
-            </FieldGroup>
-          </div>
+          </template>
+
+          <!-- Dynamic workflow-based tabs -->
+          <template v-else>
+            <div v-for="(step, i) in activeWorkflowSteps" :key="step.step_id">
+              <div v-if="activeCreateTab === `workflow-${i}`" class="space-y-4">
+                <div v-for="section in (step.sections || [])" :key="section.sectionId || section.id" class="mb-6">
+                  <h4 class="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">{{ section.label || section.title }}</h4>
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <template v-for="field in stepFields(section.sectionId || section.id)" :key="field.fieldname">
+                      <FieldGroup :label="field.label" :required="field.mandatory">
+                        <template v-if="getCreateFieldType(field.fieldname) === 'Currency'">
+                          <RupiahInput v-model="newApp[field.fieldname]" />
+                        </template>
+                        <template v-else-if="getCreateFieldType(field.fieldname) === 'Select'">
+                          <select v-model="newApp[field.fieldname]" class="form-input">
+                            <option value="">{{ __('-- Select --') }}</option>
+                            <option v-for="opt in fieldOptions(field.fieldname)" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                          </select>
+                        </template>
+                        <template v-else-if="getCreateFieldType(field.fieldname) === 'Int'">
+                          <input v-model.number="newApp[field.fieldname]" type="number" class="form-input" />
+                        </template>
+                        <template v-else-if="getCreateFieldType(field.fieldname) === 'Float'">
+                          <input v-model.number="newApp[field.fieldname]" type="number" step="0.01" class="form-input" />
+                        </template>
+                        <template v-else-if="getCreateFieldType(field.fieldname) === 'Small Text'">
+                          <textarea v-model="newApp[field.fieldname]" rows="2" class="form-input" />
+                        </template>
+                        <template v-else-if="getCreateFieldType(field.fieldname) === 'Date'">
+                          <input v-model="newApp[field.fieldname]" type="date" class="form-input" />
+                        </template>
+                        <template v-else>
+                          <input v-model="newApp[field.fieldname]" class="form-input" />
+                        </template>
+                      </FieldGroup>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
 
           <!-- Summary row at bottom -->
           <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
@@ -458,28 +516,179 @@ const creatingApplication = ref(false)
 const activeCreateTab = ref('borrower')
 let searchTimer = null
 
-const createTabs = [
-  { key: 'borrower', label: '① Borrower' },
-  { key: 'facility', label: '② Facility & Limit' },
-  { key: 'collateral', label: '③ Collateral' },
-  { key: 'financials', label: '④ Financial Summary' },
-  { key: 'analyst', label: '⑤ Analyst & Approval' },
-]
+const workflows = createResource({
+  url: 'crm.api.credit_analysis.get_published_workflows',
+  auto: true,
+})
+
+function defaultApplication() {
+  return {
+    borrower: '', borrower_name: '', borrower_type: 'Company',
+    industry: '', kbli: '', employer_name: '', public_company_ticker: '',
+    npwp: '', purpose: '',
+    facility_type: '', requested_amount: null, credit_limit: null,
+    plafond: null, tenor_months: null, interest_rate: null,
+    repayment_scheme: '', status: 'Draft', risk_grade: '', submission_date: '',
+    collateral_type: '', collateral_value: null, ltv_percent: null,
+    coverage_ratio: null, collateral_description: '',
+    revenue: null, ebitda: null, net_profit: null, total_assets: null,
+    total_liabilities: null, equity: null, financial_year: new Date().getFullYear() - 1,
+    current_ratio: null, der: null, auditor: '', audit_status: '',
+    spread_file_url: '', spread_file_name: '',
+    workflow: '',
+    relationship_manager: '', analyst: '', branch: '', segment: '',
+    priority: 'Normal', target_date: '', internal_notes: '',
+  }
+}
+
+const newApp = reactive(defaultApplication())
+
+function onSpreadFileUploaded(file) {
+  if (file?.file_url) {
+    newApp.spread_file_url = file.file_url
+    newApp.spread_file_name = file.filename || file.file_url.split('/').pop()
+  }
+}
+
+const workflowCreationConfig = createResource({
+  url: 'crm.api.credit_analysis.get_workflow_creation_config',
+  auto: false,
+  onSuccess() {
+    activeCreateTab.value = 'workflow-0'
+  },
+})
+
+watch(() => newApp.workflow, (wf) => {
+  if (wf) {
+    workflowCreationConfig.submit({ workflow_name: wf })
+  }
+})
+
+const activeWorkflowSteps = computed(() => workflowCreationConfig.data || [])
+
+const createTabs = computed(() => {
+  const steps = activeWorkflowSteps.value
+  if (steps.length) {
+    return steps.map((s, i) => ({ key: `workflow-${i}`, label: s.label }))
+  }
+  return [
+    { key: 'borrower', label: '① Borrower' },
+    { key: 'facility', label: '② Facility & Limit' },
+    { key: 'collateral', label: '③ Collateral' },
+    { key: 'financials', label: '④ Financial Summary' },
+    { key: 'analyst', label: '⑤ Analyst & Approval' },
+  ]
+})
+
+const activeStepConfig = computed(() => {
+  const steps = activeWorkflowSteps.value
+  if (!steps.length) return null
+  const match = activeCreateTab.value.match(/^workflow-(\d+)$/)
+  if (!match) return null
+  return steps[parseInt(match[1])] || null
+})
 
 function nextTab() {
-  const idx = createTabs.findIndex((t) => t.key === activeCreateTab.value)
-  if (idx < createTabs.length - 1) activeCreateTab.value = createTabs[idx + 1].key
+  const idx = createTabs.value.findIndex((t) => t.key === activeCreateTab.value)
+  if (idx < createTabs.value.length - 1) activeCreateTab.value = createTabs.value[idx + 1].key
 }
 
 function prevTab() {
-  const idx = createTabs.findIndex((t) => t.key === activeCreateTab.value)
-  if (idx > 0) activeCreateTab.value = createTabs[idx - 1].key
+  const idx = createTabs.value.findIndex((t) => t.key === activeCreateTab.value)
+  if (idx > 0) activeCreateTab.value = createTabs.value[idx - 1].key
 }
 
 function openCreateDialog() {
   Object.assign(newApp, defaultApplication())
+  workflowCreationConfig.data = null
   activeCreateTab.value = 'borrower'
   showCreateDialog.value = true
+}
+
+function stepFields(sectionId) {
+  if (!activeStepConfig.value) return []
+  return (activeStepConfig.value.fields || []).filter((f) => f.placement === sectionId && f.visible !== false)
+}
+
+function getCreateFieldType(fieldname) {
+  const map = {
+    borrower: 'Link', borrower_name: 'Data', borrower_type: 'Select',
+    npwp: 'Data', employer_name: 'Data', industry: 'Data', kbli: 'Data',
+    requested_amount: 'Currency', facility_type: 'Select', credit_limit: 'Currency',
+    plafond: 'Currency', tenor_months: 'Int', interest_rate: 'Float',
+    repayment_scheme: 'Select', risk_grade: 'Data', status: 'Select',
+    collateral_type: 'Select', collateral_value: 'Currency', ltv_percent: 'Float',
+    coverage_ratio: 'Float', collateral_description: 'Small Text',
+    revenue: 'Currency', ebitda: 'Currency', net_profit: 'Currency',
+    total_assets: 'Currency', total_liabilities: 'Currency', equity: 'Currency',
+    der: 'Float', current_ratio: 'Float', financial_year: 'Int',
+    auditor: 'Data', audit_status: 'Select',
+    purpose: 'Small Text', branch: 'Data', segment: 'Select',
+    priority: 'Select', target_date: 'Date',
+  }
+  return map[fieldname] || 'Data'
+}
+
+function fieldOptions(fieldname) {
+  const options = {
+    borrower_type: [
+      { value: 'Company', label: 'Company / Badan Usaha' },
+      { value: 'Individual', label: 'Individual / Perorangan' },
+    ],
+    facility_type: [
+      { value: 'Working Capital', label: 'Working Capital (Modal Kerja)' },
+      { value: 'Working Capital — Revolving', label: 'Working Capital — Revolving' },
+      { value: 'Working Capital — Non-Revolving', label: 'Working Capital — Non-Revolving' },
+      { value: 'Investment Loan', label: 'Investment Loan (Kredit Investasi)' },
+      { value: 'Consumer Loan', label: 'Consumer Loan (KPR/KKB)' },
+      { value: 'Trade Finance', label: 'Trade Finance (L/C, SKBDN)' },
+      { value: 'Multipurpose', label: 'Multipurpose (Multiguna)' },
+      { value: 'Syndicated', label: 'Syndicated Loan' },
+      { value: 'Other', label: 'Other' },
+    ],
+    repayment_scheme: [
+      { value: 'Annuity', label: 'Annuity' },
+      { value: 'Flat', label: 'Flat' },
+      { value: 'Bullet', label: 'Bullet' },
+      { value: 'Revolving', label: 'Revolving Draw-down' },
+    ],
+    status: [
+      { value: 'Draft', label: 'Draft' },
+      { value: 'Application Received', label: 'Application Received' },
+      { value: 'Document Review', label: 'Document Review' },
+      { value: 'Credit Analysis', label: 'Credit Analysis' },
+      { value: 'Committee Approval', label: 'Committee Approval' },
+    ],
+    collateral_type: [
+      { value: 'Property', label: 'Property / Real Estate' },
+      { value: 'Vehicle', label: 'Vehicle / Kendaraan' },
+      { value: 'Inventory', label: 'Inventory / Persediaan' },
+      { value: 'Receivables', label: 'Receivables / Piutang' },
+      { value: 'Equipment', label: 'Equipment / Mesin' },
+      { value: 'Cash Deposit', label: 'Cash Deposit / Deposito' },
+      { value: 'Guarantee', label: 'Bank Guarantee / Aval' },
+      { value: 'Other', label: 'Other' },
+    ],
+    audit_status: [
+      { value: 'Audited', label: 'Audited' },
+      { value: 'Reviewed', label: 'Reviewed (Limited)' },
+      { value: 'Compiled', label: 'Compiled (Unaudited)' },
+      { value: 'Management', label: 'Management Accounts' },
+    ],
+    segment: [
+      { value: 'Corporate', label: 'Corporate' },
+      { value: 'Commercial', label: 'Commercial (Menengah)' },
+      { value: 'SME', label: 'SME (Usaha Kecil)' },
+      { value: 'Micro', label: 'Micro' },
+      { value: 'Consumer', label: 'Consumer / Retail' },
+    ],
+    priority: [
+      { value: 'Normal', label: 'Normal' },
+      { value: 'High', label: 'High' },
+      { value: 'Urgent', label: 'Urgent' },
+    ],
+  }
+  return options[fieldname] || []
 }
 
 const applications = createResource({
@@ -496,69 +705,6 @@ const withTicker = computed(() => rows.value.filter((row) => row.public_company_
 
 function openApplication(row) {
   router.push({ name: 'Credit Analysis Detail', params: { applicationId: row.name } })
-}
-
-function defaultApplication() {
-  return {
-    // Borrower tab
-    borrower: '',
-    borrower_name: '',
-    borrower_type: 'Company',
-    industry: '',
-    kbli: '',
-    employer_name: '',
-    public_company_ticker: '',
-    npwp: '',
-    purpose: '',
-    // Facility tab
-    facility_type: '',
-    requested_amount: null,
-    credit_limit: null,
-    plafond: null,
-    tenor_months: null,
-    interest_rate: null,
-    repayment_scheme: '',
-    status: 'Draft',
-    risk_grade: '',
-    submission_date: '',
-    // Collateral tab
-    collateral_type: '',
-    collateral_value: null,
-    ltv_percent: null,
-    coverage_ratio: null,
-    collateral_description: '',
-    // Financial summary tab
-    revenue: null,
-    ebitda: null,
-    net_profit: null,
-    total_assets: null,
-    total_liabilities: null,
-    equity: null,
-    financial_year: new Date().getFullYear() - 1,
-    current_ratio: null,
-    der: null,
-    auditor: '',
-    audit_status: '',
-    spread_file_url: '',
-    spread_file_name: '',
-    // Analyst tab
-    relationship_manager: '',
-    analyst: '',
-    branch: '',
-    segment: '',
-    priority: 'Normal',
-    target_date: '',
-    internal_notes: '',
-  }
-}
-
-const newApp = reactive(defaultApplication())
-
-function onSpreadFileUploaded(file) {
-  if (file?.file_url) {
-    newApp.spread_file_url = file.file_url
-    newApp.spread_file_name = file.filename || file.file_url.split('/').pop()
-  }
 }
 
 async function createApplication() {
@@ -586,6 +732,18 @@ async function createApplication() {
     }
 
     const row = await call('crm.api.credit.create_credit_application', { payload })
+
+    // If workflow selected, assign it after creation
+    if (newApp.workflow) {
+      try {
+        await call('crm.api.credit_analysis.assign_workflow', {
+          application_id: row.name,
+          workflow_name: newApp.workflow,
+        })
+      } catch (wfError) {
+        toast.error(wfError?.messages?.[0] || wfError.message || __('Application created but workflow assignment failed'))
+      }
+    }
     toast.success(__('Credit application created'))
 
     // If a spread file was uploaded, import it immediately

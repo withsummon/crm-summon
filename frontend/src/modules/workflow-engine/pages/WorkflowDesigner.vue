@@ -353,6 +353,7 @@ import LucideFile from '~icons/lucide/file'
 import LucideUserCheck from '~icons/lucide/user-check'
 import LucideShieldCheck from '~icons/lucide/shield-check'
 import LucideLayers from '~icons/lucide/layers'
+import LucideFileText from '~icons/lucide/file-text'
 
 const router = useRouter()
 const route = useRoute()
@@ -427,6 +428,7 @@ const computedProductList = computed(() => {
 
 function getIcon(iconName) {
   if (iconName === 'LucideFile') return LucideFile
+  if (iconName === 'LucideFileText') return LucideFileText
   if (iconName === 'LucideUserCheck') return LucideUserCheck
   if (iconName === 'LucideShieldCheck') return LucideShieldCheck
   return LucideLayers

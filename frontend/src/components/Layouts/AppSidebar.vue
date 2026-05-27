@@ -221,7 +221,6 @@ const isFCSite = ref(window.is_fc_site)
 const isDemoSite = ref(window.is_demo_site)
 
 // ─── Parent Route Groups ─────────────────────────────────
-// Each parent route group has its own dashboard + sub-items
 
 const crmCoreLinks = [
   {
@@ -282,13 +281,8 @@ const crmCoreLinks = [
 ]
 
 // Build module groups for non-CRM-Core parent routes
-function buildModuleGroupLinks(groupName, dashboardRouteName) {
-  const dashboardLink = {
-    label: 'Dashboard',
-    icon: LucideLayoutDashboard,
-    to: dashboardRouteName,
-  }
-  const moduleLinks = summonModules
+function buildModuleGroupLinks(groupName) {
+  return summonModules
     .filter((m) => m.group === groupName)
     .map((m) => ({
       label: m.label,
@@ -297,7 +291,6 @@ function buildModuleGroupLinks(groupName, dashboardRouteName) {
       status: m.status,
       pwaInstall: m.label === 'Mobile RM Workspace',
     }))
-  return [dashboardLink, ...moduleLinks]
 }
 
 const parentRouteGroups = computed(() => [
@@ -309,22 +302,22 @@ const parentRouteGroups = computed(() => [
   {
     name: 'Lending & Risk',
     opened: false,
-    views: buildModuleGroupLinks('Lending & Risk', 'Lending Dashboard'),
+    views: buildModuleGroupLinks('Lending & Risk'),
   },
   {
     name: 'Operations',
     opened: false,
-    views: buildModuleGroupLinks('Operations', 'Operations Dashboard'),
+    views: buildModuleGroupLinks('Operations'),
   },
   {
     name: 'Admin & Platform',
     opened: false,
-    views: buildModuleGroupLinks('Admin & Platform', 'Admin Dashboard'),
+    views: buildModuleGroupLinks('Admin & Platform'),
   },
   {
     name: 'Channels & Portal',
     opened: false,
-    views: buildModuleGroupLinks('Channels & Portal', 'Channels Dashboard'),
+    views: buildModuleGroupLinks('Channels & Portal'),
   },
 ])
 

@@ -21,7 +21,7 @@ class CRMCreditApplication(Document):
 
 		# Auto-initiate visual credit flow execution on first save
 		if not self.credit_flow_execution:
-			from crm.utils.credit_flow_engine import start_flow_execution
+			from crm.utils.workflow_engine import start_flow_execution
 			try:
 				start_flow_execution(self.name)
 			except Exception:

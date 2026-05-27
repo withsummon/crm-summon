@@ -50,38 +50,49 @@ def start_flow_execution(application_id):
 	doctype = get_target_doctype(application_id)
 	app = frappe.get_doc(doctype, application_id)
 
-	# Find matching published flow
-	filters = {"status": "Published"}
-	
-	# Handle lead/deal properties safely
-	facility_type = getattr(app, "facility_type", None) or getattr(app, "product_type", None)
-	if facility_type:
-		filters["product_type"] = facility_type
-		
-	borrower_type = getattr(app, "borrower_type", None) or getattr(app, "applicant_persona", None)
-	if borrower_type:
-		filters["applicant_persona"] = ["in", ["Any", borrower_type]]
-		
-	is_pre_approved = getattr(app, "is_pre_approved", 0)
-	filters["is_pre_approved"] = 1 if is_pre_approved else 0
+	# Check if a workflow was manually assigned via credit_flow field
+	assigned_workflow = getattr(app, "credit_flow", None) or getattr(app, "workflow", None)
+	if assigned_workflow:
+		flow_doc = frappe.get_doc("CRM Workflow", assigned_workflow)
+		if flow_doc.status == "Published":
+			matched_flows = [{
+				"name": flow_doc.name,
+				"current_version": flow_doc.current_version,
+				"flow_json": flow_doc.flow_json,
+			}]
+		else:
+			matched_flows = []
+	else:
+		# Find matching published flow
+		filters = {"status": "Published"}
 
-	matched_flows = frappe.get_all(
-		"CRM Workflow",
-		filters=filters,
-		fields=["name", "current_version", "flow_json"],
-		order_by="modified desc",
-		limit=1
-	)
+		facility_type = getattr(app, "facility_type", None) or getattr(app, "product_type", None)
+		if facility_type:
+			filters["product_type"] = facility_type
 
-	if not matched_flows:
-		# Fall back to default Any/Any flow
+		borrower_type = getattr(app, "borrower_type", None) or getattr(app, "applicant_persona", None)
+		if borrower_type:
+			filters["applicant_persona"] = ["in", ["Any", borrower_type]]
+
+		is_pre_approved = getattr(app, "is_pre_approved", 0)
+		filters["is_pre_approved"] = 1 if is_pre_approved else 0
+
 		matched_flows = frappe.get_all(
 			"CRM Workflow",
-			filters={"status": "Published", "applicant_persona": "Any"},
+			filters=filters,
 			fields=["name", "current_version", "flow_json"],
 			order_by="modified desc",
 			limit=1
 		)
+
+		if not matched_flows:
+			matched_flows = frappe.get_all(
+				"CRM Workflow",
+				filters={"status": "Published", "applicant_persona": "Any"},
+				fields=["name", "current_version", "flow_json"],
+				order_by="modified desc",
+				limit=1
+			)
 
 	if not matched_flows:
 		return None

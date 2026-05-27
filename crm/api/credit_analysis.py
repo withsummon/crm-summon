@@ -1282,6 +1282,9 @@ def _peers(application, ratios):
 def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=None):
 	borrower = application.get("borrower_name") or _customer_name(application.get("borrower")) or application.name
 	recommendation = recommendation or _recommendation_payload(risk_grade, dscr)
+	purpose = application.get("purpose") or "Working capital and general banking facility review."
+	risk_text = f"Primary risks: {', '.join(recommendation['risk_factors'])}."
+	rec_text = f"{recommendation['decision']}: {recommendation['reasoning']}"
 	summary = [
 		f"{borrower} requests {application.get('facility_type') or 'credit facility'} of IDR {round(flt(application.get('requested_amount')), 0):,.0f}.",
 		f"Latest risk grade is {risk_grade['grade']} with score {risk_grade['score']} / 1000.",
@@ -1289,24 +1292,14 @@ def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=No
 		f"Financial spreading covers {len(set(row['year'] for row in rows))} years across PL/BS/CF.",
 		f"Recommendation is {recommendation['decision']} with {recommendation['confidence']}% confidence.",
 	]
-	content = "\n".join(
+	content = "\n\n".join(
 		[
-			"# Credit Analysis Memorandum",
-			"",
-			"## Borrower",
-			summary[0],
-			"",
-			"## Purpose",
-			application.get("purpose") or "Working capital and general banking facility review.",
-			"",
-			"## Financials",
-			summary[2],
-			"",
-			"## Risks",
-			f"Primary risks: {', '.join(recommendation['risk_factors'])}.",
-			"",
-			"## Recommendation",
-			f"{recommendation['decision']}: {recommendation['reasoning']}",
+			f"CREDIT ANALYSIS MEMORANDUM",
+			f"Borrower\n{summary[0]}",
+			f"Purpose\n{purpose}",
+			f"Financials\n{summary[2]}",
+			f"Risks\n{risk_text}",
+			f"Recommendation\n{rec_text}",
 		]
 	)
 	return {
@@ -1493,6 +1486,132 @@ def _default_export(application):
 		"email_distribution": "Draft Queue",
 		"message": _("PDF renderer/email adapter can process this export payload."),
 	}
+
+
+@frappe.whitelist()
+def get_published_workflows():
+	"""Return published workflows for manual assignment to a credit application."""
+	if not _doctype_ready("CRM Workflow"):
+		return []
+	flows = frappe.get_all(
+		"CRM Workflow",
+		filters={"status": "Published"},
+		fields=["name", "title", "description", "product_type", "current_version"],
+		order_by="title asc",
+	)
+	return flows
+
+
+@frappe.whitelist()
+def assign_workflow(application_id: str, workflow_name: str):
+	"""Assign a published workflow to a credit application and start execution."""
+	from crm.utils.workflow_engine import start_flow_execution
+
+	app = _get_application(application_id)
+	flow = frappe.get_doc("CRM Workflow", workflow_name)
+
+	if flow.status != "Published":
+		frappe.throw(_("Workflow is not published."))
+
+	if _doctype_ready("CRM Credit Application"):
+		frappe.db.set_value("CRM Credit Application", application_id, "credit_flow", workflow_name)
+		frappe.db.set_value("CRM Credit Application", application_id, "credit_flow_version", flow.current_version)
+		frappe.db.commit()
+
+	exec_doc = start_flow_execution(application_id)
+	if not exec_doc:
+		frappe.throw(_("Failed to start workflow execution."))
+
+	return {
+		"ok": True,
+		"execution_id": exec_doc.name,
+		"workflow": workflow_name,
+		"current_node": exec_doc.current_node,
+	}
+
+
+@frappe.whitelist()
+def get_workflow_step_configs(application_id: str):
+	"""Return form node configs from the active workflow as step definitions for Credit Analysis tabs."""
+	exec_records = frappe.get_all(
+		"CRM Workflow Execution",
+		filters={"application": application_id, "status": "Running"},
+		fields=["name", "flow_version_json"],
+		limit=1,
+	)
+	if not exec_records:
+		return []
+
+	flow_data = exec_records[0]
+	try:
+		parsed = json.loads(flow_data.flow_version_json) if isinstance(flow_data.flow_version_json, str) else flow_data.flow_version_json
+		nodes = parsed.get("nodes", [])
+	except Exception:
+		return []
+
+	steps = []
+	for node in nodes:
+		node_data = node.get("data", {})
+		node_type = node_data.get("nodeType", "") or node.get("type", "")
+		node_id = node.get("id", "")
+		label = node_data.get("label") or node_data.get("name") or node_id
+
+		if node_type == "FormNode":
+			config = node_data.get("config") or {}
+			steps.append({
+				"step_id": node_id,
+				"label": label,
+				"node_type": "FormNode",
+				"sections": config.get("sections", []),
+				"fields": config.get("fields", []),
+				"available_actions": config.get("availableActions", ["save_draft", "submit"]),
+			})
+		elif node_type in ("ApprovalNode",):
+			config = node_data.get("config") or {}
+			steps.append({
+				"step_id": node_id,
+				"label": label,
+				"node_type": "ApprovalNode",
+				"sections": config.get("sections", []),
+				"fields": config.get("fields", []),
+				"available_actions": config.get("availableActions", ["approve", "reject", "return"]),
+			})
+
+	return steps
+
+
+@frappe.whitelist()
+def get_workflow_creation_config(workflow_name: str):
+	"""Return FormNode configs from a published workflow for use in the creation dialog."""
+	flow = frappe.get_doc("CRM Workflow", workflow_name)
+	if flow.status != "Published":
+		frappe.throw(_("Workflow is not published."))
+
+	flow_json = flow.flow_json
+	try:
+		parsed = json.loads(flow_json) if isinstance(flow_json, str) else flow_json
+		nodes = parsed.get("nodes", [])
+	except Exception:
+		return []
+
+	steps = []
+	for node in nodes:
+		node_data = node.get("data", {})
+		node_type = node_data.get("nodeType", "")
+		if node_type != "FormNode":
+			continue
+		node_id = node.get("id", "")
+		label = node_data.get("label") or node_data.get("name") or node_id
+		config = node_data.get("config") or {}
+		steps.append({
+			"step_id": node_id,
+			"label": label,
+			"node_type": "FormNode",
+			"sections": config.get("sections", []),
+			"fields": config.get("fields", []),
+		})
+
+	return steps
 
 
 @frappe.whitelist()
@@ -1693,6 +1812,21 @@ def run_cashflow_projection(application_id: str, years: int = 5, drivers=None):
 	_replace_artifact(application.name, application.get("borrower"), "cashflow_projection", "Cashflow Projection", result)
 	frappe.db.commit()
 	return result
+
+
+def _strip_markdown(text):
+	"""Remove markdown syntax and leading/trailing whitespace from text."""
+	if not text:
+		return ""
+	text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+	text = re.sub(r"\*(.+?)\*", r"\1", text)
+	text = re.sub(r"^-\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"^\d+\.\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"^>\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"`(.+?)`", r"\1", text)
+	text = re.sub(r"\n{3,}", "\n\n", text)
+	return text.strip()
 
 
 def _call_credit_agent(application, prompt, fallback):
