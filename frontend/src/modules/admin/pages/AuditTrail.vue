@@ -674,7 +674,7 @@ const loginStats = computed(() => ({
 }))
 const complianceCards = computed(() => [
   { label: 'Audit Volume', value: String(normalizedEvents.value.length), sub: 'Loaded events', icon: 'activity' },
-  { label: 'Overrides', value: String(approvalRows.value.filter((row) => row.action === 'override').length), sub: '30 days', icon: 'shield-alert', warn: approvalRows.value.some((row) => row.action === 'override') },
+  { label: 'Overrides', value: String(approvalRows.value.filter((row) => row.action === 'override').length), sub: '30 days', icon: 'shield', warn: approvalRows.value.some((row) => row.action === 'override') },
   { label: 'AML Alerts Open', value: String(alertRows.value.filter((row) => row.status !== 'Acknowledged').length), sub: 'Pending ack', icon: 'flag', warn: alertRows.value.some((row) => row.status !== 'Acknowledged') },
   { label: 'Failed Logins', value: String(loginStats.value.failed), sub: 'Current sample', icon: 'log-in', warn: loginStats.value.failed > 0 },
 ])

@@ -87,6 +87,11 @@ const routes = [
         component: () => import('@/pages/Leads.vue'),
       },
       {
+        path: 'lead-ops',
+        name: 'Lead Ops',
+        component: () => import('@/pages/LeadOps.vue'),
+      },
+      {
         path: 'leads/:leadId',
         name: 'Lead',
         component: () => import(`@/pages/${handleMobileView('Lead')}.vue`),

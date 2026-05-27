@@ -299,7 +299,7 @@ const defaultWidgets = [
   { key: 'revenue', label: 'Revenue Chart', icon: 'bar-chart-2', visible: true },
   { key: 'calendar', label: 'Calendar', icon: 'calendar', visible: true },
   { key: 'leadManagement', label: 'Lead Management', icon: 'users', visible: true },
-  { key: 'bankBreakdown', label: 'Bank Breakdown', icon: 'building-2', visible: true },
+  { key: 'bankBreakdown', label: 'Bank Breakdown', icon: 'briefcase', visible: true },
   { key: 'picOwnership', label: 'PIC Ownership', icon: 'user-check', visible: true },
   { key: 'followUpLoad', label: 'Follow-up Load', icon: 'check-circle', visible: true },
 ]
@@ -710,6 +710,15 @@ const chartSummary = computed(() => ({
   total: data.value.revenue?.total ?? 0,
   change: data.value.revenue?.change ?? 0,
 }))
+
+const fallbackRevenueMonths = [
+  { label: 'Jan', value: 0 },
+  { label: 'Feb', value: 0 },
+  { label: 'Mar', value: 0 },
+  { label: 'Apr', value: 0 },
+  { label: 'May', value: 0 },
+  { label: 'Jun', value: 0 },
+]
 
 const revenueMonths = computed(() => {
   const months = data.value.revenue?.months
