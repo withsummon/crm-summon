@@ -332,7 +332,7 @@
 
             <div class="omni-messages">
               <article
-                v-for="message in detail?.messages || []"
+                v-for="message in visibleMessages"
                 :key="message.name"
                 :class="['omni-message', message.direction === 'Outbound' ? 'outbound' : '', message.direction === 'Internal' ? 'internal' : '']"
               >
@@ -347,6 +347,13 @@
                   {{ __('Attachment') }}
                 </a>
               </article>
+              <button
+                v-if="(detail?.messages?.length || 0) > MESSAGE_LIMIT"
+                class="omni-load-more"
+                @click="messageLimit += MESSAGE_LIMIT"
+              >
+                {{ __('Show %{count} more', { count: Math.min(MESSAGE_LIMIT, (detail?.messages?.length || 0) - messageLimit) }) }}
+              </button>
             </div>
 
             <div class="omni-composer">
@@ -440,8 +447,9 @@
 
 <script setup>
 import { call, Dialog, FeatherIcon, FileUploader, toast } from 'frappe-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { globalStore } from '../stores/global'
 
 const router = useRouter()
 
@@ -491,6 +499,20 @@ const newChatLoading = ref(false)
 const demoRecipientLoading = ref(false)
 let customerSearchTimer = null
 
+const MESSAGE_LIMIT = 100
+const messageLimit = ref(MESSAGE_LIMIT)
+
+const visibleMessages = computed(() => {
+  const all = detail.value?.messages || []
+  return all.slice(-Math.min(messageLimit.value, all.length))
+})
+
+watch(detail, () => {
+  messageLimit.value = MESSAGE_LIMIT
+})
+
+const { $socket } = globalStore()
+
 const demoWhatsAppRecipients = [
   { label: 'Demo WhatsApp 0319', display: '+62 855-9115-0319', number: '6285591150319' },
   { label: 'Demo WhatsApp 0730', display: '+62 857-7424-0730', number: '6285774240730' },
@@ -523,7 +545,19 @@ const customerName = computed(() => {
   )
 })
 
-onMounted(loadConversations)
+onMounted(() => {
+  loadConversations()
+  $socket.on('omnichannel_message', (data) => {
+    loadConversations()
+    if (selectedConversationId.value === data.conversation) {
+      loadConversation(data.conversation)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  $socket.off('omnichannel_message')
+})
 
 watch(selectedConversationId, async (name) => {
   if (!name) return
@@ -1015,6 +1049,7 @@ async function startExternalChat() {
 .omni-list-pane {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .omni-list-header,
@@ -1204,8 +1239,10 @@ async function startExternalChat() {
 .omni-thread {
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   border-right: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .omni-sla-bar {
@@ -1221,6 +1258,7 @@ async function startExternalChat() {
 
 .omni-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 18px;
 }
@@ -1396,6 +1434,24 @@ async function startExternalChat() {
   padding-left: 10px;
   color: #334155;
   font-size: 12px;
+}
+
+.omni-load-more {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f766e;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.omni-load-more:hover {
+  background: #f0fdfa;
 }
 
 @media (max-width: 1180px) {

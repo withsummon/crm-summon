@@ -331,8 +331,8 @@ def create_whatsapp_message(
 	reference_name: str,
 	message: str,
 	to: str,
-	attach: str,
-	reply_to: str,
+	attach: str | None = None,
+	reply_to: str | None = None,
 	content_type: str = "text",
 ):
 	validate_access(reference_doctype, reference_name)
