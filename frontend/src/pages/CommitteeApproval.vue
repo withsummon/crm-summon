@@ -39,7 +39,7 @@
       <!-- ───── TAB: Queue ───── -->
       <div v-if="activeTab === 'queue'">
         <!-- KPI Strip -->
-        <div class="grid grid-cols-5 gap-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
           <div v-for="kpi in queueKPIs" :key="kpi.label" class="bg-surface-white rounded-[14px] p-4 border border-outline-gray-2">
             <p class="text-xs text-ink-gray-5 mb-1">{{ kpi.label }}</p>
             <p class="text-2xl font-bold" :class="kpi.color">{{ kpi.value }}</p>
@@ -76,7 +76,8 @@
 
         <!-- Queue Table -->
         <div class="bg-surface-white rounded-[14px] border border-outline-gray-2 overflow-hidden">
-          <table class="w-full text-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[800px]">
             <thead class="bg-surface-gray-1 border-b border-outline-gray-2">
               <tr>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-ink-gray-5 uppercase">Case</th>
@@ -141,6 +142,7 @@
           </table>
         </div>
       </div>
+    </div>
 
       <!-- ───── TAB: Meetings ───── -->
       <div v-if="activeTab === 'meetings'" class="space-y-4">
@@ -280,17 +282,20 @@
           <button @click="activeTab = 'meetings'" class="px-4 py-2 bg-crm-teal text-white rounded-lg text-sm">View Meetings</button>
         </div>
 
-        <div v-else class="grid grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Case Navigator -->
-          <div class="bg-surface-white rounded-[14px] border border-outline-gray-2 overflow-hidden">
+          <div 
+            v-if="!isMobile || !mobileShowDetails"
+            class="md:col-span-1 bg-surface-white rounded-[14px] border border-outline-gray-2 overflow-hidden"
+          >
             <div class="px-4 py-3 border-b border-outline-gray-2 bg-surface-gray-1">
-              <p class="text-xs font-semibold text-ink-gray-6 uppercase">Cases in Session</p>
+              <p class="text-xs font-semibold text-ink-gray-6 uppercase">{{ __('Cases in Session') }}</p>
             </div>
             <div class="divide-y divide-outline-gray-1">
               <div
                 v-for="(cas, idx) in activeSession.cases"
                 :key="cas.id"
-                @click="activeSessionCaseIdx = idx"
+                @click="activeSessionCaseIdx = idx; if(isMobile) mobileShowDetails = true"
                 :class="['p-4 cursor-pointer', activeSessionCaseIdx === idx ? 'bg-teal-50' : 'hover:bg-surface-gray-1']"
               >
                 <div class="flex justify-between items-start">
@@ -307,10 +312,21 @@
           </div>
 
           <!-- Voting Interface -->
-          <div class="col-span-2 space-y-4">
+          <div 
+            v-if="!isMobile || mobileShowDetails"
+            class="col-span-1 md:col-span-2 space-y-4"
+          >
             <div v-if="currentCase" class="bg-surface-white rounded-[14px] border border-outline-gray-2">
               <!-- Case Header -->
               <div class="px-6 py-4 border-b border-outline-gray-2">
+                <button 
+                  v-if="isMobile" 
+                  @click="mobileShowDetails = false"
+                  class="inline-flex items-center gap-1.5 text-xs font-extrabold text-crm-teal hover:underline mb-3"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                  <span>{{ __('Back to Agenda Cases') }}</span>
+                </button>
                 <div class="flex justify-between items-start">
                   <div>
                     <span class="font-mono text-sm text-crm-teal font-semibold">{{ currentCase.caseId }}</span>
@@ -409,7 +425,7 @@
 
       <!-- ───── TAB: Committees ───── -->
       <div v-if="activeTab === 'committees'" class="space-y-4">
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             v-for="committee in committees"
             :key="committee.id"
@@ -551,7 +567,7 @@
             </div>
             <button @click="liveStarted = false" class="px-3 py-1.5 border border-white/30 rounded text-sm">End Session</button>
           </div>
-          <div class="grid grid-cols-4 gap-4 mb-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-green-700 rounded-[14px] p-6 text-center">
               <p class="text-xs uppercase">Approve</p>
               <p class="text-5xl font-bold mt-2">{{ liveTally.approve }}</p>
@@ -590,7 +606,7 @@
       <!-- ───── TAB: Analytics ───── -->
       <div v-if="activeTab === 'analytics'">
         <!-- KPI Row -->
-        <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="bg-surface-white rounded-[14px] p-4 border border-outline-gray-2">
             <p class="text-xs text-ink-gray-5 mb-1">{{ kpi.label }}</p>
             <p class="text-2xl font-bold text-ink-gray-9">{{ kpi.value }}</p>
@@ -598,7 +614,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Approval Rate by Committee -->
           <div class="bg-surface-white rounded-[14px] border border-outline-gray-2 p-5">
             <h3 class="text-sm font-semibold text-ink-gray-7 mb-4">Approval Rate by Committee</h3>
@@ -860,7 +876,7 @@
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 
 const viewControls = ref(null)
 
@@ -879,6 +895,22 @@ const showSetupModal = ref(false)
 const showCaseModal = ref(false)
 const selectedCase = ref(null)
 const toast = ref('')
+
+const isMobile = ref(false)
+const mobileShowDetails = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const emptyCommitteeForm = () => ({
   id: null,

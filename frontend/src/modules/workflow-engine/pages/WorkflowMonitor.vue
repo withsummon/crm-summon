@@ -20,7 +20,10 @@
     <div class="flex flex-1 min-h-0 overflow-hidden">
       
       <!-- LEFT SIDEBAR: Executions List & Search Filters -->
-      <div class="w-[380px] shrink-0 border-r border-crm-border bg-white flex flex-col min-h-0">
+      <div 
+        v-if="!isMobile || !selectedExecution"
+        class="w-full md:w-[380px] shrink-0 border-r border-crm-border bg-white flex flex-col min-h-0"
+      >
         
         <!-- Search & Filter section -->
         <div class="p-4 border-b border-crm-border space-y-3 bg-gray-50/50">
@@ -100,12 +103,24 @@
       </div>
 
       <!-- RIGHT DETAIL PANEL: Visual Monitor and Timeline -->
-      <div class="flex-1 bg-crm-bg flex flex-col min-h-0">
-        <div v-if="selectedExecution" class="flex-1 flex flex-col min-h-0 overflow-y-auto p-6 space-y-6">
+      <div 
+        v-if="!isMobile || selectedExecution"
+        class="flex-1 bg-crm-bg flex flex-col min-h-0"
+      >
+        <div v-if="selectedExecution" class="flex-1 flex flex-col min-h-0 overflow-y-auto p-4 md:p-6 space-y-6">
           
           <!-- Detail Header Card -->
           <div class="rounded-xl border border-crm-border bg-white p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
+              <!-- Back button on mobile -->
+              <button 
+                v-if="isMobile" 
+                @click="selectedExecution = null" 
+                class="inline-flex items-center gap-1 text-xs font-extrabold text-crm-teal hover:underline mb-2"
+              >
+                <LucideArrowLeft class="h-4 w-4" />
+                <span>{{ __('Back to Executions') }}</span>
+              </button>
               <div class="flex items-center gap-2.5">
                 <span class="text-sm font-semibold text-crm-muted">{{ __('Execution Detail') }}</span>
                 <span class="h-1.5 w-1.5 rounded-full bg-gray-300" />
@@ -142,11 +157,33 @@
             </div>
           </div>
 
+          <!-- Mobile tab selector -->
+          <div v-if="isMobile" class="flex border border-crm-border rounded-xl bg-white p-1 shrink-0 animate-fade">
+            <button
+              v-for="tab in [
+                { id: 'canvas', label: __('Visual Path') },
+                { id: 'timeline', label: __('Timeline') },
+                { id: 'state', label: __('State Details') }
+              ]"
+              :key="tab.id"
+              class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
+              :class="activeSidebar === tab.id
+                ? 'bg-crm-teal text-white shadow-xs'
+                : 'text-crm-muted hover:text-crm-text'"
+              @click="activeSidebar = tab.id"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+
           <!-- Grid layout: Visual BPMN Diagram (left/top) + Timeline/Config (right/bottom) -->
           <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1 min-h-0">
             
             <!-- Visual Flow Canvas Modeler/Viewer (3/5 Columns) -->
-            <div class="lg:col-span-3 flex flex-col border border-crm-border rounded-xl bg-white p-4 shadow-2xs h-[500px]">
+            <div 
+              v-if="!isMobile || activeSidebar === 'canvas'"
+              class="lg:col-span-3 flex flex-col border border-crm-border rounded-xl bg-white p-4 shadow-2xs h-[500px]"
+            >
               <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 shrink-0">
                 <div class="flex items-center gap-2">
                   <LucideGitBranch class="h-4 w-4 text-crm-teal" />
@@ -167,8 +204,14 @@
             </div>
 
             <!-- Tabs container: Timeline + Current state details (2/5 Columns) -->
-            <div class="lg:col-span-2 flex flex-col border border-crm-border rounded-xl bg-white shadow-2xs h-[500px] overflow-hidden">
-              <div class="flex border-b border-crm-border bg-gray-50/60 p-2 shrink-0">
+            <div 
+              v-if="!isMobile || activeSidebar === 'timeline' || activeSidebar === 'state'"
+              class="lg:col-span-2 flex flex-col border border-crm-border rounded-xl bg-white shadow-2xs h-[500px] overflow-hidden"
+            >
+              <div 
+                v-if="!isMobile"
+                class="flex border-b border-crm-border bg-gray-50/60 p-2 shrink-0"
+              >
                 <button
                   class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
                   :class="activeTab === 'timeline'
@@ -353,7 +396,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePageMeta, createListResource } from 'frappe-ui'
 import BpmnViewer from 'bpmn-js/lib/Viewer'
@@ -393,6 +436,39 @@ const searchQuery = ref('')
 const filterStatus = ref('All')
 const selectedExecution = ref(null)
 const activeTab = ref('timeline')
+const activeSidebar = ref('canvas')
+
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
+// Watch activeSidebar on mobile to synchronize activeTab for the nested pane content
+watch(activeSidebar, (newVal) => {
+  if (newVal === 'timeline' || newVal === 'state') {
+    activeTab.value = newVal
+  }
+  
+  if (newVal === 'canvas' && bpmnViewer) {
+    setTimeout(() => {
+      try {
+        const canvas = bpmnViewer.get('canvas')
+        canvas.zoom('fit-viewport')
+      } catch (err) {
+        console.error('Failed to fit viewport on tab change:', err)
+      }
+    }, 150)
+  }
+})
 
 // bpmn-js viewer container
 const viewerContainerRef = ref(null)

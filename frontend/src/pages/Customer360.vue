@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full bg-slate-50 font-sans">
-    <div v-if="!routeCustomer" class="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0">
+    <div v-if="!routeCustomer && (!isMobile || !selectedCustomerName)" class="w-full md:w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 h-full">
       <div class="p-4 border-b border-slate-200 space-y-3">
         <div>
           <h2 class="text-lg font-bold text-slate-800">{{ __('Customer Directory') }}</h2>
@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div v-if="!isMobile || selectedCustomerName" class="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <div v-if="!selectedCustomer" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
         <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
           <FeatherIcon name="user" class="h-10 w-10 text-slate-300" />
@@ -93,6 +93,9 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
+            <Button v-if="isMobile && !routeCustomer" variant="outline" :label="__('Back to Directory')" @click="selectedCustomerName = ''; selectedCustomer = null">
+              <template #prefix><FeatherIcon name="chevron-left" class="h-4 w-4" /></template>
+            </Button>
             <Button v-if="routeCustomer" variant="outline" :label="__('Back to List')" @click="goToCustomerList">
               <template #prefix><FeatherIcon name="arrow-left" class="h-4 w-4" /></template>
             </Button>
@@ -538,7 +541,7 @@
 
 <script setup>
 import { Button, FeatherIcon, Badge, Dialog, usePageMeta, createListResource, createResource, toast, call } from 'frappe-ui'
-import { computed, h, onMounted, reactive, ref, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ChatPanel from '@/components/ChatPanel.vue'
 import Link from '@/components/Controls/Link.vue'
@@ -577,6 +580,10 @@ const editingSummary = ref(false)
 const summaryTextareaRef = ref(null)
 let searchTimer = null
 const routeCustomer = computed(() => String(route.params.customer || ''))
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 
 const newCustomer = reactive({ customer_name: '', customer_type: 'Company' })
 const profileForm = reactive({ customer_name: '', customer_type: 'Company', tax_id: '', website: '' })
@@ -2035,9 +2042,15 @@ watch(routeCustomer, () => {
 })
 
 onMounted(async () => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   await customersResource.promise
   if (routeCustomer.value) loadRouteCustomer()
   else if (directoryCustomers.value.length > 0) selectCustomer(directoryCustomers.value[0])
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 usePageMeta(() => ({ title: 'Customer 360' }))

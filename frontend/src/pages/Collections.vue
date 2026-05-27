@@ -48,7 +48,7 @@
     <!-- ── DASHBOARD TAB ── -->
     <div v-if="activeTab === 'dashboard'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
       <!-- KPI Row -->
-      <div class="grid grid-cols-5 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
         <div
           v-for="kpi in dashKpis"
           :key="kpi.label"
@@ -67,9 +67,9 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Aging Bucket Chart -->
-        <div class="col-span-2 rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="lg:col-span-2 rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-4 flex items-center justify-between">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('Aging Bucket Overview') }}</div>
             <div class="flex gap-2 text-xs">
@@ -149,7 +149,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Top Defaulters -->
         <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Top Defaulters') }}</div>
@@ -245,8 +245,8 @@
 
       <!-- Accounts table -->
       <div class="flex-1 overflow-hidden rounded-[14px] border border-crm-border bg-white shadow-sm">
-        <div class="overflow-y-auto h-full">
-          <table class="w-full text-xs">
+        <div class="overflow-y-auto h-full overflow-x-auto">
+          <table class="w-full text-xs min-w-[900px]">
             <thead class="sticky top-0 bg-surface-gray-1">
               <tr class="border-b border-outline-gray-1 text-ink-gray-4">
                 <th class="px-4 py-2.5 text-left font-medium">{{ __('Customer') }}</th>
@@ -304,7 +304,7 @@
 
     <!-- ── PTP TAB ── -->
     <div v-if="activeTab === 'ptp'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
-      <div class="grid grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div v-for="m in ptpMetrics" :key="m.label" class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="text-xs text-ink-gray-4">{{ __(m.label) }}</div>
           <div class="mt-1 text-2xl font-bold" :class="m.color || 'text-ink-gray-9'">{{ m.value }}</div>
@@ -327,7 +327,8 @@
       </div>
 
       <div class="rounded-[14px] border border-crm-border bg-white shadow-sm overflow-hidden">
-        <table class="w-full text-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs min-w-[750px]">
           <thead class="bg-surface-gray-1">
             <tr class="border-b border-outline-gray-1 text-ink-gray-4">
               <th class="px-4 py-2.5 text-left font-medium">{{ __('Customer') }}</th>
@@ -368,26 +369,30 @@
         </table>
       </div>
     </div>
+    </div>
 
     <!-- ── WORKFLOWS TAB ── -->
     <div v-if="activeTab === 'workflows'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
       <!-- Dunning Ladder -->
       <div class="rounded-[14px] border border-crm-border bg-white p-5 shadow-sm">
         <div class="mb-4 text-sm font-semibold text-ink-gray-8">{{ __('Dunning Ladder — Automated Collection Workflow') }}</div>
-        <div class="flex items-start gap-0">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-0">
           <div
             v-for="(stage, idx) in dunningStages"
             :key="stage.label"
-            class="flex flex-1 flex-col items-center"
+            class="flex flex-col flex-1 items-center"
           >
             <div class="relative flex flex-col items-center">
               <div
-                class="flex h-12 w-12 items-center justify-center rounded-full text-white text-lg shadow-md"
+                class="flex h-12 w-12 items-center justify-center rounded-full text-white text-lg shadow-md z-10"
                 :class="stage.color"
               >
                 {{ stage.icon }}
               </div>
-              <div v-if="idx < dunningStages.length - 1" class="absolute top-6 left-1/2 h-0.5 w-full" :class="stage.lineColor" />
+              <!-- Horizontal line for desktop -->
+              <div v-if="idx < dunningStages.length - 1 && !isMobile" class="absolute top-6 left-1/2 h-0.5 w-full" :class="stage.lineColor" />
+              <!-- Vertical line for mobile -->
+              <div v-if="idx < dunningStages.length - 1 && isMobile" class="w-0.5 h-6 my-1" :class="stage.lineColor" />
             </div>
             <div class="mt-3 text-center">
               <div class="text-xs font-semibold text-ink-gray-8">{{ stage.label }}</div>
@@ -429,7 +434,7 @@
       </div>
 
       <!-- Restructuring & Write-off -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 flex items-center justify-between">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('Restructuring Queue') }}</div>
@@ -475,7 +480,7 @@
     <!-- ── ANALYTICS TAB ── -->
     <div v-if="activeTab === 'analytics'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
       <!-- Recovery KPIs -->
-      <div class="grid grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div v-for="m in recoveryMetrics" :key="m.label" class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="text-xs text-ink-gray-4">{{ __(m.label) }}</div>
           <div class="mt-1 text-2xl font-bold" :class="m.color">{{ m.value }}</div>
@@ -483,7 +488,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Recovery by Bucket -->
         <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Recovery Rate by Bucket') }}</div>
@@ -545,7 +550,7 @@
           <div class="text-sm font-semibold text-ink-gray-8">{{ __('Collection Letter Templates') }}</div>
           <Button :label="__('New Template')" variant="subtle" size="sm" @click="showLetterTemplateModal = true" />
         </div>
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div
             v-for="lt in letterTemplates"
             :key="lt.id"
@@ -568,7 +573,7 @@
 
     <!-- ── STRATEGY TAB ── -->
     <div v-if="activeTab === 'strategy'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Strategy Builder -->
         <div class="rounded-[14px] border border-crm-border bg-white p-5 shadow-sm">
           <div class="mb-4 text-sm font-semibold text-ink-gray-8">{{ __('Collection Strategy Builder') }}</div>
@@ -954,7 +959,7 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 // ── Page tabs ────────────────────────────────────────────────
 const pageTabs = computed(() => [
@@ -983,6 +988,20 @@ const showPaymentModal = ref(false)
 const showNoteModal = ref(false)
 const showLegalModal = ref(false)
 const showVisitModal = ref(false)
+
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 const showRestructureModal = ref(false)
 const showWriteOffModal = ref(false)
 

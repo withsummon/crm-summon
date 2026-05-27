@@ -59,7 +59,7 @@
       <!-- ───── TAB: Dashboard ───── -->
       <div v-if="activeTab === 'dashboard'">
         <!-- KPI Strip -->
-        <div class="grid grid-cols-5 gap-4 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
           <div v-for="kpi in dashKPIs" :key="kpi.label" :class="['rounded-xl p-4 border', kpi.highlight ? 'bg-red-50 border-red-200' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700']">
             <div class="flex justify-between items-start">
               <p class="text-xs text-gray-500 mb-1">{{ kpi.label }}</p>
@@ -71,9 +71,9 @@
         </div>
 
         <!-- Health Matrix + Alert Feed -->
-        <div class="grid grid-cols-3 gap-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <!-- Covenant Health by Type -->
-          <div class="col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Covenant Health Overview</h3>
             <div class="space-y-3">
               <div v-for="type in covenantTypes" :key="type.name">
@@ -127,7 +127,8 @@
         <!-- Top Facilities at Risk -->
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Facilities Under Close Watch</h3>
-          <table class="w-full text-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[700px]">
             <thead class="border-b border-gray-100 dark:border-gray-700">
               <tr>
                 <th class="text-left pb-2 text-xs text-gray-500">Borrower</th>
@@ -164,6 +165,7 @@
           </table>
         </div>
       </div>
+    </div>
 
       <!-- ───── TAB: Covenant Library ───── -->
       <div v-if="activeTab === 'library'">
@@ -178,7 +180,7 @@
           </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             v-for="cov in filteredLibrary"
             :key="cov.id"
@@ -237,7 +239,8 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table class="w-full text-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[900px]">
             <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Borrower / Facility</th>
@@ -285,11 +288,12 @@
           </table>
         </div>
       </div>
+    </div>
 
       <!-- ───── TAB: Breaches ───── -->
       <div v-if="activeTab === 'breaches'" class="space-y-4">
         <!-- Breach Summary -->
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div v-for="s in breachSummary" :key="s.label" :class="['rounded-xl p-4 border', s.red ? 'bg-red-50 border-red-200' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700']">
             <p class="text-xs text-gray-500 mb-1">{{ s.label }}</p>
             <p class="text-2xl font-bold" :class="s.color">{{ s.value }}</p>
@@ -379,7 +383,7 @@
 
       <!-- ───── TAB: Analytics ───── -->
       <div v-if="activeTab === 'analytics'">
-        <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <p class="text-xs text-gray-500 mb-1">{{ kpi.label }}</p>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.value }}</p>
@@ -387,7 +391,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Breach History -->
           <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Monthly Breach History</h3>
@@ -616,7 +620,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const activeTab = ref('dashboard')
 const librarySearch = ref('')
@@ -631,6 +635,20 @@ const showFacilityModal = ref(false)
 const selectedBreach = ref(null)
 const selectedFacility = ref(null)
 const toast = ref('')
+
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const pageTabs = [
   { id: 'dashboard', label: 'Dashboard' },

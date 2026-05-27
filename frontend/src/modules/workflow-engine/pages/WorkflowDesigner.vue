@@ -76,13 +76,29 @@
       </template>
     </LayoutHeader>
 
+    <!-- Mobile Tabs -->
+    <div v-if="isMobile" class="flex border-b border-slate-200 shrink-0 bg-white justify-around text-xs py-2.5 z-20">
+      <button 
+        v-for="t in [
+          { key: 'canvas', label: 'Canvas' },
+          { key: 'palette', label: 'Palette' },
+          { key: 'settings', label: selectedNode ? 'Node Settings' : 'Flow Settings' }
+        ]"
+        :key="t.key"
+        :class="activeSidebar === t.key ? 'text-purple-600 font-bold border-b-2 border-purple-600 pb-1' : 'text-slate-500 pb-1'"
+        @click="activeSidebar = t.key"
+      >
+        {{ t.label }}
+      </button>
+    </div>
+
     <!-- Main Workspace -->
     <div class="flex min-h-0 flex-1 bg-white relative">
       <!-- Left Sidebar Palette -->
-      <WorkflowNodePalette />
+      <WorkflowNodePalette v-if="!isMobile || activeSidebar === 'palette'" />
 
       <!-- Center Canvas -->
-      <div class="flex-1 relative">
+      <div v-if="!isMobile || activeSidebar === 'canvas'" class="flex-1 relative">
         <WorkflowCanvas
           :flowXml="flowXml"
           :elementConfigs="elementConfigs"
@@ -130,7 +146,7 @@
       <!-- Right Properties Panel -->
       <!-- Case 1: A node is selected -->
       <NodePropertyPanel
-        v-if="selectedNode"
+        v-if="selectedNode && (!isMobile || activeSidebar === 'settings')"
         :node="selectedNode"
         @update-node="handleUpdateNode"
         @delete-node="handleDeleteNode"
@@ -138,7 +154,7 @@
       />
 
       <!-- Case 2: No node selected -> Show general flow settings -->
-      <div v-else class="flex h-full w-80 flex-col border-l border-crm-border bg-white shadow-sm p-4 space-y-4 overflow-y-auto">
+      <div v-else-if="!isMobile || activeSidebar === 'settings'" class="flex h-full w-full md:w-80 flex-col border-l border-crm-border bg-white shadow-sm p-4 space-y-4 overflow-y-auto">
         <div class="flex items-center gap-2 pb-3 border-b border-crm-border">
           <LucideSettings class="w-4.5 h-4.5 text-purple-600" />
           <h2 class="text-sm font-semibold text-gray-800">{{ __('Flow settings') }}</h2>
@@ -314,7 +330,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Button, Dialog, toast, usePageMeta, createListResource } from 'frappe-ui'
 
@@ -344,6 +360,12 @@ const flowId = route.params.flowId
 const isNew = !flowId || flowId === 'new'
 
 const showTemplateModal = ref(false)
+const isMobile = ref(false)
+const activeSidebar = ref('canvas')
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) activeSidebar.value = 'canvas'
+}
 
 const flowXml = ref('')
 const elementConfigs = ref({})
@@ -423,6 +445,8 @@ function applyTemplate(tmpl) {
 }
 
 onMounted(async () => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   if (!isNew) {
     // Wait for flow resource to fetch
     watch(
@@ -479,6 +503,10 @@ onMounted(async () => {
   }
 })
 
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 function goBack() {
   router.push('/lending-risk/workflow-engine')
 }
@@ -494,6 +522,9 @@ function handleFlowChange(change) {
 
 function handleNodeSelected(node) {
   selectedNode.value = node
+  if (isMobile.value) {
+    activeSidebar.value = 'settings'
+  }
 }
 
 function handlePaneClicked() {

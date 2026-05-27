@@ -5,11 +5,11 @@
     </template>
     <template #right-header>
       <CustomActions
-        v-if="leadsListView?.customListActions"
+        v-if="leadsListView?.customListActions && !isMobile"
         :actions="leadsListView.customListActions"
       />
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Reassign')"
         @click="openReassignDialog"
@@ -17,7 +17,7 @@
         <template #prefix><FeatherIcon name="user-check" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Close')"
         @click="openCloseDialog"
@@ -25,7 +25,7 @@
         <template #prefix><FeatherIcon name="x-circle" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         theme="red"
         :label="__('Delete')"
@@ -34,7 +34,7 @@
         <template #prefix><FeatherIcon name="trash-2" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Tag')"
         @click="openTagDialog"
@@ -42,7 +42,7 @@
         <template #prefix><FeatherIcon name="tag" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="selections.length === 2"
+        v-if="selections.length === 2 && !isMobile"
         variant="outline"
         :label="__('Merge')"
         @click="openMergeDialog"
@@ -50,6 +50,7 @@
         <template #prefix><FeatherIcon name="git-merge" class="h-4 w-4" /></template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Export')"
         @click="exportFilteredLeads"
@@ -59,6 +60,7 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="solid"
         :loading="isScraping"
         :label="__('Run Lead Gen')"
@@ -69,6 +71,7 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Import Excel')"
         @click="showImportDialog = true"
@@ -78,6 +81,7 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Lead Intake')"
         @click="showLeadIntakeDialog = true"
@@ -86,9 +90,18 @@
           <FeatherIcon name="inbox" class="h-4 w-4" />
         </template>
       </Button>
+      
+      <!-- Mobile dropdown for actions -->
+      <Dropdown
+        v-if="isMobile"
+        :options="mobileActions"
+      >
+        <Button variant="outline" icon="more-horizontal" />
+      </Dropdown>
+
       <Button
         variant="solid"
-        :label="__('Create')"
+        :label="isMobile ? '' : __('Create')"
         iconLeft="plus"
         @click="showLeadModal = true"
       />
@@ -869,9 +882,39 @@ const handleFocus = () => {
   onLeadsImported()
 }
 
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+const mobileActions = computed(() => {
+  const actions = []
+  
+  actions.push({
+    label: __('Lead Intake'),
+    onClick: () => { showLeadIntakeDialog.value = true }
+  })
+  actions.push({
+    label: __('Import Excel'),
+    onClick: () => { showImportDialog.value = true }
+  })
+  actions.push({
+    label: __('Run Lead Gen'),
+    onClick: () => { showPromptDialog.value = true }
+  })
+  actions.push({
+    label: __('Export'),
+    onClick: () => { exportFilteredLeads() }
+  })
+  
+  return actions
+})
+
 
 onMounted(async () => {
   window.addEventListener('focus', handleFocus)
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   try {
     users.value = await call('frappe.client.get_list', {
       doctype: 'User',
@@ -886,6 +929,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('focus', handleFocus)
+  window.removeEventListener('resize', checkMobile)
 })
 
 onActivated(() => {
