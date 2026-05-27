@@ -388,6 +388,7 @@ const { setUp, isOnboardingStepsCompleted } = useOnboarding('frappecrm')
 onMounted(async () => {
   await users.promise
 
+  const steps = []
   const filteredSteps = steps.filter((step) => {
     if (step.condition) {
       return step.condition()
