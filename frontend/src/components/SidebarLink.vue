@@ -58,6 +58,7 @@ const props = defineProps({
   href: { type: String, default: '' },
   isCollapsed: { type: Boolean, default: false },
   theme: { type: String, default: 'crm' },
+  beforeNavigate: { type: Function, default: null },
 })
 
 const buttonClasses = computed(() => {
@@ -80,6 +81,10 @@ const iconClasses = computed(() => {
 })
 
 function handleClick() {
+  if (props.beforeNavigate) {
+    props.beforeNavigate()
+    return
+  }
   if (props.href) {
     window.location.href = props.href
   } else if (typeof props.to === 'object') {

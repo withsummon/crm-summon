@@ -450,6 +450,7 @@ export const summonModules = [
       'Mobile-responsive workspace for field Relationship Managers, lead capture, visits, and on-the-go LOS actions.',
     priority: 'Medium',
     status: 'available',
+    pwaInstall: true,
     href: '/crm/dashboard',
     group: 'Channels & Portal',
     icon: 'smartphone',
