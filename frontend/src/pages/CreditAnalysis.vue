@@ -776,7 +776,7 @@ const queue = createResource({
 
 // Dynamic Visual Flow Execution State resource
 const currentFlowState = createResource({
-  url: 'crm.api.credit_flow_execution.get_current_state',
+  url: 'crm.api.workflow_execution.get_current_state',
   makeParams() {
     return { application_id: selectedApp.value?.name }
   },
@@ -1057,7 +1057,7 @@ function labelizeAction(action) {
 async function handleFlowAction(action) {
   busy.value = true
   try {
-    const res = await call('crm.api.credit_flow_execution.submit_action', {
+    const res = await call('crm.api.workflow_execution.submit_action', {
       application_id: selectedApp.value.name,
       action_name: action
     })
