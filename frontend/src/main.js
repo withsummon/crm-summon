@@ -60,6 +60,15 @@ let pinia = createPinia()
 
 let app = createApp(App)
 
+function mountApp() {
+  app.use(router)
+  app.use(telemetryPlugin, { app_name: 'crm' })
+  socket = initSocket()
+  app.config.globalProperties.$socket = socket
+  app.provide('socket', socket)
+  app.mount('#app')
+}
+
 setConfig('resourceFetcher', frappeRequest)
 app.use(FrappeUI)
 app.use(pinia)
@@ -75,26 +84,24 @@ if (import.meta.env.DEV) {
   frappeRequest({
     url: '/api/method/crm.www.crm.get_context_for_dev',
     method: 'GET',
-  }).then((values) => {
+  })
+    .then((values) => {
       const data = values?.message || values
       for (let key in data) {
         window[key] = data[key]
       }
-      app.use(router)
-      app.use(telemetryPlugin, { app_name: 'crm' })
-      socket = initSocket()
-      app.config.globalProperties.$socket = socket
-      app.provide('socket', socket)
-      app.mount('#app')
-    },
-  )
+    })
+    .catch((error) => {
+      console.warn(
+        '[crm] Failed to load dev context from backend, continuing with fallback context.',
+        error,
+      )
+    })
+    .finally(() => {
+      mountApp()
+    })
 } else {
-  app.use(router)
-  app.use(telemetryPlugin, { app_name: 'crm' })
-  socket = initSocket()
-  app.config.globalProperties.$socket = socket
-  app.provide('socket', socket)
-  app.mount('#app')
+  mountApp()
 }
 
 if (import.meta.env.DEV) {
