@@ -746,16 +746,18 @@
                       </span>
                     </td>
                     <td class="px-4 py-3">
-                      <button
-                        v-if="r.status === 'Breach'"
-                        @click="
-                          activeNav = 'cure';
-                          showToast('Cure task created for ' + r.covenant);
-                        "
-                        class="text-[10px] bg-red-600 text-white rounded-lg px-2.5 py-1 font-semibold hover:bg-red-700 transition-colors"
-                      >
-                        {{ __("Cure") }}
-                      </button>
+                      <div class="flex items-center gap-1.5">
+                        <button
+                          v-if="r.status === 'Breach'"
+                          @click="activeNav = 'cure'; showToast('Cure task created for ' + r.covenant)"
+                          class="text-[10px] bg-red-600 text-white rounded-lg px-2.5 py-1 font-semibold hover:bg-red-700 transition-colors"
+                        >{{ __("Cure") }}</button>
+                        <button
+                          @click.stop="openAttachDoc({ context: 'test', ref: r.covenant + ' — ' + r.facility })"
+                          class="flex items-center gap-1 text-[10px] border border-[#006699] text-[#006699] rounded-lg px-2 py-1 hover:bg-[#E6F4FA] transition-colors font-semibold"
+                          :title="__('Attach document')"
+                        ><FeatherIcon name="paperclip" class="h-3 w-3" />{{ r.attachCount || 0 }}</button>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -913,30 +915,24 @@
               </div>
               <div class="flex items-center gap-2">
                 <button
-                  @click="
-                    activeNav = 'cure';
-                    showToast('Cure task created');
-                  "
+                  @click="activeNav = 'cure'; showToast('Cure task created')"
                   class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] text-white px-3 py-1.5 text-xs font-semibold hover:bg-[#CC5200] transition-colors"
                 >
-                  <FeatherIcon name="check-square" class="h-3 w-3" />{{
-                    __("Create Cure Task")
-                  }}
+                  <FeatherIcon name="check-square" class="h-3 w-3" />{{ __("Create Cure Task") }}
                 </button>
                 <button
-                  @click="
-                    activeNav = 'waiver';
-                    showToast('Waiver request initiated');
-                  "
+                  @click="activeNav = 'waiver'; showToast('Waiver request initiated')"
                   class="flex items-center gap-1.5 rounded-lg border border-[#006699] text-[#006699] px-3 py-1.5 text-xs font-semibold hover:bg-[#E6F4FA] transition-colors"
                 >
-                  <FeatherIcon name="file-minus" class="h-3 w-3" />{{
-                    __("Request Waiver")
-                  }}
+                  <FeatherIcon name="file-minus" class="h-3 w-3" />{{ __("Request Waiver") }}
                 </button>
                 <button
+                  @click="openAttachDoc({ context: 'breach', ref: b.covenant + ' — ' + b.facility })"
                   class="flex items-center gap-1.5 rounded-lg border border-[#006699] text-[#006699] px-3 py-1.5 text-xs font-semibold hover:bg-[#E6F4FA] transition-colors"
                 >
+                  <FeatherIcon name="paperclip" class="h-3 w-3" />{{ __("Attach Doc") }}
+                </button>
+                <button class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-500 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors" @click="showToast('Notification sent')">
                   <FeatherIcon name="bell" class="h-3 w-3" />{{ __("Notify") }}
                 </button>
                 <span class="ml-auto text-[10px] text-gray-400">RM: {{ b.rm }}</span>
@@ -1326,6 +1322,138 @@
             </div>
           </div>
         </div>
+
+        <!-- BORROWER SUBMISSION -->
+        <div v-else-if="activeNav === 'borrower'" class="flex-1 flex flex-col overflow-hidden">
+          <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800">{{ __("Borrower Covenant Submission") }}</h3>
+            <span class="text-[11px] text-gray-400">{{ borrowerSubmissions.length }} submissions</span>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5 space-y-5">
+            <!-- Submission Form -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
+                  <FeatherIcon name="upload-cloud" class="h-4 w-4 text-[#FF6600]" />
+                </div>
+                <h4 class="text-sm font-bold text-gray-800">{{ __("Submit Financial Ratios") }}</h4>
+              </div>
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Borrower / Facility <span class="text-red-400">*</span></label>
+                  <select v-model="submissionForm.facility" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
+                    <option value="">Select facility…</option>
+                    <option>PT Maju Bersama — Working Capital Rp 5B</option>
+                    <option>CV Teknik Jaya — Investment Loan Rp 2.5B</option>
+                    <option>Budi Santoso — KPR Rp 800M</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant <span class="text-red-400">*</span></label>
+                  <select v-model="submissionForm.covenant" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
+                    <option value="">Select covenant…</option>
+                    <option v-for="c in covenantLibrary" :key="c.id" :value="c.name">{{ c.name }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Reporting Period <span class="text-red-400">*</span></label>
+                  <input v-model="submissionForm.period" type="text" placeholder="e.g. Q1 2026 / May 2026" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1">Actual Value <span class="text-red-400">*</span></label>
+                  <input v-model="submissionForm.value" type="text" placeholder="e.g. 1.35x / 2.8x / Rp 2.5B" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Supporting Notes</label>
+                <input v-model="submissionForm.notes" type="text" placeholder="e.g. Based on audited financial statements Q1 2026" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
+              </div>
+              <div class="mb-5">
+                <label class="block text-xs font-semibold text-gray-600 mb-2">Upload Evidence</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:border-[#FF8533] transition-colors cursor-pointer" @click="showToast('File picker opened')">
+                  <FeatherIcon name="upload" class="h-6 w-6 text-gray-300 mb-2" />
+                  <p class="text-xs text-gray-500 font-medium">Drop files here or <span class="text-[#FF6600]">browse</span></p>
+                  <p class="text-[10px] text-gray-400 mt-0.5">Financial statements, audit reports, insurance certificates</p>
+                </div>
+              </div>
+              <button @click="submitBorrowerForm" :disabled="!submissionForm.facility || !submissionForm.covenant || !submissionForm.value"
+                class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-40 transition-colors">
+                <FeatherIcon name="send" class="h-3.5 w-3.5" />{{ __("Submit for Review") }}
+              </button>
+            </div>
+
+            <!-- Submission History -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h4 class="text-xs font-bold text-gray-700">{{ __("Submission History") }}</h4>
+                <span class="text-[11px] text-gray-400">{{ borrowerSubmissions.length }} records</span>
+              </div>
+              <table class="w-full text-xs">
+                <thead><tr class="border-b border-gray-100 bg-gray-50">
+                  <th class="px-5 py-2.5 text-left font-semibold text-gray-500">Submitted</th>
+                  <th class="px-4 py-2.5 text-left font-semibold text-gray-500">Facility</th>
+                  <th class="px-4 py-2.5 text-left font-semibold text-gray-500">Covenant</th>
+                  <th class="px-4 py-2.5 text-left font-semibold text-gray-500">Period</th>
+                  <th class="px-4 py-2.5 text-left font-semibold text-gray-500">Value</th>
+                  <th class="px-4 py-2.5 text-left font-semibold text-gray-500">Status</th>
+                </tr></thead>
+                <tbody>
+                  <tr v-for="s in borrowerSubmissions" :key="s.id" class="border-b border-gray-50 hover:bg-gray-50">
+                    <td class="px-5 py-3 text-gray-500 font-mono text-[11px]">{{ s.submitted }}</td>
+                    <td class="px-4 py-3 text-gray-700 font-medium">{{ s.facility }}</td>
+                    <td class="px-4 py-3 text-gray-700">{{ s.covenant }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ s.period }}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-900">{{ s.value }}</td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="s.status==='Reviewed' ? 'bg-green-100 text-green-700' : s.status==='Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'">{{ s.status }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHANGE LOG -->
+        <div v-else-if="activeNav === 'changelog'" class="flex-1 flex flex-col overflow-hidden">
+          <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800">{{ __("Covenant Change Log") }}</h3>
+            <span class="text-[11px] text-gray-400">{{ covenantChangelog.length }} events</span>
+            <button @click="showToast('Exported')" class="ml-auto flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] border border-[#006699] rounded-lg px-3 py-1.5 transition-colors">
+              <FeatherIcon name="download" class="h-3.5 w-3.5" />Export CSV
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <table class="w-full text-xs">
+                <thead><tr class="border-b border-gray-100 bg-gray-50">
+                  <th class="px-5 py-3 text-left font-semibold text-gray-500">Timestamp</th>
+                  <th class="px-4 py-3 text-left font-semibold text-gray-500">User</th>
+                  <th class="px-4 py-3 text-left font-semibold text-gray-500">Action</th>
+                  <th class="px-4 py-3 text-left font-semibold text-gray-500">Covenant</th>
+                  <th class="px-4 py-3 text-left font-semibold text-gray-500">Detail</th>
+                </tr></thead>
+                <tbody>
+                  <tr v-for="log in covenantChangelog" :key="log.id" class="border-b border-gray-50 hover:bg-gray-50">
+                    <td class="px-5 py-3 text-gray-500 font-mono text-[11px]">{{ log.ts }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ log.user[0] }}</div>
+                        <span class="text-gray-700 font-medium">{{ log.user }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="log.action==='Added' ? 'bg-green-100 text-green-700' : log.action==='Edited' ? 'bg-[#FFF0E6] text-[#CC5200]' : log.action==='Duplicated' ? 'bg-[#E6F4FA] text-[#006699]' : 'bg-red-100 text-red-700'">{{ log.action }}</span>
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">{{ log.covenant }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ log.detail }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1491,6 +1619,36 @@
       </div>
     </div>
 
+    <!-- Attach Document Modal -->
+    <div v-if="showAttachModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showAttachModal = false">
+      <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
+            <FeatherIcon name="paperclip" class="h-5 w-5 text-[#006699]" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Attach Document</h3>
+            <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">{{ attachContext?.ref }}</p>
+          </div>
+        </div>
+        <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-[#FF8533] transition-colors cursor-pointer mb-4" @click="showToast('File picker opened')">
+          <FeatherIcon name="upload-cloud" class="h-7 w-7 text-gray-300 mb-2" />
+          <p class="text-xs text-gray-500 font-medium">Drop file here or <span class="text-[#FF6600]">browse</span></p>
+          <p class="text-[10px] text-gray-400 mt-0.5">PDF, Excel, JPG — max 20MB</p>
+        </div>
+        <div v-if="attachContext?.context === 'test'" class="mb-4">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Document Type</label>
+          <select class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
+            <option>Financial Statement</option><option>Audit Report</option><option>Management Account</option><option>Supporting Data</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button @click="showAttachModal = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Cancel</button>
+          <button @click="confirmAttach" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Attach</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast -->
     <transition name="fade">
       <div
@@ -1530,6 +1688,8 @@ const navItems = [
     badgeColor: "bg-amber-100 text-amber-700",
   },
   { id: "waiver", label: "Waiver Management", icon: "file-minus" },
+  { id: "borrower", label: "Borrower Submission", icon: "upload-cloud" },
+  { id: "changelog", label: "Change Log", icon: "clock" },
   { id: "sensitivity", label: "Sensitivity Analysis", icon: "activity" },
   { id: "reports", label: "Reports", icon: "bar-chart" },
 ];
@@ -2316,6 +2476,68 @@ function showToast(msg) {
   }, 2500);
 }
 
+// ── Covenant Change Log ──
+const covenantChangelog = ref([
+  { id: 1, ts: '2026-05-24 09:00', user: 'Dewi Kusuma', action: 'Added', covenant: 'DSCR Minimum 1.25x', detail: 'New covenant added to library' },
+  { id: 2, ts: '2026-05-23 14:30', user: 'Ahmad Fauzi', action: 'Edited', covenant: 'DER Maximum 3.0x', detail: 'Threshold changed from 3.5x to 3.0x' },
+  { id: 3, ts: '2026-05-22 11:00', user: 'Sari Indrawati', action: 'Duplicated', covenant: 'Current Ratio 1.0x', detail: 'Duplicated as "Current Ratio 1.2x"' },
+  { id: 4, ts: '2026-05-20 09:45', user: 'Dewi Kusuma', action: 'Edited', covenant: 'Insurance Renewal', detail: 'Frequency changed to Semi-Annual' },
+  { id: 5, ts: '2026-05-18 16:00', user: 'Bimo Prakoso', action: 'Added', covenant: 'Financial Statement', detail: 'New reporting covenant added' },
+])
+let changelogIdSeq = 6
+
+function addChangelogEntry(action, covenantName, detail) {
+  const now = new Date()
+  const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+  covenantChangelog.value.unshift({ id: changelogIdSeq++, ts, user: 'Current User', action, covenant: covenantName, detail })
+}
+
+// ── Attach Document ──
+const showAttachModal = ref(false)
+const attachContext = ref(null)
+
+function openAttachDoc(ctx) {
+  attachContext.value = ctx
+  showAttachModal.value = true
+}
+
+function confirmAttach() {
+  // increment attach count on test results
+  if (attachContext.value?.context === 'test') {
+    const row = testResults.value.find(r => (r.covenant + ' — ' + r.facility) === attachContext.value.ref)
+    if (row) row.attachCount = (row.attachCount || 0) + 1
+  }
+  showAttachModal.value = false
+  showToast('Document attached successfully')
+}
+
+// ── Borrower Submission ──
+const submissionForm = ref({ facility: '', covenant: '', period: '', value: '', notes: '' })
+const borrowerSubmissions = ref([
+  { id: 1, submitted: '2026-05-20 10:00', facility: 'PT Maju Bersama', covenant: 'DSCR Minimum 1.25x', period: 'Q1 2026', value: '1.08x', status: 'Reviewed' },
+  { id: 2, submitted: '2026-05-18 14:30', facility: 'CV Teknik Jaya', covenant: 'DER Maximum 3.0x', period: 'Q1 2026', value: '3.42x', status: 'Reviewed' },
+  { id: 3, submitted: '2026-05-15 09:00', facility: 'PT Maju Bersama', covenant: 'Financial Statement', period: 'Q1 2026', value: 'Submitted', status: 'Pending' },
+  { id: 4, submitted: '2026-05-10 11:00', facility: 'Budi Santoso', covenant: 'Insurance Renewal', period: 'May 2026', value: 'Valid', status: 'Reviewed' },
+])
+let submissionIdSeq = 5
+
+function submitBorrowerForm() {
+  if (!submissionForm.value.facility || !submissionForm.value.covenant || !submissionForm.value.value) return
+  const now = new Date()
+  const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+  borrowerSubmissions.value.unshift({
+    id: submissionIdSeq++,
+    submitted: ts,
+    facility: submissionForm.value.facility.split('—')[0].trim(),
+    covenant: submissionForm.value.covenant,
+    period: submissionForm.value.period || '—',
+    value: submissionForm.value.value,
+    status: 'Pending',
+  })
+  submissionForm.value = { facility: '', covenant: '', period: '', value: '', notes: '' }
+  showToast('Submission received — under review')
+}
+
 // ── Add / Edit Covenant ──
 const showAddCovForm = ref(false);
 const editingCov = ref(null);
@@ -2361,6 +2583,7 @@ function submitAddCovenant() {
         icon,
       };
     }
+    addChangelogEntry('Edited', covForm.value.name, `Type: ${covForm.value.type}, Metric: ${covForm.value.metric || '—'}`)
     showToast('Covenant updated');
   } else {
     covenantLibrary.value.unshift({
@@ -2374,6 +2597,7 @@ function submitAddCovenant() {
       icon,
       template: false,
     });
+    addChangelogEntry('Added', covForm.value.name, `Type: ${covForm.value.type}, Frequency: ${covForm.value.frequency}`)
     showToast('Covenant added to library');
   }
   showAddCovForm.value = false;
@@ -2386,6 +2610,7 @@ function duplicateCovenant(cov) {
     name: cov.name + ' (Copy)',
     template: false,
   });
+  addChangelogEntry('Duplicated', cov.name, `Created copy: "${cov.name} (Copy)"`)
   showToast('Covenant duplicated');
 }
 
