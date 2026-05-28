@@ -972,6 +972,7 @@
         <Button :label="__('Save Template')" variant="solid" @click="saveTemplate" />
       </div>
     </div>
+  </div>
   <!-- WhatsApp Connect Dialog -->
   <Dialog v-model="showWhatsAppConnectDialog" :options="{ title: __('Connect WhatsApp Device'), size: 'md' }">
     <template #body-content>

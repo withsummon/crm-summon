@@ -141,7 +141,6 @@
           </table>
         </div>
       </div>
-    </div>
 
       <!-- ───── TAB: Meetings ───── -->
       <div v-if="activeTab === 'meetings'" class="space-y-3">
