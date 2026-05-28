@@ -38,6 +38,30 @@
             </template>
           </Button>
 
+          <!-- Run History button -->
+          <Button
+            v-if="!isNew"
+            :label="__('Run History')"
+            variant="outline"
+            @click="openRunHistory"
+          >
+            <template #prefix>
+              <LucideActivity class="h-4 w-4" />
+            </template>
+          </Button>
+
+          <!-- Version History button -->
+          <Button
+            v-if="!isNew"
+            :label="__('Versions')"
+            variant="outline"
+            @click="toggleVersionPanel"
+          >
+            <template #prefix>
+              <LucideHistory class="h-4 w-4" />
+            </template>
+          </Button>
+
           <!-- Validate button -->
           <Button
             :label="__('Validate')"
@@ -326,6 +350,104 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- Version History Slide-over Panel -->
+    <div
+      v-if="showVersionPanel"
+      class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex justify-end"
+      @click.self="showVersionPanel = false"
+    >
+      <div class="bg-white w-full max-w-md h-full shadow-2xl flex flex-col animate-slide-in-right">
+        <!-- Panel Header -->
+        <div class="flex items-center justify-between p-5 border-b border-crm-border">
+          <div class="flex items-center gap-2.5">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-sm">
+              <LucideHistory class="h-4 w-4" />
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-gray-800">{{ __('Version History') }}</h3>
+              <p class="text-[10px] text-crm-muted mt-0.5">{{ __('View and manage workflow versions') }}</p>
+            </div>
+          </div>
+          <button
+            class="p-1.5 rounded-lg text-crm-muted hover:text-crm-text hover:bg-surface-gray-1 transition-colors"
+            @click="showVersionPanel = false"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Current Version Highlight -->
+        <div class="px-5 py-4 bg-purple-50/50 border-b border-crm-border">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-crm-muted font-medium">{{ __('Current Version') }}</span>
+            <span class="text-sm font-black text-purple-700 bg-purple-100 px-3 py-0.5 rounded-full">v{{ flow?.data?.current_version || 1 }}</span>
+          </div>
+          <div class="flex items-center justify-between mt-1.5">
+            <span class="text-xs text-crm-muted font-medium">{{ __('Status') }}</span>
+            <span
+              class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              :class="statusClass(flow?.data?.status || 'Draft')"
+            >
+              {{ flow?.data?.status || 'Draft' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Version List -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div v-if="isLoadingVersions" class="space-y-3">
+            <div v-for="i in 4" :key="i" class="h-20 animate-pulse rounded-xl bg-surface-gray-1 border border-crm-border/40" />
+          </div>
+
+          <div v-else-if="versionList.length">
+            <div
+              v-for="ver in versionList"
+              :key="ver.name"
+              class="group rounded-xl border border-crm-border bg-white p-4 transition-all hover:shadow-sm hover:border-purple-200"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-gray-800 font-mono">v{{ ver.version }}</span>
+                    <span
+                      class="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                      :class="ver.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                    >
+                      {{ __(ver.status) }}
+                    </span>
+                  </div>
+                  <p v-if="ver.change_note" class="mt-1.5 text-[11px] text-crm-muted leading-relaxed line-clamp-2">
+                    {{ ver.change_note }}
+                  </p>
+                  <div class="mt-2 flex items-center gap-3 text-[10px] text-crm-muted">
+                    <span class="flex items-center gap-1">
+                      <LucideUser class="h-3 w-3" />
+                      {{ ver.published_by || __('System') }}
+                    </span>
+                    <span>{{ formatDate(ver.published_at) }}</span>
+                  </div>
+                </div>
+
+                <button
+                  v-if="ver.version !== (flow?.data?.current_version || 1)"
+                  class="shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-all opacity-0 group-hover:opacity-100"
+                  @click="handleRollback(ver.version)"
+                >
+                  {{ __('Rollback') }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="text-center py-16">
+            <LucideHistory class="mx-auto h-10 w-10 text-gray-200" />
+            <h4 class="mt-3 text-xs font-bold text-gray-600">{{ __('No versions yet') }}</h4>
+            <p class="mt-1 text-[10px] text-crm-muted max-w-xs mx-auto">{{ __('Publish this workflow to create the first version snapshot.') }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -353,6 +475,9 @@ import LucideFile from '~icons/lucide/file'
 import LucideUserCheck from '~icons/lucide/user-check'
 import LucideShieldCheck from '~icons/lucide/shield-check'
 import LucideLayers from '~icons/lucide/layers'
+import LucideHistory from '~icons/lucide/history'
+import LucideActivity from '~icons/lucide/activity'
+import LucideUser from '~icons/lucide/user'
 import LucideFileText from '~icons/lucide/file-text'
 
 const router = useRouter()
@@ -378,6 +503,9 @@ const validationResults = ref(null)
 
 const showPublishModal = ref(false)
 const changeNote = ref('')
+const showVersionPanel = ref(false)
+const versionList = ref([])
+const isLoadingVersions = ref(false)
 
 // Flow Settings state
 const flowTitle = ref('Untitled Flow')
@@ -398,7 +526,7 @@ const subtitle = computed(() => {
   return flowDescription.value || ''
 })
 
-const { flow, saveFlowDraft, publishFlow: doPublish, isSaving, isPublishing } = useWorkflow(isNew ? null : flowId)
+const { flow, saveFlowDraft, publishFlow: doPublish, loadVersions, rollbackFlow, isSaving, isPublishing } = useWorkflow(isNew ? null : flowId)
 
 // Load CRM Products list for settings
 const productList = createListResource({
@@ -511,6 +639,50 @@ onUnmounted(() => {
 
 function goBack() {
   router.push('/lending-risk/workflow-engine')
+}
+
+function openRunHistory() {
+  if (!isNew && flowId) {
+    router.push(`/lending-risk/workflow-engine/${flowId}/monitor`)
+  }
+}
+
+async function toggleVersionPanel() {
+  showVersionPanel.value = !showVersionPanel.value
+  if (showVersionPanel.value) {
+    isLoadingVersions.value = true
+    try {
+      const result = await loadVersions()
+      versionList.value = result || []
+    } catch (e) {
+      versionList.value = []
+    } finally {
+      isLoadingVersions.value = false
+    }
+  }
+}
+
+async function handleRollback(version) {
+  if (!confirm(__('Are you sure you want to rollback to version v{0}? This will replace the current draft with that version.', [version]))) {
+    return
+  }
+  try {
+    await rollbackFlow(flowId, version)
+    showVersionPanel.value = false
+    toast.success(__('Rolled back to version v{0}', [version]))
+  } catch (e) {
+    toast.error(e.message || __('Failed to rollback'))
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const dt = new Date(dateStr)
+    return dt.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return dateStr
+  }
 }
 
 function handleFlowChange(change) {

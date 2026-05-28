@@ -18,7 +18,7 @@
           </div>
 
           <!-- PWA Standalone Mode: Mobile Features Only -->
-          <template v-if="isStandalone">
+          <template v-if="isStandalone || isMobileRoute">
             <div class="flex-1 overflow-y-auto">
               <div class="px-3 pb-2">
                 <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-gray-5 px-1">
@@ -182,8 +182,11 @@ import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import { summonModuleGroups } from '@/data/summonModules'
 import { computed, h, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { mobileSidebarOpened as sidebarOpened } from '@/composables/settings'
 
+const route = useRoute()
+const isMobileRoute = computed(() => route.path.startsWith('/mobile'))
 const showPwaInstallModal = ref(false)
 const isStandalone = ref(false)
 const { getPinnedViews, getPublicViews } = viewsStore()

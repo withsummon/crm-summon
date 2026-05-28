@@ -42,7 +42,7 @@ function chipClass(chip) {
     return 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
   }
   if (chip.warn) {
-    return 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
+    return 'border-[#FF6600]/40 bg-[#FF6600]/10 text-[#FF6600] hover:bg-[#FF6600]/15'
   }
   return base
 }

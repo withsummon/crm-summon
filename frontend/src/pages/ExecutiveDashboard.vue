@@ -894,8 +894,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
-  disbChart?.destroy()
-  nplChart?.destroy()
+  try { disbChart?.destroy() } catch (_) { disbChart = null }
+  try { nplChart?.destroy() } catch (_) { nplChart = null }
 })
 </script>
 

@@ -118,7 +118,8 @@ export function useWorkflow(flowId = null) {
     : null
 
   function loadVersions() {
-    if (versions) versions.submit()
+    if (versions) return versions.submit()
+    return Promise.resolve([])
   }
 
   // ─── Rollback ───────────────────────────────────────────

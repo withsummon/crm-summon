@@ -14,11 +14,18 @@
         </div>
       </template>
       <template #right-header>
-        <Button :label="__('New Flow')" variant="solid" @click="createFlow">
-          <template #prefix>
-            <LucidePlus class="h-4 w-4" />
-          </template>
-        </Button>
+        <div class="flex items-center gap-2">
+          <Button :label="__('Marketplace')" variant="outline" @click="openMarketplace">
+            <template #prefix>
+              <LucideStore class="h-4 w-4" />
+            </template>
+          </Button>
+          <Button :label="__('New Flow')" variant="solid" @click="createFlow">
+            <template #prefix>
+              <LucidePlus class="h-4 w-4" />
+            </template>
+          </Button>
+        </div>
       </template>
     </LayoutHeader>
 
@@ -143,6 +150,15 @@
                 @click="openFlow(flow.name)"
               >
                 <LucideEdit class="h-3.5 w-3.5" />
+              </button>
+
+              <!-- Run History -->
+              <button
+                :title="__('Run History')"
+                class="p-1.5 rounded-lg text-crm-muted hover:text-teal-600 hover:bg-teal-50 transition-all border border-transparent hover:border-teal-200"
+                @click="openRunHistory(flow.name)"
+              >
+                <LucideHistory class="h-3.5 w-3.5" />
               </button>
 
               <!-- Clone Flow -->
@@ -356,6 +372,8 @@ import LucidePower from '~icons/lucide/power'
 import LucideFile from '~icons/lucide/file'
 import LucideUserCheck from '~icons/lucide/user-check'
 import LucideShieldCheck from '~icons/lucide/shield-check'
+import LucideHistory from '~icons/lucide/history'
+import LucideStore from '~icons/lucide/store'
 
 const router = useRouter()
 const { flowList, cloneFlow, deactivateFlow, saveFlowDraft, isSaving } = useWorkflow()
@@ -444,6 +462,14 @@ const productList = createListResource({
 
 function openFlow(flowId) {
   router.push(`workflow-engine/${flowId}`)
+}
+
+function openMarketplace() {
+  router.push('workflow-engine/marketplace')
+}
+
+function openRunHistory(flowId) {
+  router.push(`workflow-engine/${flowId}/monitor`)
 }
 
 // Clone flow action

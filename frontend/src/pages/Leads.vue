@@ -1,5 +1,9 @@
 <template>
-  <LayoutHeader>
+  <div v-if="route.params.viewType === 'lead-ops'" class="h-full">
+    <LeadOps />
+  </div>
+  <div v-else class="flex h-full flex-col">
+    <LayoutHeader>
     <template #left-header>
       <ViewBreadcrumbs v-model="viewControls" routeName="Leads" />
     </template>
@@ -88,6 +92,16 @@
       >
         <template #prefix>
           <FeatherIcon name="inbox" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
+        v-if="!isMobile"
+        variant="outline"
+        :label="__('Lead Ops')"
+        @click="router.push('/crm-core/leads/view/lead-ops')"
+      >
+        <template #prefix>
+          <FeatherIcon name="cpu" class="h-4 w-4" />
         </template>
       </Button>
       
@@ -654,6 +668,7 @@
       <Button variant="solid" :disabled="!mergeDialog.primary" @click="submitMerge().then(() => (mergeDialog.open = false))">{{ __('Merge') }}</Button>
     </template>
   </Dialog>
+  </div>
 </template>
 
 <script setup>
@@ -678,6 +693,7 @@ import LeadModal from '@/components/Modals/LeadModal.vue'
 import LeadGenDialog from '@/components/LeadGenDialog.vue'
 import ScrapingAnimation from '@/components/ScrapingAnimation.vue'
 import ViewControls from '@/components/ViewControls.vue'
+import LeadOps from '@/pages/LeadOps.vue'
 import { backgroundStore } from '@/stores/background'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { getMeta } from '@/stores/meta'
@@ -783,6 +799,10 @@ const viewModeActions = computed(() => [
   {
     label: __('Timeline'),
     onClick: () => router.push({ name: 'Leads', params: { viewType: 'timeline' } }),
+  },
+  {
+    label: __('Lead Ops'),
+    onClick: () => router.push('/crm-core/leads/view/lead-ops'),
   },
 ])
 

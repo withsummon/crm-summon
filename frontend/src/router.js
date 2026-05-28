@@ -89,7 +89,7 @@ const routes = [
       {
         path: 'lead-ops',
         name: 'Lead Ops',
-        component: () => import('@/pages/LeadOps.vue'),
+        redirect: '/crm-core/leads/view/lead-ops',
       },
       {
         path: 'leads/:leadId',
@@ -223,6 +223,12 @@ const routes = [
         name: 'Workflow List',
         component: () =>
           import('@/modules/workflow-engine/pages/WorkflowList.vue'),
+      },
+      {
+        path: 'workflow-engine/marketplace',
+        name: 'Workflow Marketplace',
+        component: () =>
+          import('@/modules/workflow-engine/pages/WorkflowMarketplace.vue'),
       },
       {
         path: 'workflow-engine/new',
@@ -434,9 +440,10 @@ const routes = [
         }
         if (f.routeName === 'Customer 360 Mobile') {
           return {
-            path: 'customer-360',
+            path: 'customer-360/:customer?',
             name: f.routeName,
-            redirect: { name: 'Customer 360' },
+            component: () => import('@/pages/Customer360.vue'),
+            props: true,
           }
         }
         if (f.routeName === 'Mobile Login & Biometric') {
@@ -740,7 +747,7 @@ router.beforeEach(async (to, from, next) => {
     await views.promise
 
     const viewType = to.params?.viewType ?? ''
-    const standardViewTypes = ['list', 'kanban', 'group_by']
+    const standardViewTypes = ['list', 'kanban', 'group_by', 'calendar', 'timeline', 'lead-ops']
 
     if (!viewType) {
       const doctypeMap = {

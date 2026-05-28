@@ -605,28 +605,111 @@
 
         <!-- SLA Node Settings -->
         <div v-else-if="node.data?.nodeType === 'SLANode'" class="space-y-3">
+          <!-- SLA Visual Summary -->
+          <div class="bg-rose-50/60 border border-rose-200/60 rounded-xl p-3 space-y-1.5">
+            <div class="flex items-center gap-2 text-rose-700">
+              <LucideClock class="h-4 w-4" />
+              <span class="text-[10px] font-bold uppercase tracking-wider">{{ __('SLA Timer Configuration') }}</span>
+            </div>
+            <p class="text-[10px] text-rose-600/80 leading-relaxed">
+              {{ __('Configure deadline, warning thresholds, reminder intervals, and escalation rules for this SLA timer node.') }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-crm-muted uppercase tracking-wider mb-1">
+                {{ __('Deadline (Hours)') }}
+              </label>
+              <input
+                v-model.number="localConfig.deadlineHours"
+                type="number"
+                min="1"
+                placeholder="24"
+                class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text"
+                @input="updateConfig"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-crm-muted uppercase tracking-wider mb-1">
+                {{ __('Warning (Hours)') }}
+              </label>
+              <input
+                v-model.number="localConfig.warningHours"
+                type="number"
+                min="1"
+                placeholder="4"
+                class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text"
+                @input="updateConfig"
+              />
+            </div>
+          </div>
+
           <div>
             <label class="block text-[10px] font-bold text-crm-muted uppercase tracking-wider mb-1">
-              {{ __('Deadline Duration (Hours)') }}
+              {{ __('Reminder Interval (Hours)') }}
             </label>
             <input
-              v-model.number="localConfig.deadlineHours"
+              v-model.number="localConfig.reminderIntervalHours"
               type="number"
+              min="1"
+              placeholder="2"
               class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text"
               @input="updateConfig"
             />
+            <p class="text-[10px] text-crm-muted mt-1">{{ __('Sends periodic reminders at this interval before deadline') }}</p>
           </div>
+
+          <div class="border-t border-crm-border pt-3">
+            <label class="block text-[10px] font-bold text-crm-muted uppercase tracking-wider mb-1">
+              {{ __('Escalation Action') }}
+            </label>
+            <select
+              v-model="localConfig.escalationAction"
+              class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text bg-white"
+              @change="updateConfig"
+            >
+              <option value="notify">{{ __('Notify Only') }}</option>
+              <option value="reassign">{{ __('Reassign to Target') }}</option>
+              <option value="escalate">{{ __('Escalate to Supervisor') }}</option>
+            </select>
+          </div>
+
           <div>
             <label class="block text-[10px] font-bold text-crm-muted uppercase tracking-wider mb-1">
-              {{ __('Warning Threshold (Hours)') }}
+              {{ __('Escalation Target') }}
             </label>
-            <input
-              v-model.number="localConfig.warningHours"
-              type="number"
-              class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text"
-              @input="updateConfig"
-            />
+            <select
+              v-model="localConfig.escalationTarget"
+              class="w-full px-3 py-2 text-xs rounded-lg border border-crm-border focus:ring-1 focus:ring-purple-500 focus:border-purple-500 text-crm-text bg-white"
+              @change="updateConfig"
+            >
+              <option value="">{{ __('Select Target Role...') }}</option>
+              <option
+                v-for="r in roleList.data"
+                :key="r.name"
+                :value="r.name"
+              >
+                {{ r.name }}
+              </option>
+            </select>
           </div>
+
+          <div class="flex items-center gap-2 pt-2 border-t border-crm-border">
+            <input
+              id="sla-business-hours"
+              v-model="localConfig.businessHoursOnly"
+              type="checkbox"
+              class="rounded border-crm-border text-purple-600 focus:ring-purple-500 h-4 w-4"
+              @change="updateConfig"
+            />
+            <label for="sla-business-hours" class="text-xs font-semibold text-gray-700 select-none cursor-pointer">
+              {{ __('Count Business Hours Only') }}
+            </label>
+          </div>
+          <p v-if="localConfig.businessHoursOnly" class="text-[10px] text-crm-muted -mt-1 pl-6">
+            {{ __('Weekends and holidays will be excluded from the SLA timer calculation.') }}
+          </p>
         </div>
 
         <!-- Notification Node Settings -->

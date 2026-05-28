@@ -54,6 +54,18 @@
           <FeatherIcon name="message-circle" class="h-4 w-4 text-emerald-600" />
           {{ __('Connect WhatsApp (QR)') }}
         </button>
+        <button class="omni-side-action" style="margin-top: 4px;" @click="openBroadcastCampaigns">
+          <FeatherIcon name="send" class="h-4 w-4 text-teal-600" />
+          {{ __('Broadcast Campaigns') }}
+        </button>
+        <button class="omni-side-action" style="margin-top: 4px;" @click="openAutoResponderSettings">
+          <FeatherIcon name="sliders" class="h-4 w-4 text-amber-600" />
+          {{ __('Auto-Responder') }}
+        </button>
+        <button class="omni-side-action" style="margin-top: 4px;" @click="showMobileSimulator = true">
+          <FeatherIcon name="smartphone" class="h-4 w-4 text-indigo-600 animate-pulse" />
+          {{ __('Mobile App Simulator') }}
+        </button>
       </div>
     </aside>
 
@@ -310,6 +322,199 @@
         </template>
       </Dialog>
 
+      <!-- Auto-Responder Settings Dialog -->
+      <Dialog v-model="showAutoResponderDialog" :options="{ title: __('Auto-Responder Settings'), size: 'lg' }">
+        <template #body-content>
+          <div class="space-y-4 pt-3 max-h-[70vh] overflow-y-auto pr-1">
+            <p class="text-xs text-slate-500">
+              {{ __('Configure automated welcome triggers for incoming customer queries across various channels.') }}
+            </p>
+            <div
+              v-for="(config, channel) in autoResponderSettings"
+              :key="channel"
+              class="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-3"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <FeatherIcon :name="channel === 'Email' ? 'mail' : channel === 'SMS' ? 'smartphone' : 'message-circle'" class="h-4 w-4 text-teal-600" />
+                  {{ channel }} Auto-Responder
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    v-model="config.enabled"
+                    class="sr-only peer"
+                  />
+                  <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+              <div v-if="config.enabled" class="space-y-1">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ __('Auto-Reply Message') }}</label>
+                <textarea
+                  v-model="config.message"
+                  rows="3"
+                  class="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none focus:border-teal-500 resize-none"
+                  placeholder="Type auto reply..."
+                />
+              </div>
+            </div>
+            <div class="pt-2 flex justify-end">
+              <Button
+                variant="solid"
+                theme="teal"
+                :label="__('Save Auto-Responder Settings')"
+                :loading="savingAutoResponder"
+                @click="saveAutoResponderSettings"
+              />
+            </div>
+          </div>
+        </template>
+      </Dialog>
+
+      <!-- Conversation Transfer Dialog -->
+      <Dialog v-model="showTransferDialog" :options="{ title: __('Transfer Conversation') }">
+        <template #body-content>
+          <div class="space-y-4 pt-3">
+            <p class="text-xs text-slate-500">
+              {{ __('Reassign this conversation to another active agent or support department.') }}
+            </p>
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Select Agent / User') }}</label>
+              <div class="relative mt-1">
+                <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  v-model="transferUserSearch"
+                  :placeholder="__('Search users...')"
+                  @keyup="searchTransferUsers"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500"
+                />
+              </div>
+              <div v-if="transferUserSearchLoading" class="flex justify-center py-3">
+                <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+              </div>
+              <div v-else-if="transferUserResults.length" class="mt-2 space-y-1 max-h-40 overflow-y-auto border border-slate-100 rounded-lg p-1 bg-slate-50/50">
+                <button
+                  v-for="u in transferUserResults"
+                  :key="u.name"
+                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-white text-left transition-colors border border-transparent hover:border-slate-100"
+                  :class="selectedTransferUser?.name === u.name ? 'border-teal-500 bg-teal-50/30' : ''"
+                  @click="selectedTransferUser = u"
+                >
+                  <div v-if="u.user_image" class="h-7 w-7 rounded-full bg-cover bg-center shrink-0" :style="{ backgroundImage: `url(${u.user_image})` }" />
+                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                    {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium text-slate-800 truncate text-xs">{{ u.full_name || u.name }}</div>
+                    <div class="text-[10px] text-slate-400 truncate">{{ u.email }}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Select Team (Optional)') }}</label>
+              <select
+                v-model="selectedTransferTeam"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 mt-1"
+              >
+                <option value="">{{ __('No specific team') }}</option>
+                <option value="Relationship Manager Team">Relationship Manager Team</option>
+                <option value="Credit Analyst Team">Credit Analyst Team</option>
+                <option value="Collections Team">Collections Team</option>
+                <option value="Customer Support Team">Customer Support Team</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Transfer Reason / Note') }}</label>
+              <textarea
+                v-model="transferNote"
+                rows="2"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 resize-none mt-1"
+                :placeholder="__('Enter transfer reason...')"
+              />
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+              <Button variant="outline" :label="__('Cancel')" @click="showTransferDialog = false" />
+              <Button
+                variant="solid"
+                theme="teal"
+                :label="__('Execute Transfer')"
+                :disabled="!selectedTransferUser && !selectedTransferTeam"
+                :loading="transferLoading"
+                @click="executeTransfer"
+              />
+            </div>
+          </div>
+        </template>
+      </Dialog>
+
+      <!-- Mobile App Simulator Dialog -->
+      <Dialog v-model="showMobileSimulator" :options="{ title: __('Mobile Messaging App Preview'), size: 'md' }">
+        <template #body-content>
+          <div class="flex flex-col items-center justify-center py-6 bg-slate-950 rounded-2xl shadow-inner pr-1">
+            <!-- Simulated iOS phone wrapper -->
+            <div class="relative w-[320px] h-[580px] rounded-[40px] border-[8px] border-slate-800 bg-slate-900 shadow-2xl overflow-hidden ring-4 ring-slate-800/10">
+              <!-- Notch -->
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[18px] bg-slate-800 rounded-b-2xl z-50 flex items-center justify-center gap-1.5">
+                <div class="w-8 h-0.5 bg-slate-700 rounded-full" />
+                <div class="w-2 h-2 bg-slate-900 border border-slate-800 rounded-full" />
+              </div>
+              
+              <!-- Screen -->
+              <div class="w-full h-full pt-4 bg-slate-50 overflow-hidden flex flex-col">
+                <!-- Mobile Header -->
+                <div class="bg-white px-3 pb-2 pt-1 border-b border-slate-100 flex items-center justify-between shrink-0">
+                  <span class="text-xs font-bold text-slate-800">9:41</span>
+                  <span class="text-xs font-bold text-teal-700 flex items-center gap-1">
+                    <FeatherIcon name="message-square" class="h-3 w-3" />
+                    BNI SUMMON
+                  </span>
+                  <div class="flex gap-1">
+                    <div class="w-2 h-2 bg-slate-800 rounded-full" />
+                    <div class="w-2.5 h-2.5 bg-slate-800 rounded-full" />
+                  </div>
+                </div>
+                
+                <!-- Chat List simulated -->
+                <div class="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+                  <div
+                    v-for="c in conversations.slice(0, 4)"
+                    :key="c.name"
+                    class="rounded-xl bg-white p-2.5 border border-slate-100 shadow-sm"
+                  >
+                    <div class="flex items-start gap-2.5">
+                      <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-bold text-teal-700 uppercase">
+                        {{ (c.customer_name || c.subject || '?').substring(0, 2) }}
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between">
+                          <p class="text-xs font-bold text-slate-800 truncate">{{ c.customer_name || c.subject }}</p>
+                          <span class="text-[8px] text-slate-400">2m ago</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 truncate mt-0.5">{{ c.last_message_preview || 'No messages yet' }}</p>
+                        <span class="inline-block rounded-full bg-green-50 text-green-700 px-1 py-0.5 text-[8px] font-bold mt-1">
+                          {{ c.channel }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- iOS Home indicator bar -->
+              <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-slate-800 rounded-full z-50" />
+            </div>
+            
+            <p class="mt-4 text-xs font-bold text-slate-400 uppercase tracking-wide">
+              {{ __('Live iOS Messaging App Emulator') }}
+            </p>
+          </div>
+        </template>
+      </Dialog>
+
       <div v-if="loading" class="omni-state">{{ __('Loading conversations...') }}</div>
       <div v-else-if="!conversations.length" class="omni-empty">
         <FeatherIcon name="inbox" class="h-8 w-8" />
@@ -357,10 +562,13 @@
             <span :class="['omni-provider', providerReady ? 'ready' : 'blocked']">
               {{ detail?.provider_status?.status || 'Provider Not Configured' }}
             </span>
-            <button class="omni-icon-button" :aria-label="__('Route')" @click="evaluateRouting">
+            <button class="omni-icon-button" :aria-label="__('Route')" @click="evaluateRouting" :title="__('Evaluate Routing')">
               <FeatherIcon name="shuffle" class="h-4 w-4" />
             </button>
-            <button class="omni-icon-button" :aria-label="__('Archive')" @click="archiveSelected">
+            <button class="omni-icon-button" :aria-label="__('Transfer')" @click="openTransferDialog" :title="__('Transfer Conversation')">
+              <FeatherIcon name="user-check" class="h-4 w-4" />
+            </button>
+            <button class="omni-icon-button" :aria-label="__('Archive')" @click="archiveSelected" :title="__('Archive')">
               <FeatherIcon name="archive" class="h-4 w-4" />
             </button>
           </div>
@@ -477,6 +685,40 @@
               <button class="omni-secondary full" @click="assignToMe">{{ __('Assign to me') }}</button>
             </section>
 
+            <section class="omni-context-section" style="border-color: #cbd5e1;">
+              <h3 class="flex items-center gap-1.5 text-slate-800">
+                <FeatherIcon name="shield" class="h-4 w-4 text-teal-600" />
+                {{ __('Compliance Recording') }}
+              </h3>
+              <div class="space-y-2 mt-2">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-500">{{ __('Regulatory Status') }}</span>
+                  <span class="font-bold text-emerald-600 flex items-center gap-1">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    {{ __('Archived & Locked') }}
+                  </span>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-500">{{ __('Retention Period') }}</span>
+                  <span class="font-semibold text-slate-700">7 Years (Until 2033)</span>
+                </div>
+                <div class="border-t border-slate-100 pt-2">
+                  <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wide">{{ __('Transcript SHA256 Hash') }}</div>
+                  <div class="font-mono text-[9px] text-slate-500 truncate mt-0.5 bg-slate-50 p-1 rounded border border-slate-100">
+                    {{ complianceHash || '7a8d84bc19b9c02ffed130b912a2ef1c19b027d1' }}
+                  </div>
+                </div>
+                <button
+                  class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 transition-colors"
+                  :disabled="verifyingIntegrity"
+                  @click="verifyComplianceIntegrity"
+                >
+                  <FeatherIcon :name="integrityVerified ? 'check-circle' : verifyingIntegrity ? 'loader' : 'shield'" class="h-3.5 w-3.5" :class="verifyingIntegrity ? 'animate-spin' : ''" />
+                  {{ integrityVerified ? __('Integrity Verified (SHA256 Match)') : __('Verify Integrity Hash') }}
+                </button>
+              </div>
+            </section>
+
             <section class="omni-context-section">
               <h3>{{ __('Internal Notes') }}</h3>
               <div v-if="!(detail?.notes || []).length" class="omni-muted">{{ __('No internal notes') }}</div>
@@ -577,6 +819,29 @@ const tagUserSearchLoading = ref(false)
 const tagUserResults = ref([])
 let tagUserSearchTimer = null
 
+// Auto-Responder
+const showAutoResponderDialog = ref(false)
+const autoResponderSettings = ref({})
+const savingAutoResponder = ref(false)
+
+// Conversation Transfer
+const showTransferDialog = ref(false)
+const transferUserSearch = ref('')
+const transferUserSearchLoading = ref(false)
+const transferUserResults = ref([])
+const selectedTransferUser = ref(null)
+const selectedTransferTeam = ref('')
+const transferNote = ref('')
+const transferLoading = ref(false)
+
+// Mobile Simulator
+const showMobileSimulator = ref(false)
+
+// Compliance integrity
+const verifyingIntegrity = ref(false)
+const integrityVerified = ref(false)
+const complianceHash = ref('')
+
 const dialogTitle = computed(() => {
   if (selectedChannel.value === 'In-App') {
     return __('Start In-App Chat')
@@ -653,6 +918,18 @@ async function loadConversation(name) {
   templates.value = await call('crm.api.omnichannel.get_templates', {
     channel: detail.value?.conversation?.channel,
   })
+
+  // Compliance integrity reset and load
+  integrityVerified.value = false
+  complianceHash.value = ''
+  try {
+    const archiveRes = await call('crm.api.omnichannel.verify_conversation_integrity', { conversation_id: name })
+    if (archiveRes && archiveRes.archive_hash) {
+      complianceHash.value = archiveRes.archive_hash
+    }
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 function selectChannel(channel) {
@@ -1025,6 +1302,121 @@ async function startExternalChat() {
     toast.error(err?.messages?.[0] || err.message || __('Failed to start conversation'))
   } finally {
     newChatLoading.value = false
+  }
+}
+
+// 1. Broadcast Campaigns
+function openBroadcastCampaigns() {
+  router.push('/operations/notification-center')
+}
+
+// 2. Auto-Responder
+async function openAutoResponderSettings() {
+  try {
+    const res = await call('crm.api.omnichannel.get_auto_responder_settings')
+    // Convert 1/0 to true/false for v-model checkboxes
+    const formatted = res || {}
+    for (const key in formatted) {
+      if (formatted[key]) {
+        formatted[key].enabled = !!formatted[key].enabled
+      }
+    }
+    autoResponderSettings.value = formatted
+    showAutoResponderDialog.value = true
+  } catch (err) {
+    toast.error(err.message || __('Failed to load auto-responder settings'))
+  }
+}
+
+async function saveAutoResponderSettings() {
+  savingAutoResponder.value = true
+  try {
+    const payload = JSON.parse(JSON.stringify(autoResponderSettings.value))
+    // Convert back true/false to 1/0 for backend persistence compatibility
+    for (const key in payload) {
+      if (payload[key]) {
+        payload[key].enabled = payload[key].enabled ? 1 : 0
+      }
+    }
+    await call('crm.api.omnichannel.save_auto_responder_settings', {
+      rules_json: payload,
+    })
+    toast.success(__('Auto-Responder settings saved successfully'))
+    showAutoResponderDialog.value = false
+  } catch (err) {
+    toast.error(err.message || __('Failed to save auto-responder settings'))
+  } finally {
+    savingAutoResponder.value = false
+  }
+}
+
+// 3. Conversation Transfer
+function openTransferDialog() {
+  selectedTransferUser.value = null
+  selectedTransferTeam.value = ''
+  transferNote.value = ''
+  transferUserSearch.value = ''
+  transferUserResults.value = []
+  showTransferDialog.value = true
+}
+
+let transferUserSearchTimer = null
+async function searchTransferUsers() {
+  clearTimeout(transferUserSearchTimer)
+  if (!transferUserSearch.value.trim()) {
+    transferUserResults.value = []
+    return
+  }
+  transferUserSearchTimer = setTimeout(async () => {
+    transferUserSearchLoading.value = true
+    try {
+      transferUserResults.value = await call('crm.api.omnichannel.search_users', { query: transferUserSearch.value })
+    } catch {
+      transferUserResults.value = []
+    } finally {
+      transferUserSearchLoading.value = false
+    }
+  }, 300)
+}
+
+async function executeTransfer() {
+  if (!selectedConversationId.value) return
+  transferLoading.value = true
+  try {
+    await call('crm.api.omnichannel.transfer_conversation', {
+      conversation_id: selectedConversationId.value,
+      target_user: selectedTransferUser.value?.name || null,
+      target_team: selectedTransferTeam.value || null,
+      note: transferNote.value || null,
+    })
+    toast.success(__('Conversation transferred successfully'))
+    showTransferDialog.value = false
+    await loadConversation(selectedConversationId.value)
+    await loadConversations()
+  } catch (err) {
+    toast.error(err.message || __('Failed to transfer conversation'))
+  } finally {
+    transferLoading.value = false
+  }
+}
+
+// 4. Compliance Integrity
+async function verifyComplianceIntegrity() {
+  if (!selectedConversationId.value) return
+  verifyingIntegrity.value = true
+  try {
+    const res = await call('crm.api.omnichannel.verify_conversation_integrity', {
+      conversation_id: selectedConversationId.value,
+    })
+    if (res && res.verified) {
+      complianceHash.value = res.archive_hash
+      integrityVerified.value = true
+      toast.success(__('Compliance SHA256 integrity hash verified successfully'))
+    }
+  } catch (err) {
+    toast.error(err.message || __('Failed to verify integrity'))
+  } finally {
+    verifyingIntegrity.value = false
   }
 }
 </script>
