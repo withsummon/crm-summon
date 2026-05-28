@@ -250,7 +250,76 @@ async function handleIncomingMessage(msg) {
       }
     }
 
-    if (ALLOWED_SENDERS && !ALLOWED_SENDERS.includes(fromPhone)) {
+    let isAllowed = ALLOWED_SENDERS && ALLOWED_SENDERS.includes(fromPhone)
+
+    if (!isAllowed) {
+      try {
+        const frappeUrl = process.env.FRAPPE_URL || 'http://host.docker.internal:8000'
+        const authUrl = `${frappeUrl.replace(/\/$/, '')}/api/method/crm.api.omnichannel.is_valid_whatsapp_sender`
+        
+        const headers = { 'Content-Type': 'application/json' }
+        if (apiToken) {
+          headers['X-Webhook-Token'] = apiToken
+        }
+        
+        let allowedFromFrappe = false
+        if (typeof fetch === 'function') {
+          const res = await fetch(authUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ sender: fromPhone })
+          })
+          if (res.ok) {
+            const data = await res.json()
+            allowedFromFrappe = Boolean(data.message)
+          }
+        } else {
+          // Fallback node http request
+          allowedFromFrappe = await new Promise((resolve) => {
+            try {
+              const httpOrHttps = authUrl.startsWith('https') ? import('https') : import('http')
+              Promise.resolve(httpOrHttps).then((mod) => {
+                const parsedUrl = new URL(authUrl)
+                const options = {
+                  hostname: parsedUrl.hostname,
+                  port: parsedUrl.port || (authUrl.startsWith('https') ? 443 : 80),
+                  path: parsedUrl.pathname + parsedUrl.search,
+                  method: 'POST',
+                  headers: {
+                    ...headers,
+                    'Content-Length': Buffer.byteLength(JSON.stringify({ sender: fromPhone }))
+                  }
+                }
+                const req = mod.request(options, (res) => {
+                  let resData = ''
+                  res.on('data', (chunk) => resData += chunk)
+                  res.on('end', () => {
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                      try {
+                        const parsed = JSON.parse(resData)
+                        resolve(Boolean(parsed.message))
+                      } catch { resolve(false) }
+                    } else { resolve(false) }
+                  })
+                })
+                req.on('error', () => resolve(false))
+                req.write(JSON.stringify({ sender: fromPhone }))
+                req.end()
+              })
+            } catch { resolve(false) }
+          })
+        }
+        
+        if (allowedFromFrappe) {
+          isAllowed = true
+          console.log(`Dynamically authorized sender ${fromPhone} via Frappe check`)
+        }
+      } catch (err) {
+        console.error(`Error querying dynamic sender authorization: ${err.message}`)
+      }
+    }
+
+    if (!isAllowed) {
       console.log(`Ignored message from non-allowlisted sender: ${fromPhone}`)
       return
     }

@@ -939,10 +939,16 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			yield _sse("status", {"code": "menghasilkan_analisis", "message": "Menghasilkan analisis terstruktur Bahasa Indonesia..."})
 
 			content_parts = []
+			reasoning_parts = []
 			stream_meta = frappe._dict({"model": settings.kimi_model or DEFAULT_KIMI_MODEL, "total_tokens": 0, "cost": Decimal("0")})
 			for event in stream_kimi_chat_events(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode):
 				if event.event == "delta":
-					content_parts.append(event.delta)
+					if event.get("reasoning_delta"):
+						reasoning_parts.append(event.reasoning_delta)
+						yield _sse("thinking", {"thinking": event.reasoning_delta})
+					if event.delta:
+						content_parts.append(event.delta)
+						yield _sse("delta", {"delta": event.delta})
 				elif event.event == "done":
 					stream_meta = event
 
@@ -983,6 +989,20 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			"X-Accel-Buffering": "no",
 		},
 	)
+
+
+@frappe.whitelist()
+def initialize_rag(scope="crm", docname=None, agent_key=None):
+    frappe.enqueue(
+        "crm.ai.rag.reindex_structured_data",
+        queue="long",
+        timeout=600,
+        scope=scope,
+        docname=docname,
+        agent_key=agent_key,
+        reset_native=True,
+    )
+    return {"status": "started", "message": "RAG initialization queued in background"}
 
 
 @frappe.whitelist()

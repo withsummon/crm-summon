@@ -1213,6 +1213,81 @@ def ensure_demo_whatsapp_customer(recipient: str) -> dict:
 
 
 @frappe.whitelist()
+def ensure_custom_customer(customer_name: str, mobile_no: str) -> dict:
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Authentication required"))
+
+	if not customer_name:
+		customer_name = f"WA Customer - {mobile_no}"
+
+	# Clean and normalize phone number
+	digits = "".join(ch for ch in mobile_no if ch.isdigit())
+	if digits.startswith("0"):
+		digits = f"62{digits[1:]}"
+
+	# Check if customer already exists with this mobile number
+	meta = frappe.get_meta("Customer")
+	fields = ["name", "customer_name"]
+	if meta.has_field("mobile_no"):
+		fields.append("mobile_no")
+		existing = frappe.db.get_value("Customer", {"mobile_no": ["in", [digits, f"+{digits}"]]}, fields, as_dict=True)
+		if existing:
+			return existing
+
+	existing_by_name = frappe.db.get_value("Customer", {"customer_name": customer_name}, fields, as_dict=True)
+	if existing_by_name:
+		if meta.has_field("mobile_no"):
+			frappe.db.set_value("Customer", existing_by_name.name, "mobile_no", digits, update_modified=False)
+			existing_by_name.mobile_no = digits
+		return existing_by_name
+
+	# Create a new Customer
+	doc = frappe.new_doc("Customer")
+	doc.customer_name = customer_name
+	if meta.has_field("customer_type"):
+		doc.customer_type = "Individual"
+	if meta.has_field("customer_group"):
+		doc.customer_group = _default_customer_group()
+	if meta.has_field("territory"):
+		doc.territory = _default_territory()
+	if meta.has_field("mobile_no"):
+		doc.mobile_no = digits
+	doc.insert(ignore_permissions=True)
+	return {fieldname: doc.get(fieldname) for fieldname in fields}
+
+
+@frappe.whitelist(allow_guest=True)
+def is_valid_whatsapp_sender(sender: str) -> bool:
+	# Authentication check if X-Webhook-Token is set
+	if frappe.session.user == "Guest":
+		token = (frappe.get_request_header("X-Webhook-Token") or "").strip()
+		expected_token = (frappe.conf.get("whatsapp_api_token") or "").strip()
+		if expected_token and token != expected_token:
+			frappe.throw(_("Unauthorized access"), frappe.PermissionError)
+
+	if not sender:
+		return False
+
+	digits = "".join(ch for ch in sender if ch.isdigit())
+	if digits.startswith("0"):
+		digits = f"62{digits[1:]}"
+
+	# Check if customer exists with this mobile number
+	if frappe.db.exists("Customer", {"mobile_no": ["in", [digits, f"+{digits}"]]}):
+		return True
+
+	# Check if lead exists with this mobile number
+	if frappe.db.exists("CRM Lead", {"mobile_no": ["in", [digits, f"+{digits}"]]}):
+		return True
+
+	# Check if conversation exists with this phone number as provider_conversation_id
+	if frappe.db.exists("CRM Omnichannel Conversation", {"provider_conversation_id": digits}):
+		return True
+
+	return False
+
+
+@frappe.whitelist()
 def start_external_conversation(
 	channel: str,
 	customer: str,

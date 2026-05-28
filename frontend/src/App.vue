@@ -4,9 +4,9 @@
     <div v-else-if="$route.meta.standalone && session.isLoggedIn" class="h-screen isolate">
       <router-view :key="$route.fullPath" />
     </div>
-    <Layout v-else-if="session.isLoggedIn" class="isolate">
+    <component :is="Layout" v-else-if="session.isLoggedIn" :key="route.path.startsWith('/mobile') ? 'mobile' : 'desktop'" class="isolate">
       <router-view :key="$route.fullPath" />
-    </Layout>
+    </component>
     <Settings v-if="session.isLoggedIn" />
     <Dialogs />
     <DoctypeModals />
@@ -23,6 +23,7 @@ import { Dialogs } from '@/utils/dialogs'
 import { sessionStore } from '@/stores/session'
 import { FrappeUIProvider, setConfig, useTheme } from 'frappe-ui'
 import { computed, defineAsyncComponent, provide, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 const session = sessionStore()
 provide('session', session)
@@ -40,6 +41,7 @@ if (!localStorage.getItem('theme')) {
   setTheme('light')
 }
 
+const route = useRoute()
 const MobileLayout = defineAsyncComponent(
   () => import('./components/Layouts/MobileLayout.vue'),
 )
@@ -47,7 +49,7 @@ const DesktopLayout = defineAsyncComponent(
   () => import('./components/Layouts/DesktopLayout.vue'),
 )
 const Layout = computed(() => {
-  if (window.innerWidth < 640) {
+  if (window.innerWidth < 640 || route.path.startsWith('/mobile')) {
     return MobileLayout
   } else {
     return DesktopLayout

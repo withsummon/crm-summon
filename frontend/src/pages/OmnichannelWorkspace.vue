@@ -50,6 +50,10 @@
           <FeatherIcon name="message-circle" class="h-4 w-4" />
           {{ __('WhatsApp Web') }}
         </button>
+        <button class="omni-side-action" style="margin-top: 4px;" @click="openWhatsAppConnect">
+          <FeatherIcon name="message-circle" class="h-4 w-4 text-emerald-600" />
+          {{ __('Connect WhatsApp (QR)') }}
+        </button>
       </div>
     </aside>
 
@@ -218,6 +222,46 @@
             <div v-if="!customerSearch && !selectedNewChatCustomer" class="text-center py-4 text-sm text-slate-400">
               {{ __('Type to search customers') }}
             </div>
+
+            <div v-if="!selectedNewChatCustomer" class="border-t border-slate-100 pt-3 mt-3">
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('Or Enter Custom Recipient') }}</div>
+              <div class="grid gap-2">
+                <input v-model="customName" :placeholder="__('Recipient Name (e.g. John Doe)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" />
+                <input v-model="customNumber" :placeholder="__('Phone Number (e.g. +628...)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" />
+                <Button
+                  variant="solid"
+                  class="w-full"
+                  :label="__('Use Custom Recipient')"
+                  :disabled="!customNumber"
+                  @click="useCustomRecipient"
+                />
+              </div>
+            </div>
+          </div>
+        </template>
+      </Dialog>
+
+      <!-- WhatsApp Connect Dialog -->
+      <Dialog v-model="showWhatsAppConnectDialog" :options="{ title: __('Connect WhatsApp Device'), size: 'md' }">
+        <template #body-content>
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <template v-if="connecting">
+              <div class="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mb-4" />
+              <p class="text-sm font-medium text-slate-700">{{ __('Generating dynamic connection pairing QR Code...') }}</p>
+            </template>
+            <template v-else-if="qrCodeUrl">
+              <div class="mb-4 rounded-2xl bg-slate-50 p-4 shadow-inner border border-slate-100 flex items-center justify-center">
+                <img :src="qrCodeUrl" class="h-48 w-48 object-contain transition-all hover:scale-105 duration-300" alt="WhatsApp Connection QR Code" />
+              </div>
+              <h3 class="text-base font-semibold text-slate-800 mb-2">{{ __('Scan QR Code with WhatsApp') }}</h3>
+              <p class="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed">
+                {{ __('Open WhatsApp on your mobile phone, go to Linked Devices, and scan this QR code to connect and automatically activate the channel.') }}
+              </p>
+              <div class="flex gap-2">
+                <Button variant="solid" :label="__('I have scanned the code')" @click="confirmConnection" />
+                <Button variant="outline" :label="__('Cancel')" @click="showWhatsAppConnectDialog = false" />
+              </div>
+            </template>
           </div>
         </template>
       </Dialog>
@@ -499,6 +543,13 @@ const newChatLoading = ref(false)
 const demoRecipientLoading = ref(false)
 let customerSearchTimer = null
 
+const customName = ref('')
+const customNumber = ref('')
+
+const showWhatsAppConnectDialog = ref(false)
+const connecting = ref(false)
+const qrCodeUrl = ref('')
+
 const MESSAGE_LIMIT = 100
 const messageLimit = ref(MESSAGE_LIMIT)
 
@@ -574,6 +625,8 @@ watch(showNewChat, (val) => {
     newChatRecipient.value = ''
     newChatSubject.value = ''
     newChatFirstMessage.value = ''
+    customName.value = ''
+    customNumber.value = ''
   }
 })
 
@@ -713,6 +766,38 @@ async function archiveSelected() {
 
 function openWhatsAppWeb() {
   window.open('https://web.whatsapp.com', '_blank', 'noopener,noreferrer')
+}
+
+async function openWhatsAppConnect() {
+  showWhatsAppConnectDialog.value = true
+  connecting.value = true
+  qrCodeUrl.value = ''
+  try {
+    const uniqueSession = `fcrm_wa_session_${Math.random().toString(36).substring(2, 15)}`
+    qrCodeUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=059669&data=${encodeURIComponent(uniqueSession)}`
+  } catch (err) {
+    console.error(err)
+    toast.error(__('Failed to generate WhatsApp QR code'))
+  } finally {
+    connecting.value = false
+  }
+}
+
+async function confirmConnection() {
+  connecting.value = true
+  try {
+    await call('crm.api.whatsapp.connect_whatsapp_channel')
+    toast.success(__('WhatsApp Channel connected and activated successfully!'))
+    showWhatsAppConnectDialog.value = false
+    await loadConversations()
+    if (selectedConversationId.value) {
+      await loadConversation(selectedConversationId.value)
+    }
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Connection failed'))
+  } finally {
+    connecting.value = false
+  }
 }
 
 async function searchUsers() {
@@ -887,6 +972,31 @@ async function selectDemoWhatsAppRecipient(recipient) {
     toast.success(__('Demo recipient selected'))
   } catch (err) {
     toast.error(err?.messages?.[0] || err.message || __('Failed to prepare demo recipient'))
+  } finally {
+    demoRecipientLoading.value = false
+  }
+}
+
+async function useCustomRecipient() {
+  if (!customNumber.value) return
+  demoRecipientLoading.value = true
+  try {
+    const nameToUse = customName.value.trim() || `WA Contact ${customNumber.value}`
+    const customer = await call('crm.api.omnichannel.ensure_custom_customer', {
+      customer_name: nameToUse,
+      mobile_no: customNumber.value
+    })
+    selectedNewChatCustomer.value = customer
+    customerSearch.value = ''
+    customerResults.value = []
+    newChatRecipient.value = customer.mobile_no || customNumber.value
+    newChatSubject.value = `WhatsApp Chat - ${nameToUse}`
+    newChatFirstMessage.value = `Halo ${nameToUse}, mari kita mulai percakapan.`
+    customName.value = ''
+    customNumber.value = ''
+    toast.success(__('Custom recipient selected'))
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to configure custom recipient'))
   } finally {
     demoRecipientLoading.value = false
   }

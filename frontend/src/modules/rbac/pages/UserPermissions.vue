@@ -206,14 +206,11 @@ async function addPermission() {
   if (!newPerm.user || !newPerm.allow || !newPerm.for_value) return
   adding.value = true
   try {
-    await call('frappe.client.insert', {
-      doc: {
-        doctype: 'User Permission',
-        user: newPerm.user,
-        allow: newPerm.allow,
-        for_value: newPerm.for_value,
-        applicable_for: newPerm.applicable_for || undefined,
-      },
+    await call('crm.api.rbac.add_user_permission', {
+      user: newPerm.user,
+      allow: newPerm.allow,
+      for_value: newPerm.for_value,
+      applicable_for: newPerm.applicable_for || undefined,
     })
     showAddDialog.value = false
     newPerm.user = ''
@@ -230,7 +227,7 @@ async function addPermission() {
 
 async function deletePermission(name) {
   try {
-    await call('frappe.client.delete', { doctype: 'User Permission', name })
+    await call('crm.api.rbac.delete_user_permission', { name })
     permissions.value = permissions.value.filter((p) => p.name !== name)
   } catch (err) {
     console.error('Error deleting permission:', err)

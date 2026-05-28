@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { usersStore } from '@/stores/users'
 import { sessionStore } from '@/stores/session'
 import { viewsStore } from '@/stores/views'
+import { mobileFeatures } from '@/data/mobileFeatures'
 
 const handleMobileView = (componentName) => {
   return window.innerWidth < 768 ? `Mobile${componentName}` : componentName
@@ -408,6 +409,179 @@ const routes = [
       },
     ],
   },
+  // ─── Mobile PWA Routes ──────────────────────────────────
+  {
+    path: '/mobile',
+    children: [
+      {
+        path: '',
+        redirect: { name: 'Mobile Home Dashboard' },
+      },
+      ...mobileFeatures.map((f) => {
+        if (f.routeName === 'Mobile Home Dashboard') {
+          return {
+            path: 'dashboard',
+            name: f.routeName,
+            component: () => import('@/pages/MobileHomeDashboard.vue'),
+          }
+        }
+        if (f.routeName === 'My Customers Mobile') {
+          return {
+            path: 'my-customers',
+            name: f.routeName,
+            component: () => import('@/pages/MyCustomersMobile.vue'),
+          }
+        }
+        if (f.routeName === 'Customer 360 Mobile') {
+          return {
+            path: 'customer-360',
+            name: f.routeName,
+            redirect: { name: 'Customer 360' },
+          }
+        }
+        if (f.routeName === 'Mobile Login & Biometric') {
+          return {
+            path: 'security',
+            name: f.routeName,
+            component: () => import('@/pages/MobileLoginBiometric.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Lead Capture') {
+          return {
+            path: 'lead-capture',
+            name: f.routeName,
+            component: () => import('@/pages/MobileLeadCapture.vue'),
+          }
+        }
+        if (f.routeName === 'Document Scanner') {
+          return {
+            path: 'document-scanner',
+            name: f.routeName,
+            component: () => import('@/pages/DocumentScanner.vue'),
+          }
+        }
+        if (f.routeName === 'Visit Planner & Route') {
+          return {
+            path: 'visit-planner',
+            name: f.routeName,
+            component: () => import('@/pages/VisitPlannerRoute.vue'),
+          }
+        }
+        if (f.routeName === 'Visit Check-In/Out GPS') {
+          return {
+            path: 'visit-checkin',
+            name: f.routeName,
+            component: () => import('@/pages/VisitCheckInGPS.vue'),
+          }
+        }
+        if (f.routeName === 'Visit Report Capture') {
+          return {
+            path: 'visit-report',
+            name: f.routeName,
+            component: () => import('@/pages/VisitReportCapture.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Application Submit') {
+          return {
+            path: 'application-submit',
+            name: f.routeName,
+            component: () => import('@/pages/MobileApplicationSubmit.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Approval') {
+          return {
+            path: 'approval',
+            name: f.routeName,
+            component: () => import('@/pages/MobileApproval.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Push Notifications') {
+          return {
+            path: 'notifications',
+            name: f.routeName,
+            component: () => import('@/pages/MobilePushNotifications.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Omnichannel Chat') {
+          return {
+            path: 'omnichannel',
+            name: f.routeName,
+            component: () => import('@/pages/MobileOmnichannelChat.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Calculator Pricing') {
+          return {
+            path: 'calculator-pricing',
+            name: f.routeName,
+            component: () => import('@/pages/MobileCalculatorPricing.vue'),
+          }
+        }
+        if (f.routeName === 'Offline Mode & Sync') {
+          return {
+            path: 'offline-sync',
+            name: f.routeName,
+            component: () => import('@/pages/OfflineModeSync.vue'),
+          }
+        }
+        if (f.routeName === 'Quick Actions FAB') {
+          return {
+            path: 'quick-actions',
+            name: f.routeName,
+            component: () => import('@/pages/QuickActionsFAB.vue'),
+          }
+        }
+        if (f.routeName === 'Voice Commands') {
+          return {
+            path: 'voice-commands',
+            name: f.routeName,
+            component: () => import('@/pages/VoiceCommands.vue'),
+          }
+        }
+        if (f.routeName === 'Camera Business Card Scan') {
+          return {
+            path: 'business-card-scan',
+            name: f.routeName,
+            component: () => import('@/pages/CameraBusinessCardScan.vue'),
+          }
+        }
+        if (f.routeName === 'AI Assistant Mobile') {
+          return {
+            path: 'ai-assistant',
+            name: f.routeName,
+            component: () => import('@/pages/AIAssistantMobile.vue'),
+          }
+        }
+        if (f.routeName === 'Geo-Fence Reminders') {
+          return {
+            path: 'geo-fence',
+            name: f.routeName,
+            component: () => import('@/pages/GeoFenceReminders.vue'),
+          }
+        }
+        if (f.routeName === 'Mobile Expense & Mileage') {
+          return {
+            path: 'expense-mileage',
+            name: f.routeName,
+            component: () => import('@/pages/MobileExpenseMileage.vue'),
+          }
+        }
+        return {
+          path: f.routeName
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/\s+/g, '-')
+            .toLowerCase(),
+          name: f.routeName,
+          component: () => import('@/pages/MobilePlaceholderPage.vue'),
+          meta: {
+            featureTitle: f.label,
+            featureIcon: f.icon,
+            featureDescription: f.description,
+          },
+        }
+      }),
+    ],
+  },
+
   // ─── Shared / Utility Routes ─────────────────────────────
   {
     path: '/customer-portal',
@@ -510,6 +684,10 @@ router.beforeEach(async (to, from, next) => {
   } else if (loggedIn && users.fetched && !isCrmUser() && requiresCrmRole(to)) {
     next({ name: 'Not Permitted' })
   } else if (to.name === 'CRM Dispatcher' && loggedIn) {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      next({ name: 'Mobile Home Dashboard' })
+      return
+    }
     const { views, getDefaultView } = viewsStore()
     await views.promise
 

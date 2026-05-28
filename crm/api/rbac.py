@@ -529,6 +529,55 @@ def remove_user_branch(name: str):
     return {"message": _("Assignment removed")}
 
 
+def check_rbac_admin_permission():
+    user = frappe.session.user
+    if user == "Administrator":
+        return True
+    fcrm_roles = get_user_fcrm_roles(user)
+    if any(r in ("FCRM Super Admin", "FCRM Director") for r in fcrm_roles):
+        return True
+    if "System Manager" in frappe.get_roles(user):
+        return True
+    frappe.throw(_("Not permitted. Only FCRM Super Admin, FCRM Director, or System Manager can perform this action."), frappe.PermissionError)
+
+
+@frappe.whitelist()
+def add_approval_matrix(doc_data):
+    check_rbac_admin_permission()
+    if isinstance(doc_data, str):
+        import json
+        doc_data = json.loads(doc_data)
+    
+    doc = frappe.get_doc({
+        "doctype": "FCRM Approval Matrix",
+        **doc_data
+    })
+    doc.insert(ignore_permissions=True)
+    return doc
+
+
+@frappe.whitelist()
+def add_user_permission(user, allow, for_value, applicable_for=None, is_default=0):
+    check_rbac_admin_permission()
+    doc = frappe.get_doc({
+        "doctype": "User Permission",
+        "user": user,
+        "allow": allow,
+        "for_value": for_value,
+        "applicable_for": applicable_for,
+        "is_default": is_default
+    })
+    doc.insert(ignore_permissions=True)
+    return doc
+
+
+@frappe.whitelist()
+def delete_user_permission(name):
+    check_rbac_admin_permission()
+    frappe.delete_doc("User Permission", name, ignore_permissions=True)
+    return {"message": "Success"}
+
+
 def _ensure_user_permission(user: str, allow: str, for_value: str):
     """Ensure a Frappe User Permission exists for automatic filtering."""
     if not frappe.db.exists("User Permission", {
@@ -804,6 +853,36 @@ def permission_query_conditions(user: str | None = None):
 	]:
 		clauses.append(f"`tab{dt}`.`{field}` in ({','.join(branch_names)})")
 	return " or ".join(clauses)
+
+
+@frappe.whitelist()
+def get_lead_cond(user=None):
+	return get_branch_filter_condition("CRM Lead")
+
+
+@frappe.whitelist()
+def get_deal_cond(user=None):
+	return get_branch_filter_condition("CRM Deal")
+
+
+@frappe.whitelist()
+def get_credit_app_cond(user=None):
+	return get_branch_filter_condition("CRM Credit Application")
+
+
+@frappe.whitelist()
+def get_credit_fac_cond(user=None):
+	return get_branch_filter_condition("CRM Credit Facility")
+
+
+@frappe.whitelist()
+def get_org_cond(user=None):
+	return get_branch_filter_condition("CRM Organization")
+
+
+@frappe.whitelist()
+def get_contact_cond(user=None):
+	return get_branch_filter_condition("Contact")
 
 
 @frappe.whitelist()

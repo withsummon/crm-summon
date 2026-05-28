@@ -137,12 +137,12 @@ before_uninstall = "crm.uninstall.before_uninstall"
 # Permissions evaluated in scripted ways
 
 permission_query_conditions = {
-	"CRM Lead": "crm.api.rbac.permission_query_conditions",
-	"CRM Deal": "crm.api.rbac.permission_query_conditions",
-	"CRM Credit Application": "crm.api.rbac.permission_query_conditions",
-	"CRM Credit Facility": "crm.api.rbac.permission_query_conditions",
-	"CRM Organization": "crm.api.rbac.permission_query_conditions",
-	"Contact": "crm.api.rbac.permission_query_conditions",
+	"CRM Lead": "crm.api.rbac.get_lead_cond",
+	"CRM Deal": "crm.api.rbac.get_deal_cond",
+	"CRM Credit Application": "crm.api.rbac.get_credit_app_cond",
+	"CRM Credit Facility": "crm.api.rbac.get_credit_fac_cond",
+	"CRM Organization": "crm.api.rbac.get_org_cond",
+	"Contact": "crm.api.rbac.get_contact_cond",
 }
 
 has_permission = {

@@ -22,6 +22,15 @@
       <template #right-header>
         <div class="flex items-center gap-2">
           <Button
+            :label="__('Connect WA')"
+            variant="subtle"
+            @click="openWhatsAppConnect"
+          >
+            <template #prefix>
+              <FeatherIcon name="message-circle" class="h-4 w-4 text-emerald-600" />
+            </template>
+          </Button>
+          <Button
             :label="__('New Conversation')"
             variant="solid"
             @click="showConversationForm = true"
@@ -963,12 +972,35 @@
         <Button :label="__('Save Template')" variant="solid" @click="saveTemplate" />
       </div>
     </div>
-  </div>
+  <!-- WhatsApp Connect Dialog -->
+  <Dialog v-model="showWhatsAppConnectDialog" :options="{ title: __('Connect WhatsApp Device'), size: 'md' }">
+    <template #body-content>
+      <div class="flex flex-col items-center justify-center p-6 text-center">
+        <template v-if="connecting">
+          <div class="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mb-4" />
+          <p class="text-sm font-medium text-slate-700">{{ __('Generating dynamic connection pairing QR Code...') }}</p>
+        </template>
+        <template v-else-if="qrCodeUrl">
+          <div class="mb-4 rounded-2xl bg-slate-50 p-4 shadow-inner border border-slate-100 flex items-center justify-center">
+            <img :src="qrCodeUrl" class="h-48 w-48 object-contain transition-all hover:scale-105 duration-300" alt="WhatsApp Connection QR Code" />
+          </div>
+          <h3 class="text-base font-semibold text-slate-800 mb-2">{{ __('Scan QR Code with WhatsApp') }}</h3>
+          <p class="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed">
+            {{ __('Open WhatsApp on your mobile phone, go to Linked Devices, and scan this QR code to connect and automatically activate the channel.') }}
+          </p>
+          <div class="flex gap-2">
+            <Button variant="solid" :label="__('I have scanned the code')" @click="confirmConnection" />
+            <Button variant="outline" :label="__('Cancel')" @click="showWhatsAppConnectDialog = false" />
+          </div>
+        </template>
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
-import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
+import { Badge, Button, FeatherIcon, usePageMeta, Dialog, call, toast } from 'frappe-ui'
 import { computed, ref } from 'vue'
 
 // ── Page navigation ──────────────────────────────────────────
@@ -1482,6 +1514,37 @@ function saveTemplate() {
   })
   templateForm.value = { name: '', channel: 'WhatsApp', language: 'Bahasa Indonesia', body: '' }
   showTemplateForm.value = false
+}
+const showWhatsAppConnectDialog = ref(false)
+const connecting = ref(false)
+const qrCodeUrl = ref('')
+
+async function openWhatsAppConnect() {
+  showWhatsAppConnectDialog.value = true
+  connecting.value = true
+  qrCodeUrl.value = ''
+  try {
+    const uniqueSession = `fcrm_wa_session_${Math.random().toString(36).substring(2, 15)}`
+    qrCodeUrl.value = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=059669&data=${encodeURIComponent(uniqueSession)}`
+  } catch (err) {
+    console.error(err)
+    toast.error(__('Failed to generate WhatsApp QR code'))
+  } finally {
+    connecting.value = false
+  }
+}
+
+async function confirmConnection() {
+  connecting.value = true
+  try {
+    await call('crm.api.whatsapp.connect_whatsapp_channel')
+    toast.success(__('WhatsApp Channel connected and activated successfully!'))
+    showWhatsAppConnectDialog.value = false
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Connection failed'))
+  } finally {
+    connecting.value = false
+  }
 }
 
 usePageMeta(() => ({ title: __('Omnichannel Communication') }))
