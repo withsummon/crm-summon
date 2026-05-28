@@ -34,7 +34,7 @@
         v-for="tab in pageTabs"
         :key="tab.key"
         class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors"
-        :class="activeTab === tab.key ? 'border-b-2 border-red-500 text-red-600' : 'text-ink-gray-5 hover:text-ink-gray-8'"
+        :class="activeTab === tab.key ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5 hover:text-ink-gray-8'"
         @click="activeTab = tab.key"
       >
         {{ __(tab.label) }}
@@ -52,7 +52,7 @@
         <div
           v-for="kpi in dashKpis"
           :key="kpi.label"
-          class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm"
+          class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]"
         >
           <div class="flex items-start justify-between">
             <div class="text-xs text-ink-gray-4">{{ __(kpi.label) }}</div>
@@ -77,7 +77,7 @@
                 v-for="m in ['Count', 'Amount']"
                 :key="m"
                 class="rounded-md px-2 py-1"
-                :class="agingMetric === m ? 'bg-red-500 text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="agingMetric === m ? 'bg-[#FF6600] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
                 @click="agingMetric = m"
               >
                 {{ __(m) }}
@@ -112,7 +112,7 @@
         </div>
 
         <!-- AI Prioritization -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 flex items-center gap-2">
             <FeatherIcon name="zap" class="h-4 w-4 text-amber-500" />
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('AI Priority Queue') }}</div>
@@ -151,7 +151,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Top Defaulters -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Top Defaulters') }}</div>
           <table class="w-full text-xs">
             <thead>
@@ -183,7 +183,7 @@
         </div>
 
         <!-- Officer Leaderboard -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Officer Leaderboard') }}</div>
           <div class="space-y-2">
             <div
@@ -317,7 +317,7 @@
             v-for="f in ['All', 'Pending', 'Kept', 'Broken', 'Today']"
             :key="f"
             class="rounded-full border px-3 py-1 text-xs"
-            :class="ptpFilter === f ? 'border-red-500 bg-red-50 text-red-700' : 'border-outline-gray-2 text-ink-gray-5'"
+            :class="ptpFilter === f ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]' : 'border-outline-gray-2 text-ink-gray-5'"
             @click="ptpFilter = f"
           >
             {{ __(f) }}
@@ -374,7 +374,7 @@
     <!-- ── WORKFLOWS TAB ── -->
     <div v-if="activeTab === 'workflows'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
       <!-- Dunning Ladder -->
-      <div class="rounded-[14px] border border-crm-border bg-white p-5 shadow-sm">
+      <div class="rounded-2xl border border-crm-border bg-white p-5 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
         <div class="mb-4 text-sm font-semibold text-ink-gray-8">{{ __('Dunning Ladder — Automated Collection Workflow') }}</div>
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-0">
           <div
@@ -387,7 +387,7 @@
                 class="flex h-12 w-12 items-center justify-center rounded-full text-white text-lg shadow-md z-10"
                 :class="stage.color"
               >
-                {{ stage.icon }}
+                <FeatherIcon :name="stage.icon" class="h-5 w-5" />
               </div>
               <!-- Horizontal line for desktop -->
               <div v-if="idx < dunningStages.length - 1 && !isMobile" class="absolute top-6 left-1/2 h-0.5 w-full" :class="stage.lineColor" />
@@ -407,7 +407,7 @@
       </div>
 
       <!-- Active Workflows -->
-      <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+      <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
         <div class="mb-3 flex items-center justify-between">
           <div class="text-sm font-semibold text-ink-gray-8">{{ __('Active Workflow Instances') }}</div>
           <Badge :label="activeWorkflows.length + ' running'" variant="subtle" theme="blue" />
@@ -418,8 +418,8 @@
             :key="wf.id"
             class="flex items-center gap-3 rounded-lg border border-outline-gray-1 px-3 py-2 hover:bg-surface-gray-1"
           >
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm" :class="wf.stageColor">
-              {{ wf.stageIcon }}
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" :class="wf.stageColor">
+              <FeatherIcon :name="wf.stageIcon" class="h-4 w-4" />
             </div>
             <div class="min-w-0 flex-1">
               <div class="text-xs font-medium text-ink-gray-8">{{ wf.customer }}</div>
@@ -455,7 +455,7 @@
           </div>
         </div>
 
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 flex items-center justify-between">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('Write-Off Queue') }}</div>
             <Button :label="__('Propose Write-Off')" variant="subtle" size="sm" @click="showWriteOffModal = true" />
@@ -490,7 +490,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Recovery by Bucket -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Recovery Rate by Bucket') }}</div>
           <div class="space-y-2">
             <div v-for="b in recoveryByBucket" :key="b.label" class="flex items-center gap-2 text-xs">
@@ -504,7 +504,7 @@
         </div>
 
         <!-- Officer Productivity -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Officer Productivity') }}</div>
           <table class="w-full text-xs">
             <thead>
@@ -527,7 +527,7 @@
         </div>
 
         <!-- Channel Performance -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Channel Performance') }}</div>
           <div class="space-y-3">
             <div v-for="ch in channelPerformance" :key="ch.name" class="text-xs">
@@ -545,7 +545,7 @@
       </div>
 
       <!-- Collection Letter Templates -->
-      <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+      <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
         <div class="mb-3 flex items-center justify-between">
           <div class="text-sm font-semibold text-ink-gray-8">{{ __('Collection Letter Templates') }}</div>
           <Button :label="__('New Template')" variant="subtle" size="sm" @click="showLetterTemplateModal = true" />
@@ -575,7 +575,7 @@
     <div v-if="activeTab === 'strategy'" class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-surface-gray-1 p-4">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Strategy Builder -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-5 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-5 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-4 text-sm font-semibold text-ink-gray-8">{{ __('Collection Strategy Builder') }}</div>
           <div class="space-y-3 text-sm">
             <div>
@@ -614,7 +614,7 @@
         </div>
 
         <!-- Active Strategies -->
-        <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+        <div class="rounded-2xl border border-crm-border bg-white p-4 shadow-[0_8px_20px_rgba(16,24,40,0.05)]">
           <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Active Strategies & A/B Results') }}</div>
           <div class="space-y-3">
             <div
@@ -659,7 +659,7 @@
           <div class="text-lg font-semibold text-ink-gray-9">{{ selectedAccount.customer }}</div>
           <div class="text-xs text-ink-gray-5">{{ selectedAccount.product }} · DPD {{ selectedAccount.dpd }} · Outstanding: <span class="font-semibold text-red-600">{{ selectedAccount.outstanding }}</span></div>
         </div>
-        <button class="text-ink-gray-4" @click="selectedAccount = null">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="selectedAccount = null"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="grid grid-cols-3 gap-3 mb-4">
         <div class="rounded-lg bg-surface-gray-1 p-3 text-xs">
@@ -699,7 +699,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Record Promise to Pay') }}</div>
-        <button class="text-ink-gray-4" @click="showPtpModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showPtpModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div>
@@ -739,7 +739,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Record Payment') }}</div>
-        <button class="text-ink-gray-4" @click="showPaymentModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showPaymentModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div>
@@ -789,7 +789,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Log Collection Note') }}</div>
-        <button class="text-ink-gray-4" @click="showNoteModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showNoteModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div>
@@ -819,10 +819,11 @@
     <div class="w-full max-w-lg rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Legal Escalation') }}</div>
-        <button class="text-ink-gray-4" @click="showLegalModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showLegalModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
-      <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
-        ⚠️ {{ __('Legal escalation will generate a formal legal notice and assign to the legal officer. This action is logged and cannot be undone without approval.') }}
+      <div class="mb-4 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+        <FeatherIcon name="alert-triangle" class="h-4 w-4 shrink-0 mt-0.5" />
+        <span>{{ __('Legal escalation will generate a formal legal notice and assign to the legal officer. This action is logged and cannot be undone without approval.') }}</span>
       </div>
       <div class="space-y-3 text-sm">
         <div>
@@ -872,7 +873,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Schedule Visit') }}</div>
-        <button class="text-ink-gray-4" @click="showVisitModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showVisitModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div class="grid grid-cols-2 gap-3">
@@ -917,7 +918,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Restructuring Proposal') }}</div>
-        <button class="text-ink-gray-4" @click="showRestructureModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showRestructureModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div><label class="text-xs text-ink-gray-5">{{ __('Customer') }}</label><input v-model="restructureForm.customer" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" /></div>
@@ -936,7 +937,7 @@
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <div class="text-lg font-semibold text-ink-gray-9">{{ __('Write-Off Proposal') }}</div>
-        <button class="text-ink-gray-4" @click="showWriteOffModal = false">✕</button>
+        <button class="flex items-center justify-center rounded-md p-1 text-ink-gray-4 hover:bg-surface-gray-1 transition-colors" @click="showWriteOffModal = false"><FeatherIcon name="x" class="h-4 w-4" /></button>
       </div>
       <div class="space-y-3 text-sm">
         <div><label class="text-xs text-ink-gray-5">{{ __('Customer') }}</label><input v-model="writeOffForm.customer" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" /></div>
@@ -1083,18 +1084,18 @@ const ptps = ref([
 
 // ── Dunning workflow ─────────────────────────────────────────
 const dunningStages = [
-  { label: 'SMS Reminder', dpd: '1–7', icon: '📱', desc: 'Auto SMS 3x', count: 198, color: 'bg-green-500', lineColor: 'bg-green-300', countColor: 'text-green-700' },
-  { label: 'WA Message', dpd: '8–14', icon: '💬', desc: 'WhatsApp + template', count: 124, color: 'bg-yellow-500', lineColor: 'bg-yellow-300', countColor: 'text-yellow-700' },
-  { label: 'Phone Call', dpd: '15–30', icon: '📞', desc: 'Officer calls', count: 87, color: 'bg-orange-500', lineColor: 'bg-orange-300', countColor: 'text-orange-700' },
-  { label: 'Field Visit', dpd: '31–60', icon: '🚗', desc: 'Physical visit', count: 42, color: 'bg-red-500', lineColor: 'bg-red-300', countColor: 'text-red-700' },
-  { label: 'Legal Notice', dpd: '61–90', icon: '⚖️', desc: 'SP1 / SP2', count: 28, color: 'bg-red-700', lineColor: 'bg-red-500', countColor: 'text-red-800' },
-  { label: 'Court / Auction', dpd: '90+', icon: '🏛️', desc: 'Litigation / KPKNL', count: 15, color: 'bg-gray-800', lineColor: '', countColor: 'text-gray-700' },
+  { label: 'SMS Reminder', dpd: '1–7', icon: 'smartphone', desc: 'Auto SMS 3x', count: 198, color: 'bg-green-500', lineColor: 'bg-green-300', countColor: 'text-green-700' },
+  { label: 'WA Message', dpd: '8–14', icon: 'message-circle', desc: 'WhatsApp + template', count: 124, color: 'bg-yellow-500', lineColor: 'bg-yellow-300', countColor: 'text-yellow-700' },
+  { label: 'Phone Call', dpd: '15–30', icon: 'phone', desc: 'Officer calls', count: 87, color: 'bg-orange-500', lineColor: 'bg-orange-300', countColor: 'text-orange-700' },
+  { label: 'Field Visit', dpd: '31–60', icon: 'map-pin', desc: 'Physical visit', count: 42, color: 'bg-red-500', lineColor: 'bg-red-300', countColor: 'text-red-700' },
+  { label: 'Legal Notice', dpd: '61–90', icon: 'file-text', desc: 'SP1 / SP2', count: 28, color: 'bg-red-700', lineColor: 'bg-red-500', countColor: 'text-red-800' },
+  { label: 'Court / Auction', dpd: '90+', icon: 'shield', desc: 'Litigation / KPKNL', count: 15, color: 'bg-gray-800', lineColor: '', countColor: 'text-gray-700' },
 ]
 
 const activeWorkflows = ref([
-  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'WA Message', nextAction: 'Auto-WA at 14:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: '💬' },
-  { id: 'wf2', customer: 'Sari Logistics', stage: 'Phone Call', nextAction: 'Officer call tomorrow 09:00', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: '📞' },
-  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'SMS Reminder', nextAction: 'SMS #2 at 10:00', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: '📱' },
+  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'WA Message', nextAction: 'Auto-WA at 14:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: 'message-circle' },
+  { id: 'wf2', customer: 'Sari Logistics', stage: 'Phone Call', nextAction: 'Officer call tomorrow 09:00', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: 'phone' },
+  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'SMS Reminder', nextAction: 'SMS #2 at 10:00', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: 'smartphone' },
 ])
 
 const restructuringList = ref([

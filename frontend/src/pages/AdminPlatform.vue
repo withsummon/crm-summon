@@ -5,9 +5,9 @@
         <div class="flex min-w-0 items-center gap-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #7c3aed, #c084fc)"
+            style="background: linear-gradient(135deg, #FF6600, #FF944D)"
           >
-            <FeatherIcon name="shield" class="h-4 w-4 text-white" />
+            <FeatherIcon name="layout" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
             <h1 class="truncate text-lg font-semibold text-crm-text">
@@ -51,7 +51,7 @@
         class="px-4 py-2.5 text-sm font-medium transition-colors"
         :class="
           activeTab === tab.key
-            ? 'border-b-2 border-violet-500 text-violet-600'
+            ? 'border-b-2 border-[#FF6600] text-[#FF6600]'
             : 'text-ink-gray-5 hover:text-ink-gray-8'
         "
         @click="activeTab = tab.key"
@@ -92,15 +92,15 @@
         <div
           v-for="feat in featureCards"
           :key="feat.key"
-          class="group cursor-pointer rounded-[14px] border border-crm-border bg-white p-4 shadow-sm transition-all hover:border-violet-300 hover:shadow-md"
+            class="group cursor-pointer rounded-[14px] border border-crm-border bg-white p-4 shadow-sm transition-all hover:border-[#FF6600] hover:shadow-md"
           @click="navigate(feat)"
         >
           <div class="flex items-start justify-between gap-2">
             <div
-              class="flex h-9 w-9 items-center justify-center rounded-xl text-white text-base"
+              class="flex h-9 w-9 items-center justify-center rounded-xl text-white"
               :style="{ background: feat.gradient }"
             >
-              {{ feat.emoji }}
+              <FeatherIcon :name="feat.icon" class="h-4 w-4" />
             </div>
             <Badge
               v-if="feat.badge"
@@ -109,13 +109,13 @@
               :theme="feat.badgeTheme || 'gray'"
             />
           </div>
-          <div class="mt-3 text-sm font-semibold text-ink-gray-8 group-hover:text-violet-700">
+          <div class="mt-3 text-sm font-semibold text-ink-gray-8 group-hover:text-[#CC5200]">
             {{ __(feat.label) }}
           </div>
           <div class="mt-0.5 text-[11px] text-ink-gray-4 leading-relaxed">
             {{ __(feat.desc) }}
           </div>
-          <div class="mt-2 text-[10px] text-violet-500 font-medium">
+          <div class="mt-2 text-[10px] text-[#FF6600] font-medium">
             {{ feat.stat }}
           </div>
         </div>
@@ -126,7 +126,7 @@
         <div class="mb-3 flex items-center justify-between">
           <div class="text-sm font-semibold text-ink-gray-8">{{ __('Recent Admin Activity') }}</div>
           <button
-            class="text-xs text-violet-500 hover:underline"
+            class="text-xs text-[#FF6600] hover:underline"
             @click="activeTab = 'audit'"
           >
             {{ __('View Full Audit Log →') }}
@@ -139,10 +139,10 @@
             class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-surface-gray-1"
           >
             <div
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
               :class="act.iconBg"
             >
-              {{ act.emoji }}
+              <FeatherIcon :name="act.icon" class="h-3.5 w-3.5" />
             </div>
             <div class="min-w-0 flex-1 text-xs">
               <span class="font-medium text-ink-gray-8">{{ act.actor }}</span>
@@ -167,10 +167,10 @@
           class="rounded-full border px-3 py-1 text-xs transition-colors"
           :class="
             userSubTab === st
-              ? 'border-violet-500 bg-violet-50 text-violet-700'
-              : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
-          "
-          @click="userSubTab = st"
+               ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]'
+               : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
+           "
+           @click="userSubTab = st"
         >
           {{ __(st) }}
         </button>
@@ -242,7 +242,7 @@
                 </td>
                 <td class="px-4 py-2.5 text-ink-gray-5">{{ u.email }}</td>
                 <td class="px-4 py-2.5">
-                  <Badge :label="u.role" variant="subtle" theme="purple" />
+                  <Badge :label="u.role" variant="subtle" theme="orange" />
                 </td>
                 <td class="px-4 py-2.5 text-ink-gray-5">{{ u.branch }}</td>
                 <td class="px-4 py-2.5 text-ink-gray-4">{{ u.lastLogin }}</td>
@@ -308,7 +308,7 @@
               <Badge
                 :label="b.type"
                 variant="subtle"
-                :theme="b.type === 'Head Office' ? 'purple' : b.type === 'Regional' ? 'blue' : 'gray'"
+                :theme="b.type === 'Head Office' ? 'orange' : b.type === 'Regional' ? 'blue' : 'gray'"
               />
             </div>
             <div class="space-y-1 text-xs text-ink-gray-5">
@@ -425,12 +425,12 @@
               {{ __('Role & Permission Summary') }}
             </div>
             <div class="flex gap-2">
-              <a href="/crm/admin-platform/roles" class="text-xs text-violet-500 hover:underline">
-                {{ __('Manage Roles →') }}
-              </a>
-              <a href="/crm/admin-platform/role-permissions" class="text-xs text-violet-500 hover:underline">
-                {{ __('Permission Matrix →') }}
-              </a>
+               <a href="/crm/admin-platform/roles" class="text-xs text-[#FF6600] hover:underline">
+                 {{ __('Manage Roles →') }}
+               </a>
+               <a href="/crm/admin-platform/role-permissions" class="text-xs text-[#FF6600] hover:underline">
+                 {{ __('Permission Matrix →') }}
+               </a>
             </div>
           </div>
           <div class="grid grid-cols-3 gap-3 mb-4">
@@ -442,11 +442,11 @@
               <div class="font-semibold text-ink-gray-8">{{ r.role }}</div>
               <div class="mt-1 text-ink-gray-4">{{ r.users }} {{ __('users') }}</div>
               <div class="mt-2 flex flex-wrap gap-1">
-                <span
-                  v-for="perm in r.permissions.slice(0, 3)"
-                  :key="perm"
-                  class="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] text-violet-700"
-                >
+                  <span
+                    v-for="perm in r.permissions.slice(0, 3)"
+                    :key="perm"
+                    class="rounded bg-[#FFF0E0] px-1.5 py-0.5 text-[10px] text-[#CC5200]"
+                  >
                   {{ perm }}
                 </span>
                 <span v-if="r.permissions.length > 3" class="text-[10px] text-ink-gray-4">
@@ -484,8 +484,12 @@
                     :key="role"
                     class="py-1.5 px-2 text-center"
                   >
-                    <span :title="row[role]">
-                      {{ permIcon(row[role]) }}
+                    <span
+                      :title="row[role]"
+                      class="inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wide"
+                      :class="permBadgeClass(row[role])"
+                    >
+                      {{ permBadgeLabel(row[role]) }}
                     </span>
                   </td>
                 </tr>
@@ -559,10 +563,10 @@
           class="rounded-full border px-3 py-1 text-xs transition-colors"
           :class="
             configSubTab === st
-              ? 'border-violet-500 bg-violet-50 text-violet-700'
-              : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
-          "
-          @click="configSubTab = st"
+               ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]'
+               : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
+           "
+           @click="configSubTab = st"
         >
           {{ __(st) }}
         </button>
@@ -572,7 +576,7 @@
       <div v-if="configSubTab === 'SLA'">
         <div class="mb-3 flex items-center justify-between">
           <div class="text-xs text-ink-gray-5">{{ __('Define response & resolution SLAs per module and priority') }}</div>
-          <Button :label="__('Add SLA Rule')" variant="solid" size="sm" @click="showSlaModal = true" />
+          <Button :label="__('Add SLA Rule')" variant="solid" size="sm" @click="openSlaModal()" />
         </div>
         <div class="rounded-[14px] border border-crm-border bg-white shadow-sm overflow-hidden">
           <table class="w-full text-xs">
@@ -613,7 +617,7 @@
                   </button>
                 </td>
                 <td class="px-4 py-2.5 text-center">
-                  <Button icon="edit-2" variant="ghost" size="sm" @click="() => {}" />
+                  <Button icon="edit-2" variant="ghost" size="sm" @click="openSlaModal(sla)" />
                 </td>
               </tr>
             </tbody>
@@ -654,7 +658,7 @@
               <span
                 v-for="ch in nt.channels"
                 :key="ch"
-                class="rounded bg-violet-50 px-1.5 py-0.5 text-[10px] text-violet-700"
+                class="rounded bg-[#FFF0E0] px-1.5 py-0.5 text-[10px] text-[#CC5200]"
               >
                 {{ ch }}
               </span>
@@ -829,9 +833,9 @@
                   <div class="text-ink-gray-4">{{ lang.coverage }}% {{ __('translated') }}</div>
                 </div>
                 <div class="h-1.5 w-20 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-1.5 rounded-full bg-violet-500" :style="{ width: lang.coverage + '%' }" />
+                  <div class="h-1.5 rounded-full bg-[#FF6600]" :style="{ width: lang.coverage + '%' }" />
                 </div>
-                <Badge :label="lang.default ? 'Default' : 'Installed'" variant="subtle" :theme="lang.default ? 'purple' : 'gray'" />
+                <Badge :label="lang.default ? 'Default' : 'Installed'" variant="subtle" :theme="lang.default ? 'orange' : 'gray'" />
               </div>
             </div>
           </div>
@@ -861,7 +865,7 @@
               <button
                 v-if="setting.type === 'toggle'"
                 class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
-                :class="setting.value ? 'bg-violet-500' : 'bg-surface-gray-3'"
+                :class="setting.value ? 'bg-[#FF6600]' : 'bg-surface-gray-3'"
                 @click="setting.value = !setting.value"
               >
                 <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
@@ -882,7 +886,7 @@
             <div class="space-y-2 text-xs">
               <div class="flex justify-between">
                 <span class="text-ink-gray-5">{{ __('Plan') }}</span>
-                <Badge label="Enterprise" variant="subtle" theme="purple" />
+                <Badge label="Enterprise" variant="subtle" theme="orange" />
               </div>
               <div class="flex justify-between">
                 <span class="text-ink-gray-5">{{ __('Licensed To') }}</span>
@@ -902,7 +906,7 @@
               </div>
             </div>
             <div class="mt-2 h-1.5 w-full rounded-full bg-surface-gray-2 overflow-hidden">
-              <div class="h-1.5 rounded-full bg-violet-500" :style="{ width: (users.length / 500 * 100) + '%' }" />
+              <div class="h-1.5 rounded-full bg-[#FF6600]" :style="{ width: (users.length / 500 * 100) + '%' }" />
             </div>
             <div class="mt-1 text-[10px] text-ink-gray-4">{{ users.length }}/500 {{ __('seats used') }}</div>
           </div>
@@ -1076,7 +1080,7 @@
           <option v-for="a in ['Create', 'Update', 'Delete', 'Login', 'Logout', 'Export']" :key="a">{{ a }}</option>
         </select>
         <div class="ml-auto">
-          <a href="/crm/admin-platform/audit-trail" class="text-xs text-violet-500 hover:underline">{{ __('Full Audit Trail →') }}</a>
+          <a href="/crm/admin-platform/audit-trail" class="text-xs text-[#FF6600] hover:underline">{{ __('Full Audit Trail →') }}</a>
         </div>
       </div>
       <div class="rounded-[14px] border border-crm-border bg-white shadow-sm overflow-hidden">
@@ -1163,6 +1167,58 @@
     </div>
   </div>
 
+  <!-- SLA Rule Modal -->
+  <div v-if="showSlaModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-lg rounded-[16px] bg-white p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="text-lg font-semibold text-ink-gray-9">{{ slaEditTarget ? __('Edit SLA Rule') : __('Add SLA Rule') }}</div>
+        <button class="text-ink-gray-4 hover:text-ink-gray-7" @click="showSlaModal = false; slaEditTarget = null">✕</button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-ink-gray-5">{{ __('Module') }}</label>
+            <input v-model="slaForm.module" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" :placeholder="__('e.g. Omnichannel')" />
+          </div>
+          <div>
+            <label class="text-xs text-ink-gray-5">{{ __('Priority') }}</label>
+            <select v-model="slaForm.priority" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-2 text-sm">
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-ink-gray-5">{{ __('First Response') }}</label>
+            <input v-model="slaForm.firstResponse" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" placeholder="e.g. 15m, 1h, 4h" />
+          </div>
+          <div>
+            <label class="text-xs text-ink-gray-5">{{ __('Resolution Time') }}</label>
+            <input v-model="slaForm.resolution" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" placeholder="e.g. 2h, 1d, 3d" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-ink-gray-5">{{ __('Business Hours') }}</label>
+          <input v-model="slaForm.businessHours" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" placeholder="e.g. Mon–Fri 08–17" />
+        </div>
+        <div>
+          <label class="text-xs text-ink-gray-5">{{ __('Escalate To') }}</label>
+          <input v-model="slaForm.escalateTo" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 px-3 text-sm" placeholder="e.g. Branch Manager" />
+        </div>
+        <label class="flex items-center gap-2 text-xs text-ink-gray-6">
+          <input v-model="slaForm.active" type="checkbox" class="h-4 w-4 rounded" />
+          {{ __('Active') }}
+        </label>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <Button :label="__('Cancel')" variant="subtle" @click="showSlaModal = false; slaEditTarget = null" />
+        <Button :label="slaEditTarget ? __('Save Changes') : __('Add Rule')" variant="solid" @click="saveSlaRule" />
+      </div>
+    </div>
+  </div>
+
   <!-- Branch Modal -->
   <div v-if="showBranchModal" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-[16px] bg-white p-6 shadow-xl">
@@ -1235,6 +1291,8 @@ const configSubTab = ref('SLA')
 const showInviteModal = ref(false)
 const showBranchModal = ref(false)
 const showSlaModal = ref(false)
+const slaEditTarget = ref(null)
+const slaForm = ref({ module: '', priority: 'High', firstResponse: '', resolution: '', businessHours: 'Mon–Fri 08–17', escalateTo: '', active: true })
 const showNotifModal = ref(false)
 const showHolidayModal = ref(false)
 const showFieldModal = ref(false)
@@ -1253,7 +1311,7 @@ const maintenanceMessage = ref('System maintenance in progress. Please try again
 // ── Branding ─────────────────────────────────────────────────
 const branding = ref({
   platformName: 'SUMMON OS',
-  primaryColor: '#7c3aed',
+  primaryColor: '#FF6600',
   accentColor: '#14b8a6',
   faviconUrl: '/assets/favicon.ico',
   footer: '© 2026 SUMMON OS — Powered by AI',
@@ -1287,35 +1345,35 @@ const platformHealth = [
 
 // ── Feature Cards ────────────────────────────────────────────
 const featureCards = [
-  { key: 'users', label: 'User Management', desc: 'Invite, manage, and deactivate users across branches', emoji: '👥', gradient: 'linear-gradient(135deg, #7c3aed, #c084fc)', stat: '24 active users', tab: 'users', subTab: 'Users' },
-  { key: 'branches', label: 'Branch Management', desc: 'Configure organizational branches and hierarchy', emoji: '🏢', gradient: 'linear-gradient(135deg, #2563eb, #60a5fa)', stat: '5 branches', tab: 'users', subTab: 'Branches' },
-  { key: 'rbac', label: 'Role & Permissions', desc: 'Granular RBAC with permission matrix', emoji: '🔐', gradient: 'linear-gradient(135deg, #dc2626, #f87171)', stat: '7 roles configured', route: '/admin-platform/roles' },
-  { key: 'sla', label: 'SLA Configuration', desc: 'Response and resolution SLA per module and priority', emoji: '⏱️', gradient: 'linear-gradient(135deg, #0891b2, #22d3ee)', stat: '12 SLA rules', tab: 'config', subTab: 'SLA' },
-  { key: 'workflow', label: 'Workflow Engine', desc: 'No-code drag-drop workflow builder', emoji: '🔀', gradient: 'linear-gradient(135deg, #059669, #34d399)', stat: '8 active workflows', route: '/admin-platform/workflow-engine' },
-  { key: 'notif', label: 'Notification Templates', desc: 'System notification templates across channels', emoji: '🔔', gradient: 'linear-gradient(135deg, #d97706, #fbbf24)', stat: '15 templates', tab: 'config', subTab: 'Notifications' },
-  { key: 'holiday', label: 'Holiday Calendar', desc: 'Public holidays for SLA business-hours calculation', emoji: '📅', gradient: 'linear-gradient(135deg, #e11d48, #fb7185)', stat: '18 holidays', tab: 'config', subTab: 'Holidays' },
-  { key: 'settings', label: 'System Settings', desc: 'Platform-wide configuration toggles', emoji: '⚙️', gradient: 'linear-gradient(135deg, #475569, #94a3b8)', stat: '20 settings', tab: 'platform' },
-  { key: 'api', label: 'API Credentials', desc: 'API key management and OAuth configuration', emoji: '🔑', gradient: 'linear-gradient(135deg, #7c3aed, #a78bfa)', stat: '4 active keys', tab: 'security' },
-  { key: 'audit', label: 'Audit Trail', desc: 'Full activity logs and compliance tracking', emoji: '📋', gradient: 'linear-gradient(135deg, #1e3a5f, #3b82f6)', stat: '2,847 events', route: '/admin-platform/audit-trail' },
-  { key: 'tenant', label: 'Multi-Tenant', desc: 'Manage platform tenants and subdomain configuration', emoji: '🏗️', gradient: 'linear-gradient(135deg, #0f766e, #2dd4bf)', stat: '1 tenant active', tab: 'platform' },
-  { key: 'branding', label: 'Branding & White Label', desc: 'Custom logo, colors, and platform identity', emoji: '🎨', gradient: 'linear-gradient(135deg, #c026d3, #e879f9)', stat: 'BNI theme applied', tab: 'platform' },
-  { key: 'backup', label: 'Backup & Restore', desc: 'Automated backups with point-in-time restore', emoji: '💾', gradient: 'linear-gradient(135deg, #1d4ed8, #60a5fa)', stat: 'Last: 2h ago', tab: 'platform' },
-  { key: 'maintenance', label: 'Maintenance Mode', desc: 'Block user access during system maintenance', emoji: '🔧', gradient: 'linear-gradient(135deg, #92400e, #fbbf24)', stat: 'Currently off', tab: 'platform' },
-  { key: 'license', label: 'License', desc: 'Enterprise license management and seat tracking', emoji: '📜', gradient: 'linear-gradient(135deg, #065f46, #34d399)', stat: '24/500 seats', tab: 'platform' },
-  { key: 'session', label: 'Session Management', desc: 'View and terminate active user sessions', emoji: '🖥️', gradient: 'linear-gradient(135deg, #7c3aed, #c084fc)', stat: '8 sessions', tab: 'users', subTab: 'Sessions' },
-  { key: 'password', label: 'Password Policy', desc: 'Enforce password strength and rotation rules', emoji: '🛡️', gradient: 'linear-gradient(135deg, #b91c1c, #f87171)', stat: 'Policy active', tab: 'security' },
-  { key: 'fields', label: 'Custom Field Builder', desc: 'Add custom fields to CRM doctypes', emoji: '🧩', gradient: 'linear-gradient(135deg, #0369a1, #38bdf8)', stat: '6 custom fields', tab: 'config', subTab: 'Custom Fields' },
-  { key: 'locale', label: 'Localization', desc: 'Language, currency, timezone, and date format', emoji: '🌐', gradient: 'linear-gradient(135deg, #0f766e, #34d399)', stat: 'ID + EN', tab: 'config', subTab: 'Localization' },
+  { key: 'users', label: 'User Management', desc: 'Invite, manage, and deactivate users across branches', icon: 'users', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '24 active users', tab: 'users', subTab: 'Users' },
+  { key: 'branches', label: 'Branch Management', desc: 'Configure organizational branches and hierarchy', icon: 'git-branch', gradient: 'linear-gradient(135deg, #2563eb, #60a5fa)', stat: '5 branches', tab: 'users', subTab: 'Branches' },
+  { key: 'rbac', label: 'Role & Permissions', desc: 'Granular RBAC with permission matrix', icon: 'lock', gradient: 'linear-gradient(135deg, #dc2626, #f87171)', stat: '7 roles configured', route: '/admin-platform/roles' },
+  { key: 'sla', label: 'SLA Configuration', desc: 'Response and resolution SLA per module and priority', icon: 'clock', gradient: 'linear-gradient(135deg, #0891b2, #22d3ee)', stat: '12 SLA rules', tab: 'config', subTab: 'SLA' },
+  { key: 'workflow', label: 'Workflow Engine', desc: 'No-code drag-drop workflow builder', icon: 'git-merge', gradient: 'linear-gradient(135deg, #059669, #34d399)', stat: '8 active workflows', route: '/admin-platform/workflow-engine' },
+  { key: 'notif', label: 'Notification Templates', desc: 'System notification templates across channels', icon: 'bell', gradient: 'linear-gradient(135deg, #d97706, #fbbf24)', stat: '15 templates', tab: 'config', subTab: 'Notifications' },
+  { key: 'holiday', label: 'Holiday Calendar', desc: 'Public holidays for SLA business-hours calculation', icon: 'calendar', gradient: 'linear-gradient(135deg, #e11d48, #fb7185)', stat: '18 holidays', tab: 'config', subTab: 'Holidays' },
+  { key: 'settings', label: 'System Settings', desc: 'Platform-wide configuration toggles', icon: 'settings', gradient: 'linear-gradient(135deg, #475569, #94a3b8)', stat: '20 settings', tab: 'platform' },
+  { key: 'api', label: 'API Credentials', desc: 'API key management and OAuth configuration', icon: 'key', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '4 active keys', tab: 'security' },
+  { key: 'audit', label: 'Audit Trail', desc: 'Full activity logs and compliance tracking', icon: 'clipboard', gradient: 'linear-gradient(135deg, #1e3a5f, #3b82f6)', stat: '2,847 events', route: '/admin-platform/audit-trail' },
+  { key: 'tenant', label: 'Multi-Tenant', desc: 'Manage platform tenants and subdomain configuration', icon: 'layers', gradient: 'linear-gradient(135deg, #0f766e, #2dd4bf)', stat: '1 tenant active', tab: 'platform' },
+  { key: 'branding', label: 'Branding & White Label', desc: 'Custom logo, colors, and platform identity', icon: 'aperture', gradient: 'linear-gradient(135deg, #c026d3, #e879f9)', stat: 'BNI theme applied', tab: 'platform' },
+  { key: 'backup', label: 'Backup & Restore', desc: 'Automated backups with point-in-time restore', icon: 'database', gradient: 'linear-gradient(135deg, #1d4ed8, #60a5fa)', stat: 'Last: 2h ago', tab: 'platform' },
+  { key: 'maintenance', label: 'Maintenance Mode', desc: 'Block user access during system maintenance', icon: 'tool', gradient: 'linear-gradient(135deg, #92400e, #fbbf24)', stat: 'Currently off', tab: 'platform' },
+  { key: 'license', label: 'License', desc: 'Enterprise license management and seat tracking', icon: 'file-text', gradient: 'linear-gradient(135deg, #065f46, #34d399)', stat: '24/500 seats', tab: 'platform' },
+  { key: 'session', label: 'Session Management', desc: 'View and terminate active user sessions', icon: 'monitor', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '8 sessions', tab: 'users', subTab: 'Sessions' },
+  { key: 'password', label: 'Password Policy', desc: 'Enforce password strength and rotation rules', icon: 'shield', gradient: 'linear-gradient(135deg, #b91c1c, #f87171)', stat: 'Policy active', tab: 'security' },
+  { key: 'fields', label: 'Custom Field Builder', desc: 'Add custom fields to CRM doctypes', icon: 'sliders', gradient: 'linear-gradient(135deg, #0369a1, #38bdf8)', stat: '6 custom fields', tab: 'config', subTab: 'Custom Fields' },
+  { key: 'locale', label: 'Localization', desc: 'Language, currency, timezone, and date format', icon: 'globe', gradient: 'linear-gradient(135deg, #0f766e, #34d399)', stat: 'ID + EN', tab: 'config', subTab: 'Localization' },
 ]
 
 // ── Recent Activity ──────────────────────────────────────────
 const recentActivity = [
-  { id: 1, emoji: '👤', iconBg: 'bg-violet-100 text-violet-700', actor: 'Admin', action: 'invited user Siti Rahayu (RM role)', time: '5m ago' },
-  { id: 2, emoji: '🔐', iconBg: 'bg-red-100 text-red-700', actor: 'Admin', action: 'updated Role Permissions for Credit Analyst', time: '1h ago' },
-  { id: 3, emoji: '⚙️', iconBg: 'bg-gray-100 text-gray-700', actor: 'System', action: 'automated backup completed — 4.2 GB', time: '2h ago' },
-  { id: 4, emoji: '🔑', iconBg: 'bg-amber-100 text-amber-700', actor: 'IT Admin', action: 'generated new API key for BNI Integration', time: '3h ago' },
-  { id: 5, emoji: '🌐', iconBg: 'bg-blue-100 text-blue-700', actor: 'Admin', action: 'updated locale settings to Bahasa Indonesia', time: 'Yesterday' },
-  { id: 6, emoji: '⏱️', iconBg: 'bg-cyan-100 text-cyan-700', actor: 'Admin', action: 'added SLA rule — Omnichannel High Priority 15m', time: 'Yesterday' },
+  { id: 1, icon: 'user-plus', iconBg: 'bg-[#FFF0E0] text-[#CC5200]', actor: 'Admin', action: 'invited user Siti Rahayu (RM role)', time: '5m ago' },
+  { id: 2, icon: 'lock', iconBg: 'bg-red-100 text-red-700', actor: 'Admin', action: 'updated Role Permissions for Credit Analyst', time: '1h ago' },
+  { id: 3, icon: 'settings', iconBg: 'bg-gray-100 text-gray-600', actor: 'System', action: 'automated backup completed — 4.2 GB', time: '2h ago' },
+  { id: 4, icon: 'key', iconBg: 'bg-amber-100 text-amber-700', actor: 'IT Admin', action: 'generated new API key for BNI Integration', time: '3h ago' },
+  { id: 5, icon: 'globe', iconBg: 'bg-blue-100 text-blue-700', actor: 'Admin', action: 'updated locale settings to Bahasa Indonesia', time: 'Yesterday' },
+  { id: 6, icon: 'clock', iconBg: 'bg-cyan-100 text-cyan-700', actor: 'Admin', action: 'added SLA rule — Omnichannel High Priority 15m', time: 'Yesterday' },
 ]
 
 // ── Users ────────────────────────────────────────────────────
@@ -1506,11 +1564,25 @@ const filteredAuditLogs = computed(() => {
 
 // ── Helpers ──────────────────────────────────────────────────
 function avatarGradient(name) {
-  const colors = ['#7c3aed', '#2563eb', '#059669', '#dc2626', '#d97706', '#0891b2', '#c026d3']
+  const colors = ['#FF6600', '#2563eb', '#059669', '#dc2626', '#d97706', '#0891b2', '#c026d3']
   return colors[name.charCodeAt(0) % colors.length]
 }
 function permIcon(level) {
-  return level === 'full' ? '✅' : level === 'write' ? '✏️' : level === 'read' ? '👁️' : '🚫'
+  return level
+}
+
+function permBadgeLabel(level) {
+  return level === 'full' ? 'FULL' : level === 'write' ? 'EDIT' : level === 'read' ? 'VIEW' : '—'
+}
+
+function permBadgeClass(level) {
+  return level === 'full'
+    ? 'bg-green-100 text-green-700'
+    : level === 'write'
+    ? 'bg-blue-100 text-blue-700'
+    : level === 'read'
+    ? 'bg-slate-100 text-slate-500'
+    : 'text-ink-gray-3'
 }
 
 // ── Actions ──────────────────────────────────────────────────
@@ -1559,6 +1631,27 @@ function sendInvite() {
   })
   inviteForm.value = { email: '', role: 'RM', branch: '', status: 'Invited', sendWelcomeEmail: true }
   showInviteModal.value = false
+}
+
+function openSlaModal(sla = null) {
+  slaEditTarget.value = sla
+  if (sla) {
+    slaForm.value = { module: sla.module, priority: sla.priority, firstResponse: sla.firstResponse, resolution: sla.resolution, businessHours: sla.businessHours, escalateTo: sla.escalateTo, active: sla.active }
+  } else {
+    slaForm.value = { module: '', priority: 'High', firstResponse: '', resolution: '', businessHours: 'Mon–Fri 08–17', escalateTo: '', active: true }
+  }
+  showSlaModal.value = true
+}
+
+function saveSlaRule() {
+  if (!slaForm.value.module) return
+  if (slaEditTarget.value) {
+    Object.assign(slaEditTarget.value, { ...slaForm.value })
+  } else {
+    slaRules.value.push({ id: `sla-${Date.now()}`, ...slaForm.value })
+  }
+  showSlaModal.value = false
+  slaEditTarget.value = null
 }
 
 function addBranch() {

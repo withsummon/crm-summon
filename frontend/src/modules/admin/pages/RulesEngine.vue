@@ -5,7 +5,7 @@
         <div class="flex min-w-0 items-center gap-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #0891b2, #06b6d4)"
+            style="background: linear-gradient(135deg, #FF6600, #FF944D)"
           >
             <FeatherIcon name="cpu" class="h-4 w-4 text-white" />
           </div>
@@ -33,13 +33,13 @@
         v-for="tab in pageTabs"
         :key="tab.key"
         class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors"
-        :class="activeTab === tab.key ? 'border-b-2 border-cyan-500 text-cyan-600' : 'text-ink-gray-5 hover:text-ink-gray-8'"
+        :class="activeTab === tab.key ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5 hover:text-ink-gray-8'"
         @click="activeTab = tab.key"
       >
         {{ __(tab.label) }}
         <span
           v-if="tab.badge"
-          class="rounded-full bg-cyan-500 px-1.5 text-[10px] text-white"
+          class="rounded-full bg-[#FF6600] px-1.5 text-[10px] text-white"
         >{{ tab.badge }}</span>
       </button>
     </div>
@@ -197,13 +197,13 @@
           <!-- IF Conditions -->
           <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm" style="border-left: 3px solid #0891b2">
             <div class="mb-3 flex items-center justify-between">
-              <div class="text-sm font-semibold text-cyan-700">{{ __('IF') }}</div>
+              <div class="text-sm font-semibold text-[#004D73]">{{ __('IF') }}</div>
               <div class="flex gap-1">
                 <button
                   v-for="logic in ['AND', 'OR']"
                   :key="logic"
                   class="rounded px-2 py-0.5 text-[10px] font-semibold"
-                  :class="builderForm.conditionLogic === logic ? 'bg-cyan-500 text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+                  :class="builderForm.conditionLogic === logic ? 'bg-[#FF6600] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
                   @click="builderForm.conditionLogic = logic"
                 >
                   {{ logic }}
@@ -227,8 +227,8 @@
               </div>
             </div>
             <div class="mt-2 flex gap-2">
-              <button class="text-xs text-cyan-600 hover:underline" @click="addCondition">+ {{ __('Add Condition') }}</button>
-              <button class="text-xs text-cyan-600 hover:underline" @click="addConditionGroup">+ {{ __('Add Group (OR)') }}</button>
+              <button class="text-xs text-[#FF6600] hover:underline" @click="addCondition">+ {{ __('Add Condition') }}</button>
+              <button class="text-xs text-[#FF6600] hover:underline" @click="addConditionGroup">+ {{ __('Add Group (OR)') }}</button>
             </div>
           </div>
 
@@ -288,16 +288,16 @@
             <!-- Flow diagram using CSS -->
             <div class="flex flex-col items-center gap-0">
               <!-- START node -->
-              <div class="rounded-full bg-cyan-500 px-6 py-2 text-xs font-semibold text-white shadow">{{ __('START') }}</div>
-              <div class="h-6 w-px border-l-2 border-dashed border-cyan-300"></div>
+              <div class="rounded-full bg-[#006699] px-6 py-2 text-xs font-semibold text-white shadow">{{ __('START') }}</div>
+              <div class="h-6 w-px border-l-2 border-dashed border-[#0088BB]"></div>
 
               <!-- Condition block -->
-              <div class="relative rounded-lg border-2 border-cyan-400 bg-cyan-50 px-6 py-3 text-center shadow-sm">
-                <div class="text-[10px] font-semibold uppercase text-cyan-600">{{ __('Conditions') }} ({{ builderForm.conditionLogic }})</div>
+              <div class="relative rounded-lg border-2 border-[#006699] bg-[#E0F0FF] px-6 py-3 text-center shadow-sm">
+                <div class="text-[10px] font-semibold uppercase text-[#006699]">{{ __('Conditions') }} ({{ builderForm.conditionLogic }})</div>
                 <div v-for="(cond, idx) in builderForm.conditions" :key="idx" class="mt-1 text-xs text-ink-gray-7">
-                  <span class="font-mono text-cyan-700">{{ cond.field }}</span>
+                  <span class="font-mono text-[#004D73]">{{ cond.field }}</span>
                   <span class="mx-1 font-bold">{{ cond.operator }}</span>
-                  <span class="font-mono text-cyan-700">{{ cond.value }}</span>
+                  <span class="font-mono text-[#004D73]">{{ cond.value }}</span>
                 </div>
               </div>
               <div class="h-4 w-px border-l-2 border-dashed border-ink-gray-3"></div>
@@ -342,9 +342,9 @@
               <p>
                 <span class="font-semibold text-ink-gray-8">{{ __('IF') }}</span>
                 <span v-for="(cond, idx) in builderForm.conditions" :key="idx">
-                  <span class="font-mono text-cyan-700">{{ cond.field }}</span>
+                  <span class="font-mono text-[#004D73]">{{ cond.field }}</span>
                   <span class="mx-1 font-bold">{{ cond.operator }}</span>
-                  <span class="font-mono text-cyan-700">{{ cond.value }}</span>
+                  <span class="font-mono text-[#004D73]">{{ cond.value }}</span>
                   <span v-if="idx < builderForm.conditions.length - 1" class="mx-1 font-semibold text-ink-gray-5">{{ builderForm.conditionLogic }}</span>
                 </span>
               </p>
@@ -380,14 +380,14 @@
         <div v-else class="flex gap-1">
           <button
             class="rounded-md px-3 py-1.5 text-xs font-medium"
-            :class="treeView === 'list' ? 'bg-cyan-500 text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+            :class="treeView === 'list' ? 'bg-\[#FF6600\] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
             @click="treeView = 'list'"
           >
             {{ __('Tree List') }}
           </button>
           <button
             class="rounded-md px-3 py-1.5 text-xs font-medium"
-            :class="treeView === 'canvas' ? 'bg-cyan-500 text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+            :class="treeView === 'canvas' ? 'bg-\[#FF6600\] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
             @click="treeView = 'canvas'"
           >
             {{ __('Tree Canvas') }}
@@ -446,7 +446,7 @@
         <div class="tree-container pl-4">
           <!-- Root node -->
           <div class="tree-node">
-            <div class="inline-block cursor-pointer rounded-lg bg-cyan-500 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-cyan-600">
+            <div class="inline-block cursor-pointer rounded-lg bg-[#006699] px-4 py-2 text-xs font-semibold text-white shadow hover:bg-[#004D73]">
               {{ __('Age >= 21?') }}
             </div>
             <div class="tree-children">
@@ -458,7 +458,7 @@
               </div>
               <!-- Yes branch -->
               <div class="tree-node">
-                <div class="inline-block cursor-pointer rounded-lg bg-cyan-100 px-4 py-2 text-xs font-medium text-cyan-700 shadow-sm hover:bg-cyan-200">
+                <div class="inline-block cursor-pointer rounded-lg bg-[#CCE5F5] px-4 py-2 text-xs font-medium text-[#004D73] shadow-sm hover:bg-[#B3D9F0]">
                   {{ __('SLIK Score >= 500?') }}
                 </div>
                 <div class="tree-children">
@@ -468,7 +468,7 @@
                     </div>
                   </div>
                   <div class="tree-node">
-                    <div class="inline-block cursor-pointer rounded-lg bg-cyan-100 px-4 py-2 text-xs font-medium text-cyan-700 shadow-sm hover:bg-cyan-200">
+                    <div class="inline-block cursor-pointer rounded-lg bg-[#CCE5F5] px-4 py-2 text-xs font-medium text-[#004D73] shadow-sm hover:bg-[#B3D9F0]">
                       {{ __('Monthly Income >= Rp 15M?') }}
                     </div>
                     <div class="tree-children">
@@ -478,7 +478,7 @@
                         </div>
                       </div>
                       <div class="tree-node">
-                        <div class="inline-block cursor-pointer rounded-lg bg-cyan-100 px-4 py-2 text-xs font-medium text-cyan-700 shadow-sm hover:bg-cyan-200">
+                        <div class="inline-block cursor-pointer rounded-lg bg-[#CCE5F5] px-4 py-2 text-xs font-medium text-[#004D73] shadow-sm hover:bg-[#B3D9F0]">
                           {{ __('Loan Amount?') }}
                         </div>
                         <div class="tree-children">
@@ -698,7 +698,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="(v, idx) in simResult.outputVars" :key="idx" class="border-b border-outline-gray-1 last:border-0">
-                    <td class="py-1.5 font-mono text-cyan-700">{{ v.name }}</td>
+                    <td class="py-1.5 font-mono text-[#004D73]">{{ v.name }}</td>
                     <td class="py-1.5 font-medium text-ink-gray-7">{{ v.value }}</td>
                     <td class="py-1.5 text-ink-gray-5">{{ v.setBy }}</td>
                   </tr>
@@ -735,9 +735,9 @@
                   <div class="text-lg font-bold text-ink-gray-5">{{ simResult.summary.skipped }}</div>
                   <div class="text-ink-gray-4">{{ __('Skipped') }}</div>
                 </div>
-                <div class="rounded-lg bg-cyan-50 p-2">
-                  <div class="text-lg font-bold text-cyan-600">{{ simResult.summary.totalTime }}ms</div>
-                  <div class="text-cyan-500">{{ __('Total Time') }}</div>
+                <div class="rounded-lg bg-[#FFF0E0] p-2">
+                  <div class="text-lg font-bold text-[#FF6600]">{{ simResult.summary.totalTime }}ms</div>
+                  <div class="text-[#FF6600]">{{ __('Total Time') }}</div>
                 </div>
               </div>
             </div>
@@ -764,7 +764,7 @@
             v-for="period in ['Today', '7d', '30d']"
             :key="period"
             class="rounded-md px-2.5 py-1 text-xs"
-            :class="logsPeriod === period ? 'bg-cyan-500 text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+            :class="logsPeriod === period ? 'bg-\[#FF6600\] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
             @click="logsPeriod = period"
           >
             {{ __(period) }}
@@ -843,7 +843,7 @@
               <div class="w-36 truncate text-ink-gray-6">{{ item.name }}</div>
               <div class="flex-1">
                 <div class="h-5 overflow-hidden rounded bg-surface-gray-2">
-                  <div class="flex h-5 items-center rounded bg-cyan-500 px-2 text-[10px] font-medium text-white" :style="{ width: item.pct + '%' }">
+                  <div class="flex h-5 items-center rounded bg-[#FF6600] px-2 text-[10px] font-medium text-white" :style="{ width: item.pct + '%' }">
                     {{ item.count }}
                   </div>
                 </div>
@@ -903,7 +903,7 @@
           <div class="flex items-end gap-2 h-32">
             <div v-for="bar in monthlyTrend" :key="bar.month" class="flex flex-1 flex-col items-center gap-1">
               <span class="text-[10px] text-ink-gray-5">{{ bar.count }}</span>
-              <div class="w-full rounded-t bg-cyan-500" :style="{ height: (bar.count / maxMonthly * 100) + '%' }"></div>
+              <div class="w-full rounded-t bg-[#FF6600]" :style="{ height: (bar.count / maxMonthly * 100) + '%' }"></div>
               <span class="text-[10px] text-ink-gray-4">{{ bar.month }}</span>
             </div>
           </div>
@@ -981,11 +981,11 @@
         >
           <div
             class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
-            :class="newRuleStep === idx + 1 ? 'bg-cyan-500 text-white' : newRuleStep > idx + 1 ? 'bg-green-500 text-white' : 'bg-surface-gray-2 text-ink-gray-4'"
+            :class="newRuleStep === idx + 1 ? 'bg-[#FF6600] text-white' : newRuleStep > idx + 1 ? 'bg-green-500 text-white' : 'bg-surface-gray-2 text-ink-gray-4'"
           >
             {{ idx + 1 }}
           </div>
-          <span class="text-xs" :class="newRuleStep === idx + 1 ? 'font-semibold text-cyan-700' : 'text-ink-gray-4'">{{ __(step) }}</span>
+          <span class="text-xs" :class="newRuleStep === idx + 1 ? 'font-semibold text-[#CC5200]' : 'text-ink-gray-4'">{{ __(step) }}</span>
           <div v-if="idx < 2" class="mx-1 h-px w-8 bg-outline-gray-2"></div>
         </div>
       </div>
@@ -1047,7 +1047,7 @@
             <button class="text-ink-gray-3 hover:text-red-500" @click="newRuleForm.conditions.splice(idx, 1)">✕</button>
           </div>
         </div>
-        <button class="text-xs text-cyan-600 hover:underline" @click="newRuleForm.conditions.push({ field: 'credit_score', operator: '>=', value: '' })">
+        <button class="text-xs text-[#FF6600] hover:underline" @click="newRuleForm.conditions.push({ field: 'credit_score', operator: '>=', value: '' })">
           + {{ __('Add Condition') }}
         </button>
       </div>
@@ -1158,7 +1158,7 @@
           :key="ver.version"
           class="flex items-start gap-3 rounded-lg border border-outline-gray-1 p-3"
         >
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-700">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#CCE5F5] text-xs font-bold text-[#004D73]">
             v{{ ver.version }}
           </div>
           <div class="min-w-0 flex-1">
@@ -1219,7 +1219,7 @@
         </div>
         <div>
           <div class="mb-1 text-xs font-semibold text-ink-gray-6">{{ __('Decision Path') }}</div>
-          <div class="rounded-lg bg-cyan-50 p-3 text-xs text-cyan-800">
+          <div class="rounded-lg bg-[#E0F0FF] p-3 text-xs text-[#00334D]">
             {{ selectedLog.decisionPath }}
           </div>
         </div>
@@ -1611,24 +1611,24 @@ const executionLogs = ref([
 
 // ─── KPI Data ───
 const libraryKpis = [
-  { label: 'Total Rules', value: '47', icon: 'layers', iconColor: 'text-cyan-500', delta: '+3 this month', deltaColor: 'text-green-500' },
+  { label: 'Total Rules', value: '47', icon: 'layers', iconColor: 'text-[#FF6600]', delta: '+3 this month', deltaColor: 'text-green-500' },
   { label: 'Active', value: '38', icon: 'check-circle', iconColor: 'text-green-500', valueColor: 'text-green-600', delta: '80.9% of total' },
   { label: 'Pending Approval', value: '4', icon: 'clock', iconColor: 'text-amber-500', valueColor: 'text-amber-600', delta: 'Awaiting review' },
   { label: 'Failed (7d)', value: '2', icon: 'alert-triangle', iconColor: 'text-red-500', valueColor: 'text-red-600', delta: '-1 vs last week', deltaColor: 'text-green-500' },
-  { label: 'Avg Exec Time', value: '12ms', icon: 'zap', iconColor: 'text-cyan-500', delta: '-3ms vs last month', deltaColor: 'text-green-500' },
+  { label: 'Avg Exec Time', value: '12ms', icon: 'zap', iconColor: 'text-[#FF6600]', delta: '-3ms vs last month', deltaColor: 'text-green-500' },
 ]
 
 const logsKpis = [
-  { label: 'Executions (24h)', value: '1,247', color: 'text-cyan-600', sub: '+8.3% vs yesterday' },
+  { label: 'Executions (24h)', value: '1,247', color: 'text-[#FF6600]', sub: '+8.3% vs yesterday' },
   { label: 'Avg Latency', value: '8ms', color: 'text-green-600', sub: 'Within SLA' },
   { label: 'Error Rate', value: '0.3%', color: 'text-green-600', sub: 'Below threshold' },
   { label: 'Top Rule', value: 'Credit Eligibility Basic', color: 'text-ink-gray-9', sub: '312 executions' },
 ]
 
 const analyticsKpis = [
-  { label: 'Active Rules', value: '38', color: 'text-cyan-600', sub: '+3 this month' },
+  { label: 'Active Rules', value: '38', color: 'text-[#FF6600]', sub: '+3 this month' },
   { label: 'Avg Hit Rate', value: '73.2%', color: 'text-green-600', sub: '+2.1% vs last month' },
-  { label: 'Avg Latency', value: '8ms', color: 'text-cyan-600', sub: '-2ms improved' },
+  { label: 'Avg Latency', value: '8ms', color: 'text-[#FF6600]', sub: '-2ms improved' },
   { label: 'Exception Rate', value: '2.4%', color: 'text-amber-600', sub: 'Within tolerance' },
 ]
 
@@ -1773,6 +1773,22 @@ function openNewRuleModal() {
 }
 
 function createNewRule() {
+  const newId = Math.max(...rules.value.map(r => r.id)) + 1
+  rules.value.unshift({
+    id: newId,
+    name: newRuleForm.name || 'Untitled Rule',
+    category: newRuleForm.category,
+    module: newRuleForm.module,
+    description: newRuleForm.description,
+    priority: newRuleForm.priority,
+    status: 'Draft',
+    version: 'v1.0',
+    lastModified: new Date().toISOString().slice(0, 10),
+    hitRate: null,
+    conditions: newRuleForm.conditions.map(c => ({ ...c })),
+    thenActions: [],
+    elseActions: [],
+  })
   showNewRuleModal.value = false
   showToast(__('Rule created successfully'))
 }
