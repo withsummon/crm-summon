@@ -3,7 +3,7 @@
     <LayoutHeader stretch-left>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]">
             <FeatherIcon name="link" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
@@ -13,11 +13,11 @@
       </template>
       <template #right-header>
         <div class="flex items-center gap-2">
-          <button @click="runHealthCheck" class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white">
+          <button @click="runHealthCheck" class="flex items-center gap-1.5 rounded-lg border border-[#006699] px-3 py-1.5 text-xs font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors bg-white">
             <FeatherIcon name="activity" class="h-3.5 w-3.5" />
             Health Check
           </button>
-          <button @click="showAddModal = true" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+          <button @click="showAddModal = true" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
             <FeatherIcon name="plus" class="h-3.5 w-3.5" />
             Add Integration
           </button>
@@ -33,7 +33,7 @@
           <button v-for="item in apiCoreNav" :key="item.id"
             @click="activeSection = item.id"
             class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors"
-            :class="activeSection === item.id ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'">
+            :class="activeSection === item.id ? 'bg-[#FFF8F2] text-[#CC5200] font-medium' : 'text-gray-600 hover:bg-gray-50'">
             <FeatherIcon :name="item.icon" class="h-3.5 w-3.5 flex-shrink-0" />
             <span class="truncate">{{ item.label }}</span>
             <span v-if="item.badge" class="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" :class="item.badgeColor">{{ item.badge }}</span>
@@ -43,7 +43,7 @@
           <button v-for="item in integrationsNav" :key="item.id"
             @click="activeSection = item.id"
             class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors"
-            :class="activeSection === item.id ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'">
+            :class="activeSection === item.id ? 'bg-[#FFF8F2] text-[#CC5200] font-medium' : 'text-gray-600 hover:bg-gray-50'">
             <FeatherIcon :name="item.icon" class="h-3.5 w-3.5 flex-shrink-0" />
             <span class="truncate">{{ item.label }}</span>
             <span v-if="item.badge" class="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" :class="item.badgeColor">{{ item.badge }}</span>
@@ -53,7 +53,7 @@
           <button v-for="item in operationsNav" :key="item.id"
             @click="activeSection = item.id"
             class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors"
-            :class="activeSection === item.id ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'">
+            :class="activeSection === item.id ? 'bg-[#FFF8F2] text-[#CC5200] font-medium' : 'text-gray-600 hover:bg-gray-50'">
             <FeatherIcon :name="item.icon" class="h-3.5 w-3.5 flex-shrink-0" />
             <span class="truncate">{{ item.label }}</span>
             <span v-if="item.badge" class="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" :class="item.badgeColor">{{ item.badge }}</span>
@@ -90,7 +90,7 @@
               <h2 class="text-base font-semibold text-gray-800">API Management Console</h2>
               <p class="text-xs text-gray-500 mt-0.5">Manage API endpoints, keys, versioning, and usage metrics</p>
             </div>
-            <button @click="openGenKeyModal" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">
+            <button @click="openGenKeyModal" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#CC5200] bg-[#FFF8F2] rounded-lg hover:bg-[#FFF0E6] transition-colors">
               <FeatherIcon name="key" class="h-3.5 w-3.5" />Generate Key
             </button>
           </div>
@@ -109,7 +109,7 @@
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <h3 class="text-sm font-medium text-gray-700">API Endpoints</h3>
               <div class="flex items-center gap-2">
-                <input v-model="apiSearch" placeholder="Search endpoints..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-48 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+                <input v-model="apiSearch" placeholder="Search endpoints..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-48 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
                 <select class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none">
                   <option>All Versions</option><option>v1</option><option>v2</option>
                 </select>
@@ -129,7 +129,7 @@
               </thead>
               <tbody>
                 <tr v-for="ep in filteredEndpoints" :key="ep.id" class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td class="px-4 py-3 font-mono text-teal-700">{{ ep.path }}</td>
+                  <td class="px-4 py-3 font-mono text-[#CC5200]">{{ ep.path }}</td>
                   <td class="px-4 py-3">
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold" :class="methodColor(ep.method)">{{ ep.method }}</span>
                   </td>
@@ -140,15 +140,15 @@
                   </td>
                   <td class="px-4 py-3">
                     <button @click="toggleEndpoint(ep)" class="flex items-center gap-1.5">
-                      <div class="w-7 h-4 rounded-full transition-colors relative" :class="ep.enabled ? 'bg-teal-500' : 'bg-gray-200'">
+                      <div class="w-7 h-4 rounded-full transition-colors relative" :class="ep.enabled ? 'bg-[#FF6600]' : 'bg-gray-200'">
                         <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all" :class="ep.enabled ? 'left-3.5' : 'left-0.5'"></div>
                       </div>
-                      <span :class="ep.enabled ? 'text-teal-600' : 'text-gray-400'">{{ ep.enabled ? 'Active' : 'Off' }}</span>
+                      <span :class="ep.enabled ? 'text-[#FF6600]' : 'text-gray-400'">{{ ep.enabled ? 'Active' : 'Off' }}</span>
                     </button>
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-1">
-                      <button @click="showToast('Endpoint copied')" class="p-1 text-gray-400 hover:text-teal-600 rounded"><FeatherIcon name="copy" class="h-3.5 w-3.5" /></button>
+                      <button @click="showToast('Endpoint copied')" class="p-1 text-gray-400 hover:text-[#FF6600] rounded"><FeatherIcon name="copy" class="h-3.5 w-3.5" /></button>
                       <button v-if="ep.deprecate" class="px-2 py-0.5 text-[10px] text-amber-600 bg-amber-50 rounded border border-amber-200">Deprecated</button>
                     </div>
                   </td>
@@ -161,7 +161,7 @@
           <div class="mt-5 bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
               <h3 class="text-sm font-medium text-gray-700">Custom Integrations</h3>
-              <button @click="showAddModal = true" class="flex items-center gap-1.5 text-xs font-medium text-teal-600 hover:text-teal-700">
+              <button @click="showAddModal = true" class="flex items-center gap-1.5 text-xs font-medium text-[#FF6600] hover:text-[#CC5200]">
                 <FeatherIcon name="plus" class="h-3.5 w-3.5" />Add New
               </button>
             </div>
@@ -171,8 +171,8 @@
             </div>
             <div v-else class="divide-y divide-gray-50">
               <div v-for="intg in userIntegrations" :key="intg.id" class="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group">
-                <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-                  <FeatherIcon name="link-2" class="h-4 w-4 text-teal-600" />
+                <div class="w-8 h-8 rounded-lg bg-[#FFF8F2] flex items-center justify-center shrink-0">
+                  <FeatherIcon name="link-2" class="h-4 w-4 text-[#FF6600]" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
@@ -184,7 +184,7 @@
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">{{ intg.authType }}</span>
-                  <button @click="editIntegration(intg)" class="p-1 text-gray-300 hover:text-teal-600 rounded hover:bg-teal-50 transition-colors opacity-0 group-hover:opacity-100">
+                  <button @click="editIntegration(intg)" class="p-1 text-gray-300 hover:text-[#FF6600] rounded hover:bg-[#FFF8F2] transition-colors opacity-0 group-hover:opacity-100">
                     <FeatherIcon name="edit-2" class="h-3.5 w-3.5" />
                   </button>
                   <button @click="deleteTarget = intg; showDeleteIntg = true" class="p-1 text-gray-300 hover:text-red-500 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100">
@@ -203,7 +203,7 @@
               <h2 class="text-base font-semibold text-gray-800">Webhook Management</h2>
               <p class="text-xs text-gray-500 mt-0.5">Register, test, and monitor webhook deliveries</p>
             </div>
-            <button @click="showAddWebhook = true" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showAddWebhook = true" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />Register Webhook
             </button>
           </div>
@@ -212,14 +212,14 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4">
               <p class="text-xs text-gray-500 mb-3">Delivery Success Rate (7d)</p>
               <div class="flex items-end gap-1 h-16">
-                <div v-for="(h,i) in [88,92,95,91,96,98,99]" :key="i" class="flex-1 bg-teal-100 rounded-t" :style="`height:${h}%`" :title="`${h}%`"></div>
+                <div v-for="(h,i) in [88,92,95,91,96,98,99]" :key="i" class="flex-1 bg-[#FFF0E6] rounded-t" :style="`height:${h}%`" :title="`${h}%`"></div>
               </div>
               <div class="flex justify-between text-[10px] text-gray-400 mt-1">
                 <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
               </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-4 grid grid-cols-2 gap-3">
-              <div class="text-center"><p class="text-2xl font-bold text-teal-600">4,821</p><p class="text-[10px] text-gray-500">Total Sent (7d)</p></div>
+              <div class="text-center"><p class="text-2xl font-bold text-[#FF6600]">4,821</p><p class="text-[10px] text-gray-500">Total Sent (7d)</p></div>
               <div class="text-center"><p class="text-2xl font-bold text-green-600">4,763</p><p class="text-[10px] text-gray-500">Delivered</p></div>
               <div class="text-center"><p class="text-2xl font-bold text-amber-500">42</p><p class="text-[10px] text-gray-500">Retried</p></div>
               <div class="text-center"><p class="text-2xl font-bold text-red-500">16</p><p class="text-[10px] text-gray-500">Failed</p></div>
@@ -237,14 +237,14 @@
                     <span class="text-xs font-medium text-gray-800">{{ wh.name }}</span>
                     <span class="text-[10px] px-1.5 py-0.5 rounded-full" :class="wh.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">{{ wh.active ? 'Active' : 'Paused' }}</span>
                   </div>
-                  <p class="text-[11px] font-mono text-teal-600 mt-0.5 truncate">{{ wh.url }}</p>
+                  <p class="text-[11px] font-mono text-[#FF6600] mt-0.5 truncate">{{ wh.url }}</p>
                   <div class="flex items-center gap-3 mt-1">
                     <span class="text-[10px] text-gray-400">Events: <span class="text-gray-600">{{ wh.events.join(', ') }}</span></span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2 ml-4">
                   <span class="text-[10px] text-green-600 font-medium">{{ wh.successRate }}% success</span>
-                  <button @click="testWebhook(wh)" class="px-2.5 py-1 text-[10px] font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">Test</button>
+                  <button @click="testWebhook(wh)" class="px-2.5 py-1 text-[10px] font-medium text-[#CC5200] bg-[#FFF8F2] rounded-lg hover:bg-[#FFF0E6] transition-colors">Test</button>
                   <button @click="showToast('Delivery log opened')" class="px-2.5 py-1 text-[10px] font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">Logs</button>
                   <button @click="wh.active = !wh.active; showToast(wh.active ? 'Webhook activated' : 'Webhook paused')" class="p-1 text-gray-400 hover:text-gray-600"><FeatherIcon :name="wh.active ? 'pause' : 'play'" class="h-3.5 w-3.5" /></button>
                 </div>
@@ -260,13 +260,13 @@
               <h2 class="text-base font-semibold text-gray-800">OAuth 2.0 Provider</h2>
               <p class="text-xs text-gray-500 mt-0.5">Manage client applications, scopes, and token lifecycle</p>
             </div>
-            <button @click="showToast('New OAuth client created')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('New OAuth client created')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />Register App
             </button>
           </div>
           <div class="grid grid-cols-3 gap-4 mb-5">
             <div class="bg-white rounded-xl border border-gray-200 p-4 text-center"><p class="text-2xl font-bold text-gray-800">8</p><p class="text-xs text-gray-500 mt-1">Registered Apps</p></div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4 text-center"><p class="text-2xl font-bold text-teal-600">1,247</p><p class="text-xs text-gray-500 mt-1">Active Tokens</p></div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4 text-center"><p class="text-2xl font-bold text-[#FF6600]">1,247</p><p class="text-xs text-gray-500 mt-1">Active Tokens</p></div>
             <div class="bg-white rounded-xl border border-gray-200 p-4 text-center"><p class="text-2xl font-bold text-gray-800">98.4%</p><p class="text-xs text-gray-500 mt-1">Auth Success Rate</p></div>
           </div>
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -288,7 +288,7 @@
                   <td class="px-4 py-3 font-mono text-gray-500 text-[10px]">{{ app.clientId }}</td>
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap gap-1">
-                      <span v-for="s in app.scopes" :key="s" class="px-1.5 py-0.5 bg-teal-50 text-teal-700 rounded text-[10px]">{{ s }}</span>
+                      <span v-for="s in app.scopes" :key="s" class="px-1.5 py-0.5 bg-[#FFF8F2] text-[#CC5200] rounded text-[10px]">{{ s }}</span>
                     </div>
                   </td>
                   <td class="px-4 py-3 text-gray-700">{{ app.tokens }}</td>
@@ -313,7 +313,7 @@
               <select class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none">
                 <option>v2.1.0</option><option>v2.0.0</option><option>v1.5.0</option>
               </select>
-              <button @click="showToast('Docs exported')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button @click="showToast('Docs exported')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#006699] bg-white border border-[#006699] rounded-lg hover:bg-[#E6F4FA] transition-colors">
                 <FeatherIcon name="download" class="h-3.5 w-3.5" />Export
               </button>
             </div>
@@ -321,7 +321,7 @@
           <div class="grid grid-cols-3 gap-4">
             <div class="col-span-1 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div class="px-4 py-3 border-b border-gray-100">
-                <input placeholder="Search endpoints..." class="text-xs w-full border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+                <input placeholder="Search endpoints..." class="text-xs w-full border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
               </div>
               <div class="p-2">
                 <div v-for="group in apiDocGroups" :key="group.tag" class="mb-1">
@@ -348,11 +348,11 @@
                 <div class="mb-4">
                   <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Code Sample</p>
                   <div class="flex gap-2 mb-2">
-                    <button v-for="lang in ['cURL','Python','JavaScript','Go']" :key="lang" @click="docLang = lang" class="px-2.5 py-1 text-[10px] rounded-lg font-medium transition-colors" :class="docLang === lang ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">{{ lang }}</button>
+                    <button v-for="lang in ['cURL','Python','JavaScript','Go']" :key="lang" @click="docLang = lang" class="px-2.5 py-1 text-[10px] rounded-lg font-medium transition-colors" :class="docLang === lang ? 'bg-[#FF6600] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">{{ lang }}</button>
                   </div>
                   <div class="bg-gray-900 rounded-lg p-4 text-[11px] font-mono text-green-400 whitespace-pre">{{ codeSample }}</div>
                 </div>
-                <button @click="showToast('Request sent — 200 OK')" class="px-4 py-2 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+                <button @click="showToast('Request sent — 200 OK')" class="px-4 py-2 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
                   Try it out
                 </button>
               </div>
@@ -371,13 +371,13 @@
               <h2 class="text-base font-semibold text-gray-800">Integration Marketplace</h2>
               <p class="text-xs text-gray-500 mt-0.5">Browse and install pre-built connectors</p>
             </div>
-            <input v-model="marketSearch" placeholder="Search connectors..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-52 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+            <input v-model="marketSearch" placeholder="Search connectors..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-52 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
           </div>
           <div class="flex gap-2 mb-4">
             <button v-for="cat in ['All','Banking','Communication','E-Signature','Analytics','ERP']" :key="cat"
               @click="marketCat = cat"
               class="px-3 py-1 text-xs rounded-full font-medium transition-colors"
-              :class="marketCat === cat ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
+              :class="marketCat === cat ? 'bg-[#FF6600] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">
               {{ cat }}
             </button>
           </div>
@@ -397,7 +397,7 @@
                   <span v-for="i in 5" :key="i" class="text-xs" :class="i <= conn.rating ? 'text-amber-400' : 'text-gray-200'">★</span>
                   <span class="text-[10px] text-gray-400 ml-1">{{ conn.rating }}.0</span>
                 </div>
-                <button @click="installConnector(conn)" class="px-3 py-1 text-[10px] font-medium rounded-lg transition-colors" :class="conn.installed ? 'text-gray-500 bg-gray-50 border border-gray-200' : 'text-white bg-teal-600 hover:bg-teal-700'">
+                <button @click="installConnector(conn)" class="px-3 py-1 text-[10px] font-medium rounded-lg transition-colors" :class="conn.installed ? 'text-gray-500 bg-gray-50 border border-gray-200' : 'text-white bg-[#FF6600] hover:bg-[#CC5200]'">
                   {{ conn.installed ? 'Configure' : 'Install' }}
                 </button>
               </div>
@@ -422,12 +422,12 @@
               <div class="space-y-3">
                 <div v-for="f in waFields" :key="f.label">
                   <label class="text-[11px] text-gray-500 font-medium">{{ f.label }}</label>
-                  <input :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+                  <input :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
                 </div>
               </div>
               <div class="flex gap-2 mt-4">
-                <button @click="showToast('WhatsApp config saved')" class="px-4 py-2 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">Save</button>
-                <button @click="showToast('Test message sent to +62812-XXXX-XXXX')" class="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">Send Test</button>
+                <button @click="showToast('WhatsApp config saved')" class="px-4 py-2 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">Save</button>
+                <button @click="showToast('Test message sent to +62812-XXXX-XXXX')" class="px-4 py-2 text-xs font-medium text-[#006699] bg-[#E6F4FA] border border-[#006699] rounded-lg hover:bg-[#CCE6F5] transition-colors">Send Test</button>
               </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -462,7 +462,7 @@
               <div class="space-y-3">
                 <div v-for="f in smtpFields" :key="f.label">
                   <label class="text-[11px] text-gray-500 font-medium">{{ f.label }}</label>
-                  <input :type="f.type || 'text'" :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+                  <input :type="f.type || 'text'" :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
                 </div>
                 <div class="flex gap-2 pt-1">
                   <label class="flex items-center gap-1.5 text-xs text-gray-600"><input type="checkbox" checked class="rounded" /> TLS/SSL</label>
@@ -471,8 +471,8 @@
                 </div>
               </div>
               <div class="flex gap-2 mt-4">
-                <button @click="showToast('SMTP config saved')" class="px-4 py-2 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">Save</button>
-                <button @click="showToast('Test email sent')" class="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">Send Test</button>
+                <button @click="showToast('SMTP config saved')" class="px-4 py-2 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">Save</button>
+                <button @click="showToast('Test email sent')" class="px-4 py-2 text-xs font-medium text-[#006699] bg-[#E6F4FA] border border-[#006699] rounded-lg hover:bg-[#CCE6F5] transition-colors">Send Test</button>
               </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -501,7 +501,7 @@
               <h2 class="text-base font-semibold text-gray-800">Core Banking Integration</h2>
               <p class="text-xs text-gray-500 mt-0.5">Account sync, disbursement, repayment, and reconciliation</p>
             </div>
-            <button @click="runSync" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="runSync" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="refresh-cw" class="h-3.5 w-3.5" :class="syncing ? 'animate-spin' : ''" />{{ syncing ? 'Syncing...' : 'Sync Now' }}
             </button>
           </div>
@@ -517,7 +517,7 @@
               <div class="flex gap-2">
                 <span v-for="t in ['All','Account','Disbursement','Repayment','Reconciliation']" :key="t"
                   @click="syncFilter = t"
-                  class="cursor-pointer px-2 py-0.5 text-[10px] rounded-full" :class="syncFilter === t ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'">
+                  class="cursor-pointer px-2 py-0.5 text-[10px] rounded-full" :class="syncFilter === t ? 'bg-[#FF6600] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'">
                   {{ t }}
                 </span>
               </div>
@@ -556,7 +556,7 @@
               <h2 class="text-base font-semibold text-gray-800">Credit Bureau Integration</h2>
               <p class="text-xs text-gray-500 mt-0.5">SLIK OJK, Pefindo connector with on-demand pull and cache policy</p>
             </div>
-            <button @click="showToast('Bureau pull initiated')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Bureau pull initiated')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="search" class="h-3.5 w-3.5" />Pull Report
             </button>
           </div>
@@ -564,7 +564,7 @@
             <div v-for="bureau in bureaus" :key="bureau.name" class="bg-white rounded-xl border border-gray-200 p-5">
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center"><FeatherIcon name="shield" class="h-4 w-4 text-teal-600" /></div>
+                  <div class="w-8 h-8 rounded-lg bg-[#FFF8F2] flex items-center justify-center"><FeatherIcon name="shield" class="h-4 w-4 text-[#FF6600]" /></div>
                   <span class="text-sm font-medium text-gray-800">{{ bureau.name }}</span>
                 </div>
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-medium" :class="bureau.status === 'Connected' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">{{ bureau.status }}</span>
@@ -575,7 +575,7 @@
               </div>
               <div class="mt-3 flex items-center justify-between text-[11px] text-gray-500">
                 <span>Cache TTL: {{ bureau.cacheTTL }}</span>
-                <button @click="showToast('Cache cleared')" class="text-teal-600 hover:text-teal-700">Clear Cache</button>
+                <button @click="showToast('Cache cleared')" class="text-[#FF6600] hover:text-[#CC5200]">Clear Cache</button>
               </div>
             </div>
           </div>
@@ -597,7 +597,7 @@
                   <td class="px-4 py-3 text-gray-600">{{ r.bureau }}</td>
                   <td class="px-4 py-3"><span class="font-semibold" :class="r.score > 700 ? 'text-green-600' : r.score > 500 ? 'text-amber-600' : 'text-red-600'">{{ r.score }}</span></td>
                   <td class="px-4 py-3 text-gray-500">{{ r.pulledAt }}</td>
-                  <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded text-[10px]" :class="r.source === 'Cache' ? 'bg-blue-50 text-blue-700' : 'bg-teal-50 text-teal-700'">{{ r.source }}</span></td>
+                  <td class="px-4 py-3"><span class="px-1.5 py-0.5 rounded text-[10px]" :class="r.source === 'Cache' ? 'bg-[#F0F8FC] text-[#004D73]' : 'bg-[#FFF8F2] text-[#CC5200]'">{{ r.source }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -611,7 +611,7 @@
               <h2 class="text-base font-semibold text-gray-800">{{ activeSection === 'erp' ? 'ERP Integration' : 'Accounting System Integration' }}</h2>
               <p class="text-xs text-gray-500 mt-0.5">{{ activeSection === 'erp' ? 'SAP / Oracle connector, GL sync, and reconciliation' : 'Accurate / Jurnal / QuickBooks, auto-post journal entries' }}</p>
             </div>
-            <button @click="showToast('Sync triggered')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Sync triggered')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="refresh-cw" class="h-3.5 w-3.5" />Sync GL
             </button>
           </div>
@@ -622,7 +622,7 @@
                 <span class="text-[10px] px-2 py-0.5 rounded-full font-medium" :class="sys.connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">{{ sys.connected ? 'Connected' : 'Not configured' }}</span>
               </div>
               <p class="text-[11px] text-gray-500 mb-3">{{ sys.desc }}</p>
-              <button @click="showToast(sys.connected ? 'Configuration opened' : `${sys.name} connection initiated`)" class="w-full py-1.5 text-xs font-medium rounded-lg transition-colors" :class="sys.connected ? 'bg-teal-50 text-teal-700 hover:bg-teal-100' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'">
+              <button @click="showToast(sys.connected ? 'Configuration opened' : `${sys.name} connection initiated`)" class="w-full py-1.5 text-xs font-medium rounded-lg transition-colors" :class="sys.connected ? 'bg-[#FFF8F2] text-[#CC5200] hover:bg-[#FFF0E6]' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'">
                 {{ sys.connected ? 'Configure' : 'Connect' }}
               </button>
             </div>
@@ -636,15 +636,15 @@
               <h2 class="text-base font-semibold text-gray-800">E-Signature Integration</h2>
               <p class="text-xs text-gray-500 mt-0.5">Privy / Tilaka / DocuSign with send-for-sign workflow and status callbacks</p>
             </div>
-            <button @click="showToast('Document sent for signing')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Document sent for signing')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="send" class="h-3.5 w-3.5" />Send for Sign
             </button>
           </div>
           <div class="grid grid-cols-3 gap-4 mb-5">
-            <div v-for="p in esignProviders" :key="p.name" class="bg-white rounded-xl border-2 p-4 cursor-pointer transition-all" :class="esignActive === p.name ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-teal-200'" @click="esignActive = p.name; showToast(`${p.name} selected as active provider`)">
+            <div v-for="p in esignProviders" :key="p.name" class="bg-white rounded-xl border-2 p-4 cursor-pointer transition-all" :class="esignActive === p.name ? 'border-[#FF6600] bg-[#FFF8F2]' : 'border-gray-200 hover:border-[#FFD9B3]'" @click="esignActive = p.name; showToast(`${p.name} selected as active provider`)">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-semibold text-gray-800">{{ p.name }}</span>
-                <span v-if="esignActive === p.name" class="text-[10px] px-2 py-0.5 bg-teal-600 text-white rounded-full">Active</span>
+                <span v-if="esignActive === p.name" class="text-[10px] px-2 py-0.5 bg-[#FF6600] text-white rounded-full">Active</span>
               </div>
               <div class="grid grid-cols-2 gap-2 text-center">
                 <div class="bg-white rounded-lg p-2"><p class="text-base font-bold text-gray-800">{{ p.sent }}</p><p class="text-[10px] text-gray-500">Sent</p></div>
@@ -684,7 +684,7 @@
               <h2 class="text-base font-semibold text-gray-800">Dukcapil Integration</h2>
               <p class="text-xs text-gray-500 mt-0.5">e-KTP verification with match score and audit logging</p>
             </div>
-            <button @click="showVerifyModal = true" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showVerifyModal = true" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="user-check" class="h-3.5 w-3.5" />Verify e-KTP
             </button>
           </div>
@@ -742,15 +742,15 @@
               </div>
               <div class="space-y-1.5 mb-3">
                 <div v-for="m in gw.methods" :key="m" class="flex items-center gap-1.5">
-                  <FeatherIcon name="check" class="h-3 w-3 text-teal-500" />
+                  <FeatherIcon name="check" class="h-3 w-3 text-[#FF6600]" />
                   <span class="text-[11px] text-gray-600">{{ m }}</span>
                 </div>
               </div>
               <div class="text-center pt-3 border-t border-gray-100">
-                <p class="text-base font-bold text-teal-600">{{ gw.volume }}</p>
+                <p class="text-base font-bold text-[#FF6600]">{{ gw.volume }}</p>
                 <p class="text-[10px] text-gray-500">Volume (30d)</p>
               </div>
-              <button @click="showToast(`${gw.name} configured`)" class="mt-3 w-full py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">Configure</button>
+              <button @click="showToast(`${gw.name} configured`)" class="mt-3 w-full py-1.5 text-xs font-medium bg-[#E6F4FA] border border-[#006699] text-[#006699] rounded-lg hover:bg-[#CCE6F5] transition-colors">Configure</button>
             </div>
           </div>
         </div>
@@ -772,12 +772,12 @@
               <div class="space-y-3">
                 <div v-for="f in smsFields" :key="f.label">
                   <label class="text-[11px] text-gray-500 font-medium">{{ f.label }}</label>
-                  <input :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+                  <input :value="f.value" class="mt-1 w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
                 </div>
               </div>
               <div class="flex gap-2 mt-4">
-                <button @click="showToast('SMS config saved')" class="px-4 py-2 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">Save</button>
-                <button @click="showToast('Test SMS sent')" class="px-4 py-2 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">Send Test SMS</button>
+                <button @click="showToast('SMS config saved')" class="px-4 py-2 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">Save</button>
+                <button @click="showToast('Test SMS sent')" class="px-4 py-2 text-xs font-medium text-[#006699] bg-[#E6F4FA] border border-[#006699] rounded-lg hover:bg-[#CCE6F5] transition-colors">Send Test SMS</button>
               </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -802,7 +802,7 @@
               <h2 class="text-base font-semibold text-gray-800">API Rate Limiting</h2>
               <p class="text-xs text-gray-500 mt-0.5">Per-key and endpoint rate limits with partner override settings</p>
             </div>
-            <button @click="showToast('Rate limit policy saved')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Rate limit policy saved')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="save" class="h-3.5 w-3.5" />Save Policy
             </button>
           </div>
@@ -815,7 +815,7 @@
                     <span class="text-gray-600 font-medium">{{ limit.label }}</span>
                     <span class="text-gray-800 font-semibold">{{ limit.value }} req/{{ limit.window }}</span>
                   </div>
-                  <input type="range" :min="limit.min" :max="limit.max" v-model="limit.value" class="w-full accent-teal-600" />
+                  <input type="range" :min="limit.min" :max="limit.max" v-model="limit.value" class="w-full accent-[#FF6600]" />
                   <div class="flex justify-between text-[10px] text-gray-400"><span>{{ limit.min }}</span><span>{{ limit.max }}</span></div>
                 </div>
               </div>
@@ -823,7 +823,7 @@
             <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="text-sm font-medium text-gray-700">Partner Overrides</h3>
-                <button @click="showToast('Override added')" class="text-xs text-teal-600 hover:text-teal-700">+ Add Override</button>
+                <button @click="showToast('Override added')" class="text-xs text-[#FF6600] hover:text-[#CC5200]">+ Add Override</button>
               </div>
               <table class="w-full text-xs">
                 <thead class="bg-gray-50 border-b border-gray-100">
@@ -837,7 +837,7 @@
                 <tbody>
                   <tr v-for="ov in partnerOverrides" :key="ov.partner" class="border-b border-gray-50 hover:bg-gray-50">
                     <td class="px-4 py-3 font-medium text-gray-800">{{ ov.partner }}</td>
-                    <td class="px-4 py-3 text-teal-600 font-semibold">{{ ov.limit.toLocaleString() }}</td>
+                    <td class="px-4 py-3 text-[#FF6600] font-semibold">{{ ov.limit.toLocaleString() }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ ov.window }}</td>
                     <td class="px-4 py-3"><button @click="showToast('Override removed')" class="text-red-500 hover:text-red-600"><FeatherIcon name="trash-2" class="h-3.5 w-3.5" /></button></td>
                   </tr>
@@ -855,7 +855,7 @@
               <p class="text-xs text-gray-500 mt-0.5">Usage dashboard, endpoint monitoring, error rates, and latency</p>
             </div>
             <div class="flex gap-2">
-              <button v-for="p in ['24h','7d','30d']" :key="p" @click="analyticsPeriod = p" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors" :class="analyticsPeriod === p ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">{{ p }}</button>
+              <button v-for="p in ['24h','7d','30d']" :key="p" @click="analyticsPeriod = p" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors" :class="analyticsPeriod === p ? 'bg-[#FF6600] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'">{{ p }}</button>
             </div>
           </div>
           <div class="grid grid-cols-4 gap-4 mb-5">
@@ -869,7 +869,7 @@
             <div class="bg-white rounded-xl border border-gray-200 p-5">
               <h3 class="text-sm font-medium text-gray-700 mb-4">Request Volume (24h)</h3>
               <div class="flex items-end gap-1 h-32">
-                <div v-for="(v,i) in requestVolume" :key="i" class="flex-1 rounded-t transition-all" :class="i === requestVolume.length-1 ? 'bg-teal-500' : 'bg-teal-100'" :style="`height:${(v/Math.max(...requestVolume))*100}%`" :title="`${v} req`"></div>
+                <div v-for="(v,i) in requestVolume" :key="i" class="flex-1 rounded-t transition-all" :class="i === requestVolume.length-1 ? 'bg-[#FF6600]' : 'bg-[#FFF0E6]'" :style="`height:${(v/Math.max(...requestVolume))*100}%`" :title="`${v} req`"></div>
               </div>
               <div class="flex justify-between text-[10px] text-gray-400 mt-2">
                 <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
@@ -881,7 +881,7 @@
                 <div v-for="ep in topEndpoints" :key="ep.path" class="flex items-center gap-3">
                   <span class="font-mono text-[10px] text-gray-500 w-36 truncate">{{ ep.path }}</span>
                   <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-teal-500 rounded-full" :style="`width:${ep.pct}%`"></div>
+                    <div class="h-full bg-[#FF6600] rounded-full" :style="`width:${ep.pct}%`"></div>
                   </div>
                   <span class="text-[10px] font-semibold text-gray-700 w-12 text-right">{{ ep.calls.toLocaleString() }}</span>
                 </div>
@@ -897,7 +897,7 @@
               <h2 class="text-base font-semibold text-gray-800">Webhook Reliability</h2>
               <p class="text-xs text-gray-500 mt-0.5">Retry mechanism, dead-letter queue, and delivery guarantee</p>
             </div>
-            <button @click="showToast('Manual retry triggered for all failed')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Manual retry triggered for all failed')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6600] rounded-lg hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="refresh-cw" class="h-3.5 w-3.5" />Retry All Failed
             </button>
           </div>
@@ -918,16 +918,16 @@
                 <div class="text-center"><p class="text-3xl font-bold text-red-500">7</p><p class="text-xs text-gray-500 mt-1">Messages in DLQ</p></div>
               </div>
               <div class="grid grid-cols-2 gap-2 mt-3">
-                <button @click="showToast('DLQ replayed')" class="py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">Replay All</button>
+                <button @click="showToast('DLQ replayed')" class="py-1.5 text-xs font-medium text-[#CC5200] bg-[#FFF8F2] rounded-lg hover:bg-[#FFF0E6] transition-colors">Replay All</button>
                 <button @click="showToast('DLQ cleared')" class="py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">Clear DLQ</button>
               </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-200 p-4">
               <h3 class="text-sm font-medium text-gray-700 mb-3">Delivery Guarantee</h3>
               <div class="space-y-2">
-                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" checked class="accent-teal-600" /> At-least-once delivery</label>
-                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" class="accent-teal-600" /> Exactly-once (idempotency key)</label>
-                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" class="accent-teal-600" /> Best-effort</label>
+                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" checked class="accent-[#FF6600]" /> At-least-once delivery</label>
+                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" class="accent-[#FF6600]" /> Exactly-once (idempotency key)</label>
+                <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer"><input type="radio" name="dlvr" class="accent-[#FF6600]" /> Best-effort</label>
               </div>
             </div>
           </div>
@@ -951,7 +951,7 @@
                   <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">{{ f.attempts }}/5</span></td>
                   <td class="px-4 py-3 text-red-500 font-mono text-[10px]">{{ f.error }}</td>
                   <td class="px-4 py-3 text-gray-500">{{ f.nextRetry }}</td>
-                  <td class="px-4 py-3"><button @click="showToast('Manual retry triggered')" class="px-2.5 py-1 text-[10px] font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors">Retry</button></td>
+                  <td class="px-4 py-3"><button @click="showToast('Manual retry triggered')" class="px-2.5 py-1 text-[10px] font-medium text-[#CC5200] bg-[#FFF8F2] rounded-lg hover:bg-[#FFF0E6] transition-colors">Retry</button></td>
                 </tr>
               </tbody>
             </table>
@@ -977,7 +977,7 @@
                   <label class="text-[11px] text-gray-500 font-medium">{{ key.label }}</label>
                   <div class="flex gap-2 mt-1">
                     <input :value="key.value" readonly class="flex-1 text-[11px] font-mono bg-gray-50 border border-gray-200 rounded-lg px-3 py-2" />
-                    <button @click="showToast('Copied to clipboard')" class="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"><FeatherIcon name="copy" class="h-3.5 w-3.5 text-gray-500" /></button>
+                    <button @click="showToast('Copied to clipboard')" class="px-2.5 py-1.5 bg-[#E6F4FA] border border-[#006699] rounded-lg hover:bg-[#CCE6F5] transition-colors"><FeatherIcon name="copy" class="h-3.5 w-3.5 text-[#006699]" /></button>
                   </div>
                 </div>
               </div>
@@ -991,7 +991,7 @@
                     <p class="text-[10px] text-gray-400">{{ svc.desc }}</p>
                   </div>
                   <button @click="svc.enabled = !svc.enabled; showToast(svc.enabled ? `${svc.name} mock enabled` : `${svc.name} mock disabled`)" class="flex items-center gap-1.5">
-                    <div class="w-8 h-4 rounded-full transition-colors relative" :class="svc.enabled ? 'bg-teal-500' : 'bg-gray-200'">
+                    <div class="w-8 h-4 rounded-full transition-colors relative" :class="svc.enabled ? 'bg-[#FF6600]' : 'bg-gray-200'">
                       <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all" :class="svc.enabled ? 'left-4' : 'left-0.5'"></div>
                     </div>
                   </button>
@@ -1008,7 +1008,7 @@
               <h2 class="text-base font-semibold text-gray-800">API Audit & Compliance</h2>
               <p class="text-xs text-gray-500 mt-0.5">Immutable API audit log with sensitive data masking and retention policy</p>
             </div>
-            <button @click="showToast('Audit report exported')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <button @click="showToast('Audit report exported')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#006699] bg-white border border-[#006699] rounded-lg hover:bg-[#E6F4FA] transition-colors">
               <FeatherIcon name="download" class="h-3.5 w-3.5" />Export Report
             </button>
           </div>
@@ -1021,7 +1021,7 @@
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
               <h3 class="text-sm font-medium text-gray-700 flex-1">API Audit Log</h3>
-              <input placeholder="Search by key or path..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-52 focus:outline-none focus:ring-1 focus:ring-teal-400" />
+              <input placeholder="Search by key or path..." class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-52 focus:outline-none focus:ring-1 focus:ring-[#FF8533]" />
               <select class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none"><option>All Methods</option><option>GET</option><option>POST</option><option>DELETE</option></select>
             </div>
             <table class="w-full text-xs">
@@ -1039,7 +1039,7 @@
               <tbody>
                 <tr v-for="log in auditLogs" :key="log.id" class="border-b border-gray-50 hover:bg-gray-50">
                   <td class="px-4 py-2.5 text-gray-500 font-mono text-[10px]">{{ log.ts }}</td>
-                  <td class="px-4 py-2.5 font-mono text-[10px] text-teal-700">{{ log.key }}</td>
+                  <td class="px-4 py-2.5 font-mono text-[10px] text-[#CC5200]">{{ log.key }}</td>
                   <td class="px-4 py-2.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold" :class="methodColor(log.method)">{{ log.method }}</span></td>
                   <td class="px-4 py-2.5 font-mono text-gray-600">{{ log.path }}</td>
                   <td class="px-4 py-2.5"><span class="font-semibold" :class="log.status < 400 ? 'text-green-600' : 'text-red-500'">{{ log.status }}</span></td>
@@ -1064,15 +1064,15 @@
         <div class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Integration Name <span class="text-red-400">*</span></label>
-            <input v-model="intgForm.name" type="text" placeholder="e.g. SLIK OJK Connector" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500" @keyup.enter="saveIntegration" />
+            <input v-model="intgForm.name" type="text" placeholder="e.g. SLIK OJK Connector" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600]" @keyup.enter="saveIntegration" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Base URL <span class="text-red-400">*</span></label>
-            <input v-model="intgForm.baseUrl" type="url" placeholder="https://api.example.com" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-teal-500" />
+            <input v-model="intgForm.baseUrl" type="url" placeholder="https://api.example.com" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Type</label>
-            <select v-model="intgForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+            <select v-model="intgForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white">
               <option value="Banking">Banking</option>
               <option value="Communication">Communication</option>
               <option value="E-Signature">E-Signature</option>
@@ -1083,7 +1083,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Auth Type</label>
-            <select v-model="intgForm.authType" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+            <select v-model="intgForm.authType" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white">
               <option value="Bearer Token">Bearer Token</option>
               <option value="API Key">API Key</option>
               <option value="OAuth 2.0">OAuth 2.0</option>
@@ -1092,8 +1092,8 @@
           </div>
         </div>
         <div class="mt-5 flex gap-2">
-          <button @click="closeIntgModal" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
-          <button @click="saveIntegration" :disabled="!intgForm.name || !intgForm.baseUrl" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors">
+          <button @click="closeIntgModal" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Cancel</button>
+          <button @click="saveIntegration" :disabled="!intgForm.name || !intgForm.baseUrl" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-50 transition-colors">
             {{ editingIntg ? 'Save Changes' : 'Add Integration' }}
           </button>
         </div>
@@ -1117,7 +1117,7 @@
           <p class="text-[10px] font-mono text-gray-400 mt-0.5">{{ deleteTarget?.baseUrl }}</p>
         </div>
         <div class="flex gap-2">
-          <button @click="showDeleteIntg = false; deleteTarget = null" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button @click="showDeleteIntg = false; deleteTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Cancel</button>
           <button @click="deleteIntegration" class="flex-1 rounded-lg bg-red-500 py-2 text-sm font-semibold text-white hover:bg-red-600 transition-colors">Delete</button>
         </div>
       </div>
@@ -1137,9 +1137,9 @@
           </div>
           <div>
             <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-1.5">API Key <span class="text-amber-500 normal-case font-normal">(copy now — shown once)</span></p>
-            <div class="flex items-center gap-2 rounded-lg bg-teal-50 border border-teal-200 px-3 py-2.5">
-              <code class="text-[11px] font-mono text-teal-800 flex-1 break-all select-all">{{ generatedKey }}</code>
-              <button @click="copyGeneratedKey" class="shrink-0 text-[10px] font-bold text-teal-700 hover:underline whitespace-nowrap">{{ keyCopied ? '✓ Copied' : 'Copy' }}</button>
+            <div class="flex items-center gap-2 rounded-lg bg-[#FFF8F2] border border-[#FFD9B3] px-3 py-2.5">
+              <code class="text-[11px] font-mono text-[#993D00] flex-1 break-all select-all">{{ generatedKey }}</code>
+              <button @click="copyGeneratedKey" class="shrink-0 text-[10px] font-bold text-[#CC5200] hover:underline whitespace-nowrap">{{ keyCopied ? '✓ Copied' : 'Copy' }}</button>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs">
@@ -1161,14 +1161,14 @@
             </div>
           </div>
         </div>
-        <button @click="showGenKeyModal = false" class="mt-5 w-full rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Close</button>
+        <button @click="showGenKeyModal = false" class="mt-5 w-full rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Close</button>
       </div>
     </div>
 
     <!-- Toast -->
     <transition enter-active-class="transition duration-200 ease-out" enter-from-class="translate-y-2 opacity-0" enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-2 opacity-0">
       <div v-if="toast" class="fixed bottom-6 right-6 bg-gray-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-lg z-50 flex items-center gap-2">
-        <FeatherIcon name="check-circle" class="h-3.5 w-3.5 text-teal-400" />{{ toast }}
+        <FeatherIcon name="check-circle" class="h-3.5 w-3.5 text-[#FF8533]" />{{ toast }}
       </div>
     </transition>
   </div>
@@ -1246,7 +1246,7 @@ function toggleEndpoint(ep) {
   showToast(ep.enabled ? 'Endpoint enabled' : 'Endpoint disabled')
 }
 function methodColor(m) {
-  return { GET: 'bg-blue-100 text-blue-700', POST: 'bg-green-100 text-green-700', PUT: 'bg-amber-100 text-amber-700', DELETE: 'bg-red-100 text-red-700', PATCH: 'bg-purple-100 text-purple-700' }[m] || 'bg-gray-100 text-gray-600'
+  return { GET: 'bg-[#E6F4FA] text-[#004D73]', POST: 'bg-green-100 text-green-700', PUT: 'bg-amber-100 text-amber-700', DELETE: 'bg-red-100 text-red-700', PATCH: 'bg-purple-100 text-purple-700' }[m] || 'bg-gray-100 text-gray-600'
 }
 
 // ── Webhooks ───────────────────────────────────
@@ -1300,15 +1300,15 @@ const codeSample = computed(() => {
 const marketSearch = ref('')
 const marketCat = ref('All')
 const connectors = ref([
-  { id: 1, name: 'Midtrans', desc: 'Payment gateway for VA, e-wallet, QRIS', logo: '💳', bgColor: 'bg-blue-50', rating: 5, installed: true, cat: 'Banking' },
+  { id: 1, name: 'Midtrans', desc: 'Payment gateway for VA, e-wallet, QRIS', logo: '💳', bgColor: 'bg-[#F0F8FC]', rating: 5, installed: true, cat: 'Banking' },
   { id: 2, name: 'Privy', desc: 'Digital e-signature platform', logo: '✍️', bgColor: 'bg-purple-50', rating: 5, installed: true, cat: 'E-Signature' },
-  { id: 3, name: 'Pefindo', desc: 'Credit scoring and bureau services', logo: '📊', bgColor: 'bg-teal-50', rating: 4, installed: true, cat: 'Banking' },
+  { id: 3, name: 'Pefindo', desc: 'Credit scoring and bureau services', logo: '📊', bgColor: 'bg-[#FFF8F2]', rating: 4, installed: true, cat: 'Banking' },
   { id: 4, name: 'Accurate', desc: 'Accounting and ERP integration', logo: '📒', bgColor: 'bg-green-50', rating: 4, installed: false, cat: 'ERP' },
   { id: 5, name: 'Dukcapil API', desc: 'e-KTP verification service', logo: '🪪', bgColor: 'bg-orange-50', rating: 4, installed: true, cat: 'Banking' },
   { id: 6, name: 'Twilio SMS', desc: 'SMS OTP and campaign messaging', logo: '📱', bgColor: 'bg-red-50', rating: 5, installed: false, cat: 'Communication' },
   { id: 7, name: 'WhatsApp Business', desc: 'Official WhatsApp Business API', logo: '💬', bgColor: 'bg-green-50', rating: 5, installed: true, cat: 'Communication' },
   { id: 8, name: 'DocuSign', desc: 'Enterprise e-signature solution', logo: '📄', bgColor: 'bg-yellow-50', rating: 4, installed: false, cat: 'E-Signature' },
-  { id: 9, name: 'Tableau', desc: 'Advanced analytics and BI', logo: '📈', bgColor: 'bg-blue-50', rating: 4, installed: false, cat: 'Analytics' },
+  { id: 9, name: 'Tableau', desc: 'Advanced analytics and BI', logo: '📈', bgColor: 'bg-[#F0F8FC]', rating: 4, installed: false, cat: 'Analytics' },
 ])
 const filteredConnectors = computed(() => {
   let list = connectors.value
@@ -1344,8 +1344,8 @@ const smtpFields = [
   { label: 'From Name', value: 'SUMMON CRM' },
 ]
 const emailStats = [
-  { label: 'Delivery Rate', value: 98.2, color: 'bg-teal-500' },
-  { label: 'Open Rate', value: 42.5, color: 'bg-blue-500' },
+  { label: 'Delivery Rate', value: 98.2, color: 'bg-[#FF6600]' },
+  { label: 'Open Rate', value: 42.5, color: 'bg-[#006699]' },
   { label: 'Click Rate', value: 18.3, color: 'bg-purple-500' },
   { label: 'Bounce Rate', value: 1.8, color: 'bg-red-400' },
 ]
@@ -1354,9 +1354,9 @@ const emailStats = [
 const syncing = ref(false)
 const syncFilter = ref('All')
 const bankingStats = [
-  { label: 'Accounts Synced', value: '12,847', color: 'text-teal-600' },
+  { label: 'Accounts Synced', value: '12,847', color: 'text-[#FF6600]' },
   { label: 'Disbursements', value: '284', color: 'text-green-600' },
-  { label: 'Repayments', value: '1,429', color: 'text-blue-600' },
+  { label: 'Repayments', value: '1,429', color: 'text-[#006699]' },
   { label: 'Recon Errors', value: '3', color: 'text-red-500' },
 ]
 const syncJobs = [
@@ -1413,7 +1413,7 @@ const esignRequests = [
 // ── Dukcapil ───────────────────────────────────
 const showVerifyModal = ref(false)
 const dukcapilStats = [
-  { label: 'Total Verifications', value: '4,821', color: 'text-teal-600' },
+  { label: 'Total Verifications', value: '4,821', color: 'text-[#FF6600]' },
   { label: 'Valid (30d)', value: '4,692', color: 'text-green-600' },
   { label: 'Invalid', value: '129', color: 'text-red-500' },
   { label: 'Avg Match Score', value: '94.2%', color: 'text-gray-800' },
@@ -1498,7 +1498,7 @@ function resetSandbox() { showToast('Sandbox data reset to defaults') }
 
 // ── Audit ──────────────────────────────────────
 const auditStats = [
-  { label: 'API Calls (24h)', value: '84,210', color: 'text-teal-600' },
+  { label: 'API Calls (24h)', value: '84,210', color: 'text-[#FF6600]' },
   { label: 'Flagged Requests', value: '12', color: 'text-amber-600' },
   { label: 'Masked Fields', value: '3,481', color: 'text-gray-800' },
   { label: 'Retention Policy', value: '90 days', color: 'text-gray-800' },

@@ -4,7 +4,7 @@
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
           <div
-            class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700"
+            class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]"
           >
             <FeatherIcon name="shield" class="h-4 w-4 text-white" />
           </div>
@@ -28,7 +28,7 @@
             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all text-left"
             :class="
               activeNav === nav.id
-                ? 'bg-teal-50 text-teal-700 font-semibold'
+                ? 'bg-[#FFF8F2] text-[#CC5200] font-semibold'
                 : 'text-gray-600 hover:bg-gray-50'
             "
           >
@@ -37,7 +37,7 @@
             <span
               v-if="nav.badge"
               class="ml-auto text-[9px] rounded-full px-1.5 font-bold"
-              :class="nav.badgeColor || 'bg-teal-100 text-teal-700'"
+              :class="nav.badgeColor || 'bg-[#FFF0E6] text-[#CC5200]'"
               >{{ nav.badge }}</span
             >
           </button>
@@ -266,7 +266,7 @@
                 </h3>
                 <button
                   @click="activeNav = 'breach'"
-                  class="text-[10px] text-teal-600 hover:underline"
+                  class="text-[10px] text-[#FF6600] hover:underline"
                 >
                   {{ __("View all") }}
                 </button>
@@ -325,7 +325,7 @@
                 </h3>
                 <button
                   @click="activeNav = 'calendar'"
-                  class="text-[10px] text-teal-600 hover:underline"
+                  class="text-[10px] text-[#FF6600] hover:underline"
                 >
                   {{ __("Calendar") }}
                 </button>
@@ -367,9 +367,9 @@
                     class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0"
                     :class="
                       t.freq === 'Monthly'
-                        ? 'bg-teal-100 text-teal-700'
+                        ? 'bg-[#FFF0E6] text-[#CC5200]'
                         : t.freq === 'Quarterly'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#E6F4FA] text-[#004D73]'
                         : 'bg-gray-100 text-gray-600'
                     "
                   >
@@ -469,7 +469,7 @@
                 v-model="libSearch"
                 type="text"
                 :placeholder="__('Search covenants...')"
-                class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
+                class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
               />
             </div>
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
@@ -479,7 +479,7 @@
                 @click="libFilter = t"
                 class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
                 :class="
-                  libFilter === t ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
+                  libFilter === t ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500'
                 "
               >
                 {{ t }}
@@ -487,7 +487,7 @@
             </div>
             <button
               @click="openAddCovenant"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Covenant") }}
             </button>
@@ -535,10 +535,10 @@
                           class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                           :class="
                             cov.type === 'Financial'
-                              ? 'bg-teal-100'
+                              ? 'bg-[#FFF0E6]'
                               : cov.type === 'Non-Financial'
                               ? 'bg-purple-100'
-                              : 'bg-blue-100'
+                              : 'bg-[#E6F4FA]'
                           "
                         >
                           <FeatherIcon
@@ -546,10 +546,10 @@
                             class="h-3.5 w-3.5"
                             :class="
                               cov.type === 'Financial'
-                                ? 'text-teal-600'
+                                ? 'text-[#FF6600]'
                                 : cov.type === 'Non-Financial'
                                 ? 'text-purple-600'
-                                : 'text-blue-600'
+                                : 'text-[#006699]'
                             "
                           />
                         </div>
@@ -566,10 +566,10 @@
                         class="rounded-full px-2 py-0.5 text-[10px] font-semibold"
                         :class="
                           cov.type === 'Financial'
-                            ? 'bg-teal-100 text-teal-700'
+                            ? 'bg-[#FFF0E6] text-[#CC5200]'
                             : cov.type === 'Non-Financial'
                             ? 'bg-purple-100 text-purple-700'
-                            : 'bg-blue-100 text-blue-700'
+                            : 'bg-[#E6F4FA] text-[#004D73]'
                         "
                       >
                         {{ cov.type }}
@@ -596,7 +596,7 @@
                       <div class="flex items-center justify-end gap-1">
                         <button
                           @click.stop="openEditCovenant(cov)"
-                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
+                          class="p-1.5 rounded hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600]"
                         >
                           <FeatherIcon name="edit-2" class="h-3 w-3" />
                         </button>
@@ -627,7 +627,7 @@
                 @click="testPeriod = p"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
                 :class="
-                  testPeriod === p ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500'
+                  testPeriod === p ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500'
                 "
               >
                 {{ p }}
@@ -636,7 +636,7 @@
             <span class="text-xs text-gray-400">{{ testResults.length }} tests</span>
             <button
               @click="runAllTests"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors"
             >
               <FeatherIcon
                 :name="testing ? 'loader' : 'play'"
@@ -796,7 +796,7 @@
                 :class="
                   cell.day
                     ? cell.today
-                      ? 'border-teal-400 bg-teal-50'
+                      ? 'border-[#FF8533] bg-[#FFF8F2]'
                       : 'border-gray-100 hover:bg-gray-50'
                     : 'border-transparent'
                 "
@@ -804,7 +804,7 @@
                 <p
                   v-if="cell.day"
                   class="text-[11px] font-semibold mb-1"
-                  :class="cell.today ? 'text-teal-700' : 'text-gray-700'"
+                  :class="cell.today ? 'text-[#CC5200]' : 'text-gray-700'"
                 >
                   {{ cell.day }}
                 </p>
@@ -819,7 +819,7 @@
                         : ev.status === 'Watch'
                         ? 'bg-amber-100 text-amber-700'
                         : ev.status === 'Due'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-[#E6F4FA] text-[#004D73]'
                         : 'bg-green-100 text-green-700'
                     "
                     @click="showToast(ev.name + ' — ' + ev.status)"
@@ -859,7 +859,7 @@
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
                 :class="
                   breachFilter === s
-                    ? 'bg-white text-teal-700 shadow-sm'
+                    ? 'bg-white text-[#CC5200] shadow-sm'
                     : 'text-gray-500'
                 "
               >
@@ -917,7 +917,7 @@
                     activeNav = 'cure';
                     showToast('Cure task created');
                   "
-                  class="flex items-center gap-1.5 rounded-lg bg-teal-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-teal-700 transition-colors"
+                  class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] text-white px-3 py-1.5 text-xs font-semibold hover:bg-[#CC5200] transition-colors"
                 >
                   <FeatherIcon name="check-square" class="h-3 w-3" />{{
                     __("Create Cure Task")
@@ -928,14 +928,14 @@
                     activeNav = 'waiver';
                     showToast('Waiver request initiated');
                   "
-                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                  class="flex items-center gap-1.5 rounded-lg border border-[#006699] text-[#006699] px-3 py-1.5 text-xs font-semibold hover:bg-[#E6F4FA] transition-colors"
                 >
                   <FeatherIcon name="file-minus" class="h-3 w-3" />{{
                     __("Request Waiver")
                   }}
                 </button>
                 <button
-                  class="flex items-center gap-1.5 rounded-lg border border-gray-200 text-gray-600 px-3 py-1.5 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                  class="flex items-center gap-1.5 rounded-lg border border-[#006699] text-[#006699] px-3 py-1.5 text-xs font-semibold hover:bg-[#E6F4FA] transition-colors"
                 >
                   <FeatherIcon name="bell" class="h-3 w-3" />{{ __("Notify") }}
                 </button>
@@ -959,7 +959,7 @@
             >
             <button
               @click="openAddTask"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("Add Task") }}
             </button>
@@ -1006,7 +1006,7 @@
                     <div v-if="task.progress !== undefined" class="mt-2">
                       <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          class="h-full bg-teal-500 rounded-full"
+                          class="h-full bg-[#FF6600] rounded-full"
                           :style="{ width: task.progress + '%' }"
                         />
                       </div>
@@ -1015,7 +1015,7 @@
                       <button
                         v-if="task.status !== 'Done'"
                         @click="advanceCure(task)"
-                        class="text-[10px] text-teal-600 hover:underline font-semibold"
+                        class="text-[10px] text-[#FF6600] hover:underline font-semibold"
                       >
                         {{ task.status === "Open" ? "Start →" : "Mark Done →" }}
                       </button>
@@ -1043,7 +1043,7 @@
             >
             <button
               @click="openAddWaiver"
-              class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+              class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors"
             >
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __("New Waiver") }}
             </button>
@@ -1118,14 +1118,14 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
                         <button
-                          class="p-1.5 rounded hover:bg-teal-50 text-gray-400 hover:text-teal-600"
+                          class="p-1.5 rounded hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600]"
                         >
                           <FeatherIcon name="file-text" class="h-3 w-3" />
                         </button>
                         <button
                           v-if="w.status === 'Pending'"
                           @click="approveWaiver(w)"
-                          class="px-2.5 py-1 bg-teal-600 text-white rounded-lg text-[10px] font-semibold hover:bg-teal-700 transition-colors"
+                          class="px-2.5 py-1 bg-[#FF6600] text-white rounded-lg text-[10px] font-semibold hover:bg-[#CC5200] transition-colors"
                         >
                           Approve
                         </button>
@@ -1171,13 +1171,13 @@
                 >
                   <button
                     @click.stop="showToast('Downloading ' + rep.name)"
-                    class="text-[10px] text-teal-600 font-semibold hover:underline"
+                    class="text-[10px] text-[#FF6600] font-semibold hover:underline"
                   >
                     PDF
                   </button>
                   <button
                     @click.stop="showToast('Exporting ' + rep.name)"
-                    class="text-[10px] text-blue-600 font-semibold hover:underline"
+                    class="text-[10px] text-[#006699] font-semibold hover:underline"
                   >
                     Excel
                   </button>
@@ -1275,7 +1275,7 @@
                   v-model="simRevDrop"
                   min="0"
                   max="50"
-                  class="w-full accent-teal-600"
+                  class="w-full accent-[#FF6600]"
                 />
                 <p class="text-[10px] text-gray-500 mt-1">-{{ simRevDrop }}% revenue</p>
               </div>
@@ -1288,7 +1288,7 @@
                   v-model="simDebtInc"
                   min="0"
                   max="50"
-                  class="w-full accent-teal-600"
+                  class="w-full accent-[#FF6600]"
                 />
                 <p class="text-[10px] text-gray-500 mt-1">
                   +{{ simDebtInc }}% debt service
@@ -1297,7 +1297,7 @@
               <div class="flex items-end">
                 <button
                   @click="runSim"
-                  class="w-full flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+                  class="w-full flex items-center justify-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-2 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors"
                 >
                   <FeatherIcon name="play" class="h-3.5 w-3.5" />{{ __("Simulate") }}
                 </button>
@@ -1337,8 +1337,8 @@
     >
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon :name="editingCov ? 'edit-2' : 'shield'" class="h-5 w-5 text-teal-600" />
+          <div class="w-10 h-10 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0">
+            <FeatherIcon :name="editingCov ? 'edit-2' : 'shield'" class="h-5 w-5 text-[#FF6600]" />
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-800">{{ editingCov ? 'Edit Covenant' : 'Add Covenant' }}</h3>
@@ -1348,12 +1348,12 @@
         <div class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant Name <span class="text-red-400">*</span></label>
-            <input v-model="covForm.name" type="text" placeholder="e.g. DSCR Minimum 1.25x" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="covForm.name" type="text" placeholder="e.g. DSCR Minimum 1.25x" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-              <select v-model="covForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <select v-model="covForm.type" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
                 <option>Financial</option>
                 <option>Non-Financial</option>
                 <option>Operational</option>
@@ -1361,7 +1361,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Frequency</label>
-              <select v-model="covForm.frequency" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <select v-model="covForm.frequency" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
                 <option>Monthly</option>
                 <option>Quarterly</option>
                 <option>Semi-Annual</option>
@@ -1371,16 +1371,16 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Metric / Threshold</label>
-            <input v-model="covForm.metric" type="text" placeholder="e.g. DSCR ≥ 1.25" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="covForm.metric" type="text" placeholder="e.g. DSCR ≥ 1.25" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Tags (comma-separated)</label>
-            <input v-model="covForm.tags" type="text" placeholder="e.g. Cash Flow, Core" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="covForm.tags" type="text" placeholder="e.g. Cash Flow, Core" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
         </div>
         <div class="flex gap-2 mt-6">
-          <button @click="showAddCovForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddCovenant" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">{{ editingCov ? 'Save Changes' : 'Add Covenant' }}</button>
+          <button @click="showAddCovForm = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors">Cancel</button>
+          <button @click="submitAddCovenant" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">{{ editingCov ? 'Save Changes' : 'Add Covenant' }}</button>
         </div>
       </div>
     </div>
@@ -1393,8 +1393,8 @@
     >
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon name="check-square" class="h-5 w-5 text-teal-600" />
+          <div class="w-10 h-10 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0">
+            <FeatherIcon name="check-square" class="h-5 w-5 text-[#FF6600]" />
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-800">Add Cure Task</h3>
@@ -1404,16 +1404,16 @@
         <div class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Task Title <span class="text-red-400">*</span></label>
-            <input v-model="taskForm.title" type="text" placeholder="e.g. DSCR Improvement Plan" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="taskForm.title" type="text" placeholder="e.g. DSCR Improvement Plan" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
-            <input v-model="taskForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="taskForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Priority</label>
-              <select v-model="taskForm.priority" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <select v-model="taskForm.priority" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
                 <option>Critical</option>
                 <option>High</option>
                 <option>Medium</option>
@@ -1421,17 +1421,17 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>
-              <input v-model="taskForm.deadline" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+              <input v-model="taskForm.deadline" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
             </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Assigned To</label>
-            <input v-model="taskForm.owner" type="text" placeholder="e.g. Reza M." class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="taskForm.owner" type="text" placeholder="e.g. Reza M." class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
         </div>
         <div class="flex gap-2 mt-6">
-          <button @click="showAddTaskForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddTask" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Add Task</button>
+          <button @click="showAddTaskForm = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors">Cancel</button>
+          <button @click="submitAddTask" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Add Task</button>
         </div>
       </div>
     </div>
@@ -1444,8 +1444,8 @@
     >
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0">
-            <FeatherIcon name="file-text" class="h-5 w-5 text-teal-600" />
+          <div class="w-10 h-10 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0">
+            <FeatherIcon name="file-text" class="h-5 w-5 text-[#FF6600]" />
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-800">New Waiver Request</h3>
@@ -1455,27 +1455,27 @@
         <div class="space-y-3">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Covenant <span class="text-red-400">*</span></label>
-            <select v-model="waiverForm.covenant" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <select v-model="waiverForm.covenant" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
               <option value="">Select covenant…</option>
               <option v-for="c in covenantLibrary" :key="c.id" :value="c.name">{{ c.name }}</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Facility / Borrower <span class="text-red-400">*</span></label>
-            <input v-model="waiverForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="waiverForm.facility" type="text" placeholder="e.g. PT Maju Bersama" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Reason <span class="text-red-400">*</span></label>
-            <input v-model="waiverForm.reason" type="text" placeholder="e.g. Post-pandemic recovery" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <input v-model="waiverForm.reason" type="text" placeholder="e.g. Post-pandemic recovery" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Waiver Expiry</label>
-              <input v-model="waiverForm.expiry" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400" />
+              <input v-model="waiverForm.expiry" type="date" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Approver</label>
-              <select v-model="waiverForm.approver" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-400">
+              <select v-model="waiverForm.approver" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
                 <option>Risk Committee</option>
                 <option>Credit Head</option>
                 <option>Division Director</option>
@@ -1485,8 +1485,8 @@
           </div>
         </div>
         <div class="flex gap-2 mt-6">
-          <button @click="showAddWaiverForm = false" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button @click="submitAddWaiver" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">Submit Waiver</button>
+          <button @click="showAddWaiverForm = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors">Cancel</button>
+          <button @click="submitAddWaiver" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Submit Waiver</button>
         </div>
       </div>
     </div>
@@ -1497,7 +1497,7 @@
         v-if="toast"
         class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2"
       >
-        <FeatherIcon name="check-circle" class="h-4 w-4 text-teal-400" />{{ toast }}
+        <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF8533]" />{{ toast }}
       </div>
     </transition>
   </div>
@@ -1546,10 +1546,10 @@ const dashStats = [
     label: "Total Covenants",
     value: "42",
     icon: "shield",
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
+    iconBg: "bg-[#FFF0E6]",
+    iconColor: "text-[#FF6600]",
     badge: "Active",
-    badgeClass: "bg-teal-100 text-teal-700",
+    badgeClass: "bg-[#FFF0E6] text-[#CC5200]",
     nav: "library",
   },
   {
@@ -1991,7 +1991,7 @@ function runAllTests() {
 
 // ── Calendar ──
 const calLegend = [
-  { label: "Due Today", color: "bg-blue-200" },
+  { label: "Due Today", color: "bg-[#B3DDEF]" },
   { label: "Breach", color: "bg-red-200" },
   { label: "Watch", color: "bg-amber-200" },
   { label: "Pass", color: "bg-green-200" },
@@ -2161,8 +2161,8 @@ const covReports = [
     name: "Monthly Compliance Report",
     desc: "Pass/Watch/Breach summary with trend analysis",
     icon: "bar-chart-2",
-    colorBg: "bg-teal-100",
-    colorText: "text-teal-600",
+    colorBg: "bg-[#FFF0E6]",
+    colorText: "text-[#FF6600]",
     period: "May 2026",
     status: "Ready",
     statusClass: "bg-green-100 text-green-700",
@@ -2216,11 +2216,11 @@ const covReports = [
     name: "Regulatory Covenant Report",
     desc: "OJK/BI required covenant monitoring disclosure",
     icon: "shield",
-    colorBg: "bg-blue-100",
-    colorText: "text-blue-600",
+    colorBg: "bg-[#E6F4FA]",
+    colorText: "text-[#006699]",
     period: "Q1 2026",
     status: "Generating...",
-    statusClass: "bg-blue-100 text-blue-700",
+    statusClass: "bg-[#E6F4FA] text-[#004D73]",
   },
 ];
 

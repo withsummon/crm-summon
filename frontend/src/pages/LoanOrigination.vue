@@ -1,9 +1,9 @@
 <template>
-  <div class="flex h-full flex-col bg-slate-50 font-sans">
+  <div class="flex h-full flex-col bg-gray-50 font-sans">
     <LayoutHeader stretch-left>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]">
             <FeatherIcon name="file-text" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
@@ -12,7 +12,7 @@
         </div>
       </template>
       <template #right-header>
-        <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+        <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
           <FeatherIcon name="plus" class="h-3.5 w-3.5" />
           {{ __('New Loan Application') }}
         </button>
@@ -20,14 +20,14 @@
     </LayoutHeader>
     <div class="flex flex-1 min-h-0 overflow-hidden">
     <!-- Sidebar -->
-    <div class="w-72 border-r border-slate-200 bg-white flex flex-col shrink-0">
-      <div class="px-4 py-2.5 border-b border-slate-200">
-        <p class="text-xs text-slate-500">{{ filteredApps.length }} {{ __('applications') }}</p>
+    <div class="w-72 border-r border-gray-200 bg-white flex flex-col shrink-0">
+      <div class="px-4 py-2.5 border-b border-gray-200">
+        <p class="text-xs text-gray-500">{{ filteredApps.length }} {{ __('applications') }}</p>
       </div>
-      <div class="p-3 border-b border-slate-100">
+      <div class="p-3 border-b border-gray-100">
         <div class="relative">
-          <input v-model="searchQuery" type="text" :placeholder="__('Search...')" class="w-full pl-8 pr-3 py-1.5 bg-slate-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-teal-500" />
-          <FeatherIcon name="search" class="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+          <input v-model="searchQuery" type="text" :placeholder="__('Search...')" class="w-full pl-8 pr-3 py-1.5 bg-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
+          <FeatherIcon name="search" class="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
         </div>
       </div>
       <div class="flex-1 overflow-y-auto p-2 space-y-1">
@@ -35,10 +35,10 @@
           v-for="app in filteredApps" :key="app.id"
           @click="selectApp(app)"
           class="group p-3 rounded-lg cursor-pointer border transition-all"
-          :class="selected?.id === app.id ? 'bg-teal-50 border-teal-200' : 'border-transparent hover:bg-slate-50'"
+          :class="selected?.id === app.id ? 'bg-[#FFF8F2] border-[#FFD9B3]' : 'border-transparent hover:bg-gray-50'"
         >
           <div class="flex items-start justify-between gap-1">
-            <span class="text-xs font-semibold text-slate-800 truncate">{{ app.borrower_name }}</span>
+            <span class="text-xs font-semibold text-gray-800 truncate">{{ app.borrower_name }}</span>
             <div class="flex items-center gap-1 shrink-0">
               <span class="rounded-full px-1.5 py-0.5 text-[9px] font-bold" :class="statusBadge(app.status)">{{ app.status }}</span>
               <button @click.stop="confirmDelete(app)" class="bg-red-50 transition-opacity p-0.5 rounded hover:bg-red-600 text-red-500 hover:text-gray-300">
@@ -46,11 +46,11 @@
               </button>
             </div>
           </div>
-          <div class="text-[10px] text-slate-400 mt-0.5 truncate">{{ app.id }} · {{ app.facility_type }}</div>
+          <div class="text-[10px] text-gray-400 mt-0.5 truncate">{{ app.id }} · {{ app.facility_type }}</div>
           <div class="flex gap-0.5 mt-2">
-            <div v-for="s in 8" :key="s" class="h-1 flex-1 rounded-full" :class="(app.step||1) >= s ? 'bg-teal-500' : 'bg-slate-200'" />
+            <div v-for="s in 8" :key="s" class="h-1 flex-1 rounded-full" :class="(app.step||1) >= s ? 'bg-[#FF6600]' : 'bg-gray-200'" />
           </div>
-          <div class="text-[9px] text-slate-400 mt-1">{{ STEPS[Math.min((app.step||1)-1,7)].short }}</div>
+          <div class="text-[9px] text-gray-400 mt-1">{{ STEPS[Math.min((app.step||1)-1,7)].short }}</div>
         </div>
       </div>
     </div>
@@ -59,27 +59,27 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Empty state -->
       <div v-if="!selected" class="flex-1 flex flex-col items-center justify-center p-8">
-        <div class="w-16 h-16 rounded-full bg-teal-50 flex items-center justify-center mb-4">
-          <FeatherIcon name="file-text" class="h-8 w-8 text-teal-300" />
+        <div class="w-16 h-16 rounded-full bg-[#FFF8F2] flex items-center justify-center mb-4">
+          <FeatherIcon name="file-text" class="h-8 w-8 text-[#FFB380]" />
         </div>
-        <h3 class="text-base font-semibold text-slate-700">{{ __('Select an Application') }}</h3>
-        <p class="text-sm text-slate-400 mt-1 text-center max-w-xs">{{ __('Or create a new loan application to start the origination process.') }}</p>
-        <button @click="startNew" class="mt-4 flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors">
+        <h3 class="text-base font-semibold text-gray-700">{{ __('Select an Application') }}</h3>
+        <p class="text-sm text-gray-400 mt-1 text-center max-w-xs">{{ __('Or create a new loan application to start the origination process.') }}</p>
+        <button @click="startNew" class="mt-4 flex items-center gap-2 rounded-lg bg-[#FF6600] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">
           <FeatherIcon name="plus" class="h-4 w-4" />{{ __('New Loan Application') }}
         </button>
       </div>
 
       <template v-else>
         <!-- App Header -->
-        <div class="bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between shrink-0 shadow-sm">
+        <div class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between shrink-0 shadow-sm">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-teal-600/20">{{ initials(selected.borrower_name) }}</div>
+            <div class="w-10 h-10 rounded-xl bg-[#FF6600] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-[#FF6600]/20">{{ initials(selected.borrower_name) }}</div>
             <div class="min-w-0">
               <div class="flex items-center gap-2">
-                <h1 class="text-base font-bold text-slate-800 truncate">{{ selected.borrower_name }}</h1>
-                <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="selected.borrower_type==='Corporate' ? 'bg-purple-100 text-purple-700' : 'bg-teal-100 text-teal-700'">{{ selected.borrower_type }}</span>
+                <h1 class="text-base font-bold text-gray-800 truncate">{{ selected.borrower_name }}</h1>
+                <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="selected.borrower_type==='Corporate' ? 'bg-purple-100 text-purple-700' : 'bg-[#FFF0E6] text-[#CC5200]'">{{ selected.borrower_type }}</span>
               </div>
-              <div class="text-xs text-slate-400 flex gap-2">
+              <div class="text-xs text-gray-400 flex gap-2">
                 <span class="font-mono">{{ selected.id }}</span>
                 <span v-if="selected.facility_type">· {{ selected.facility_type }}</span>
                 <span v-if="selected.requested_amount">· {{ fmt(selected.requested_amount) }}</span>
@@ -87,13 +87,13 @@
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <span v-if="autoSaved" class="text-[10px] text-slate-400 flex items-center gap-1">
-              <FeatherIcon name="check" class="h-3 w-3 text-teal-500" />{{ __('Auto-saved') }}
+            <span v-if="autoSaved" class="text-[10px] text-gray-400 flex items-center gap-1">
+              <FeatherIcon name="check" class="h-3 w-3 text-[#FF6600]" />{{ __('Auto-saved') }}
             </span>
-            <button @click="prevStep" :disabled="currentStep===1" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors">
+            <button @click="prevStep" :disabled="currentStep===1" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
               <FeatherIcon name="chevron-left" class="h-4 w-4" />
             </button>
-            <button @click="nextStep" :disabled="currentStep===8" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 disabled:opacity-40 transition-colors">
+            <button @click="nextStep" :disabled="currentStep===8" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] disabled:opacity-40 transition-colors">
               <FeatherIcon v-if="saving" name="loader" class="h-3.5 w-3.5 animate-spin" />
               <span>{{ currentStep < 3 ? __('Save & Next') : __('Next') }}</span>
               <FeatherIcon v-if="!saving" name="chevron-right" class="h-3.5 w-3.5" />
@@ -105,21 +105,21 @@
         </div>
 
         <!-- Step Bar -->
-        <div class="bg-white border-b border-slate-100 px-5 py-3 shrink-0 overflow-x-auto">
+        <div class="bg-white border-b border-gray-100 px-5 py-3 shrink-0 overflow-x-auto">
           <div class="flex items-start min-w-max gap-0">
             <div v-for="(step, idx) in STEPS" :key="step.id" class="flex items-center">
               <div class="flex flex-col items-center w-20 cursor-pointer" @click="jumpStep(step.id)">
                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
-                  :class="currentStep>step.id ? 'bg-teal-600 border-teal-600 text-white' : currentStep===step.id ? 'bg-white border-teal-600 text-teal-600' : 'bg-white border-slate-300 text-slate-400'">
+                  :class="currentStep>step.id ? 'bg-[#FF6600] border-[#FF6600] text-white' : currentStep===step.id ? 'bg-white border-[#FF6600] text-[#FF6600]' : 'bg-white border-gray-300 text-gray-400'">
                   <FeatherIcon v-if="currentStep>step.id" name="check" class="h-3.5 w-3.5" />
                   <span v-else>{{ step.id }}</span>
                 </div>
                 <div class="text-center mt-1.5">
-                  <div class="text-[10px] font-medium leading-tight" :class="currentStep===step.id ? 'text-teal-600 font-bold' : currentStep>step.id ? 'text-slate-500' : 'text-slate-400'">{{ step.short }}</div>
-                  <div v-if="step.id <= 3" class="text-[8px] text-teal-400">backend</div>
+                  <div class="text-[10px] font-medium leading-tight" :class="currentStep===step.id ? 'text-[#FF6600] font-bold' : currentStep>step.id ? 'text-gray-500' : 'text-gray-400'">{{ step.short }}</div>
+                  <div v-if="step.id <= 3" class="text-[8px] text-[#FF8533]">backend</div>
                 </div>
               </div>
-              <div v-if="idx<7" class="w-6 h-0.5 mb-4 shrink-0" :class="currentStep>step.id ? 'bg-teal-500' : 'bg-slate-200'" />
+              <div v-if="idx<7" class="w-6 h-0.5 mb-4 shrink-0" :class="currentStep>step.id ? 'bg-[#FF6600]' : 'bg-gray-200'" />
             </div>
           </div>
         </div>
@@ -132,26 +132,26 @@
             <StepHeader icon="edit-3" title="Application Intake" sub="Product selection, borrower profile, KYC & OCR" badge="Connects to Backend" />
 
             <!-- Product Selection -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">{{ __('Product Selection') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">{{ __('Product Selection') }}</h4>
               <div class="grid grid-cols-3 gap-3">
                 <div v-for="prod in products" :key="prod.id"
                   @click="form.facility_type = prod.id"
                   class="rounded-xl border-2 p-3 cursor-pointer transition-all"
-                  :class="form.facility_type===prod.id ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-teal-300'">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-2" :class="form.facility_type===prod.id ? 'bg-teal-100' : 'bg-slate-100'">
-                    <FeatherIcon :name="prod.icon" class="h-4 w-4" :class="form.facility_type===prod.id ? 'text-teal-600' : 'text-slate-500'" />
+                  :class="form.facility_type===prod.id ? 'border-[#FF6600] bg-[#FFF8F2]' : 'border-gray-200 hover:border-[#FFB380]'">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-2" :class="form.facility_type===prod.id ? 'bg-[#FFF0E6]' : 'bg-gray-100'">
+                    <FeatherIcon :name="prod.icon" class="h-4 w-4" :class="form.facility_type===prod.id ? 'text-[#FF6600]' : 'text-gray-500'" />
                   </div>
-                  <div class="text-xs font-semibold text-slate-800">{{ prod.name }}</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">{{ prod.tenor }}</div>
-                  <div v-if="form.facility_type===prod.id" class="mt-2 text-[9px] bg-teal-100 text-teal-700 rounded px-1.5 py-0.5 font-semibold w-fit">{{ __('Selected') }}</div>
+                  <div class="text-xs font-semibold text-gray-800">{{ prod.name }}</div>
+                  <div class="text-[10px] text-gray-400 mt-0.5">{{ prod.tenor }}</div>
+                  <div v-if="form.facility_type===prod.id" class="mt-2 text-[9px] bg-[#FFF0E6] text-[#CC5200] rounded px-1.5 py-0.5 font-semibold w-fit">{{ __('Selected') }}</div>
                 </div>
               </div>
             </div>
 
             <!-- Borrower Info -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">{{ __('Borrower Information') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">{{ __('Borrower Information') }}</h4>
               <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                   <label class="field-label">{{ __('Full Name / Company Name') }} <span class="text-red-400">*</span></label>
@@ -169,7 +169,7 @@
                   <label class="field-label">{{ __('NPWP') }}</label>
                   <div class="relative">
                     <input v-model="form.npwp" type="text" placeholder="XX.XXX.XXX.X-XXX.XXX" class="field-input font-mono pr-16" />
-                    <button @click="fakeNpwpValidate" class="absolute right-2 top-1.5 text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded font-semibold">{{ npwpStatus || __('Validate') }}</button>
+                    <button @click="fakeNpwpValidate" class="absolute right-2 top-1.5 text-[10px] bg-[#FF6600] text-white px-2 py-0.5 rounded font-semibold">{{ npwpStatus || __('Validate') }}</button>
                   </div>
                 </div>
                 <div>
@@ -195,21 +195,21 @@
             </div>
 
             <!-- KYC Status -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <div class="flex items-center justify-between mb-3">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('KYC Collection') }}</h4>
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('KYC Collection') }}</h4>
                 <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">AML/PEP Screening</span>
               </div>
               <div class="grid grid-cols-2 gap-3">
-                <div v-for="kyc in kycItems" :key="kyc.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="kyc.status==='Verified' ? 'bg-green-50 border-green-200' : kyc.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'">
-                  <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 cursor-pointer" :class="kyc.status==='Verified' ? 'bg-green-500' : kyc.status==='Pending' ? 'bg-amber-400' : 'bg-slate-300'" @click="cycleKyc(kyc)">
+                <div v-for="kyc in kycItems" :key="kyc.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="kyc.status==='Verified' ? 'bg-green-50 border-green-200' : kyc.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 cursor-pointer" :class="kyc.status==='Verified' ? 'bg-green-500' : kyc.status==='Pending' ? 'bg-amber-400' : 'bg-gray-300'" @click="cycleKyc(kyc)">
                     <FeatherIcon :name="kyc.status==='Verified' ? 'check' : 'clock'" class="h-3.5 w-3.5 text-white" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800">{{ kyc.name }}</div>
-                    <div class="text-[10px]" :class="kyc.status==='Verified' ? 'text-green-600' : kyc.status==='Pending' ? 'text-amber-600' : 'text-slate-400'">{{ kyc.status }}</div>
+                    <div class="text-xs font-semibold text-gray-800">{{ kyc.name }}</div>
+                    <div class="text-[10px]" :class="kyc.status==='Verified' ? 'text-green-600' : kyc.status==='Pending' ? 'text-amber-600' : 'text-gray-400'">{{ kyc.status }}</div>
                   </div>
-                  <button @click="fakeOcr(kyc)" v-if="kyc.ocr" class="text-[10px] text-teal-600 font-semibold hover:underline shrink-0">OCR</button>
+                  <button @click="fakeOcr(kyc)" v-if="kyc.ocr" class="text-[10px] text-[#FF6600] font-semibold hover:underline shrink-0">OCR</button>
                 </div>
               </div>
               <!-- PEP/AML result -->
@@ -220,22 +220,22 @@
             </div>
 
             <!-- OCR Result (shown after OCR click) -->
-            <div v-if="ocrResult" class="bg-white rounded-xl border border-teal-200 shadow-sm p-5">
+            <div v-if="ocrResult" class="bg-white rounded-xl border border-[#FFD9B3] shadow-sm p-5">
               <div class="flex items-center gap-2 mb-3">
-                <FeatherIcon name="cpu" class="h-4 w-4 text-teal-600" />
-                <h4 class="text-xs font-bold text-teal-700 uppercase tracking-wide">{{ __('OCR Extraction Result') }}</h4>
-                <span class="ml-auto text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-semibold">Confidence: 94%</span>
+                <FeatherIcon name="cpu" class="h-4 w-4 text-[#FF6600]" />
+                <h4 class="text-xs font-bold text-[#CC5200] uppercase tracking-wide">{{ __('OCR Extraction Result') }}</h4>
+                <span class="ml-auto text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold">Confidence: 94%</span>
               </div>
               <div class="grid grid-cols-2 gap-3">
-                <div v-for="field in ocrResult" :key="field.key" class="rounded-lg bg-slate-50 border border-slate-200 p-2.5">
-                  <div class="text-[10px] text-slate-400 font-semibold">{{ field.key }}</div>
-                  <div class="text-xs font-bold text-slate-800 mt-0.5 flex items-center justify-between">
+                <div v-for="field in ocrResult" :key="field.key" class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
+                  <div class="text-[10px] text-gray-400 font-semibold">{{ field.key }}</div>
+                  <div class="text-xs font-bold text-gray-800 mt-0.5 flex items-center justify-between">
                     <span>{{ field.value }}</span>
                     <span class="text-[9px] rounded px-1 font-semibold" :class="field.conf >= 90 ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'">{{ field.conf }}%</span>
                   </div>
                 </div>
               </div>
-              <button @click="applyOcr" class="mt-3 w-full rounded-lg bg-teal-600 text-white text-xs font-semibold py-2 hover:bg-teal-700 transition-colors">{{ __('Apply to Form') }}</button>
+              <button @click="applyOcr" class="mt-3 w-full rounded-lg bg-[#FF6600] text-white text-xs font-semibold py-2 hover:bg-[#CC5200] transition-colors">{{ __('Apply to Form') }}</button>
             </div>
           </div>
 
@@ -244,76 +244,76 @@
             <StepHeader icon="paperclip" title="Document Collection" sub="Upload, checklist, expiry tracking & version control" badge="Connects to Backend" />
 
             <!-- Upload zone -->
-            <div class="bg-white rounded-xl border-2 border-dashed border-slate-300 hover:border-teal-400 transition-colors p-8 text-center cursor-pointer" @click="fakeUpload" @dragover.prevent @drop.prevent="fakeUpload">
-              <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center mx-auto mb-3">
-                <FeatherIcon name="upload-cloud" class="h-6 w-6 text-teal-400" />
+            <div class="bg-white rounded-xl border-2 border-dashed border-gray-300 hover:border-[#FF8533] transition-colors p-8 text-center cursor-pointer" @click="fakeUpload" @dragover.prevent @drop.prevent="fakeUpload">
+              <div class="w-12 h-12 rounded-full bg-[#FFF8F2] flex items-center justify-center mx-auto mb-3">
+                <FeatherIcon name="upload-cloud" class="h-6 w-6 text-[#FF8533]" />
               </div>
-              <p class="text-sm font-semibold text-slate-700">{{ __('Drag & drop files here, or click to upload') }}</p>
-              <p class="text-xs text-slate-400 mt-1">{{ __('PDF, JPG, PNG, XLSX, DOCX — max 25 MB per file') }}</p>
+              <p class="text-sm font-semibold text-gray-700">{{ __('Drag & drop files here, or click to upload') }}</p>
+              <p class="text-xs text-gray-400 mt-1">{{ __('PDF, JPG, PNG, XLSX, DOCX — max 25 MB per file') }}</p>
               <div v-if="uploadProgress" class="mt-4 max-w-xs mx-auto">
-                <div class="flex justify-between text-xs text-slate-500 mb-1">
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
                   <span>{{ uploadingFile }}</span>
                   <span>{{ uploadProgress }}%</span>
                 </div>
-                <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-teal-500 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }" />
+                <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-[#FF6600] rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }" />
                 </div>
               </div>
             </div>
 
             <!-- Document checklist -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('Required Documents') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Required Documents') }}</h4>
                 <div class="flex gap-3 text-xs">
                   <span class="text-green-600 font-semibold">{{ docsReceived }} {{ __('Received') }}</span>
                   <span class="text-amber-500 font-semibold">{{ docsPending }} {{ __('Pending') }}</span>
                   <span class="text-red-500 font-semibold">{{ docsMissing }} {{ __('Missing') }}</span>
                 </div>
               </div>
-              <div class="divide-y divide-slate-100">
+              <div class="divide-y divide-gray-100">
                 <div v-for="doc in documents" :key="doc.id" class="flex items-center gap-3 px-5 py-3">
                   <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition-colors"
-                    :class="doc.status==='Received' ? 'bg-green-500' : doc.status==='Missing' ? 'bg-red-400' : 'bg-slate-200'"
+                    :class="doc.status==='Received' ? 'bg-green-500' : doc.status==='Missing' ? 'bg-red-400' : 'bg-gray-200'"
                     @click="cycleDoc(doc)">
                     <FeatherIcon :name="doc.status==='Received' ? 'check' : doc.status==='Missing' ? 'x' : 'minus'" class="h-3.5 w-3.5 text-white" />
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold text-slate-800">{{ doc.name }}</span>
+                      <span class="text-xs font-semibold text-gray-800">{{ doc.name }}</span>
                       <span v-if="doc.required" class="text-[9px] text-red-400 font-bold">REQ</span>
                       <span v-if="doc.expiry" class="text-[9px] bg-amber-100 text-amber-700 px-1.5 rounded font-semibold">Exp: {{ doc.expiry }}</span>
                     </div>
-                    <div class="text-[10px] text-slate-400">{{ doc.description }}</div>
+                    <div class="text-[10px] text-gray-400">{{ doc.description }}</div>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
-                    <span v-if="doc.version" class="text-[9px] text-slate-400">v{{ doc.version }}</span>
-                    <select v-model="doc.status" class="text-xs rounded border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      :class="doc.status==='Received' ? 'border-green-200 text-green-700 bg-green-50' : doc.status==='Missing' ? 'border-red-200 text-red-600 bg-red-50' : 'border-slate-200 text-slate-600'">
+                    <span v-if="doc.version" class="text-[9px] text-gray-400">v{{ doc.version }}</span>
+                    <select v-model="doc.status" class="text-xs rounded border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
+                      :class="doc.status==='Received' ? 'border-green-200 text-green-700 bg-green-50' : doc.status==='Missing' ? 'border-red-200 text-red-600 bg-red-50' : 'border-gray-200 text-gray-600'">
                       <option>Pending</option><option>Received</option><option>Missing</option><option>Waived</option>
                     </select>
                   </div>
                 </div>
               </div>
               <!-- Submit gate -->
-              <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center gap-3">
+              <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-3">
                 <FeatherIcon :name="docsMissing > 0 ? 'alert-triangle' : 'check-circle'" class="h-4 w-4 shrink-0" :class="docsMissing > 0 ? 'text-amber-500' : 'text-green-500'" />
                 <span class="text-xs" :class="docsMissing > 0 ? 'text-amber-700' : 'text-green-700'">
                   {{ docsMissing > 0 ? `${docsMissing} mandatory document(s) missing — submission blocked` : 'All required documents received — ready to proceed' }}
                 </span>
-                <span class="ml-auto text-xs font-bold text-teal-600">{{ Math.round(docsReceived / documents.length * 100) }}% complete</span>
+                <span class="ml-auto text-xs font-bold text-[#FF6600]">{{ Math.round(docsReceived / documents.length * 100) }}% complete</span>
               </div>
             </div>
 
             <!-- Uploaded files -->
-            <div v-if="uploadedFiles.length" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Uploaded Files') }}</h4>
+            <div v-if="uploadedFiles.length" class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Uploaded Files') }}</h4>
               <div class="space-y-2">
-                <div v-for="file in uploadedFiles" :key="file.name" class="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                  <FeatherIcon name="file" class="h-4 w-4 text-teal-500 shrink-0" />
+                <div v-for="file in uploadedFiles" :key="file.name" class="flex items-center gap-3 p-2.5 rounded-lg bg-gray-50 border border-gray-200">
+                  <FeatherIcon name="file" class="h-4 w-4 text-[#FF6600] shrink-0" />
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800 truncate">{{ file.name }}</div>
-                    <div class="text-[10px] text-slate-400">{{ file.size }} · {{ file.uploaded }}</div>
+                    <div class="text-xs font-semibold text-gray-800 truncate">{{ file.name }}</div>
+                    <div class="text-[10px] text-gray-400">{{ file.size }} · {{ file.uploaded }}</div>
                   </div>
                   <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">{{ __('Scanned OK') }}</span>
                 </div>
@@ -327,34 +327,34 @@
 
             <!-- Key Ratios -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div v-for="r in ratios" :key="r.label" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-                <div class="text-xl font-black" :class="r.ok ? 'text-teal-600' : 'text-red-500'">{{ r.value }}</div>
-                <div class="text-[10px] text-slate-500 mt-1">{{ r.label }}</div>
+              <div v-for="r in ratios" :key="r.label" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+                <div class="text-xl font-black" :class="r.ok ? 'text-[#FF6600]' : 'text-red-500'">{{ r.value }}</div>
+                <div class="text-[10px] text-gray-500 mt-1">{{ r.label }}</div>
                 <div class="text-[9px] mt-1 font-semibold" :class="r.ok ? 'text-green-600' : 'text-red-500'">{{ r.ok ? '✓ Pass' : '✗ Breach' }}</div>
               </div>
             </div>
 
             <!-- Financial Spreading -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('Financial Spreading') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Financial Spreading') }}</h4>
                 <div class="flex gap-2">
-                  <button class="text-xs text-teal-600 font-semibold hover:underline">{{ __('AI Extract from PDF') }}</button>
-                  <button class="text-xs text-slate-500 hover:text-slate-700">{{ __('Export Excel') }}</button>
+                  <button class="text-xs text-[#FF6600] font-semibold hover:underline">{{ __('AI Extract from PDF') }}</button>
+                  <button class="text-xs text-gray-500 hover:text-gray-700">{{ __('Export Excel') }}</button>
                 </div>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-xs">
-                  <thead class="bg-slate-50">
+                  <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-4 py-2.5 text-left font-semibold text-slate-600 w-48">{{ __('Item') }}</th>
-                      <th v-for="yr in ['FY2022','FY2023','FY2024']" :key="yr" class="px-4 py-2.5 text-right font-semibold text-slate-600">{{ yr }}</th>
+                      <th class="px-4 py-2.5 text-left font-semibold text-gray-600 w-48">{{ __('Item') }}</th>
+                      <th v-for="yr in ['FY2022','FY2023','FY2024']" :key="yr" class="px-4 py-2.5 text-right font-semibold text-gray-600">{{ yr }}</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-100">
-                    <tr v-for="row in spreadingRows" :key="row.label" :class="row.bold ? 'bg-teal-50 font-semibold' : 'hover:bg-slate-50'">
-                      <td class="px-4 py-2 text-slate-700" :class="row.indent ? 'pl-7 text-slate-500' : ''">{{ row.label }}</td>
-                      <td v-for="val in row.values" :key="val" class="px-4 py-2 text-right font-mono text-slate-800" :class="row.bold ? 'text-teal-700' : ''">{{ val }}</td>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="row in spreadingRows" :key="row.label" :class="row.bold ? 'bg-[#FFF8F2] font-semibold' : 'hover:bg-gray-50'">
+                      <td class="px-4 py-2 text-gray-700" :class="row.indent ? 'pl-7 text-gray-500' : ''">{{ row.label }}</td>
+                      <td v-for="val in row.values" :key="val" class="px-4 py-2 text-right font-mono text-gray-800" :class="row.bold ? 'text-[#CC5200]' : ''">{{ val }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -363,53 +363,53 @@
 
             <!-- 5C + Risk Score -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4">{{ __('5C Analysis') }}</h4>
+              <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-4">{{ __('5C Analysis') }}</h4>
                 <div class="space-y-3">
                   <div v-for="c in fiveC" :key="c.label">
                     <div class="flex justify-between text-xs mb-1">
-                      <span class="text-slate-700">{{ c.label }}</span>
-                      <span class="font-bold" :class="c.score>=70 ? 'text-teal-600' : c.score>=50 ? 'text-amber-600' : 'text-red-500'">{{ c.score }}/100</span>
+                      <span class="text-gray-700">{{ c.label }}</span>
+                      <span class="font-bold" :class="c.score>=70 ? 'text-[#FF6600]' : c.score>=50 ? 'text-amber-600' : 'text-red-500'">{{ c.score }}/100</span>
                     </div>
-                    <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full" :class="c.score>=70 ? 'bg-teal-500' : c.score>=50 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.score+'%'}" />
+                    <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full" :class="c.score>=70 ? 'bg-[#FF6600]' : c.score>=50 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.score+'%'}" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4">{{ __('Risk Scoring') }}</h4>
+              <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-4">{{ __('Risk Scoring') }}</h4>
                 <div class="text-center mb-4">
-                  <div class="text-5xl font-black text-teal-600">742</div>
-                  <div class="text-sm font-bold text-slate-600 mt-1">{{ __('Grade') }}: B+</div>
-                  <div class="text-xs text-slate-400">0 — 1000 scale</div>
+                  <div class="text-5xl font-black text-[#FF6600]">742</div>
+                  <div class="text-sm font-bold text-gray-600 mt-1">{{ __('Grade') }}: B+</div>
+                  <div class="text-xs text-gray-400">0 — 1000 scale</div>
                 </div>
                 <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
-                  <div class="rounded-lg bg-red-50 p-2"><div class="font-bold text-red-600">0–499</div><div class="text-slate-500">High Risk</div></div>
-                  <div class="rounded-lg bg-amber-50 p-2"><div class="font-bold text-amber-600">500–699</div><div class="text-slate-500">Medium</div></div>
-                  <div class="rounded-lg bg-teal-50 border border-teal-200 p-2"><div class="font-bold text-teal-600">700–1000</div><div class="text-slate-500">Low Risk ✓</div></div>
+                  <div class="rounded-lg bg-red-50 p-2"><div class="font-bold text-red-600">0–499</div><div class="text-gray-500">High Risk</div></div>
+                  <div class="rounded-lg bg-amber-50 p-2"><div class="font-bold text-amber-600">500–699</div><div class="text-gray-500">Medium</div></div>
+                  <div class="rounded-lg bg-[#FFF8F2] border border-[#FFD9B3] p-2"><div class="font-bold text-[#FF6600]">700–1000</div><div class="text-gray-500">Low Risk ✓</div></div>
                 </div>
               </div>
             </div>
 
             <!-- AI Recommendation -->
-            <div class="bg-white rounded-xl border border-teal-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-[#FFD9B3] shadow-sm p-5">
               <div class="flex items-center gap-2 mb-3">
-                <div class="w-7 h-7 rounded-lg bg-teal-100 flex items-center justify-center">
-                  <FeatherIcon name="cpu" class="h-4 w-4 text-teal-600" />
+                <div class="w-7 h-7 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
+                  <FeatherIcon name="cpu" class="h-4 w-4 text-[#FF6600]" />
                 </div>
-                <h4 class="text-xs font-bold text-teal-700 uppercase tracking-wide">{{ __('AI Recommendation') }}</h4>
-                <span class="ml-auto text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-semibold">Confidence: 87%</span>
+                <h4 class="text-xs font-bold text-[#CC5200] uppercase tracking-wide">{{ __('AI Recommendation') }}</h4>
+                <span class="ml-auto text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold">Confidence: 87%</span>
               </div>
               <div class="flex gap-3 mb-3">
                 <div v-for="rec in ['Approve','Refer','Reject']" :key="rec"
-                  :class="rec==='Approve' ? 'bg-green-100 border-green-400 text-green-700 font-bold ring-2 ring-green-200' : 'bg-slate-50 border-slate-200 text-slate-400'"
+                  :class="rec==='Approve' ? 'bg-green-100 border-green-400 text-green-700 font-bold ring-2 ring-green-200' : 'bg-gray-50 border-gray-200 text-gray-400'"
                   class="flex-1 text-center rounded-xl border py-3 text-sm font-semibold cursor-pointer">
                   {{ rec }}
                 </div>
               </div>
-              <div class="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-700 leading-relaxed">
+              <div class="rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 leading-relaxed">
                 {{ __('Based on financial analysis, the borrower demonstrates adequate debt service capacity with DSCR of 1.42x (threshold: 1.2x). Risk score of 742 falls in low-risk band. Recommend approval subject to: (1) NPWP validation, (2) collateral appraisal completion, (3) net worth confirmation via SLIK report.') }}
               </div>
               <div class="mt-3">
@@ -424,48 +424,48 @@
             <StepHeader icon="shield" title="Collateral Management" sub="Registration, appraisal, insurance & legal documents" />
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div v-for="c in collaterals" :key="c.id" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+              <div v-for="c in collaterals" :key="c.id" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-start justify-between mb-3">
-                  <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                    <FeatherIcon :name="c.icon" class="h-4 w-4 text-teal-600" />
+                  <div class="w-8 h-8 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
+                    <FeatherIcon :name="c.icon" class="h-4 w-4 text-[#FF6600]" />
                   </div>
                   <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="c.status==='Appraised' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">{{ c.status }}</span>
                 </div>
-                <div class="text-sm font-bold text-slate-800">{{ c.name }}</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">{{ c.id }}</div>
+                <div class="text-sm font-bold text-gray-800">{{ c.name }}</div>
+                <div class="text-[10px] text-gray-500 mt-0.5">{{ c.id }}</div>
                 <div class="mt-3 space-y-1.5 text-xs">
-                  <div class="flex justify-between"><span class="text-slate-500">Market Value</span><span class="font-bold text-slate-800">{{ fmt(c.value) }}</span></div>
-                  <div class="flex justify-between"><span class="text-slate-500">LTV</span><span class="font-bold" :class="c.ltv <= 80 ? 'text-teal-600' : 'text-red-500'">{{ c.ltv }}%</span></div>
-                  <div class="flex justify-between"><span class="text-slate-500">Insured Until</span><span class="font-semibold text-slate-700">{{ c.insured }}</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">Market Value</span><span class="font-bold text-gray-800">{{ fmt(c.value) }}</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">LTV</span><span class="font-bold" :class="c.ltv <= 80 ? 'text-[#FF6600]' : 'text-red-500'">{{ c.ltv }}%</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">Insured Until</span><span class="font-semibold text-gray-700">{{ c.insured }}</span></div>
                 </div>
-                <div class="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" :class="c.ltv<=70 ? 'bg-teal-500' : c.ltv<=80 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.ltv+'%'}" />
+                <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full" :class="c.ltv<=70 ? 'bg-[#FF6600]' : c.ltv<=80 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.ltv+'%'}" />
                 </div>
               </div>
             </div>
 
             <!-- Appraisal -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Appraisal Management') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Appraisal Management') }}</h4>
               <div class="overflow-x-auto">
                 <table class="w-full text-xs">
-                  <thead class="bg-slate-50">
+                  <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-3 py-2 text-left text-slate-600">{{ __('Collateral') }}</th>
-                      <th class="px-3 py-2 text-left text-slate-600">{{ __('Appraiser') }}</th>
-                      <th class="px-3 py-2 text-right text-slate-600">{{ __('Value') }}</th>
-                      <th class="px-3 py-2 text-center text-slate-600">{{ __('Date') }}</th>
-                      <th class="px-3 py-2 text-center text-slate-600">{{ __('Next Re-appraisal') }}</th>
-                      <th class="px-3 py-2 text-center text-slate-600">{{ __('Status') }}</th>
+                      <th class="px-3 py-2 text-left text-gray-600">{{ __('Collateral') }}</th>
+                      <th class="px-3 py-2 text-left text-gray-600">{{ __('Appraiser') }}</th>
+                      <th class="px-3 py-2 text-right text-gray-600">{{ __('Value') }}</th>
+                      <th class="px-3 py-2 text-center text-gray-600">{{ __('Date') }}</th>
+                      <th class="px-3 py-2 text-center text-gray-600">{{ __('Next Re-appraisal') }}</th>
+                      <th class="px-3 py-2 text-center text-gray-600">{{ __('Status') }}</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-100">
-                    <tr v-for="a in appraisals" :key="a.col" class="hover:bg-slate-50">
-                      <td class="px-3 py-2 font-semibold text-slate-800">{{ a.col }}</td>
-                      <td class="px-3 py-2 text-slate-600">{{ a.appraiser }}</td>
-                      <td class="px-3 py-2 text-right font-mono font-bold text-teal-700">{{ fmt(a.value) }}</td>
-                      <td class="px-3 py-2 text-center text-slate-500">{{ a.date }}</td>
-                      <td class="px-3 py-2 text-center text-slate-500">{{ a.next }}</td>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="a in appraisals" :key="a.col" class="hover:bg-gray-50">
+                      <td class="px-3 py-2 font-semibold text-gray-800">{{ a.col }}</td>
+                      <td class="px-3 py-2 text-gray-600">{{ a.appraiser }}</td>
+                      <td class="px-3 py-2 text-right font-mono font-bold text-[#CC5200]">{{ fmt(a.value) }}</td>
+                      <td class="px-3 py-2 text-center text-gray-500">{{ a.date }}</td>
+                      <td class="px-3 py-2 text-center text-gray-500">{{ a.next }}</td>
                       <td class="px-3 py-2 text-center"><span class="rounded-full px-2 py-0.5 text-[9px] font-semibold" :class="a.status==='Completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">{{ a.status }}</span></td>
                     </tr>
                   </tbody>
@@ -479,33 +479,33 @@
             <StepHeader icon="check-circle" title="Approval Workflow" sub="Multi-level approval, committee routing & voting" />
 
             <!-- Approval Chain -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-4">{{ __('Approval Chain') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-4">{{ __('Approval Chain') }}</h4>
               <div class="flex flex-col gap-0">
                 <div v-for="(lvl, idx) in approvalLevels" :key="lvl.id" class="flex items-start gap-4">
                   <div class="flex flex-col items-center">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 text-xs font-bold shrink-0"
-                      :class="lvl.state==='Approved' ? 'bg-teal-600 border-teal-600 text-white' : lvl.state==='Pending' ? 'bg-white border-teal-500 text-teal-600' : 'bg-white border-slate-300 text-slate-400'">
+                      :class="lvl.state==='Approved' ? 'bg-[#FF6600] border-[#FF6600] text-white' : lvl.state==='Pending' ? 'bg-white border-[#FF6600] text-[#FF6600]' : 'bg-white border-gray-300 text-gray-400'">
                       <FeatherIcon v-if="lvl.state==='Approved'" name="check" class="h-4 w-4" />
                       <span v-else>{{ lvl.id }}</span>
                     </div>
-                    <div v-if="idx<approvalLevels.length-1" class="w-0.5 h-10 mt-1" :class="lvl.state==='Approved' ? 'bg-teal-400' : 'bg-slate-200'" />
+                    <div v-if="idx<approvalLevels.length-1" class="w-0.5 h-10 mt-1" :class="lvl.state==='Approved' ? 'bg-[#FF8533]' : 'bg-gray-200'" />
                   </div>
                   <div class="flex-1 pb-4">
                     <div class="flex items-center justify-between gap-2">
                       <div>
-                        <div class="text-sm font-bold text-slate-800">{{ lvl.approver }}</div>
-                        <div class="text-xs text-slate-500">{{ lvl.role }}</div>
+                        <div class="text-sm font-bold text-gray-800">{{ lvl.approver }}</div>
+                        <div class="text-xs text-gray-500">{{ lvl.role }}</div>
                       </div>
                       <div class="text-right shrink-0">
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="lvl.state==='Approved' ? 'bg-green-100 text-green-700' : lvl.state==='Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'">{{ lvl.state }}</span>
-                        <div v-if="lvl.date" class="text-[10px] text-slate-400 mt-0.5">{{ lvl.date }}</div>
+                        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="lvl.state==='Approved' ? 'bg-green-100 text-green-700' : lvl.state==='Pending' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'">{{ lvl.state }}</span>
+                        <div v-if="lvl.date" class="text-[10px] text-gray-400 mt-0.5">{{ lvl.date }}</div>
                       </div>
                     </div>
-                    <div v-if="lvl.note" class="mt-1.5 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-200 italic">"{{ lvl.note }}"</div>
+                    <div v-if="lvl.note" class="mt-1.5 text-xs text-gray-600 bg-gray-50 rounded-lg p-2 border border-gray-200 italic">"{{ lvl.note }}"</div>
                     <!-- SLA timer -->
                     <div v-if="lvl.state==='Pending'" class="mt-2 flex items-center gap-2">
-                      <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div class="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
                         <div class="h-full bg-amber-400 rounded-full" style="width: 60%" />
                       </div>
                       <span class="text-[10px] text-amber-600 font-semibold">SLA: 14h remaining</span>
@@ -516,22 +516,22 @@
             </div>
 
             <!-- Committee Voting -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Committee Voting') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Committee Voting') }}</h4>
               <div class="grid grid-cols-2 gap-3 mb-4">
-                <div v-for="m in committeeMembers" :key="m.name" class="flex items-center gap-2 p-3 rounded-lg border" :class="m.vote ? 'bg-teal-50 border-teal-200' : 'bg-slate-50 border-slate-200'">
-                  <div class="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-black shrink-0" :class="m.vote==='Approve' ? 'bg-teal-600' : m.vote==='Reject' ? 'bg-red-500' : 'bg-slate-400'">{{ m.name[0] }}</div>
+                <div v-for="m in committeeMembers" :key="m.name" class="flex items-center gap-2 p-3 rounded-lg border" :class="m.vote ? 'bg-[#FFF8F2] border-[#FFD9B3]' : 'bg-gray-50 border-gray-200'">
+                  <div class="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-black shrink-0" :class="m.vote==='Approve' ? 'bg-[#FF6600]' : m.vote==='Reject' ? 'bg-red-500' : 'bg-gray-400'">{{ m.name[0] }}</div>
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800">{{ m.name }}</div>
-                    <div class="text-[10px] text-slate-500">{{ m.role }}</div>
+                    <div class="text-xs font-semibold text-gray-800">{{ m.name }}</div>
+                    <div class="text-[10px] text-gray-500">{{ m.role }}</div>
                   </div>
-                  <span class="text-[10px] font-bold shrink-0" :class="m.vote==='Approve' ? 'text-teal-600' : m.vote==='Reject' ? 'text-red-500' : 'text-slate-400'">{{ m.vote || 'Pending' }}</span>
+                  <span class="text-[10px] font-bold shrink-0" :class="m.vote==='Approve' ? 'text-[#FF6600]' : m.vote==='Reject' ? 'text-red-500' : 'text-gray-400'">{{ m.vote || 'Pending' }}</span>
                 </div>
               </div>
               <!-- Quorum -->
-              <div class="rounded-lg bg-teal-50 border border-teal-200 px-4 py-3 flex items-center gap-3">
-                <FeatherIcon name="check-circle" class="h-4 w-4 text-teal-600 shrink-0" />
-                <div class="text-xs text-teal-700">
+              <div class="rounded-lg bg-[#FFF8F2] border border-[#FFD9B3] px-4 py-3 flex items-center gap-3">
+                <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF6600] shrink-0" />
+                <div class="text-xs text-[#CC5200]">
                   <span class="font-bold">Quorum met</span> — 3/4 voted · Majority: <span class="font-bold">Approved (3-0-1)</span>
                 </div>
               </div>
@@ -543,53 +543,53 @@
             <StepHeader icon="file-text" title="Legal & Documentation" sub="Agreement generation, e-signing & covenant setup" />
 
             <!-- Agreements -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('Agreements') }}</h4>
-                <button class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-teal-700 transition-colors">{{ __('Generate from Template') }}</button>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Agreements') }}</h4>
+                <button class="text-xs bg-[#FF6600] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#CC5200] transition-colors">{{ __('Generate from Template') }}</button>
               </div>
-              <div class="divide-y divide-slate-100">
+              <div class="divide-y divide-gray-100">
                 <div v-for="ag in agreements" :key="ag.id" class="flex items-center gap-3 px-5 py-3">
-                  <FeatherIcon name="file-text" class="h-4 w-4 text-teal-500 shrink-0" />
+                  <FeatherIcon name="file-text" class="h-4 w-4 text-[#FF6600] shrink-0" />
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800">{{ ag.name }}</div>
-                    <div class="text-[10px] text-slate-400">{{ ag.version }} · {{ ag.date }}</div>
+                    <div class="text-xs font-semibold text-gray-800">{{ ag.name }}</div>
+                    <div class="text-[10px] text-gray-400">{{ ag.version }} · {{ ag.date }}</div>
                   </div>
-                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="ag.status==='Signed' ? 'bg-green-100 text-green-700' : ag.status==='Pending Signature' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'">{{ ag.status }}</span>
-                  <button class="text-[10px] text-teal-600 hover:underline font-semibold ml-2">{{ ag.status==='Draft' ? 'Review' : 'View' }}</button>
+                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="ag.status==='Signed' ? 'bg-green-100 text-green-700' : ag.status==='Pending Signature' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'">{{ ag.status }}</span>
+                  <button class="text-[10px] text-[#FF6600] hover:underline font-semibold ml-2">{{ ag.status==='Draft' ? 'Review' : 'View' }}</button>
                 </div>
               </div>
             </div>
 
             <!-- E-Sign -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Digital Signing (e-Sign)') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Digital Signing (e-Sign)') }}</h4>
               <div class="grid grid-cols-3 gap-3 mb-3">
-                <div v-for="sg in signers" :key="sg.name" class="rounded-xl border p-3 text-center" :class="sg.signed ? 'border-teal-200 bg-teal-50' : 'border-slate-200'">
-                  <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-black mx-auto mb-2">{{ sg.name[0] }}</div>
-                  <div class="text-xs font-semibold text-slate-800">{{ sg.name }}</div>
-                  <div class="text-[10px] text-slate-400">{{ sg.role }}</div>
-                  <div class="mt-2 text-[10px] font-bold" :class="sg.signed ? 'text-teal-600' : 'text-slate-400'">{{ sg.signed ? '✓ Signed' : 'Awaiting' }}</div>
-                  <div v-if="sg.signed" class="text-[9px] text-slate-400">{{ sg.signed_at }}</div>
+                <div v-for="sg in signers" :key="sg.name" class="rounded-xl border p-3 text-center" :class="sg.signed ? 'border-[#FFD9B3] bg-[#FFF8F2]' : 'border-gray-200'">
+                  <div class="w-8 h-8 rounded-full bg-[#FF6600] text-white flex items-center justify-center text-xs font-black mx-auto mb-2">{{ sg.name[0] }}</div>
+                  <div class="text-xs font-semibold text-gray-800">{{ sg.name }}</div>
+                  <div class="text-[10px] text-gray-400">{{ sg.role }}</div>
+                  <div class="mt-2 text-[10px] font-bold" :class="sg.signed ? 'text-[#FF6600]' : 'text-gray-400'">{{ sg.signed ? '✓ Signed' : 'Awaiting' }}</div>
+                  <div v-if="sg.signed" class="text-[9px] text-gray-400">{{ sg.signed_at }}</div>
                 </div>
               </div>
-              <div class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[10px] text-slate-500">
+              <div class="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2 text-[10px] text-gray-500">
                 {{ __('Provider: Privy.id / Tilaka — UU ITE compliant — audit trail stored immutably') }}
               </div>
             </div>
 
             <!-- Covenants -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Covenant Setup') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Covenant Setup') }}</h4>
               <div class="space-y-2">
-                <div v-for="cov in covenants" :key="cov.id" class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div class="w-2 h-2 rounded-full shrink-0" :class="cov.type==='Financial' ? 'bg-teal-500' : 'bg-purple-400'" />
+                <div v-for="cov in covenants" :key="cov.id" class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                  <div class="w-2 h-2 rounded-full shrink-0" :class="cov.type==='Financial' ? 'bg-[#FF6600]' : 'bg-purple-400'" />
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800">{{ cov.name }}</div>
-                    <div class="text-[10px] text-slate-400">{{ cov.type }} · Tested {{ cov.frequency }}</div>
+                    <div class="text-xs font-semibold text-gray-800">{{ cov.name }}</div>
+                    <div class="text-[10px] text-gray-400">{{ cov.type }} · Tested {{ cov.frequency }}</div>
                   </div>
                   <div class="text-xs text-right shrink-0">
-                    <div class="font-bold text-slate-800">Threshold: {{ cov.threshold }}</div>
+                    <div class="font-bold text-gray-800">Threshold: {{ cov.threshold }}</div>
                   </div>
                 </div>
               </div>
@@ -601,23 +601,23 @@
             <StepHeader icon="send" title="Disbursement" sub="Verification checklist, tranche planning & payment instructions" />
 
             <!-- CP Checklist -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-slate-100">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('Condition Precedent Checklist') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Condition Precedent Checklist') }}</h4>
               </div>
-              <div class="divide-y divide-slate-100">
+              <div class="divide-y divide-gray-100">
                 <div v-for="cp in cpItems" :key="cp.id" class="flex items-center gap-3 px-5 py-3">
-                  <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="cp.cleared ? 'bg-teal-500' : 'bg-slate-200'">
+                  <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="cp.cleared ? 'bg-[#FF6600]' : 'bg-gray-200'">
                     <FeatherIcon :name="cp.cleared ? 'check' : 'minus'" class="h-3 w-3 text-white" />
                   </div>
-                  <div class="flex-1 text-xs font-medium text-slate-800">{{ cp.name }}</div>
-                  <span class="text-[10px] font-semibold" :class="cp.cleared ? 'text-teal-600' : 'text-slate-400'">{{ cp.cleared ? 'Cleared' : 'Open' }}</span>
+                  <div class="flex-1 text-xs font-medium text-gray-800">{{ cp.name }}</div>
+                  <span class="text-[10px] font-semibold" :class="cp.cleared ? 'text-[#FF6600]' : 'text-gray-400'">{{ cp.cleared ? 'Cleared' : 'Open' }}</span>
                 </div>
               </div>
-              <div class="px-5 py-3 bg-slate-50 border-t border-slate-200">
+              <div class="px-5 py-3 bg-gray-50 border-t border-gray-200">
                 <div class="flex items-center gap-2">
-                  <FeatherIcon :name="cpItems.every(c=>c.cleared) ? 'check-circle' : 'alert-triangle'" class="h-4 w-4 shrink-0" :class="cpItems.every(c=>c.cleared) ? 'text-teal-500' : 'text-amber-500'" />
-                  <span class="text-xs font-semibold" :class="cpItems.every(c=>c.cleared) ? 'text-teal-700' : 'text-amber-700'">
+                  <FeatherIcon :name="cpItems.every(c=>c.cleared) ? 'check-circle' : 'alert-triangle'" class="h-4 w-4 shrink-0" :class="cpItems.every(c=>c.cleared) ? 'text-[#FF6600]' : 'text-amber-500'" />
+                  <span class="text-xs font-semibold" :class="cpItems.every(c=>c.cleared) ? 'text-[#CC5200]' : 'text-amber-700'">
                     {{ cpItems.filter(c=>c.cleared).length }}/{{ cpItems.length }} {{ __('conditions cleared') }}
                     {{ cpItems.every(c=>c.cleared) ? '— Disbursement authorized' : '— Block active' }}
                   </span>
@@ -626,23 +626,23 @@
             </div>
 
             <!-- Tranches -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Disbursement Tranches') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Disbursement Tranches') }}</h4>
               <div class="space-y-2">
-                <div v-for="t in tranches" :key="t.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="t.status==='Disbursed' ? 'bg-teal-50 border-teal-200' : t.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'border-slate-200'">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0" :class="t.status==='Disbursed' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'">{{ t.id }}</div>
+                <div v-for="t in tranches" :key="t.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="t.status==='Disbursed' ? 'bg-[#FFF8F2] border-[#FFD9B3]' : t.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'border-gray-200'">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0" :class="t.status==='Disbursed' ? 'bg-[#FFF0E6] text-[#CC5200]' : 'bg-gray-100 text-gray-500'">{{ t.id }}</div>
                   <div class="flex-1 min-w-0">
-                    <div class="text-xs font-semibold text-slate-800">Tranche {{ t.id }} — {{ fmt(t.amount) }}</div>
-                    <div class="text-[10px] text-slate-400">{{ t.date }} · {{ t.condition }}</div>
+                    <div class="text-xs font-semibold text-gray-800">Tranche {{ t.id }} — {{ fmt(t.amount) }}</div>
+                    <div class="text-[10px] text-gray-400">{{ t.date }} · {{ t.condition }}</div>
                   </div>
-                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0" :class="t.status==='Disbursed' ? 'bg-teal-100 text-teal-700' : 'bg-amber-100 text-amber-700'">{{ t.status }}</span>
+                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0" :class="t.status==='Disbursed' ? 'bg-[#FFF0E6] text-[#CC5200]' : 'bg-amber-100 text-amber-700'">{{ t.status }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Account Info -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Payment Instructions') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Payment Instructions') }}</h4>
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="field-label">{{ __('Bank') }}</label>
@@ -673,40 +673,40 @@
 
             <!-- Health KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div v-for="kpi in healthKpis" :key="kpi.label" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
+              <div v-for="kpi in healthKpis" :key="kpi.label" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
                 <div class="text-xl font-black" :class="kpi.color">{{ kpi.value }}</div>
-                <div class="text-[10px] text-slate-500 mt-1">{{ kpi.label }}</div>
-                <div class="mt-2 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="text-[10px] text-gray-500 mt-1">{{ kpi.label }}</div>
+                <div class="mt-2 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div class="h-full rounded-full" :class="kpi.barColor" :style="{width: kpi.pct+'%'}" />
                 </div>
               </div>
             </div>
 
             <!-- Payment Schedule -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">{{ __('Payment Tracking') }}</h4>
-                <span class="text-[10px] text-slate-500">{{ __('Showing latest 6 installments') }}</span>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Payment Tracking') }}</h4>
+                <span class="text-[10px] text-gray-500">{{ __('Showing latest 6 installments') }}</span>
               </div>
               <div class="overflow-x-auto">
                 <table class="w-full text-xs">
-                  <thead class="bg-slate-50">
+                  <thead class="bg-gray-50">
                     <tr>
-                      <th class="px-4 py-2.5 text-left text-slate-600">#</th>
-                      <th class="px-4 py-2.5 text-left text-slate-600">{{ __('Due Date') }}</th>
-                      <th class="px-4 py-2.5 text-right text-slate-600">{{ __('Scheduled') }}</th>
-                      <th class="px-4 py-2.5 text-right text-slate-600">{{ __('Actual Paid') }}</th>
-                      <th class="px-4 py-2.5 text-right text-slate-600">{{ __('Outstanding') }}</th>
-                      <th class="px-4 py-2.5 text-center text-slate-600">{{ __('Status') }}</th>
+                      <th class="px-4 py-2.5 text-left text-gray-600">#</th>
+                      <th class="px-4 py-2.5 text-left text-gray-600">{{ __('Due Date') }}</th>
+                      <th class="px-4 py-2.5 text-right text-gray-600">{{ __('Scheduled') }}</th>
+                      <th class="px-4 py-2.5 text-right text-gray-600">{{ __('Actual Paid') }}</th>
+                      <th class="px-4 py-2.5 text-right text-gray-600">{{ __('Outstanding') }}</th>
+                      <th class="px-4 py-2.5 text-center text-gray-600">{{ __('Status') }}</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-slate-100">
-                    <tr v-for="p in paymentRows" :key="p.n" class="hover:bg-slate-50">
-                      <td class="px-4 py-2.5 text-slate-500">{{ p.n }}</td>
-                      <td class="px-4 py-2.5 text-slate-700">{{ p.due }}</td>
-                      <td class="px-4 py-2.5 text-right font-mono text-slate-700">{{ fmt(p.scheduled) }}</td>
-                      <td class="px-4 py-2.5 text-right font-mono" :class="p.paid ? 'text-teal-700 font-semibold' : 'text-slate-400'">{{ p.paid ? fmt(p.paid) : '—' }}</td>
-                      <td class="px-4 py-2.5 text-right font-mono text-slate-600">{{ fmt(p.outstanding) }}</td>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="p in paymentRows" :key="p.n" class="hover:bg-gray-50">
+                      <td class="px-4 py-2.5 text-gray-500">{{ p.n }}</td>
+                      <td class="px-4 py-2.5 text-gray-700">{{ p.due }}</td>
+                      <td class="px-4 py-2.5 text-right font-mono text-gray-700">{{ fmt(p.scheduled) }}</td>
+                      <td class="px-4 py-2.5 text-right font-mono" :class="p.paid ? 'text-[#CC5200] font-semibold' : 'text-gray-400'">{{ p.paid ? fmt(p.paid) : '—' }}</td>
+                      <td class="px-4 py-2.5 text-right font-mono text-gray-600">{{ fmt(p.outstanding) }}</td>
                       <td class="px-4 py-2.5 text-center">
                         <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="p.status==='Paid' ? 'bg-green-100 text-green-700' : p.status==='Overdue' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'">{{ p.status }}</span>
                       </td>
@@ -717,22 +717,22 @@
             </div>
 
             <!-- Covenant Monitoring -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">{{ __('Covenant Monitoring') }}</h4>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Covenant Monitoring') }}</h4>
               <div class="space-y-3">
                 <div v-for="cov in covenantMonitoring" :key="cov.id">
                   <div class="flex items-center justify-between mb-1.5">
                     <div>
-                      <span class="text-xs font-semibold text-slate-800">{{ cov.name }}</span>
-                      <span class="ml-2 text-[10px] text-slate-400">Threshold: {{ cov.threshold }}</span>
+                      <span class="text-xs font-semibold text-gray-800">{{ cov.name }}</span>
+                      <span class="ml-2 text-[10px] text-gray-400">Threshold: {{ cov.threshold }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-black" :class="cov.ok ? 'text-teal-600' : 'text-red-500'">{{ cov.actual }}</span>
+                      <span class="text-xs font-black" :class="cov.ok ? 'text-[#FF6600]' : 'text-red-500'">{{ cov.actual }}</span>
                       <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="cov.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">{{ cov.ok ? 'Pass' : 'Breach' }}</span>
                     </div>
                   </div>
-                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all" :class="cov.ok ? 'bg-teal-500' : 'bg-red-400'" :style="{width: Math.min(cov.pct, 100)+'%'}" />
+                  <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all" :class="cov.ok ? 'bg-[#FF6600]' : 'bg-red-400'" :style="{width: Math.min(cov.pct, 100)+'%'}" />
                   </div>
                 </div>
               </div>
@@ -748,8 +748,8 @@
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showModal=false">
       <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex items-center justify-between mb-5">
-          <h3 class="text-base font-bold text-slate-800">{{ __('New Loan Application') }}</h3>
-          <button @click="showModal=false" class="text-slate-400 hover:text-slate-600"><FeatherIcon name="x" class="h-5 w-5" /></button>
+          <h3 class="text-base font-bold text-gray-800">{{ __('New Loan Application') }}</h3>
+          <button @click="showModal=false" class="text-gray-400 hover:text-gray-600"><FeatherIcon name="x" class="h-5 w-5" /></button>
         </div>
         <div class="space-y-3">
           <div>
@@ -766,8 +766,8 @@
           </div>
         </div>
         <div class="mt-5 flex gap-2">
-          <button @click="showModal=false" class="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">{{ __('Cancel') }}</button>
-          <button @click="createApp" :disabled="!newApp.borrower_name" class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors">{{ __('Create') }}</button>
+          <button @click="showModal=false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">{{ __('Cancel') }}</button>
+          <button @click="createApp" :disabled="!newApp.borrower_name" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-50 transition-colors">{{ __('Create') }}</button>
         </div>
       </div>
     </div>
@@ -790,7 +790,7 @@
         <p class="text-[10px] text-gray-400 mt-0.5">{{ deleteTarget?.id }} · {{ deleteTarget?.facility_type || 'No facility selected' }}</p>
       </div>
       <div class="flex gap-2">
-        <button @click="deleteTarget = null" class="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">{{ __('Cancel') }}</button>
+        <button @click="deleteTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">{{ __('Cancel') }}</button>
         <button @click="deleteApp" class="flex-1 rounded-lg bg-red-500 py-2 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{{ __('Delete') }}</button>
       </div>
     </div>
@@ -807,13 +807,13 @@ const StepHeader = defineComponent({
   props: { icon: String, title: String, sub: String, badge: String },
   setup(props) {
     return () => h('div', { class: 'flex items-center gap-3' }, [
-      h('div', { class: 'w-9 h-9 rounded-xl bg-teal-100 flex items-center justify-center shrink-0' },
-        [h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-teal-600' })]),
+      h('div', { class: 'w-9 h-9 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0' },
+        [h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-[#FF6600]' })]),
       h('div', { class: 'flex-1' }, [
-        h('h3', { class: 'text-base font-bold text-slate-800' }, props.title),
-        h('p', { class: 'text-xs text-slate-500' }, props.sub),
+        h('h3', { class: 'text-base font-bold text-gray-800' }, props.title),
+        h('p', { class: 'text-xs text-gray-500' }, props.sub),
       ]),
-      props.badge ? h('span', { class: 'text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-semibold' }, props.badge) : null,
+      props.badge ? h('span', { class: 'text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold' }, props.badge) : null,
     ])
   },
 })
@@ -987,10 +987,10 @@ const tranches = [
 ]
 
 const healthKpis = [
-  { label: 'Outstanding Balance', value: 'Rp 11.2B', color: 'text-slate-800', barColor: 'bg-teal-500', pct: 89 },
-  { label: 'Paid to Date', value: 'Rp 1.3B', color: 'text-teal-600', barColor: 'bg-green-500', pct: 11 },
+  { label: 'Outstanding Balance', value: 'Rp 11.2B', color: 'text-gray-800', barColor: 'bg-[#FF6600]', pct: 89 },
+  { label: 'Paid to Date', value: 'Rp 1.3B', color: 'text-[#FF6600]', barColor: 'bg-green-500', pct: 11 },
   { label: 'Days Past Due', value: '0 days', color: 'text-green-600', barColor: 'bg-green-500', pct: 0 },
-  { label: 'Installment Cover', value: '1.42x', color: 'text-teal-600', barColor: 'bg-teal-500', pct: 71 },
+  { label: 'Installment Cover', value: '1.42x', color: 'text-[#FF6600]', barColor: 'bg-[#FF6600]', pct: 71 },
 ]
 
 const paymentRows = [
@@ -1024,8 +1024,8 @@ function initials(name) { return (name||'?').split(' ').slice(0,2).map(w=>w[0]).
 function fmt(v) { return v ? 'Rp ' + Math.round(v).toLocaleString('id-ID') : '—' }
 
 function statusBadge(s) {
-  const m = { Draft:'bg-slate-100 text-slate-600', 'Document Collection':'bg-amber-100 text-amber-700', 'Credit Analysis':'bg-blue-100 text-blue-700', Committee:'bg-purple-100 text-purple-700', Active:'bg-green-100 text-green-700', Rejected:'bg-red-100 text-red-600' }
-  return m[s] || 'bg-slate-100 text-slate-600'
+  const m = { Draft:'bg-gray-100 text-gray-600', 'Document Collection':'bg-amber-100 text-amber-700', 'Credit Analysis':'bg-[#E6F4FA] text-[#004D73]', Committee:'bg-purple-100 text-purple-700', Active:'bg-green-100 text-green-700', Rejected:'bg-red-100 text-red-600' }
+  return m[s] || 'bg-gray-100 text-gray-600'
 }
 
 function selectApp(app) {
@@ -1156,6 +1156,6 @@ onMounted(() => {
 
 <style scoped>
 .field-label { @apply block text-xs font-semibold text-gray-700 mb-1.5; }
-.field-input { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors; }
-.field-select { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white transition-colors; }
+.field-input { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] transition-colors; }
+.field-select { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white transition-colors; }
 </style>
