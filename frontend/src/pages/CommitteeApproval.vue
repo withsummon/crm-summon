@@ -141,7 +141,6 @@
           </table>
         </div>
       </div>
-    </div>
 
       <!-- ───── TAB: Meetings ───── -->
       <div v-if="activeTab === 'meetings'" class="space-y-3">
@@ -875,7 +874,7 @@
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { loadPersisted, persistRef } from '@/utils/persist'
 
 const viewControls = ref(null)

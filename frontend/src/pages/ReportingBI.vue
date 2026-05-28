@@ -3,7 +3,7 @@
     <LayoutHeader>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-teal-500 to-teal-700">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]">
             <FeatherIcon name="bar-chart-2" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
@@ -13,11 +13,11 @@
       </template>
       <template #right-header>
         <div class="flex items-center gap-2">
-          <button @click="doRefresh" class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors bg-white">
+          <button @click="doRefresh" class="flex items-center gap-1.5 rounded-lg border border-[#006699] px-3 py-1.5 text-xs font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors bg-white">
             <FeatherIcon :name="refreshing ? 'loader' : 'refresh-cw'" class="h-3.5 w-3.5" :class="refreshing && 'animate-spin'" />
             {{ __('Refresh') }}
           </button>
-          <button @click="doExport" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+          <button @click="doExport" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
             <FeatherIcon name="download" class="h-3.5 w-3.5" />
             {{ __('Export') }}
           </button>
@@ -33,11 +33,11 @@
             v-for="nav in navItems" :key="nav.id"
             @click="activeNav = nav.id"
             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all text-left"
-            :class="activeNav === nav.id ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'"
+            :class="activeNav === nav.id ? 'bg-[#FFF8F2] text-[#CC5200] font-semibold' : 'text-gray-600 hover:bg-gray-50'"
           >
             <FeatherIcon :name="nav.icon" class="h-3.5 w-3.5 shrink-0" />
             <span class="truncate">{{ nav.label }}</span>
-            <span v-if="nav.badge" class="ml-auto text-[9px] bg-teal-100 text-teal-700 rounded-full px-1.5 font-bold">{{ nav.badge }}</span>
+            <span v-if="nav.badge" class="ml-auto text-[9px] bg-[#FFF0E6] text-[#CC5200] rounded-full px-1.5 font-bold">{{ nav.badge }}</span>
           </button>
         </div>
 
@@ -82,7 +82,7 @@
               </div>
               <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all"
-                  :class="kpi.pct >= 100 ? 'bg-green-500' : kpi.pct >= 80 ? 'bg-teal-500' : 'bg-amber-400'"
+                  :class="kpi.pct >= 100 ? 'bg-green-500' : kpi.pct >= 80 ? 'bg-[#FF6600]' : 'bg-amber-400'"
                   :style="{ width: Math.min(kpi.pct, 100) + '%' }" />
               </div>
             </div>
@@ -100,7 +100,7 @@
                 <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                   <button v-for="ct in ['Bar','Line']" :key="ct" @click="chartType = ct"
                     class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
-                    :class="chartType===ct ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-400'">
+                    :class="chartType===ct ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-400'">
                     {{ ct }}
                   </button>
                 </div>
@@ -111,13 +111,13 @@
                   <rect v-for="(v,i) in disbursement" :key="i"
                     :x="(400/disbursement.length)*i+3" :y="110-(v/maxDisb)*110"
                     :width="(400/disbursement.length)-6" :height="(v/maxDisb)*110"
-                    :fill="i===disbursement.length-1?'#0d9488':'#99f6e4'" rx="2" />
+                    :fill="i===disbursement.length-1?'#FF6600':'#FFD9B3'" rx="2" />
                 </template>
                 <template v-else>
-                  <polyline :points="linePoints" fill="none" stroke="#0d9488" stroke-width="2" stroke-linejoin="round" />
+                  <polyline :points="linePoints" fill="none" stroke="#FF6600" stroke-width="2" stroke-linejoin="round" />
                   <circle v-for="(v,i) in disbursement" :key="i"
                     :cx="(400/disbursement.length)*i+(400/disbursement.length/2)"
-                    :cy="110-(v/maxDisb)*110" r="3" fill="#0d9488" />
+                    :cy="110-(v/maxDisb)*110" r="3" fill="#FF6600" />
                 </template>
               </svg>
               <div class="flex justify-around mt-1">
@@ -190,7 +190,7 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-gray-800">{{ __('Recent Reports') }}</h3>
-                <button @click="activeNav='hub'" class="text-[10px] text-teal-600 hover:underline">{{ __('View all') }}</button>
+                <button @click="activeNav='hub'" class="text-[10px] text-[#FF6600] hover:underline">{{ __('View all') }}</button>
               </div>
               <div class="space-y-1.5">
                 <div v-for="r in recentReports.slice(0,5)" :key="r.id"
@@ -204,7 +204,7 @@
                     <p class="text-[10px] text-gray-400">{{ r.lastRun }}</p>
                   </div>
                   <button @click.stop="downloadReport(r)" class="shrink-0">
-                    <FeatherIcon name="download" class="h-3 w-3 text-gray-300 hover:text-teal-500" />
+                    <FeatherIcon name="download" class="h-3 w-3 text-gray-300 hover:text-[#FF6600]" />
                   </button>
                 </div>
               </div>
@@ -219,13 +219,13 @@
               <div class="relative flex-1 max-w-md">
                 <FeatherIcon name="search" class="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                 <input v-model="reportSearch" type="text" :placeholder="__('Search reports...')"
-                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500" />
+                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
               </div>
               <select v-model="reportCategory" class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none bg-white text-gray-600">
                 <option value="">{{ __('All Categories') }}</option>
                 <option>Regulatory</option><option>Executive</option><option>Portfolio</option><option>Operations</option><option>Sales</option>
               </select>
-              <button @click="showCreateReport = true" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+              <button @click="showCreateReport = true" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-2 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
                 <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('New Report') }}
               </button>
             </div>
@@ -237,7 +237,7 @@
               <div class="grid grid-cols-4 gap-3">
                 <div v-for="r in favoriteReports" :key="r.id"
                   @click="openReport(r)"
-                  class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-teal-300 hover:shadow-md transition-all group">
+                  class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-[#FFB380] hover:shadow-md transition-all group">
                   <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform" :class="r.colorBg">
                     <FeatherIcon :name="r.icon" class="h-4 w-4" :class="r.colorText" />
                   </div>
@@ -249,7 +249,7 @@
                   </div>
                 </div>
                 <div @click="showCreateReport = true"
-                  class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-teal-300 transition-all flex flex-col items-center justify-center gap-2">
+                  class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-[#FFB380] transition-all flex flex-col items-center justify-center gap-2">
                   <FeatherIcon name="plus-circle" class="h-6 w-6 text-gray-300" />
                   <p class="text-[11px] text-gray-400 font-medium text-center">{{ __('New Report') }}</p>
                 </div>
@@ -268,6 +268,7 @@
                   <tr class="border-b border-gray-100 bg-gray-50">
                     <th class="px-5 py-2.5 text-left font-semibold text-gray-500">{{ __('Report Name') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Category') }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Visibility') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Schedule') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Last Run') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Format') }}</th>
@@ -292,17 +293,23 @@
                     <td class="px-4 py-3">
                       <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="categoryBadge(r.category)">{{ r.category }}</span>
                     </td>
+                    <td class="px-4 py-3">
+                      <select v-model="r.visibility" @click.stop class="text-[10px] border rounded-lg px-2 py-1 focus:outline-none font-semibold cursor-pointer"
+                        :class="r.visibility==='Public' ? 'border-green-300 text-green-700 bg-green-50' : r.visibility==='Private' ? 'border-red-200 text-red-600 bg-red-50' : 'border-[#B3DDEF] text-[#006699] bg-[#E6F4FA]'">
+                        <option>Public</option><option>Team</option><option>Private</option>
+                      </select>
+                    </td>
                     <td class="px-4 py-3 text-gray-500">{{ r.schedule || '-' }}</td>
                     <td class="px-4 py-3 text-gray-500">{{ r.lastRun }}</td>
                     <td class="px-4 py-3">
                       <div class="flex gap-1">
-                        <span v-for="fmt in r.formats" :key="fmt" class="text-[9px] border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 font-semibold">{{ fmt }}</span>
+                        <span v-for="fmt in r.formats" :key="fmt" class="text-[9px] border border-[#006699] rounded px-1.5 py-0.5 text-[#006699] font-semibold">{{ fmt }}</span>
                       </div>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
-                        <button @click.stop="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-teal-50 text-gray-400 hover:text-teal-600 transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
-                        <button @click.stop="shareReport(r)" class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
+                        <button @click.stop="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
+                        <button @click.stop="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#F0F8FC] text-gray-400 hover:text-[#006699] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>
@@ -318,12 +325,12 @@
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
               <button v-for="p in ['Daily','Weekly','Monthly','YTD']" :key="p" @click="kpiPeriod = p"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="kpiPeriod===p ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                :class="kpiPeriod===p ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
                 {{ p }}
               </button>
             </div>
             <span class="text-xs text-gray-400">{{ activePeriod }}</span>
-            <button @click="showToast('KPI added')" class="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            <button @click="showToast('KPI added')" class="ml-auto flex items-center gap-1.5 rounded-lg border border-[#006699] px-3 py-1.5 text-xs font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('Add KPI') }}
             </button>
           </div>
@@ -355,7 +362,7 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-2">
                         <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full" :class="k.pct>=100?'bg-green-500':k.pct>=80?'bg-teal-500':'bg-amber-400'" :style="{width:Math.min(k.pct,100)+'%'}" />
+                          <div class="h-full rounded-full" :class="k.pct>=100?'bg-green-500':k.pct>=80?'bg-[#FF6600]':'bg-amber-400'" :style="{width:Math.min(k.pct,100)+'%'}" />
                         </div>
                         <span class="font-semibold" :class="k.pct>=100?'text-green-600':'text-amber-600'">{{ k.pct }}%</span>
                       </div>
@@ -374,7 +381,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <svg :viewBox="`0 0 60 24`" class="w-16 h-6">
-                        <polyline :points="sparkline(k.spark)" fill="none" :stroke="k.up?'#0d9488':'#f97316'" stroke-width="1.5" stroke-linejoin="round" />
+                        <polyline :points="sparkline(k.spark)" fill="none" :stroke="k.up?'#FF6600':'#f97316'" stroke-width="1.5" stroke-linejoin="round" />
                       </svg>
                     </td>
                   </tr>
@@ -392,7 +399,7 @@
                 <h3 class="text-sm font-bold text-gray-800">{{ __('Portfolio Pivot Analysis') }}</h3>
                 <p class="text-[10px] text-gray-400">{{ __('Outstanding balance by product × branch (Rp Billion)') }}</p>
               </div>
-              <button @click="doExport" class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-teal-600 transition-colors border border-gray-200 rounded-lg px-3 py-1.5">
+              <button @click="doExport" class="flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] transition-colors border border-[#006699] rounded-lg px-3 py-1.5">
                 <FeatherIcon name="download" class="h-3.5 w-3.5" />{{ __('Export Excel') }}
               </button>
             </div>
@@ -402,19 +409,19 @@
                   <tr class="bg-gray-50 border-b border-gray-200">
                     <th class="px-5 py-3 text-left font-semibold text-gray-600 border-r border-gray-200">{{ __('Product / Branch') }}</th>
                     <th v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right font-semibold text-gray-600 min-w-[100px]">{{ branch }}</th>
-                    <th class="px-4 py-3 text-right font-semibold text-teal-700 border-l border-gray-200">{{ __('Total') }}</th>
+                    <th class="px-4 py-3 text-right font-semibold text-[#CC5200] border-l border-gray-200">{{ __('Total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="row in pivotData" :key="row.product" class="border-b border-gray-100 hover:bg-teal-50/30 transition-colors">
+                  <tr v-for="row in pivotData" :key="row.product" class="border-b border-gray-100 hover:bg-[#FFF8F2]/30 transition-colors">
                     <td class="px-5 py-3 font-semibold text-gray-800 border-r border-gray-100">{{ row.product }}</td>
                     <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-gray-700">{{ row[branch] || '-' }}</td>
-                    <td class="px-4 py-3 text-right font-black text-teal-700 border-l border-gray-200">{{ row.total }}</td>
+                    <td class="px-4 py-3 text-right font-black text-[#CC5200] border-l border-gray-200">{{ row.total }}</td>
                   </tr>
-                  <tr class="bg-teal-50 border-t-2 border-teal-200 font-bold">
-                    <td class="px-5 py-3 text-teal-700 font-black border-r border-gray-200">{{ __('Grand Total') }}</td>
-                    <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-teal-800">{{ pivotTotals[branch] }}</td>
-                    <td class="px-4 py-3 text-right text-teal-900 font-black text-sm border-l border-gray-200">Rp 2.4T</td>
+                  <tr class="bg-[#FFF8F2] border-t-2 border-[#FFD9B3] font-bold">
+                    <td class="px-5 py-3 text-[#CC5200] font-black border-r border-gray-200">{{ __('Grand Total') }}</td>
+                    <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-[#993D00]">{{ pivotTotals[branch] }}</td>
+                    <td class="px-4 py-3 text-right text-[#7A3000] font-black text-sm border-l border-gray-200">Rp 2.4T</td>
                   </tr>
                 </tbody>
               </table>
@@ -427,7 +434,7 @@
           <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
             <h3 class="text-sm font-semibold text-gray-800">{{ __('Scheduled Reports') }}</h3>
             <span class="text-[11px] text-gray-400">{{ schedules.length }} {{ __('schedules') }}</span>
-            <button @click="showToast('Schedule created')" class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+            <button @click="showToast('Schedule created')" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('Add Schedule') }}
             </button>
           </div>
@@ -455,7 +462,7 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-0.5">
                         <span v-for="(rec,i) in s.recipients.slice(0,2)" :key="i"
-                          class="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[9px] font-bold border border-white -ml-1 first:ml-0">
+                          class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold border border-white -ml-1 first:ml-0">
                           {{ rec[0] }}
                         </span>
                         <span v-if="s.recipients.length>2" class="text-[10px] text-gray-400 ml-1">+{{ s.recipients.length-2 }}</span>
@@ -463,7 +470,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex gap-1">
-                        <span v-for="fmt in s.formats" :key="fmt" class="text-[9px] border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 font-semibold">{{ fmt }}</span>
+                        <span v-for="fmt in s.formats" :key="fmt" class="text-[9px] border border-[#006699] rounded px-1.5 py-0.5 text-[#006699] font-semibold">{{ fmt }}</span>
                       </div>
                     </td>
                     <td class="px-4 py-3">
@@ -491,12 +498,12 @@
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
               <button v-for="t in ['OJK','Bank Indonesia','Tax']" :key="t" @click="regTab=t"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="regTab===t?'bg-white text-teal-700 shadow-sm':'text-gray-500 hover:text-gray-700'">
+                :class="regTab===t?'bg-white text-[#CC5200] shadow-sm':'text-gray-500 hover:text-gray-700'">
                 {{ t }}
               </button>
             </div>
             <span class="text-xs text-gray-400">{{ activePeriod }}</span>
-            <button @click="generateReg" class="ml-auto flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+            <button @click="generateReg" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
               <FeatherIcon name="file-text" class="h-3.5 w-3.5" />{{ __('Generate') }}
             </button>
           </div>
@@ -525,20 +532,20 @@
                     </td>
                     <td class="px-4 py-3">
                       <span class="rounded-full px-2 py-0.5 text-[9px] font-bold"
-                        :class="r.status==='Submitted'?'bg-teal-100 text-teal-700':r.status==='Ready'?'bg-blue-100 text-blue-700':'bg-gray-100 text-gray-600'">
+                        :class="r.status==='Submitted'?'bg-[#FFF0E6] text-[#CC5200]':r.status==='Ready'?'bg-[#E6F4FA] text-[#004D73]':'bg-gray-100 text-gray-600'">
                         {{ r.status }}
                       </span>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
-                        <button class="p-1.5 rounded-lg hover:bg-teal-50 text-gray-400 hover:text-teal-600 transition-colors" @click="downloadReport(r)">
+                        <button class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors" @click="downloadReport(r)">
                           <FeatherIcon name="download" class="h-3.5 w-3.5" />
                         </button>
                         <button v-if="r.status!=='Submitted'" @click="submitReg(r)"
-                          class="px-2.5 py-1 rounded-lg bg-teal-600 text-white text-[10px] font-semibold hover:bg-teal-700 transition-colors">
+                          class="px-2.5 py-1 rounded-lg bg-[#FF6600] text-white text-[10px] font-semibold hover:bg-[#CC5200] transition-colors">
                           {{ __('Submit') }}
                         </button>
-                        <span v-else class="text-[10px] text-teal-600 font-semibold">✓ {{ __('Submitted') }}</span>
+                        <span v-else class="text-[10px] text-[#FF6600] font-semibold">✓ {{ __('Submitted') }}</span>
                       </div>
                     </td>
                   </tr>
@@ -565,10 +572,10 @@
               <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span class="text-[10px] text-gray-400">{{ rep.period }} · {{ rep.pages }} pages</span>
                 <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-teal-600 font-semibold flex items-center gap-1 hover:underline">
+                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#FF6600] font-semibold flex items-center gap-1 hover:underline">
                     <FeatherIcon name="download" class="h-3 w-3" />PDF
                   </button>
-                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-blue-600 font-semibold flex items-center gap-1 hover:underline">
+                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#006699] font-semibold flex items-center gap-1 hover:underline">
                     <FeatherIcon name="file" class="h-3 w-3" />Excel
                   </button>
                 </div>
@@ -587,16 +594,16 @@
             </div>
             <div class="flex-1 overflow-y-auto p-3 space-y-2">
               <div v-for="tbl in queryTables" :key="tbl.name"
-                class="p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-teal-300 transition-all"
-                :class="selectedTable===tbl.name?'bg-teal-50 border-teal-300':''"
+                class="p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-[#FFB380] transition-all"
+                :class="selectedTable===tbl.name?'bg-[#FFF8F2] border-[#FFB380]':''"
                 @click="selectedTable=tbl.name; buildQuery()">
                 <div class="flex items-center gap-2 mb-1">
-                  <FeatherIcon name="database" class="h-3.5 w-3.5 text-teal-600" />
+                  <FeatherIcon name="database" class="h-3.5 w-3.5 text-[#FF6600]" />
                   <span class="text-xs font-semibold text-gray-800">{{ tbl.name }}</span>
                 </div>
                 <div v-if="selectedTable===tbl.name" class="space-y-1 mt-2">
                   <label v-for="col in tbl.columns" :key="col" class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="selectedColumns" :value="col" class="rounded text-teal-600" />
+                    <input type="checkbox" v-model="selectedColumns" :value="col" class="rounded text-[#FF6600]" />
                     <span class="text-[11px] text-gray-600">{{ col }}</span>
                   </label>
                 </div>
@@ -610,28 +617,28 @@
             <div class="border-b border-gray-200 p-4 bg-white shrink-0">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-semibold text-gray-700">{{ __('SQL Preview') }}</span>
-                <button @click="runQuery" class="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+                <button @click="runQuery" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
                   <FeatherIcon :name="queryRunning?'loader':'play'" class="h-3.5 w-3.5" :class="queryRunning&&'animate-spin'" />
                   {{ queryRunning ? __('Running...') : __('Run Query') }}
                 </button>
               </div>
               <div class="bg-gray-900 rounded-lg p-3 font-mono text-[11px] text-green-400">
-                <span class="text-blue-400">SELECT </span>{{ selectedColumns.join(', ') || '*' }}<br />
-                <span class="text-blue-400">FROM </span><span class="text-yellow-400">{{ selectedTable || 'crm_lead' }}</span><br />
-                <span class="text-blue-400">WHERE </span>status <span class="text-red-400">!=</span> <span class="text-green-300">'Closed'</span><br />
-                <span class="text-blue-400">LIMIT </span>100
+                <span class="text-[#3399CC]">SELECT </span>{{ selectedColumns.join(', ') || '*' }}<br />
+                <span class="text-[#3399CC]">FROM </span><span class="text-yellow-400">{{ selectedTable || 'crm_lead' }}</span><br />
+                <span class="text-[#3399CC]">WHERE </span>status <span class="text-red-400">!=</span> <span class="text-green-300">'Closed'</span><br />
+                <span class="text-[#3399CC]">LIMIT </span>100
               </div>
             </div>
             <div class="flex-1 overflow-auto p-4">
               <div v-if="queryRunning" class="flex items-center justify-center h-32">
                 <div class="flex items-center gap-2 text-sm text-gray-500">
-                  <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-teal-500" />{{ __('Running query...') }}
+                  <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-[#FF6600]" />{{ __('Running query...') }}
                 </div>
               </div>
               <template v-else-if="queryResults.length > 0">
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-xs text-gray-500">{{ queryResults.length }} {{ __('rows') }} · {{ queryTime }}ms</span>
-                  <button @click="doExport" class="text-xs text-teal-600 font-semibold hover:underline flex items-center gap-1">
+                  <button @click="doExport" class="text-xs text-[#FF6600] font-semibold hover:underline flex items-center gap-1">
                     <FeatherIcon name="download" class="h-3 w-3" />{{ __('Export CSV') }}
                   </button>
                 </div>
@@ -658,13 +665,119 @@
           </div>
         </div>
 
+        <!-- AUDIT LOG -->
+        <div v-else-if="activeNav==='auditlog'" class="flex-1 flex flex-col overflow-hidden">
+          <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800">{{ __('Report Activity Audit Log') }}</h3>
+            <span class="text-[11px] text-gray-400">{{ reportAuditLog.length }} events</span>
+            <button @click="doExport" class="ml-auto flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] transition-colors border border-[#006699] rounded-lg px-3 py-1.5">
+              <FeatherIcon name="download" class="h-3.5 w-3.5" />{{ __('Export CSV') }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-500">{{ __('Timestamp') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('User') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Action') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Report') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Visibility') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Result') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="log in reportAuditLog" :key="log.id" class="border-b border-gray-50 hover:bg-gray-50">
+                    <td class="px-5 py-3 text-gray-500 font-mono text-[11px]">{{ log.ts }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ log.user[0] }}</div>
+                        <span class="text-gray-700 font-medium">{{ log.user }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="auditActionClass(log.action)">{{ log.action }}</span>
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">{{ log.report }}</td>
+                    <td class="px-4 py-3">
+                      <span class="text-[10px] font-semibold" :class="log.visibility==='Public' ? 'text-green-600' : log.visibility==='Private' ? 'text-red-500' : 'text-[#006699]'">{{ log.visibility }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="log.result==='Success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ log.result }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Share Report Modal -->
+    <div v-if="shareTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="shareTarget = null">
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
+            <FeatherIcon name="share-2" class="h-5 w-5 text-[#006699]" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Share Report</h3>
+            <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[240px]">{{ shareTarget?.name }}</p>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Visibility</label>
+            <div class="flex gap-2">
+              <button v-for="v in ['Public','Team','Private']" :key="v" @click="shareTarget.visibility = v"
+                class="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
+                :class="shareTarget.visibility===v ? (v==='Public' ? 'bg-green-50 border-green-400 text-green-700' : v==='Private' ? 'bg-red-50 border-red-400 text-red-600' : 'bg-[#E6F4FA] border-[#006699] text-[#006699]') : 'border-gray-200 text-gray-500 hover:bg-gray-50'">
+                {{ v }}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Link Expiry</label>
+            <select v-model="shareLinkExpiry" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006699]">
+              <option>1 hour</option><option>24 hours</option><option>7 days</option><option>30 days</option><option>Never</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Share Link</label>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[11px] text-gray-500 font-mono truncate">
+                https://crm.summon.id/r/{{ shareTarget?.id }}-{{ (shareTarget?.name||'').toLowerCase().replace(/\s+/g,'-') }}?token=abc123
+              </div>
+              <button @click="copyShareLink" class="px-3 py-2 bg-[#E6F4FA] border border-[#006699] text-[#006699] rounded-lg text-xs font-semibold hover:bg-[#CCE6F5] transition-colors shrink-0">
+                {{ linkCopied ? '✓ Copied' : 'Copy' }}
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="shareAllowDownload" class="rounded" />
+              <span class="text-xs text-gray-600">Allow download</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="shareWatermark" class="rounded" />
+              <span class="text-xs text-gray-600">Add watermark</span>
+            </label>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-5">
+          <button @click="shareTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Close</button>
+          <button @click="confirmShare" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Save & Notify</button>
+        </div>
       </div>
     </div>
 
     <!-- Toast -->
     <transition name="fade">
       <div v-if="toast" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
-        <FeatherIcon name="check-circle" class="h-4 w-4 text-teal-400" />{{ toast }}
+        <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF8533]" />{{ toast }}
       </div>
     </transition>
   </div>
@@ -686,6 +799,7 @@ const navItems = [
   { id: 'regulatory', label: 'Regulatory Reports', icon: 'shield', badge: '3' },
   { id: 'executive', label: 'Executive Reports', icon: 'briefcase' },
   { id: 'adhoc', label: 'Ad-Hoc Query', icon: 'terminal' },
+  { id: 'auditlog', label: 'Audit Log', icon: 'activity' },
 ]
 
 // ── Period / Refresh ──
@@ -725,7 +839,7 @@ const linePoints = computed(() => {
 
 // ── Portfolio Donut ──
 const portfolioBreakdown = [
-  { label: 'Working Capital', pct: 38, color: '#0d9488' },
+  { label: 'Working Capital', pct: 38, color: '#FF6600' },
   { label: 'Investment Loan', pct: 24, color: '#06b6d4' },
   { label: 'KPR', pct: 18, color: '#8b5cf6' },
   { label: 'KKB', pct: 11, color: '#f59e0b' },
@@ -773,10 +887,10 @@ const kpiAlerts = [
 
 // ── Recent Reports ──
 const recentReports = ref([
-  { id: 1, name: 'OJK LPBB Monthly', category: 'Regulatory', lastRun: '24 May 09:00', icon: 'shield', colorBg: 'bg-blue-100', colorText: 'text-blue-600' },
+  { id: 1, name: 'OJK LPBB Monthly', category: 'Regulatory', lastRun: '24 May 09:00', icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]' },
   { id: 2, name: 'Board Pack May 2026', category: 'Executive', lastRun: '24 May 08:30', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600' },
   { id: 3, name: 'NPL Report MTD', category: 'Portfolio', lastRun: '23 May 18:00', icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600' },
-  { id: 4, name: 'Disbursement Summary', category: 'Operations', lastRun: '23 May 17:30', icon: 'credit-card', colorBg: 'bg-teal-100', colorText: 'text-teal-600' },
+  { id: 4, name: 'Disbursement Summary', category: 'Operations', lastRun: '23 May 17:30', icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]' },
   { id: 5, name: 'Sales Pipeline Report', category: 'Sales', lastRun: '23 May 16:00', icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600' },
 ])
 
@@ -787,21 +901,21 @@ const showCreateReport = ref(false)
 
 const favoriteReports = [
   { id: 1, name: 'Board Pack', category: 'Executive', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', lastRun: '24 May' },
-  { id: 2, name: 'OJK LPBB Report', category: 'Regulatory', icon: 'shield', colorBg: 'bg-blue-100', colorText: 'text-blue-600', lastRun: '24 May' },
+  { id: 2, name: 'OJK LPBB Report', category: 'Regulatory', icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]', lastRun: '24 May' },
   { id: 3, name: 'NPL Monitoring', category: 'Portfolio', icon: 'activity', colorBg: 'bg-amber-100', colorText: 'text-amber-600', lastRun: '23 May' },
 ]
 
 const allReports = ref([
-  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-blue-100', colorText: 'text-blue-600' },
-  { id: 2, name: 'Board Pack Dashboard', desc: 'Executive summary for board', category: 'Executive', schedule: 'Monthly', lastRun: '24 May 08:30', formats: ['PDF', 'PPT'], icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600' },
-  { id: 3, name: 'NPL Report MTD', desc: 'Non-performing loan monitoring', category: 'Portfolio', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel', 'PDF'], icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600' },
-  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-teal-100', colorText: 'text-teal-600' },
-  { id: 5, name: 'Sales Pipeline Report', desc: 'Pipeline and conversion analytics', category: 'Sales', schedule: 'Weekly', lastRun: '23 May 16:00', formats: ['PDF', 'Excel'], icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600' },
-  { id: 6, name: 'BI LKPBU Report', desc: 'Laporan Keuangan Publikasi BU', category: 'Regulatory', schedule: 'Quarterly', lastRun: '30 Mar 2026', formats: ['XML', 'PDF'], icon: 'file-text', colorBg: 'bg-indigo-100', colorText: 'text-indigo-600' },
-  { id: 7, name: 'Credit Approval Analytics', desc: 'Approval rate & SLA tracking', category: 'Portfolio', schedule: 'Weekly', lastRun: '22 May 09:00', formats: ['Excel', 'PDF'], icon: 'check-circle', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600' },
-  { id: 8, name: 'Collection Officer Report', desc: 'Collection productivity & recovery', category: 'Operations', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel'], icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600' },
-  { id: 9, name: 'PPN & PPh Monthly', desc: 'Tax reconciliation report', category: 'Regulatory', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'CSV'], icon: 'percent', colorBg: 'bg-gray-100', colorText: 'text-gray-600' },
-  { id: 10, name: 'Vintage Analysis', desc: 'Portfolio vintage cohort analysis', category: 'Portfolio', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'PDF'], icon: 'layers', colorBg: 'bg-sky-100', colorText: 'text-sky-600' },
+  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]', visibility: 'Team' },
+  { id: 2, name: 'Board Pack Dashboard', desc: 'Executive summary for board', category: 'Executive', schedule: 'Monthly', lastRun: '24 May 08:30', formats: ['PDF', 'PPT'], icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', visibility: 'Private' },
+  { id: 3, name: 'NPL Report MTD', desc: 'Non-performing loan monitoring', category: 'Portfolio', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel', 'PDF'], icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600', visibility: 'Team' },
+  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', visibility: 'Public' },
+  { id: 5, name: 'Sales Pipeline Report', desc: 'Pipeline and conversion analytics', category: 'Sales', schedule: 'Weekly', lastRun: '23 May 16:00', formats: ['PDF', 'Excel'], icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600', visibility: 'Team' },
+  { id: 6, name: 'BI LKPBU Report', desc: 'Laporan Keuangan Publikasi BU', category: 'Regulatory', schedule: 'Quarterly', lastRun: '30 Mar 2026', formats: ['XML', 'PDF'], icon: 'file-text', colorBg: 'bg-indigo-100', colorText: 'text-indigo-600', visibility: 'Team' },
+  { id: 7, name: 'Credit Approval Analytics', desc: 'Approval rate & SLA tracking', category: 'Portfolio', schedule: 'Weekly', lastRun: '22 May 09:00', formats: ['Excel', 'PDF'], icon: 'check-circle', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600', visibility: 'Private' },
+  { id: 8, name: 'Collection Officer Report', desc: 'Collection productivity & recovery', category: 'Operations', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel'], icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', visibility: 'Team' },
+  { id: 9, name: 'PPN & PPh Monthly', desc: 'Tax reconciliation report', category: 'Regulatory', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'CSV'], icon: 'percent', colorBg: 'bg-gray-100', colorText: 'text-gray-600', visibility: 'Private' },
+  { id: 10, name: 'Vintage Analysis', desc: 'Portfolio vintage cohort analysis', category: 'Portfolio', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'PDF'], icon: 'layers', colorBg: 'bg-sky-100', colorText: 'text-sky-600', visibility: 'Public' },
 ])
 
 const filteredReportsList = computed(() => {
@@ -815,7 +929,7 @@ const filteredReportsList = computed(() => {
 })
 
 function categoryBadge(cat) {
-  const map = { Regulatory: 'bg-blue-100 text-blue-700', Executive: 'bg-purple-100 text-purple-700', Portfolio: 'bg-amber-100 text-amber-700', Operations: 'bg-teal-100 text-teal-700', Sales: 'bg-green-100 text-green-700' }
+  const map = { Regulatory: 'bg-[#E6F4FA] text-[#004D73]', Executive: 'bg-purple-100 text-purple-700', Portfolio: 'bg-amber-100 text-amber-700', Operations: 'bg-[#FFF0E6] text-[#CC5200]', Sales: 'bg-green-100 text-green-700' }
   return map[cat] || 'bg-gray-100 text-gray-600'
 }
 
@@ -894,9 +1008,9 @@ function submitReg(r) { r.status = 'Submitted'; showToast(`${r.name} submitted`)
 const executiveReports = [
   { id: 1, name: 'Board Pack — May 2026', desc: 'Executive summary with KPI, financial highlights, and portfolio overview', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', period: 'May 2026', pages: 24, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
   { id: 2, name: 'Risk Dashboard Report', desc: 'Comprehensive risk metrics, NPL analysis, and concentration report', icon: 'shield', colorBg: 'bg-amber-100', colorText: 'text-amber-600', period: 'May 2026', pages: 18, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
-  { id: 3, name: 'Financial Performance Summary', desc: 'P&L, balance sheet highlights, and ROA/ROE analysis', icon: 'trending-up', colorBg: 'bg-teal-100', colorText: 'text-teal-600', period: 'May 2026', pages: 12, status: 'Draft', statusClass: 'bg-gray-100 text-gray-600' },
+  { id: 3, name: 'Financial Performance Summary', desc: 'P&L, balance sheet highlights, and ROA/ROE analysis', icon: 'trending-up', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', period: 'May 2026', pages: 12, status: 'Draft', statusClass: 'bg-gray-100 text-gray-600' },
   { id: 4, name: 'Loan Portfolio Analytics', desc: 'Disbursement trend, vintage analysis, and segment breakdown', icon: 'pie-chart', colorBg: 'bg-sky-100', colorText: 'text-sky-600', period: 'May 2026', pages: 16, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
-  { id: 5, name: 'Collection & Recovery Report', desc: 'Collection rate, officer productivity, and delinquency buckets', icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', period: 'May 2026', pages: 10, status: 'Generating...', statusClass: 'bg-blue-100 text-blue-700' },
+  { id: 5, name: 'Collection & Recovery Report', desc: 'Collection rate, officer productivity, and delinquency buckets', icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', period: 'May 2026', pages: 10, status: 'Generating...', statusClass: 'bg-[#E6F4FA] text-[#004D73]' },
   { id: 6, name: 'Operational Excellence Report', desc: 'SLA tracking, branch performance, and approval analytics', icon: 'activity', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600', period: 'May 2026', pages: 14, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
 ]
 
@@ -953,10 +1067,64 @@ function runQuery() {
   }, 800)
 }
 
+// ── Share Modal ──
+const shareTarget = ref(null)
+const shareLinkExpiry = ref('7 days')
+const shareAllowDownload = ref(true)
+const shareWatermark = ref(false)
+const linkCopied = ref(false)
+
+function openShareModal(r) {
+  shareTarget.value = r
+  shareLinkExpiry.value = '7 days'
+  linkCopied.value = false
+  addAuditLog('View Share', r.name, r.visibility || 'Team')
+}
+function copyShareLink() {
+  linkCopied.value = true
+  addAuditLog('Copy Link', shareTarget.value?.name, shareTarget.value?.visibility)
+  setTimeout(() => { linkCopied.value = false }, 2000)
+}
+function confirmShare() {
+  addAuditLog('Share', shareTarget.value?.name, shareTarget.value?.visibility)
+  shareTarget.value = null
+  showToast('Report shared — recipients notified')
+}
+
+// ── Audit Log ──
+const reportAuditLog = ref([
+  { id: 1, ts: '2026-05-24 09:15', user: 'Dewi Kusuma', action: 'Download', report: 'OJK LPBB Monthly Report', visibility: 'Team', result: 'Success' },
+  { id: 2, ts: '2026-05-24 09:10', user: 'Ahmad Fauzi', action: 'Share', report: 'Board Pack Dashboard', visibility: 'Private', result: 'Success' },
+  { id: 3, ts: '2026-05-24 09:00', user: 'Sari Indrawati', action: 'View', report: 'NPL Report MTD', visibility: 'Team', result: 'Success' },
+  { id: 4, ts: '2026-05-23 18:30', user: 'Bimo Prakoso', action: 'Generate', report: 'Disbursement Summary', visibility: 'Public', result: 'Success' },
+  { id: 5, ts: '2026-05-23 17:00', user: 'Rina Putri', action: 'Download', report: 'Sales Pipeline Report', visibility: 'Team', result: 'Success' },
+  { id: 6, ts: '2026-05-23 16:00', user: 'Ahmad Fauzi', action: 'View', report: 'Vintage Analysis', visibility: 'Public', result: 'Success' },
+  { id: 7, ts: '2026-05-23 14:45', user: 'Dewi Kusuma', action: 'Share', report: 'NPL Report MTD', visibility: 'Team', result: 'Blocked' },
+  { id: 8, ts: '2026-05-23 11:00', user: 'Sari Indrawati', action: 'Generate', report: 'BI LKPBU Report', visibility: 'Team', result: 'Success' },
+])
+let auditIdSeq = 9
+
+function addAuditLog(action, report, visibility) {
+  const now = new Date()
+  const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+  reportAuditLog.value.unshift({ id: auditIdSeq++, ts, user: 'Current User', action, report: report || '—', visibility: visibility || '—', result: 'Success' })
+}
+
+function auditActionClass(action) {
+  const map = { Download: 'bg-[#FFF0E6] text-[#CC5200]', Share: 'bg-[#E6F4FA] text-[#006699]', View: 'bg-gray-100 text-gray-600', Generate: 'bg-green-100 text-green-700', 'Copy Link': 'bg-purple-100 text-purple-700', 'View Share': 'bg-[#E6F4FA] text-[#006699]' }
+  return map[action] || 'bg-gray-100 text-gray-600'
+}
+
 // ── Actions ──
-function openReport(r) { showToast(`Opening ${r.name}...`) }
-function downloadReport(r) { showToast(`Downloading ${r.name}...`) }
-function shareReport(r) { showToast(`Share link copied for ${r.name}`) }
+function openReport(r) {
+  addAuditLog('View', r.name, r.visibility)
+  showToast(`Opening ${r.name}...`)
+}
+function downloadReport(r) {
+  addAuditLog('Download', r.name, r.visibility)
+  showToast(`Downloading ${r.name}...`)
+}
+function shareReport(r) { openShareModal(r) }
 function doExport() { showToast('Export started — check your email when ready') }
 
 // ── Toast ──
