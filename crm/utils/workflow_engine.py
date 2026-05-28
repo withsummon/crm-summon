@@ -101,9 +101,9 @@ def start_flow_execution(application_id):
 
 	# Create execution doc
 	exec_doc = frappe.new_doc("CRM Workflow Execution")
-	exec_doc.flow = flow_info.name
-	exec_doc.flow_version = flow_info.current_version
-	exec_doc.flow_version_json = flow_info.flow_json
+	exec_doc.flow = flow_info["name"]
+	exec_doc.flow_version = flow_info["current_version"]
+	exec_doc.flow_version_json = flow_info["flow_json"]
 	exec_doc.document_type = doctype
 	exec_doc.application = application_id
 	exec_doc.status = "Running"
@@ -120,7 +120,7 @@ def start_flow_execution(application_id):
 	exec_doc.insert(ignore_permissions=True)
 
 	try:
-		flow_data = json.loads(flow_info.flow_json)
+		flow_data = json.loads(flow_info["flow_json"])
 	except Exception:
 		flow_data = {"nodes": [], "edges": []}
 

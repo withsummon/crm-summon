@@ -109,8 +109,8 @@
               />
             </template>
             
-            <!-- Fallback Static Buttons -->
-            <template v-else-if="!workflowSteps.data?.length">
+            <!-- Fallback Static Buttons (when no workflow assigned) -->
+            <template v-else-if="!workflowSteps.loading && !workflowSteps.data?.length">
               <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
               <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
                 <template #prefix>

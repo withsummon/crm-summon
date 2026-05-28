@@ -561,6 +561,9 @@ const workflowCreationConfig = createResource({
 watch(() => newApp.workflow, (wf) => {
   if (wf) {
     workflowCreationConfig.submit({ workflow_name: wf })
+  } else {
+    workflowCreationConfig.data = null
+    activeCreateTab.value = 'borrower'
   }
 })
 
