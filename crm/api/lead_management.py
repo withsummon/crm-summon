@@ -704,6 +704,93 @@ def _notify_lead_user(user, lead, title, text):
 	)
 
 
+_DEMO_INTAKE = {
+	"WhatsApp": [
+		{"name": "Andi Putra", "phone": "+62-812-3456-7890", "body": "Halo saya tertarik dengan kredit modal kerja. Bisa info lebih lanjut?"},
+		{"name": "Siti Rahayu", "phone": "+62-813-1111-2222", "body": "Tolong info bunga KPR Mei 2026"},
+		{"name": "Budi Hartono", "phone": "+62-815-9876-5432", "body": "Saya butuh top-up 500jt"},
+	],
+	"Email": [
+		{"from": "dewi@maju.co.id", "subject": "Inquiry: Working capital loan", "snippet": "Hi, we are PT Maju Bersama and would like to apply for..."},
+		{"from": "agus@sukses.com", "subject": "Refinancing question", "snippet": "Can you compare your investment loan rates with..."},
+	],
+}
+
+
+def _fill_from_lead(log, payload):
+	lead_name = log.get("lead")
+	if not lead_name or not frappe.db.exists("CRM Lead", lead_name):
+		return {}
+	lead = frappe.db.get_value(
+		"CRM Lead", lead_name, ["lead_name", "first_name", "email", "mobile_no", "phone"], as_dict=True
+	)
+	if not lead:
+		return {}
+	return {
+		"lead_name": lead.get("lead_name") or lead.get("first_name") or "",
+		"email": lead.get("email") or "",
+		"mobile_no": lead.get("mobile_no") or lead.get("phone") or "",
+	}
+
+
+@frappe.whitelist()
+def get_lead_ops_intake(channel="WhatsApp", limit=50):
+	messages = []
+	if frappe.db.table_exists("CRM Lead Intake Log"):
+		logs = frappe.get_all(
+			"CRM Lead Intake Log",
+			filters={"channel": channel, "status": ["!=", "Failed"]},
+			fields=["name", "channel", "payload", "message", "creation", "status", "lead"],
+			limit=limit,
+			order_by="creation desc",
+		)
+		for log in logs:
+			payload = _as_dict(log.payload)
+			fill = _fill_from_lead(log, payload)
+			msg = {"id": log.name, "channel": log.channel, "received_at": str(log.creation), "status": log.status}
+			if channel == "WhatsApp":
+				msg.update({
+					"name": payload.get("lead_name") or payload.get("first_name") or fill.get("lead_name") or _("Unknown"),
+					"phone": payload.get("mobile_no") or payload.get("phone") or fill.get("mobile_no") or "\u2014",
+					"body": payload.get("message") or payload.get("body") or log.message or "",
+				})
+			elif channel == "Email":
+				msg.update({
+					"from": payload.get("sender") or payload.get("email") or fill.get("email") or fill.get("lead_name") or _("Unknown"),
+					"subject": payload.get("subject") or _("Lead Inquiry"),
+					"snippet": (payload.get("message") or payload.get("body") or log.message or "")[:200],
+					"email": payload.get("email") or fill.get("email") or "",
+				})
+			messages.append(msg)
+	if not messages:
+		demo = _DEMO_INTAKE.get(channel, [])
+		messages = [
+			{
+				"id": f"{channel.lower()}-demo-{i}",
+				"demo": True,
+				"received_at": frappe.utils.now_datetime(),
+				**m,
+			}
+			for i, m in enumerate(demo)
+		]
+	return {"messages": messages}
+
+
+@frappe.whitelist()
+def create_lead_from_intake(channel="WhatsApp", data=None):
+	data = _as_dict(data)
+	data["capture_channel"] = channel
+	data["source"] = channel
+	if not data.get("lead_name") and not data.get("first_name") and not data.get("organization"):
+		if data.get("body") or data.get("message"):
+			data["lead_name"] = (data.get("body") or data.get("message") or "")[:80]
+		elif channel == "Email" and data.get("sender"):
+			data["lead_name"] = data.get("sender")
+		else:
+			data["lead_name"] = _("Intake Lead")
+	return capture_lead(data, channel)
+
+
 @frappe.whitelist()
 def mock_whatsapp_intake(payload=None):
 	payload = _as_dict(payload)
@@ -898,4 +985,127 @@ def process_lead_aging():
 					_("Lead aging alert"),
 					_("Lead {0} has had no conversion for {1} days.").format(lead.name, days),
 				)
-	return {"processed": True}
+		return {"processed": True}
+
+
+@frappe.whitelist()
+def save_widget_config(fields=None, routing="round_robin"):
+	frappe.cache.set_value("crm:lead_ops:widget_config", {"fields": fields or [], "routing": routing})
+	return {"saved": True}
+
+
+@frappe.whitelist()
+def get_widget_config():
+	return frappe.cache.get_value("crm:lead_ops:widget_config") or {}
+
+
+@frappe.whitelist()
+def save_nurture_sequence(sequence=None):
+	if not sequence:
+		return {"saved": False}
+	sequences = frappe.cache.get_value("crm:lead_ops:nurture_sequences") or []
+	updated = False
+	for i, s in enumerate(sequences):
+		if s.get("id") == sequence.get("id"):
+			sequences[i] = sequence
+			updated = True
+			break
+	if not updated:
+		sequences.append(sequence)
+	frappe.cache.set_value("crm:lead_ops:nurture_sequences", sequences)
+	return {"saved": True, "sequences": sequences}
+
+
+@frappe.whitelist()
+def get_nurture_sequences():
+	return frappe.cache.get_value("crm:lead_ops:nurture_sequences") or []
+
+
+@frappe.whitelist()
+def save_scoring_rules(rules=None):
+	frappe.cache.set_value("crm:lead_ops:scoring_rules", rules or [])
+	return {"saved": True}
+
+
+@frappe.whitelist()
+def export_lead_leads_csv(columns=None):
+	_known = {
+		"name": "name",
+		"lead_name": "lead_name",
+		"email": "email",
+		"phone": "mobile_no",
+		"company": "organization",
+		"amount": "organization",
+		"source": "source",
+		"score": "score",
+	}
+	columns = columns or list(_known.keys())
+	field_map = {k: v for k, v in _known.items() if k in columns}
+	fields_to_query = list(dict.fromkeys(v for v in field_map.values()))
+	safe = []
+	for f in fields_to_query:
+		if f == "name" or frappe.get_meta("CRM Lead").has_field(f):
+			safe.append(f)
+	if not safe:
+		safe = ["name", "lead_name"]
+	leads = frappe.get_all("CRM Lead", fields=safe, limit=500, order_by="creation desc")
+	output = io.StringIO()
+	header_map = {v: k for k, v in field_map.items()}
+	headers = list(field_map.keys())
+	writer = csv.DictWriter(output, fieldnames=headers, extrasaction="ignore")
+	writer.writeheader()
+	for lead in leads:
+		row = {}
+		for col_key in headers:
+			field = field_map[col_key]
+			row[col_key] = lead.get(field, "")
+		writer.writerow(row)
+	return {"csv": output.getvalue(), "filename": "lead_pipeline.csv"}
+
+
+@frappe.whitelist()
+def generate_lead_pdf(lead_id):
+	from frappe.utils.jinja import get_jenv
+
+	lead = frappe.get_doc("CRM Lead", lead_id)
+	html = get_jenv().from_string(
+		"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Lead Briefing — {{ doc.lead_name }}</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, sans-serif; padding: 48px; color: #1f2937; background: #fff; }
+h1 { font-size: 28px; color: #0f766e; border-bottom: 3px solid #14b8a6; padding-bottom: 12px; margin-bottom: 32px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: #f1f5f9; font-weight: 600; text-align: left; padding: 10px 16px; border: 1px solid #e2e8f0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; }
+td { padding: 10px 16px; border: 1px solid #e2e8f0; font-size: 15px; }
+tr:nth-child(even) td { background: #f8fafc; }
+.section { margin-top: 36px; }
+.section h2 { font-size: 20px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 16px; }
+.section p { font-size: 14px; line-height: 1.7; color: #374151; }
+.footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Lead Briefing Report</h1>
+<table>
+<tr><th style="width:200px">Field</th><th>Value</th></tr>
+<tr><td>Lead Name</td><td>{{ doc.lead_name or doc.first_name or "" }}</td></tr>
+<tr><td>Organization</td><td>{{ doc.organization or "" }}</td></tr>
+<tr><td>Email</td><td>{{ doc.email or "" }}</td></tr>
+<tr><td>Phone</td><td>{{ doc.mobile_no or doc.phone or "" }}</td></tr>
+<tr><td>Source</td><td>{{ doc.source or "" }}</td></tr>
+<tr><td>Status</td><td>{{ doc.status or "" }}</td></tr>
+<tr><td>Lead Owner</td><td>{{ doc.lead_owner or "" }}</td></tr>
+<tr><td>Created</td><td>{{ doc.creation or "" }}</td></tr>
+</table>
+<div class="section">
+<h2>Summary</h2>
+<p>This briefing was generated for <strong>{{ doc.lead_name or doc.first_name or "this lead" }}</strong> on {{ frappe.utils.now_datetime().strftime("%d %B %Y %H:%M") }}.</p>
+</div>
+<div class="footer">CRM Lead Ops — Confidential</div>
+</body>
+</html>"""
+	).render(doc=lead)
+	return {"html": html, "filename": f"lead_briefing_{lead_id}.html"}

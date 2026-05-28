@@ -129,8 +129,8 @@ async function createRule() {
   if (!form.approver_role) return
   saving.value = true
   try {
-    await call('frappe.client.insert', {
-      doc: { doctype: 'FCRM Approval Matrix', ...form, enabled: 1 }
+    await call('crm.api.rbac.add_approval_matrix', {
+      doc_data: { ...form, enabled: 1 }
     })
     showNewDialog.value = false
     fetchRules()

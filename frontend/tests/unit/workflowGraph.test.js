@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_SOURCE_HANDLE,
   DEFAULT_TARGET_HANDLE,
-  validateWorkflowConnection,
-} from '@/modules/admin/components/WorkflowEngine/workflowGraph'
+  validateConnection as validateWorkflowConnection,
+} from '@/modules/workflow-engine/components/FlowCanvas/workflowGraph'
 
 describe('workflow graph validation', () => {
   it('accepts a valid connection between two nodes', () => {

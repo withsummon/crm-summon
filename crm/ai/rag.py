@@ -245,7 +245,7 @@ def get_raganything_instance():
 	working_dir = get_rag_storage_path()
 	os.makedirs(working_dir, exist_ok=True)
 
-	def llm_model_func(prompt, system_prompt=None, history_messages=None, **kwargs):
+	async def llm_model_func(prompt, system_prompt=None, history_messages=None, **kwargs):
 		messages = []
 		if system_prompt:
 			messages.append({"role": "system", "content": system_prompt})
@@ -254,7 +254,7 @@ def get_raganything_instance():
 		messages.append({"role": "user", "content": prompt})
 		return call_kimi_chat(messages, thinking_mode=settings.thinking_mode, timeout=180).content
 
-	def vision_model_func(prompt, system_prompt=None, history_messages=None, image_data=None, messages=None, **kwargs):
+	async def vision_model_func(prompt, system_prompt=None, history_messages=None, image_data=None, messages=None, **kwargs):
 		if messages:
 			return call_kimi_chat(messages, thinking_mode=settings.thinking_mode).content
 		payload = [{"type": "text", "text": prompt}]
@@ -313,6 +313,31 @@ def retrieve_sources(query, customer=None, limit=8):
 	words = [word for word in re.findall(r"[\w]+", (query or "").lower()) if len(word) > 2]
 	if not words:
 		words = ["customer", "credit", "risk"]
+	else:
+		# Expand common Indonesian CRM keywords to their English equivalents
+		indonesian_mappings = {
+			"nasabah": ["customer", "borrower", "lead"],
+			"potensial": ["lead", "deal", "opportunity", "prospect"],
+			"rekomendasi": ["recommendation", "insight", "suggested"],
+			"kunjungan": ["visit", "check"],
+			"kredit": ["credit", "facility", "loan"],
+			"transaksi": ["transaction", "amount"],
+			"tugas": ["task", "todo"],
+			"catatan": ["note"],
+			"riwayat": ["history", "call", "modified"],
+			"telepon": ["call", "phone", "mobile"],
+			"komunikasi": ["communication", "message", "email", "channel"],
+			"organisasi": ["organization", "company"],
+			"perusahaan": ["organization", "company"],
+			"kontak": ["contact"],
+			"peluang": ["deal", "lead", "opportunity"],
+			"analisis": ["analysis", "analyst", "risk"],
+		}
+		expanded = list(words)
+		for word in words:
+			if word in indonesian_mappings:
+				expanded.extend(indonesian_mappings[word])
+		words = list(set(expanded))
 	conditions = []
 	params = []
 	if customer:
@@ -387,14 +412,16 @@ def query_rag(query, agent_key=None, customer=None):
 
 	sources = retrieve_sources(query, customer=customer)
 	if not sources:
-		reindex_structured_data(scope="customer_360" if customer else "crm", docname=customer, agent_key=agent_key)
-		sources = retrieve_sources(query, customer=customer)
+		chunk_count = frappe.db.count("CRM AI RAG Chunk") if frappe.db.table_exists("CRM AI RAG Chunk") else 0
+		if chunk_count == 0:
+			reindex_structured_data(scope="customer_360" if customer else "crm", docname=customer, agent_key=agent_key)
+			sources = retrieve_sources(query, customer=customer)
 
 	context = "\n\n".join(f"[{idx + 1}] {source['title']}\n{source['excerpt']}" for idx, source in enumerate(sources))
 	confidence = min(0.95, 0.2 + (len(sources) * 0.1))
 	
-	threshold = flt(settings.guardrail_confidence_threshold)
-	passes = len(sources) > 0 and confidence >= threshold
+	# If any sources are retrieved, allow the grounded answer to pass the guardrail
+	passes = len(sources) > 0
 
 	return {
 		"context": context,

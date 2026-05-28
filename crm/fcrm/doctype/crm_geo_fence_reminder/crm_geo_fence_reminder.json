@@ -1,0 +1,108 @@
+{
+    "actions": [],
+    "allow_import": 1,
+    "autoname": "format:GF-{YYYY}-{#####}",
+    "creation": "2026-05-28 00:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "rm",
+        "location_name",
+        "address",
+        "latitude",
+        "longitude",
+        "radius_meters",
+        "note",
+        "is_active"
+    ],
+    "fields": [
+        {
+            "fieldname": "rm",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "RM",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "location_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Location Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "address",
+            "fieldtype": "Small Text",
+            "in_list_view": 1,
+            "label": "Address"
+        },
+        {
+            "fieldname": "latitude",
+            "fieldtype": "Float",
+            "label": "Latitude"
+        },
+        {
+            "fieldname": "longitude",
+            "fieldtype": "Float",
+            "label": "Longitude"
+        },
+        {
+            "fieldname": "radius_meters",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Radius (m)"
+        },
+        {
+            "fieldname": "note",
+            "fieldtype": "Text",
+            "label": "Note"
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Active",
+            "default": 1
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "links": [],
+    "modified": "2026-05-28 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "FCRM",
+    "name": "CRM Geo Fence Reminder",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "Sales User",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "row_format": "Dynamic",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1,
+    "app": "crm"
+}

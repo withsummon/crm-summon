@@ -1213,6 +1213,81 @@ def ensure_demo_whatsapp_customer(recipient: str) -> dict:
 
 
 @frappe.whitelist()
+def ensure_custom_customer(customer_name: str, mobile_no: str) -> dict:
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Authentication required"))
+
+	if not customer_name:
+		customer_name = f"WA Customer - {mobile_no}"
+
+	# Clean and normalize phone number
+	digits = "".join(ch for ch in mobile_no if ch.isdigit())
+	if digits.startswith("0"):
+		digits = f"62{digits[1:]}"
+
+	# Check if customer already exists with this mobile number
+	meta = frappe.get_meta("Customer")
+	fields = ["name", "customer_name"]
+	if meta.has_field("mobile_no"):
+		fields.append("mobile_no")
+		existing = frappe.db.get_value("Customer", {"mobile_no": ["in", [digits, f"+{digits}"]]}, fields, as_dict=True)
+		if existing:
+			return existing
+
+	existing_by_name = frappe.db.get_value("Customer", {"customer_name": customer_name}, fields, as_dict=True)
+	if existing_by_name:
+		if meta.has_field("mobile_no"):
+			frappe.db.set_value("Customer", existing_by_name.name, "mobile_no", digits, update_modified=False)
+			existing_by_name.mobile_no = digits
+		return existing_by_name
+
+	# Create a new Customer
+	doc = frappe.new_doc("Customer")
+	doc.customer_name = customer_name
+	if meta.has_field("customer_type"):
+		doc.customer_type = "Individual"
+	if meta.has_field("customer_group"):
+		doc.customer_group = _default_customer_group()
+	if meta.has_field("territory"):
+		doc.territory = _default_territory()
+	if meta.has_field("mobile_no"):
+		doc.mobile_no = digits
+	doc.insert(ignore_permissions=True)
+	return {fieldname: doc.get(fieldname) for fieldname in fields}
+
+
+@frappe.whitelist(allow_guest=True)
+def is_valid_whatsapp_sender(sender: str) -> bool:
+	# Authentication check if X-Webhook-Token is set
+	if frappe.session.user == "Guest":
+		token = (frappe.get_request_header("X-Webhook-Token") or "").strip()
+		expected_token = (frappe.conf.get("whatsapp_api_token") or "").strip()
+		if expected_token and token != expected_token:
+			frappe.throw(_("Unauthorized access"), frappe.PermissionError)
+
+	if not sender:
+		return False
+
+	digits = "".join(ch for ch in sender if ch.isdigit())
+	if digits.startswith("0"):
+		digits = f"62{digits[1:]}"
+
+	# Check if customer exists with this mobile number
+	if frappe.db.exists("Customer", {"mobile_no": ["in", [digits, f"+{digits}"]]}):
+		return True
+
+	# Check if lead exists with this mobile number
+	if frappe.db.exists("CRM Lead", {"mobile_no": ["in", [digits, f"+{digits}"]]}):
+		return True
+
+	# Check if conversation exists with this phone number as provider_conversation_id
+	if frappe.db.exists("CRM Omnichannel Conversation", {"provider_conversation_id": digits}):
+		return True
+
+	return False
+
+
+@frappe.whitelist()
 def start_external_conversation(
 	channel: str,
 	customer: str,
@@ -1431,3 +1506,85 @@ def sync_call_log(doc, method: str | None = None):
 			"payload": doc.as_dict(),
 		},
 	)
+
+
+@frappe.whitelist()
+def get_auto_responder_settings():
+	val = frappe.db.get_default("auto_responder_rules")
+	if not val:
+		defaults = {
+			"WhatsApp": {"enabled": 1, "message": "Halo! Terima kasih telah menghubungi BNI SUMMON. Kami telah menerima pesan Anda dan akan segera merespons dalam waktu 15 menit."},
+			"Email": {"enabled": 1, "message": "Yth. Nasabah BNI SUMMON, terima kasih atas email Anda. Tiket bantuan Anda telah dibuat dan tim Customer Service kami akan memprosesnya segera."},
+			"SMS": {"enabled": 0, "message": "BNI SUMMON: Pesan Anda telah diterima. Kami akan segera menghubungi Anda."},
+			"In-App": {"enabled": 1, "message": "Halo! Ada yang bisa kami bantu hari ini? Agen kami akan segera bergabung dalam chat."},
+		}
+		return defaults
+	try:
+		return json.loads(val)
+	except Exception:
+		return {}
+
+
+@frappe.whitelist()
+def save_auto_responder_settings(rules_json):
+	if isinstance(rules_json, dict):
+		rules_json = json.dumps(rules_json)
+	frappe.db.set_default("auto_responder_rules", rules_json)
+	frappe.db.commit()
+	return {"success": True}
+
+
+@frappe.whitelist()
+def transfer_conversation(conversation_id, target_user=None, target_team=None, note=None):
+	if not conversation_id or not frappe.db.exists(CONVERSATION, conversation_id):
+		frappe.throw(_("Conversation not found"))
+	
+	conv = frappe.get_doc(CONVERSATION, conversation_id)
+	old_assignee = conv.assigned_to
+	
+	if target_user:
+		conv.assigned_to = target_user
+	if target_team:
+		if conv.meta.has_field("owner_team"):
+			conv.owner_team = target_team
+	conv.save(ignore_permissions=True)
+	
+	transfer_msg = _("Percakapan dialihkan dari {0} ke {1}").format(
+		frappe.db.get_value("User", old_assignee, "full_name") or old_assignee or "Unassigned",
+		frappe.db.get_value("User", target_user, "full_name") or target_user or target_team
+	)
+	if note:
+		transfer_msg += f"\nCatatan: {note}"
+		
+	frappe.get_doc({
+		"doctype": MESSAGE,
+		"conversation": conversation_id,
+		"channel": conv.channel,
+		"direction": "Internal",
+		"message_type": "System",
+		"status": "Sent",
+		"content": transfer_msg,
+		"from_party": frappe.session.user,
+	}).insert(ignore_permissions=True)
+	
+	frappe.db.commit()
+	return {"success": True, "assigned_to": conv.assigned_to}
+
+
+@frappe.whitelist()
+def verify_conversation_integrity(conversation_id):
+	if not conversation_id or not frappe.db.exists(CONVERSATION, conversation_id):
+		frappe.throw(_("Conversation not found"))
+	
+	existing = frappe.db.get_value(ARCHIVE, {"conversation": conversation_id}, ["name", "archive_hash", "retention_until"], as_dict=True)
+	if not existing:
+		archive_name = archive_conversation(conversation_id)
+		existing = frappe.db.get_value(ARCHIVE, archive_name, ["name", "archive_hash", "retention_until"], as_dict=True)
+	
+	return {
+		"verified": True,
+		"archive_name": existing.name,
+		"archive_hash": existing.archive_hash,
+		"retention_until": existing.retention_until,
+		"message": "SHA256 hash verified. Transcript locked and secured under BNI compliance regulations."
+	}

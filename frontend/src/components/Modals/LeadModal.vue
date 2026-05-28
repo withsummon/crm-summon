@@ -185,6 +185,11 @@ function openQuickEntryModal() {
 }
 
 onMounted(() => {
+  for (const key in lead.doc) {
+    delete lead.doc[key]
+  }
+  lead.doc.__newDocument = true
+  lead.doc.doctype = 'CRM Lead'
   lead.doc.no_of_employees = '1-10'
   Object.assign(lead.doc, props.defaults)
 

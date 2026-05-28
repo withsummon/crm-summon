@@ -96,7 +96,7 @@ GENERAL_AGENT = {
 	"uat": ["Universal chat", "RAG grounded answers", "CRM action execution"],
 }
 
-LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up", "generate_pdf_report"}
+LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up", "generate_pdf_report", "create_lead", "create_deal"}
 HIGH_RISK_ACTIONS = {"update_record", "send_communication", "fire_workflow", "export_regulatory_draft"}
 
 AGENT_TOOLS = {
@@ -769,6 +769,32 @@ def _execute_low_risk_action(agent_key, session_id, action):
 		result = {"doctype": "CRM AI Recommendation", "name": result_name}
 	elif action_type == "generate_pdf_report":
 		result = _create_pdf_report(payload)
+	elif action_type == "create_lead":
+		doc = frappe.get_doc(
+			{
+				"doctype": "CRM Lead",
+				"first_name": payload.get("first_name") or payload.get("lead_name") or payload.get("name") or "New Lead",
+				"last_name": payload.get("last_name") or "",
+				"email": payload.get("email"),
+				"mobile_no": payload.get("mobile_no") or payload.get("phone"),
+				"status": payload.get("status") or "Lead",
+				"source": payload.get("source") or "AI Agent",
+				"organization": payload.get("organization"),
+			}
+		).insert(ignore_permissions=True)
+		result = {"doctype": "CRM Lead", "name": doc.name, "title": f"{doc.first_name} {doc.last_name}".strip()}
+	elif action_type == "create_deal":
+		doc = frappe.get_doc(
+			{
+				"doctype": "CRM Deal",
+				"title": payload.get("title") or payload.get("name") or "New Deal",
+				"organization": payload.get("organization"),
+				"deal_owner": payload.get("deal_owner") or frappe.session.user,
+				"expected_revenue": payload.get("expected_revenue") or 0,
+				"status": payload.get("status") or "Open",
+			}
+		).insert(ignore_permissions=True)
+		result = {"doctype": "CRM Deal", "name": doc.name, "title": doc.title}
 	else:
 		result = {"message": "Action queued for manual handling"}
 
@@ -939,10 +965,16 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			yield _sse("status", {"code": "menghasilkan_analisis", "message": "Menghasilkan analisis terstruktur Bahasa Indonesia..."})
 
 			content_parts = []
+			reasoning_parts = []
 			stream_meta = frappe._dict({"model": settings.kimi_model or DEFAULT_KIMI_MODEL, "total_tokens": 0, "cost": Decimal("0")})
 			for event in stream_kimi_chat_events(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode):
 				if event.event == "delta":
-					content_parts.append(event.delta)
+					if event.get("reasoning_delta"):
+						reasoning_parts.append(event.reasoning_delta)
+						yield _sse("thinking", {"thinking": event.reasoning_delta})
+					if event.delta:
+						content_parts.append(event.delta)
+						yield _sse("delta", {"delta": event.delta})
 				elif event.event == "done":
 					stream_meta = event
 
@@ -983,6 +1015,20 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			"X-Accel-Buffering": "no",
 		},
 	)
+
+
+@frappe.whitelist()
+def initialize_rag(scope="crm", docname=None, agent_key=None):
+    frappe.enqueue(
+        "crm.ai.rag.reindex_structured_data",
+        queue="long",
+        timeout=600,
+        scope=scope,
+        docname=docname,
+        agent_key=agent_key,
+        reset_native=True,
+    )
+    return {"status": "started", "message": "RAG initialization queued in background"}
 
 
 @frappe.whitelist()
@@ -1065,6 +1111,17 @@ def confirm_action(action_id):
 			status = "Completed"
 	elif action.action_type == "send_communication":
 		result.update({"message": "External channel adapter is not configured; communication remains queued for manual send."})
+	elif action.action_type == "fire_workflow":
+		application_id = payload.get("application_id") or payload.get("lead") or payload.get("deal") or payload.get("document_id")
+		if not application_id:
+			frappe.throw(_("application_id, lead, deal or document_id is required to fire a workflow"))
+		from crm.utils.workflow_engine import start_flow_execution
+		exec_doc = start_flow_execution(application_id)
+		if not exec_doc:
+			result.update({"ok": False, "message": "No matching published Workflow found for this document."})
+		else:
+			result.update({"ok": True, "doctype": "CRM Workflow Execution", "name": exec_doc.name, "current_node": exec_doc.current_node})
+			status = "Completed"
 	frappe.db.sql(
 		"UPDATE `tabCRM AI Action Log` SET status=%s, modified=%s, result_json=%s WHERE name=%s",
 		(status, frappe.utils.now_datetime(), json.dumps(result, default=str), action_id),
@@ -1193,3 +1250,73 @@ def save_ai_settings(provider, model, base_url=None, api_key=None):
 	settings.save(ignore_permissions=True)
 	frappe.db.commit()
 	return settings.as_dict()
+
+
+@frappe.whitelist()
+def get_automation_rules(agent_key=None):
+	ensure_ai_tables()
+	# Check if empty, insert defaults
+	count = frappe.db.sql("SELECT COUNT(*) FROM `tabCRM AI Automation Rule`")[0][0]
+	if count == 0:
+		defaults = [
+			{"agent_key": "risk_analyst", "title": "Auto-Trigger Risk Analysis", "threshold": 0.80, "action_type": "risk_signal_scan", "requires_approval": 1, "enabled": 1},
+			{"agent_key": "proposal_generator", "title": "Auto-Generate Credit Proposal", "threshold": 0.85, "action_type": "proposal_draft", "requires_approval": 1, "enabled": 1},
+			{"agent_key": "collection_officer", "title": "Auto-Prioritize Dunning Actions", "threshold": 0.70, "action_type": "overdue_prioritization", "requires_approval": 0, "enabled": 1},
+			{"agent_key": "credit_analyst", "title": "Auto-Spread Financial Statement", "threshold": 0.90, "action_type": "financial_spreading", "requires_approval": 0, "enabled": 0},
+		]
+		for d in defaults:
+			_raw_insert("CRM AI Automation Rule", d)
+		frappe.db.commit()
+
+	filters = {}
+	if agent_key:
+		filters["agent_key"] = agent_key
+	rules = frappe.get_all(
+		"CRM AI Automation Rule",
+		filters=filters,
+		fields=["name", "agent_key", "title", "threshold", "action_type", "requires_approval", "enabled"],
+		order_by="creation desc"
+	)
+	return rules
+
+
+@frappe.whitelist()
+def save_automation_rule(name=None, agent_key=None, title=None, threshold=0.8, action_type=None, requires_approval=1, enabled=1):
+	ensure_ai_tables()
+	values = {
+		"agent_key": agent_key,
+		"title": title,
+		"threshold": float(threshold or 0.8),
+		"action_type": action_type,
+		"requires_approval": int(requires_approval),
+		"enabled": int(enabled),
+	}
+	if name:
+		frappe.db.sql(
+			"""UPDATE `tabCRM AI Automation Rule`
+			   SET agent_key=%s, title=%s, threshold=%s, action_type=%s, requires_approval=%s, enabled=%s, modified=%s
+			   WHERE name=%s""",
+			(agent_key, title, float(threshold), action_type, int(requires_approval), int(enabled), frappe.utils.now_datetime(), name)
+		)
+		frappe.db.commit()
+		return name
+	else:
+		new_name = _raw_insert("CRM AI Automation Rule", values)
+		frappe.db.commit()
+		return new_name
+
+
+@frappe.whitelist()
+def toggle_automation_rule(name, enabled):
+	ensure_ai_tables()
+	frappe.db.sql("UPDATE `tabCRM AI Automation Rule` SET enabled=%s, modified=%s WHERE name=%s", (int(enabled), frappe.utils.now_datetime(), name))
+	frappe.db.commit()
+	return {"name": name, "enabled": int(enabled)}
+
+
+@frappe.whitelist()
+def delete_automation_rule(name):
+	ensure_ai_tables()
+	frappe.db.sql("DELETE FROM `tabCRM AI Automation Rule` WHERE name=%s", (name,))
+	frappe.db.commit()
+	return {"deleted": True}

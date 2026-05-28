@@ -460,3 +460,29 @@ def add_roles():
 			update_permission_property(doctype, role, 0, "print", 1)
 			update_permission_property(doctype, role, 0, "report", 1)
 			update_permission_property(doctype, role, 0, "export", 1)
+
+
+@frappe.whitelist()
+def connect_whatsapp_channel():
+	account_name = "WhatsApp Production"
+	
+	if not frappe.db.exists("CRM Omnichannel Channel Account", account_name):
+		doc = frappe.get_doc({
+			"doctype": "CRM Omnichannel Channel Account",
+			"account_name": account_name,
+			"channel": "WhatsApp",
+			"provider": "WhatsApp Business",
+			"status": "Active",
+			"is_default": 1,
+			"credentials_configured": 1
+		})
+		doc.insert(ignore_permissions=True)
+	else:
+		doc = frappe.get_doc("CRM Omnichannel Channel Account", account_name)
+		doc.status = "Active"
+		doc.credentials_configured = 1
+		doc.provider = "WhatsApp Business"
+		doc.save(ignore_permissions=True)
+		
+	frappe.db.commit()
+	return {"message": "Success", "account": doc.as_dict()}

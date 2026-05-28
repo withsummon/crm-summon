@@ -16,95 +16,129 @@
           <div>
             <UserDropdown class="p-2" :isCollapsed="!sidebarOpened" />
           </div>
-          <div class="flex-1 overflow-y-auto">
-            <div class="mb-3 flex flex-col">
-              <SidebarLink
-                id="notifications-btn"
-                :label="__('Notifications')"
-                :icon="NotificationsIcon"
-                :to="{ name: 'Notifications' }"
-                class="relative mx-2 my-0.5"
-              >
-                <template #right>
-                  <Badge
-                    v-if="unreadNotificationsCount"
-                    :label="unreadNotificationsCount"
-                    variant="subtle"
-                  />
-                </template>
-              </SidebarLink>
-            </div>
-            <div v-for="view in allViews" :key="view.label">
-              <CollapsibleSection
-                :label="view.name"
-                :hideLabel="view.hideLabel"
-                :opened="view.opened"
-              >
-                <template #header="{ opened, hide, toggle }">
-                  <div
-                    v-if="!hide"
-                    class="ml-2 mt-4 flex h-7 w-auto cursor-pointer gap-1.5 px-1 text-base font-medium text-ink-gray-5 opacity-100 transition-all duration-300 ease-in-out"
-                    @click="toggle()"
-                  >
-                    <FeatherIcon
-                      name="chevron-right"
-                      class="h-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
-                      :class="{ 'rotate-90': opened }"
+
+          <!-- PWA Standalone Mode: Mobile Features Only -->
+          <template v-if="isStandalone || isMobileRoute">
+            <div class="flex-1 overflow-y-auto">
+              <div class="px-3 pb-2">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-ink-gray-5 px-1">
+                  {{ __('Mobile RM Workspace') }}
+                </p>
+              </div>
+              <nav class="flex flex-col">
+                <SidebarLink
+                  v-for="feature in mobileFeatures"
+                  :key="feature.label"
+                  :icon="feature.icon"
+                  :label="__(feature.label)"
+                  :to="{ name: feature.routeName }"
+                  class="mx-2 my-0.5"
+                >
+                  <template #right>
+                    <Badge
+                      v-if="feature.status !== 'ready'"
+                      :label="__('Soon')"
+                      variant="subtle"
+                      theme="gray"
                     />
-                    <span>{{ __(view.name) }}</span>
-                  </div>
-                </template>
-                <nav class="flex flex-col">
-                  <SidebarLink
-                    v-for="link in view.views"
-                    :key="link.label"
-                    :icon="link.icon"
-                    :label="__(link.label)"
-                    :to="link.to"
-                    class="mx-2 my-0.5"
-                  />
-                </nav>
-              </CollapsibleSection>
+                  </template>
+                </SidebarLink>
+              </nav>
             </div>
-            <div v-for="group in summonModuleGroups" :key="group.name">
-              <CollapsibleSection :label="group.name" :opened="group.opened">
-                <template #header="{ opened, hide, toggle }">
-                  <div
-                    v-if="!hide"
-                    class="ml-2 mt-4 flex h-7 w-auto cursor-pointer gap-1.5 px-1 text-base font-medium text-ink-gray-5 opacity-100 transition-all duration-300 ease-in-out"
-                    @click="toggle()"
-                  >
-                    <FeatherIcon
-                      name="chevron-right"
-                      class="h-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
-                      :class="{ 'rotate-90': opened }"
+          </template>
+
+          <!-- Browser Mode: Full CRM Navigation -->
+          <template v-else>
+            <div class="flex-1 overflow-y-auto">
+              <div class="mb-3 flex flex-col">
+                <SidebarLink
+                  id="notifications-btn"
+                  :label="__('Notifications')"
+                  :icon="NotificationsIcon"
+                  :to="{ name: 'Notifications' }"
+                  class="relative mx-2 my-0.5"
+                >
+                  <template #right>
+                    <Badge
+                      v-if="unreadNotificationsCount"
+                      :label="unreadNotificationsCount"
+                      variant="subtle"
                     />
-                    <span>{{ __(group.name) }}</span>
-                  </div>
-                </template>
-                <nav class="flex flex-col">
-                  <SidebarLink
-                    v-for="module in group.views"
-                    :key="module.sheet"
-                    :icon="module.icon"
-                    :label="__(module.label)"
-                    :href="module.pwaInstall ? '' : module.href"
-                    :beforeNavigate="module.pwaInstall ? () => { showPwaInstallModal = true; sidebarOpened.value = false } : null"
-                    class="mx-2 my-0.5"
-                  >
-                    <template #right>
-                      <Badge
-                        v-if="module.status !== 'available'"
-                        :label="module.status === 'partial' ? __('Partial') : __('Soon')"
-                        variant="subtle"
-                        theme="gray"
+                  </template>
+                </SidebarLink>
+              </div>
+              <div v-for="view in allViews" :key="view.label">
+                <CollapsibleSection
+                  :label="view.name"
+                  :hideLabel="view.hideLabel"
+                  :opened="view.opened"
+                >
+                  <template #header="{ opened, hide, toggle }">
+                    <div
+                      v-if="!hide"
+                      class="ml-2 mt-4 flex h-7 w-auto cursor-pointer gap-1.5 px-1 text-base font-medium text-ink-gray-5 opacity-100 transition-all duration-300 ease-in-out"
+                      @click="toggle()"
+                    >
+                      <FeatherIcon
+                        name="chevron-right"
+                        class="h-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
+                        :class="{ 'rotate-90': opened }"
                       />
-                    </template>
-                  </SidebarLink>
-                </nav>
-              </CollapsibleSection>
+                      <span>{{ __(view.name) }}</span>
+                    </div>
+                  </template>
+                  <nav class="flex flex-col">
+                    <SidebarLink
+                      v-for="link in view.views"
+                      :key="link.label"
+                      :icon="link.icon"
+                      :label="__(link.label)"
+                      :to="link.to"
+                      class="mx-2 my-0.5"
+                    />
+                  </nav>
+                </CollapsibleSection>
+              </div>
+              <div v-for="group in summonModuleGroups" :key="group.name">
+                <CollapsibleSection :label="group.name" :opened="group.opened">
+                  <template #header="{ opened, hide, toggle }">
+                    <div
+                      v-if="!hide"
+                      class="ml-2 mt-4 flex h-7 w-auto cursor-pointer gap-1.5 px-1 text-base font-medium text-ink-gray-5 opacity-100 transition-all duration-300 ease-in-out"
+                      @click="toggle()"
+                    >
+                      <FeatherIcon
+                        name="chevron-right"
+                        class="h-4 text-ink-gray-9 transition-all duration-300 ease-in-out"
+                        :class="{ 'rotate-90': opened }"
+                      />
+                      <span>{{ __(group.name) }}</span>
+                    </div>
+                  </template>
+                  <nav class="flex flex-col">
+                    <SidebarLink
+                      v-for="module in group.views"
+                      :key="module.sheet"
+                      :icon="module.icon"
+                      :label="__(module.label)"
+                      :href="module.pwaInstall ? '' : module.href"
+                      :beforeNavigate="module.pwaInstall ? () => { showPwaInstallModal = true; sidebarOpened.value = false } : null"
+                      class="mx-2 my-0.5"
+                    >
+                      <template #right>
+                        <Badge
+                          v-if="module.status !== 'available'"
+                          :label="module.status === 'partial' ? __('Partial') : __('Soon')"
+                          variant="subtle"
+                          theme="gray"
+                        />
+                      </template>
+                    </SidebarLink>
+                  </nav>
+                </CollapsibleSection>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </TransitionChild>
       <TransitionChild
@@ -129,6 +163,7 @@ import {
   Dialog,
   DialogOverlay,
 } from '@headlessui/vue'
+import { Badge, FeatherIcon } from 'frappe-ui'
 import CollapsibleSection from '@/components/CollapsibleSection.vue'
 import PinIcon from '@/components/Icons/PinIcon.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
@@ -142,14 +177,23 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
 import PwaInstallModal from '@/components/Modals/PwaInstallModal.vue'
+import { mobileFeatures } from '@/data/mobileFeatures'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import { summonModuleGroups } from '@/data/summonModules'
-import { computed, h, ref } from 'vue'
+import { computed, h, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { mobileSidebarOpened as sidebarOpened } from '@/composables/settings'
 
+const route = useRoute()
+const isMobileRoute = computed(() => route.path.startsWith('/mobile'))
 const showPwaInstallModal = ref(false)
+const isStandalone = ref(false)
 const { getPinnedViews, getPublicViews } = viewsStore()
+
+onMounted(() => {
+  isStandalone.value = window.matchMedia('(display-mode: standalone)').matches
+})
 
 const links = [
   {

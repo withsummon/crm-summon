@@ -238,6 +238,7 @@ const crmCoreLinks = [
     icon: LeadsIcon,
     to: 'Leads',
   },
+
   {
     label: 'Deals',
     icon: DealsIcon,
