@@ -268,6 +268,7 @@
                   <tr class="border-b border-gray-100 bg-gray-50">
                     <th class="px-5 py-2.5 text-left font-semibold text-gray-500">{{ __('Report Name') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Category') }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Visibility') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Schedule') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Last Run') }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold text-gray-500">{{ __('Format') }}</th>
@@ -292,6 +293,12 @@
                     <td class="px-4 py-3">
                       <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="categoryBadge(r.category)">{{ r.category }}</span>
                     </td>
+                    <td class="px-4 py-3">
+                      <select v-model="r.visibility" @click.stop class="text-[10px] border rounded-lg px-2 py-1 focus:outline-none font-semibold cursor-pointer"
+                        :class="r.visibility==='Public' ? 'border-green-300 text-green-700 bg-green-50' : r.visibility==='Private' ? 'border-red-200 text-red-600 bg-red-50' : 'border-[#B3DDEF] text-[#006699] bg-[#E6F4FA]'">
+                        <option>Public</option><option>Team</option><option>Private</option>
+                      </select>
+                    </td>
                     <td class="px-4 py-3 text-gray-500">{{ r.schedule || '-' }}</td>
                     <td class="px-4 py-3 text-gray-500">{{ r.lastRun }}</td>
                     <td class="px-4 py-3">
@@ -302,7 +309,7 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
                         <button @click.stop="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
-                        <button @click.stop="shareReport(r)" class="p-1.5 rounded-lg hover:bg-[#F0F8FC] text-gray-400 hover:text-[#006699] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
+                        <button @click.stop="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#F0F8FC] text-gray-400 hover:text-[#006699] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>
@@ -658,6 +665,112 @@
           </div>
         </div>
 
+        <!-- AUDIT LOG -->
+        <div v-else-if="activeNav==='auditlog'" class="flex-1 flex flex-col overflow-hidden">
+          <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800">{{ __('Report Activity Audit Log') }}</h3>
+            <span class="text-[11px] text-gray-400">{{ reportAuditLog.length }} events</span>
+            <button @click="doExport" class="ml-auto flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] transition-colors border border-[#006699] rounded-lg px-3 py-1.5">
+              <FeatherIcon name="download" class="h-3.5 w-3.5" />{{ __('Export CSV') }}
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-5 py-3 text-left font-semibold text-gray-500">{{ __('Timestamp') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('User') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Action') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Report') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Visibility') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Result') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="log in reportAuditLog" :key="log.id" class="border-b border-gray-50 hover:bg-gray-50">
+                    <td class="px-5 py-3 text-gray-500 font-mono text-[11px]">{{ log.ts }}</td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ log.user[0] }}</div>
+                        <span class="text-gray-700 font-medium">{{ log.user }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="auditActionClass(log.action)">{{ log.action }}</span>
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">{{ log.report }}</td>
+                    <td class="px-4 py-3">
+                      <span class="text-[10px] font-semibold" :class="log.visibility==='Public' ? 'text-green-600' : log.visibility==='Private' ? 'text-red-500' : 'text-[#006699]'">{{ log.visibility }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="log.result==='Success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ log.result }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Share Report Modal -->
+    <div v-if="shareTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="shareTarget = null">
+      <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
+            <FeatherIcon name="share-2" class="h-5 w-5 text-[#006699]" />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Share Report</h3>
+            <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[240px]">{{ shareTarget?.name }}</p>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Visibility</label>
+            <div class="flex gap-2">
+              <button v-for="v in ['Public','Team','Private']" :key="v" @click="shareTarget.visibility = v"
+                class="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
+                :class="shareTarget.visibility===v ? (v==='Public' ? 'bg-green-50 border-green-400 text-green-700' : v==='Private' ? 'bg-red-50 border-red-400 text-red-600' : 'bg-[#E6F4FA] border-[#006699] text-[#006699]') : 'border-gray-200 text-gray-500 hover:bg-gray-50'">
+                {{ v }}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Link Expiry</label>
+            <select v-model="shareLinkExpiry" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006699]">
+              <option>1 hour</option><option>24 hours</option><option>7 days</option><option>30 days</option><option>Never</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Share Link</label>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[11px] text-gray-500 font-mono truncate">
+                https://crm.summon.id/r/{{ shareTarget?.id }}-{{ (shareTarget?.name||'').toLowerCase().replace(/\s+/g,'-') }}?token=abc123
+              </div>
+              <button @click="copyShareLink" class="px-3 py-2 bg-[#E6F4FA] border border-[#006699] text-[#006699] rounded-lg text-xs font-semibold hover:bg-[#CCE6F5] transition-colors shrink-0">
+                {{ linkCopied ? '✓ Copied' : 'Copy' }}
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="shareAllowDownload" class="rounded" />
+              <span class="text-xs text-gray-600">Allow download</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="shareWatermark" class="rounded" />
+              <span class="text-xs text-gray-600">Add watermark</span>
+            </label>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-5">
+          <button @click="shareTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Close</button>
+          <button @click="confirmShare" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Save & Notify</button>
+        </div>
       </div>
     </div>
 
@@ -686,6 +799,7 @@ const navItems = [
   { id: 'regulatory', label: 'Regulatory Reports', icon: 'shield', badge: '3' },
   { id: 'executive', label: 'Executive Reports', icon: 'briefcase' },
   { id: 'adhoc', label: 'Ad-Hoc Query', icon: 'terminal' },
+  { id: 'auditlog', label: 'Audit Log', icon: 'activity' },
 ]
 
 // ── Period / Refresh ──
@@ -792,16 +906,16 @@ const favoriteReports = [
 ]
 
 const allReports = ref([
-  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]' },
-  { id: 2, name: 'Board Pack Dashboard', desc: 'Executive summary for board', category: 'Executive', schedule: 'Monthly', lastRun: '24 May 08:30', formats: ['PDF', 'PPT'], icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600' },
-  { id: 3, name: 'NPL Report MTD', desc: 'Non-performing loan monitoring', category: 'Portfolio', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel', 'PDF'], icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600' },
-  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]' },
-  { id: 5, name: 'Sales Pipeline Report', desc: 'Pipeline and conversion analytics', category: 'Sales', schedule: 'Weekly', lastRun: '23 May 16:00', formats: ['PDF', 'Excel'], icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600' },
-  { id: 6, name: 'BI LKPBU Report', desc: 'Laporan Keuangan Publikasi BU', category: 'Regulatory', schedule: 'Quarterly', lastRun: '30 Mar 2026', formats: ['XML', 'PDF'], icon: 'file-text', colorBg: 'bg-indigo-100', colorText: 'text-indigo-600' },
-  { id: 7, name: 'Credit Approval Analytics', desc: 'Approval rate & SLA tracking', category: 'Portfolio', schedule: 'Weekly', lastRun: '22 May 09:00', formats: ['Excel', 'PDF'], icon: 'check-circle', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600' },
-  { id: 8, name: 'Collection Officer Report', desc: 'Collection productivity & recovery', category: 'Operations', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel'], icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600' },
-  { id: 9, name: 'PPN & PPh Monthly', desc: 'Tax reconciliation report', category: 'Regulatory', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'CSV'], icon: 'percent', colorBg: 'bg-gray-100', colorText: 'text-gray-600' },
-  { id: 10, name: 'Vintage Analysis', desc: 'Portfolio vintage cohort analysis', category: 'Portfolio', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'PDF'], icon: 'layers', colorBg: 'bg-sky-100', colorText: 'text-sky-600' },
+  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]', visibility: 'Team' },
+  { id: 2, name: 'Board Pack Dashboard', desc: 'Executive summary for board', category: 'Executive', schedule: 'Monthly', lastRun: '24 May 08:30', formats: ['PDF', 'PPT'], icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', visibility: 'Private' },
+  { id: 3, name: 'NPL Report MTD', desc: 'Non-performing loan monitoring', category: 'Portfolio', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel', 'PDF'], icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600', visibility: 'Team' },
+  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', visibility: 'Public' },
+  { id: 5, name: 'Sales Pipeline Report', desc: 'Pipeline and conversion analytics', category: 'Sales', schedule: 'Weekly', lastRun: '23 May 16:00', formats: ['PDF', 'Excel'], icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600', visibility: 'Team' },
+  { id: 6, name: 'BI LKPBU Report', desc: 'Laporan Keuangan Publikasi BU', category: 'Regulatory', schedule: 'Quarterly', lastRun: '30 Mar 2026', formats: ['XML', 'PDF'], icon: 'file-text', colorBg: 'bg-indigo-100', colorText: 'text-indigo-600', visibility: 'Team' },
+  { id: 7, name: 'Credit Approval Analytics', desc: 'Approval rate & SLA tracking', category: 'Portfolio', schedule: 'Weekly', lastRun: '22 May 09:00', formats: ['Excel', 'PDF'], icon: 'check-circle', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600', visibility: 'Private' },
+  { id: 8, name: 'Collection Officer Report', desc: 'Collection productivity & recovery', category: 'Operations', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel'], icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', visibility: 'Team' },
+  { id: 9, name: 'PPN & PPh Monthly', desc: 'Tax reconciliation report', category: 'Regulatory', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'CSV'], icon: 'percent', colorBg: 'bg-gray-100', colorText: 'text-gray-600', visibility: 'Private' },
+  { id: 10, name: 'Vintage Analysis', desc: 'Portfolio vintage cohort analysis', category: 'Portfolio', schedule: 'Monthly', lastRun: '30 Apr 2026', formats: ['Excel', 'PDF'], icon: 'layers', colorBg: 'bg-sky-100', colorText: 'text-sky-600', visibility: 'Public' },
 ])
 
 const filteredReportsList = computed(() => {
@@ -953,10 +1067,64 @@ function runQuery() {
   }, 800)
 }
 
+// ── Share Modal ──
+const shareTarget = ref(null)
+const shareLinkExpiry = ref('7 days')
+const shareAllowDownload = ref(true)
+const shareWatermark = ref(false)
+const linkCopied = ref(false)
+
+function openShareModal(r) {
+  shareTarget.value = r
+  shareLinkExpiry.value = '7 days'
+  linkCopied.value = false
+  addAuditLog('View Share', r.name, r.visibility || 'Team')
+}
+function copyShareLink() {
+  linkCopied.value = true
+  addAuditLog('Copy Link', shareTarget.value?.name, shareTarget.value?.visibility)
+  setTimeout(() => { linkCopied.value = false }, 2000)
+}
+function confirmShare() {
+  addAuditLog('Share', shareTarget.value?.name, shareTarget.value?.visibility)
+  shareTarget.value = null
+  showToast('Report shared — recipients notified')
+}
+
+// ── Audit Log ──
+const reportAuditLog = ref([
+  { id: 1, ts: '2026-05-24 09:15', user: 'Dewi Kusuma', action: 'Download', report: 'OJK LPBB Monthly Report', visibility: 'Team', result: 'Success' },
+  { id: 2, ts: '2026-05-24 09:10', user: 'Ahmad Fauzi', action: 'Share', report: 'Board Pack Dashboard', visibility: 'Private', result: 'Success' },
+  { id: 3, ts: '2026-05-24 09:00', user: 'Sari Indrawati', action: 'View', report: 'NPL Report MTD', visibility: 'Team', result: 'Success' },
+  { id: 4, ts: '2026-05-23 18:30', user: 'Bimo Prakoso', action: 'Generate', report: 'Disbursement Summary', visibility: 'Public', result: 'Success' },
+  { id: 5, ts: '2026-05-23 17:00', user: 'Rina Putri', action: 'Download', report: 'Sales Pipeline Report', visibility: 'Team', result: 'Success' },
+  { id: 6, ts: '2026-05-23 16:00', user: 'Ahmad Fauzi', action: 'View', report: 'Vintage Analysis', visibility: 'Public', result: 'Success' },
+  { id: 7, ts: '2026-05-23 14:45', user: 'Dewi Kusuma', action: 'Share', report: 'NPL Report MTD', visibility: 'Team', result: 'Blocked' },
+  { id: 8, ts: '2026-05-23 11:00', user: 'Sari Indrawati', action: 'Generate', report: 'BI LKPBU Report', visibility: 'Team', result: 'Success' },
+])
+let auditIdSeq = 9
+
+function addAuditLog(action, report, visibility) {
+  const now = new Date()
+  const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+  reportAuditLog.value.unshift({ id: auditIdSeq++, ts, user: 'Current User', action, report: report || '—', visibility: visibility || '—', result: 'Success' })
+}
+
+function auditActionClass(action) {
+  const map = { Download: 'bg-[#FFF0E6] text-[#CC5200]', Share: 'bg-[#E6F4FA] text-[#006699]', View: 'bg-gray-100 text-gray-600', Generate: 'bg-green-100 text-green-700', 'Copy Link': 'bg-purple-100 text-purple-700', 'View Share': 'bg-[#E6F4FA] text-[#006699]' }
+  return map[action] || 'bg-gray-100 text-gray-600'
+}
+
 // ── Actions ──
-function openReport(r) { showToast(`Opening ${r.name}...`) }
-function downloadReport(r) { showToast(`Downloading ${r.name}...`) }
-function shareReport(r) { showToast(`Share link copied for ${r.name}`) }
+function openReport(r) {
+  addAuditLog('View', r.name, r.visibility)
+  showToast(`Opening ${r.name}...`)
+}
+function downloadReport(r) {
+  addAuditLog('Download', r.name, r.visibility)
+  showToast(`Downloading ${r.name}...`)
+}
+function shareReport(r) { openShareModal(r) }
 function doExport() { showToast('Export started — check your email when ready') }
 
 // ── Toast ──
