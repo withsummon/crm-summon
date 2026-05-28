@@ -5,7 +5,7 @@
         <div class="flex min-w-0 items-center gap-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #0ea5e9, #22c55e)"
+            style="background: linear-gradient(135deg, #FF6600, #006699)"
           >
             <FeatherIcon name="truck" class="h-4 w-4 text-white" />
           </div>
@@ -34,13 +34,13 @@
         v-for="tab in pageTabs"
         :key="tab.key"
         class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors"
-        :class="activeTab === tab.key ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-ink-gray-5 hover:text-ink-gray-8'"
+        :class="activeTab === tab.key ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5 hover:text-ink-gray-8'"
         @click="activeTab = tab.key"
       >
         {{ __(tab.label) }}
         <span
           v-if="tab.badge"
-          class="rounded-full bg-emerald-500 px-1.5 text-[10px] text-white"
+          class="rounded-full bg-[#FF6600] px-1.5 text-[10px] text-white"
         >{{ tab.badge }}</span>
       </button>
     </div>
@@ -70,7 +70,7 @@
         <div class="col-span-2 rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 flex items-center justify-between">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('SLA Health by Vendor Type') }}</div>
-            <Badge :label="slaOverviewLabel" variant="subtle" theme="green" />
+            <Badge :label="slaOverviewLabel" variant="subtle" theme="orange" />
           </div>
           <div class="space-y-3">
             <div v-for="row in slaOverview" :key="row.category" class="flex items-center gap-3 text-xs">
@@ -126,7 +126,7 @@
               class="flex items-center gap-3 rounded-lg border border-outline-gray-1 px-3 py-2"
             >
               <div class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
-                :class="idx === 0 ? 'bg-emerald-100 text-emerald-700' : idx === 1 ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700'"
+                :class="idx === 0 ? 'bg-[#FFE0CC] text-[#CC5200]' : idx === 1 ? 'bg-[#CCE5F5] text-[#004D73]' : 'bg-amber-100 text-amber-700'"
               >
                 {{ idx + 1 }}
               </div>
@@ -156,7 +156,7 @@
               <div class="min-w-0 flex-1">
                 <div class="text-ink-gray-8 font-semibold">{{ req.type }}</div>
                 <div class="text-[10px] text-ink-gray-4">{{ req.vendor }} · {{ req.requester }}</div>
-                <div class="mt-1 text-[10px]" :class="req.slaBreached ? 'text-red-600' : 'text-emerald-600'">
+                <div class="mt-1 text-[10px]" :class="req.slaBreached ? 'text-red-600' : 'text-[#FF6600]'">
                   SLA due {{ req.slaDue }}
                 </div>
               </div>
@@ -242,10 +242,10 @@
                 </td>
                 <td class="px-4 py-2.5 text-ink-gray-6">{{ vendor.category }}</td>
                 <td class="px-4 py-2.5">
-                  <Badge :label="vendor.tier" variant="subtle" theme="blue" />
+                  <Badge :label="vendor.tier" variant="subtle" theme="orange" />
                 </td>
                 <td class="px-4 py-2.5 text-right">
-                  <span class="font-semibold" :class="vendor.slaCompliance >= 95 ? 'text-emerald-600' : vendor.slaCompliance >= 90 ? 'text-amber-600' : 'text-red-600'">
+                  <span class="font-semibold" :class="vendor.slaCompliance >= 95 ? 'text-[#FF6600]' : vendor.slaCompliance >= 90 ? 'text-amber-600' : 'text-red-600'">
                     {{ vendor.slaCompliance }}%
                   </span>
                 </td>
@@ -279,7 +279,6 @@
               <div class="flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold text-white shadow-md" :class="stage.color">
                 {{ stage.count }}
               </div>
-              <div v-if="idx < onboardingStages.length - 1" class="absolute top-5 left-1/2 h-0.5 w-full" :class="stage.lineColor" />
             </div>
             <div class="mt-3 text-center">
               <div class="text-xs font-semibold text-ink-gray-8">{{ stage.label }}</div>
@@ -390,7 +389,7 @@
               <td class="py-2.5 text-ink-gray-8 font-semibold">{{ sla.vendor }}</td>
               <td class="py-2.5 text-ink-gray-5">{{ sla.response }}</td>
               <td class="py-2.5 text-ink-gray-5">{{ sla.resolution }}</td>
-              <td class="py-2.5 text-right font-semibold" :class="sla.compliance >= 95 ? 'text-emerald-600' : sla.compliance >= 90 ? 'text-amber-600' : 'text-red-600'">
+              <td class="py-2.5 text-right font-semibold" :class="sla.compliance >= 95 ? 'text-[#FF6600]' : sla.compliance >= 90 ? 'text-amber-600' : 'text-red-600'">
                 {{ sla.compliance }}%
               </td>
               <td class="py-2.5 text-ink-gray-5">{{ sla.lastBreach }}</td>
@@ -426,7 +425,7 @@
         <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 flex items-center justify-between">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('Invoice & Payment Tracking') }}</div>
-            <Badge :label="invoices.length + ' invoices'" variant="subtle" theme="blue" />
+            <Badge :label="invoices.length + ' invoices'" variant="subtle" theme="orange" />
           </div>
           <div class="space-y-2 text-xs">
             <div v-for="invoice in invoices" :key="invoice.id" class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2">
@@ -458,7 +457,7 @@
                 </div>
                 <div class="text-right">
                   <div class="text-xs font-semibold" :class="scoreColor(perf.score)">{{ perf.score }}</div>
-                  <div class="text-[10px]" :class="perf.trend >= 0 ? 'text-emerald-600' : 'text-red-500'">
+                  <div class="text-[10px]" :class="perf.trend >= 0 ? 'text-[#FF6600]' : 'text-red-500'">
                     {{ perf.trend >= 0 ? '+' : '' }}{{ perf.trend }} pts
                   </div>
                 </div>
@@ -556,7 +555,7 @@
               <div v-for="month in slaTrend" :key="month.label" class="flex items-center gap-2">
                 <span class="w-10 text-ink-gray-6">{{ month.label }}</span>
                 <div class="flex-1 h-2 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-2 rounded-full bg-emerald-500" :style="{ width: month.value + '%' }" />
+                  <div class="h-2 rounded-full bg-[#FF6600]" :style="{ width: month.value + '%' }" />
                 </div>
                 <span class="w-10 text-right font-medium">{{ month.value }}%</span>
               </div>
@@ -582,7 +581,7 @@
         <div class="grid grid-cols-3 gap-4 text-xs">
           <div class="rounded-lg border border-outline-gray-1 p-3">
             <div class="text-ink-gray-5">Active Accounts</div>
-            <div class="mt-1 text-2xl font-bold text-emerald-600">48</div>
+            <div class="mt-1 text-2xl font-bold text-[#FF6600]">48</div>
             <div class="text-[10px] text-ink-gray-4">+6 activated this month</div>
           </div>
           <div class="rounded-lg border border-outline-gray-1 p-3">
@@ -592,7 +591,7 @@
           </div>
           <div class="rounded-lg border border-outline-gray-1 p-3">
             <div class="text-ink-gray-5">Portal Usage</div>
-            <div class="mt-1 text-2xl font-bold text-sky-600">72%</div>
+            <div class="mt-1 text-2xl font-bold text-[#006699]">72%</div>
             <div class="text-[10px] text-ink-gray-4">SLA updates via portal</div>
           </div>
         </div>
@@ -615,7 +614,7 @@
               <div v-for="feature in portalUsage" :key="feature.name" class="flex items-center gap-2">
                 <span class="w-32 text-ink-gray-6">{{ feature.name }}</span>
                 <div class="flex-1 h-2 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-2 rounded-full bg-sky-500" :style="{ width: feature.pct + '%' }" />
+                  <div class="h-2 rounded-full bg-[#006699]" :style="{ width: feature.pct + '%' }" />
                 </div>
                 <span class="w-10 text-right font-medium">{{ feature.pct }}%</span>
               </div>
@@ -642,7 +641,7 @@
       <div class="grid grid-cols-3 gap-3 mb-4 text-xs">
         <div class="rounded-lg bg-surface-gray-1 p-3">
           <div class="text-ink-gray-4">SLA Compliance</div>
-          <div class="mt-1 text-lg font-bold" :class="selectedVendor.slaCompliance >= 95 ? 'text-emerald-600' : 'text-amber-600'">
+          <div class="mt-1 text-lg font-bold" :class="selectedVendor.slaCompliance >= 95 ? 'text-[#FF6600]' : 'text-amber-600'">
             {{ selectedVendor.slaCompliance }}%
           </div>
           <div class="text-ink-gray-4">Last breach: {{ selectedVendor.lastBreach }}</div>
@@ -915,14 +914,14 @@ const dashKpis = [
     value: '62',
     delta: '+4 new this quarter',
     icon: 'users',
-    iconColor: 'text-sky-500',
+    iconColor: 'text-[#006699]',
   },
   {
     label: 'Active Contracts',
     value: '47',
     delta: '8 renewals due',
     icon: 'file-text',
-    iconColor: 'text-emerald-500',
+    iconColor: 'text-[#FF6600]',
   },
   {
     label: 'SLA Compliance',
@@ -957,11 +956,11 @@ const dashKpis = [
 ]
 
 const slaOverview = [
-  { category: 'Appraiser', compliance: 96, breaches: 2, color: 'bg-emerald-500', textColor: 'text-emerald-600' },
+  { category: 'Appraiser', compliance: 96, breaches: 2, color: 'bg-[#FF6600]', textColor: 'text-[#FF6600]' },
   { category: 'Insurance Provider', compliance: 92, breaches: 5, color: 'bg-amber-500', textColor: 'text-amber-600' },
-  { category: 'Legal Counsel', compliance: 94, breaches: 3, color: 'bg-sky-500', textColor: 'text-sky-600' },
+  { category: 'Legal Counsel', compliance: 94, breaches: 3, color: 'bg-[#006699]', textColor: 'text-[#006699]' },
   { category: 'Technology Vendor', compliance: 89, breaches: 7, color: 'bg-orange-500', textColor: 'text-orange-600' },
-  { category: 'Referral Partner', compliance: 98, breaches: 1, color: 'bg-emerald-600', textColor: 'text-emerald-600' },
+  { category: 'Referral Partner', compliance: 98, breaches: 1, color: 'bg-[#CC5200]', textColor: 'text-[#FF6600]' },
 ]
 const slaOverviewLabel = '93% overall'
 
@@ -1219,11 +1218,11 @@ const filteredVendors = computed(() =>
 )
 
 const onboardingStages = [
-  { label: 'Pre-screen', count: 4, desc: 'Vendor intake & pre-qualify', color: 'bg-emerald-500', lineColor: 'bg-emerald-200' },
-  { label: 'Due Diligence', count: 6, desc: 'KYC, compliance, checks', color: 'bg-sky-500', lineColor: 'bg-sky-200' },
+  { label: 'Pre-screen', count: 4, desc: 'Vendor intake & pre-qualify', color: 'bg-[#FF6600]', lineColor: 'bg-[#FFD9B3]' },
+  { label: 'Due Diligence', count: 6, desc: 'KYC, compliance, checks', color: 'bg-[#006699]', lineColor: 'bg-[#B3D9F0]' },
   { label: 'Contracting', count: 3, desc: 'Negotiation & legal review', color: 'bg-amber-500', lineColor: 'bg-amber-200' },
   { label: 'Integration', count: 2, desc: 'Portal & workflow setup', color: 'bg-indigo-500', lineColor: 'bg-indigo-200' },
-  { label: 'Activated', count: 8, desc: 'Ready for engagement', color: 'bg-emerald-600', lineColor: 'bg-emerald-200' },
+  { label: 'Activated', count: 8, desc: 'Ready for engagement', color: 'bg-[#CC5200]', lineColor: 'bg-[#FFD9B3]' },
 ]
 
 const onboardingList = ref([
@@ -1291,8 +1290,8 @@ const auditTrail = [
 ]
 
 const spendByCategory = [
-  { name: 'Insurance', pct: 32, color: 'bg-sky-500' },
-  { name: 'Appraisal', pct: 24, color: 'bg-emerald-500' },
+  { name: 'Insurance', pct: 32, color: 'bg-[#006699]' },
+  { name: 'Appraisal', pct: 24, color: 'bg-[#FF6600]' },
   { name: 'Technology', pct: 28, color: 'bg-indigo-500' },
   { name: 'Legal', pct: 16, color: 'bg-amber-500' },
 ]
@@ -1476,7 +1475,7 @@ function createRequest() {
 }
 
 function scoreColor(score) {
-  if (score >= 90) return 'text-emerald-600'
+  if (score >= 90) return 'text-[#FF6600]'
   if (score >= 80) return 'text-amber-600'
   return 'text-red-600'
 }
