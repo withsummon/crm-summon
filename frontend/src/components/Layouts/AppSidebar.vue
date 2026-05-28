@@ -39,9 +39,10 @@
               :key="link.label"
               :icon="link.icon"
               :label="__(link.label)"
-              :to="link.to"
-              :href="link.href"
+              :to="link.pwaInstall ? null : link.to"
+              :href="link.pwaInstall ? '' : link.href"
               :isCollapsed="isSidebarCollapsed"
+              :beforeNavigate="link.pwaInstall ? () => showPwaInstallModal = true : null"
               class="mx-2 my-[1.5px]"
             >
               <template #right>
@@ -164,6 +165,7 @@
       :logo="CRMLogo"
       docsLink="/crm"
     />
+    <PwaInstallModal v-model="showPwaInstallModal" />
   </div>
 </template>
 
@@ -188,6 +190,7 @@ import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import HelpIcon from '@/components/Icons/HelpIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
+import PwaInstallModal from '@/components/Modals/PwaInstallModal.vue'
 import { viewsStore } from '@/stores/views'
 import { summonModules } from '@/data/summonModules'
 import { unreadNotificationsCount } from '@/stores/notifications'
@@ -212,18 +215,18 @@ const { capture } = useTelemetry()
 const { clearDemoData, isDemoDataCreated } = useDemoData()
 
 const isSidebarCollapsed = useStorage('isSidebarCollapsed', false)
+const showPwaInstallModal = ref(false)
 
 const isFCSite = ref(window.is_fc_site)
 const isDemoSite = ref(window.is_demo_site)
 
 // ─── Parent Route Groups ─────────────────────────────────
-// Each parent route group has its own dashboard + sub-items
 
 const crmCoreLinks = [
   {
     label: 'Dashboard',
     icon: LucideLayoutDashboard,
-    to: 'Executive Dashboard',
+    to: 'CRM Core Dashboard',
   },
   {
     label: 'Customer 360',
@@ -278,22 +281,16 @@ const crmCoreLinks = [
 ]
 
 // Build module groups for non-CRM-Core parent routes
-function buildModuleGroupLinks(groupName, dashboardRouteName) {
-  const dashboardLink = {
-    label: 'Dashboard',
-    icon: LucideLayoutDashboard,
-    to: dashboardRouteName,
-  }
-  const moduleLinks = summonModules
+function buildModuleGroupLinks(groupName) {
+  return summonModules
     .filter((m) => m.group === groupName)
     .map((m) => ({
       label: m.label,
       icon: m.icon,
-      // Use internal route name when available, otherwise fall back to href
       ...(m.routeName ? { to: m.routeName } : { href: m.href }),
       status: m.status,
+      pwaInstall: m.label === 'Mobile RM Workspace',
     }))
-  return [dashboardLink, ...moduleLinks]
 }
 
 const parentRouteGroups = computed(() => [
@@ -305,22 +302,22 @@ const parentRouteGroups = computed(() => [
   {
     name: 'Lending & Risk',
     opened: false,
-    views: buildModuleGroupLinks('Lending & Risk', 'Lending Dashboard'),
+    views: buildModuleGroupLinks('Lending & Risk'),
   },
   {
     name: 'Operations',
     opened: false,
-    views: buildModuleGroupLinks('Operations', 'Operations Dashboard'),
+    views: buildModuleGroupLinks('Operations'),
   },
   {
     name: 'Admin & Platform',
     opened: false,
-    views: buildModuleGroupLinks('Admin & Platform', 'Admin Dashboard'),
+    views: buildModuleGroupLinks('Admin & Platform'),
   },
   {
     name: 'Channels & Portal',
     opened: false,
-    views: buildModuleGroupLinks('Channels & Portal', 'Channels Dashboard'),
+    views: buildModuleGroupLinks('Channels & Portal'),
   },
 ])
 
@@ -383,7 +380,7 @@ function getIcon(routeName, icon) {
 
 // onboarding - disabled, always mark as completed
 const { users, isManager } = usersStore()
-const { setUp, isOnboardingStepsCompleted } = useOnboarding('frappecrm')
+const { isOnboardingStepsCompleted, setUp } = useOnboarding('frappecrm')
 
 onMounted(async () => {
   await users.promise

@@ -5,11 +5,11 @@
     </template>
     <template #right-header>
       <CustomActions
-        v-if="leadsListView?.customListActions"
+        v-if="leadsListView?.customListActions && !isMobile"
         :actions="leadsListView.customListActions"
       />
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Reassign')"
         @click="openReassignDialog"
@@ -17,7 +17,7 @@
         <template #prefix><FeatherIcon name="user-check" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Close')"
         @click="openCloseDialog"
@@ -25,7 +25,7 @@
         <template #prefix><FeatherIcon name="x-circle" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         theme="red"
         :label="__('Delete')"
@@ -34,7 +34,7 @@
         <template #prefix><FeatherIcon name="trash-2" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="hasSelection"
+        v-if="hasSelection && !isMobile"
         variant="outline"
         :label="__('Tag')"
         @click="openTagDialog"
@@ -42,7 +42,7 @@
         <template #prefix><FeatherIcon name="tag" class="h-4 w-4" /></template>
       </Button>
       <Button
-        v-if="selections.length === 2"
+        v-if="selections.length === 2 && !isMobile"
         variant="outline"
         :label="__('Merge')"
         @click="openMergeDialog"
@@ -50,6 +50,7 @@
         <template #prefix><FeatherIcon name="git-merge" class="h-4 w-4" /></template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Export')"
         @click="exportFilteredLeads"
@@ -59,6 +60,7 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="solid"
         :loading="isScraping"
         :label="__('Run Lead Gen')"
@@ -69,6 +71,7 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Import Excel')"
         @click="showImportDialog = true"
@@ -78,8 +81,27 @@
         </template>
       </Button>
       <Button
+        v-if="!isMobile"
+        variant="outline"
+        :label="__('Lead Intake')"
+        @click="showLeadIntakeDialog = true"
+      >
+        <template #prefix>
+          <FeatherIcon name="inbox" class="h-4 w-4" />
+        </template>
+      </Button>
+      
+      <!-- Mobile dropdown for actions -->
+      <Dropdown
+        v-if="isMobile"
+        :options="mobileActions"
+      >
+        <Button variant="outline" icon="more-horizontal" />
+      </Dropdown>
+
+      <Button
         variant="solid"
-        :label="__('Create')"
+        :label="isMobile ? '' : __('Create')"
         iconLeft="plus"
         @click="showLeadModal = true"
       />
@@ -395,6 +417,7 @@
     :options="{
       showTooltip: false,
       resizeColumn: true,
+      selectable: true,
       rowCount: leads.data.row_count,
       totalCount: leads.data.total_count,
     }"
@@ -404,9 +427,7 @@
     @applyFilter="(data) => viewControls.applyFilter(data)"
     @applyLikeFilter="(data) => viewControls.applyLikeFilter(data)"
     @likeDoc="(data) => viewControls.likeDoc(data)"
-    @selectionsChanged="
-      (s) => { viewControls.updateSelections(s); selections.value = (s || []).map((r) => r.name) }
-    "
+    @selectionsChanged="updateSelections"
     @previewLead="onPreviewLead"
     @openScoring="onOpenScoring"
   />
@@ -432,30 +453,52 @@
     :processedCount="scrapingProcessed"
   />
   <Dialog
-    v-model="showCaptureDialog"
+    v-model="showLeadIntakeDialog"
     :options="{
-      title: __('Capture UAT Lead'),
+      title: __('Lead Intake'),
       size: 'md',
       actions: [
         {
           label: __('Create Lead'),
           variant: 'solid',
-          loading: captureLoading,
-          onClick: captureUatLead,
+          loading: intakeLoading,
+          onClick: captureLeadFromIntake,
         },
       ],
     }"
   >
     <template #body-content>
-      <div class="grid gap-3 py-3 sm:grid-cols-2">
-        <FormControl v-model="captureDraft.lead_name" :label="__('Full Name')" />
-        <FormControl v-model="captureDraft.organization" :label="__('Organization')" />
-        <FormControl v-model="captureDraft.email" :label="__('Email')" />
-        <FormControl v-model="captureDraft.mobile_no" :label="__('Mobile No.')" />
-        <FormControl v-model="captureDraft.source" :label="__('Source')" />
-        <FormControl v-model="captureDraft.campaign" :label="__('Campaign')" />
-        <FormControl v-model="captureDraft.referrer" :label="__('Referrer')" />
-        <FormControl v-model="captureDraft.npwp" :label="__('NPWP')" />
+      <div class="space-y-4 py-3">
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-ink-gray-5">
+            {{ __('Intake Channel') }}
+          </label>
+          <select
+            v-model="intakeDraft.channel"
+            class="w-full rounded border border-outline-gray-2 px-3 py-2 text-sm"
+            @change="syncIntakeSource"
+          >
+            <option v-for="channel in intakeChannels" :key="channel.value" :value="channel.value">
+              {{ channel.label }}
+            </option>
+          </select>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <FormControl v-model="intakeDraft.lead_name" :label="__('Full Name')" />
+          <FormControl v-model="intakeDraft.organization" :label="__('Organization')" />
+          <FormControl v-model="intakeDraft.email" :label="__('Email')" />
+          <FormControl v-model="intakeDraft.mobile_no" :label="__('Mobile No.')" />
+          <FormControl v-model="intakeDraft.source" :label="__('Lead Source')" />
+          <FormControl v-model="intakeDraft.campaign" :label="__('Campaign')" />
+          <FormControl v-model="intakeDraft.referrer_type" :label="__('Referrer Type')" />
+          <FormControl v-model="intakeDraft.referrer" :label="__('Referrer')" />
+          <FormControl v-model="intakeDraft.referral_fee" :label="__('Referral Fee')" type="number" />
+          <FormControl v-model="intakeDraft.npwp" :label="__('NPWP / Tax ID')" />
+          <FormControl v-model="intakeDraft.utm_source" :label="__('UTM Source')" />
+          <FormControl v-model="intakeDraft.utm_medium" :label="__('UTM Medium')" />
+          <FormControl v-model="intakeDraft.utm_campaign" :label="__('UTM Campaign')" />
+          <FormControl v-model="intakeDraft.utm_content" :label="__('UTM Content')" />
+        </div>
       </div>
     </template>
   </Dialog>
@@ -509,9 +552,9 @@
         </div>
       </div>
     </template>
-    <template #actions="{ close }">
-      <Button variant="ghost" label="Cancel" @click="close" />
-      <Button variant="solid" :disabled="!canReassign" @click="submitReassign().then(close)">{{ __('Reassign') }}</Button>
+    <template #actions>
+      <Button variant="ghost" label="Cancel" @click="reassignDialog.open = false" />
+      <Button variant="solid" :disabled="!canReassign" @click="submitReassign().then(() => (reassignDialog.open = false))">{{ __('Reassign') }}</Button>
     </template>
   </Dialog>
 
@@ -530,9 +573,9 @@
         </div>
       </div>
     </template>
-    <template #actions="{ close }">
-      <Button variant="ghost" label="Cancel" @click="close" />
-      <Button variant="solid" :disabled="!canTag" @click="submitTag().then(close)">{{ __('Tag') }}</Button>
+    <template #actions>
+      <Button variant="ghost" label="Cancel" @click="tagDialog.open = false" />
+      <Button variant="solid" :disabled="!canTag" @click="submitTag().then(() => (tagDialog.open = false))">{{ __('Tag') }}</Button>
     </template>
   </Dialog>
 
@@ -550,9 +593,9 @@
         </div>
       </div>
     </template>
-    <template #actions="{ close }">
-      <Button variant="ghost" label="Cancel" @click="close" />
-      <Button variant="solid" @click="confirmExport().then(close)">{{ __('Export') }}</Button>
+    <template #actions>
+      <Button variant="ghost" label="Cancel" @click="exportDialog.open = false" />
+      <Button variant="solid" @click="confirmExport().then(() => (exportDialog.open = false))">{{ __('Export') }}</Button>
     </template>
   </Dialog>
 
@@ -582,9 +625,9 @@
         </div>
       </div>
     </template>
-    <template #actions="{ close }">
-      <Button variant="ghost" label="Cancel" @click="close" />
-      <Button variant="solid" :disabled="!closeDialog.reason.trim()" @click="submitClose().then(close)">{{ __('Close Leads') }}</Button>
+    <template #actions>
+      <Button variant="ghost" label="Cancel" @click="closeDialog.open = false" />
+      <Button variant="solid" :disabled="!closeDialog.reason.trim()" @click="submitClose().then(() => (closeDialog.open = false))">{{ __('Close Leads') }}</Button>
     </template>
   </Dialog>
 
@@ -606,9 +649,9 @@
         </div>
       </div>
     </template>
-    <template #actions="{ close }">
-      <Button variant="ghost" label="Cancel" @click="close" />
-      <Button variant="solid" :disabled="!mergeDialog.primary" @click="submitMerge().then(close)">{{ __('Merge') }}</Button>
+    <template #actions>
+      <Button variant="ghost" label="Cancel" @click="mergeDialog.open = false" />
+      <Button variant="solid" :disabled="!mergeDialog.primary" @click="submitMerge().then(() => (mergeDialog.open = false))">{{ __('Merge') }}</Button>
     </template>
   </Dialog>
 </template>
@@ -679,18 +722,36 @@ const leadsListView = ref(null)
 const showLeadModal = ref(false)
 const showImportDialog = ref(false)
 const showPromptDialog = ref(false)
-const showCaptureDialog = ref(false)
-const captureLoading = ref(false)
+const showLeadIntakeDialog = ref(false)
+const intakeLoading = ref(false)
 const promptText = ref('')
-const captureDraft = reactive({
+const intakeChannels = [
+  { value: 'Web Form', label: __('Web Form') },
+  { value: 'WhatsApp', label: 'WhatsApp' },
+  { value: 'Email', label: 'Email' },
+  { value: 'Walk-in', label: __('Walk-in') },
+  { value: 'Referral', label: __('Referral') },
+  { value: 'Campaign', label: __('Campaign') },
+  { value: 'Widget', label: __('Web Widget') },
+  { value: 'Mobile', label: __('Mobile App') },
+  { value: 'OCR', label: __('ID OCR') },
+]
+const intakeDraft = reactive({
+  channel: 'Web Form',
   lead_name: '',
   organization: '',
   email: '',
   mobile_no: '',
   source: 'Web Form',
   campaign: '',
+  referrer_type: '',
   referrer: '',
+  referral_fee: '',
   npwp: '',
+  utm_source: '',
+  utm_medium: '',
+  utm_campaign: '',
+  utm_content: '',
 })
 
 const selections = ref([])
@@ -821,9 +882,39 @@ const handleFocus = () => {
   onLeadsImported()
 }
 
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+const mobileActions = computed(() => {
+  const actions = []
+  
+  actions.push({
+    label: __('Lead Intake'),
+    onClick: () => { showLeadIntakeDialog.value = true }
+  })
+  actions.push({
+    label: __('Import Excel'),
+    onClick: () => { showImportDialog.value = true }
+  })
+  actions.push({
+    label: __('Run Lead Gen'),
+    onClick: () => { showPromptDialog.value = true }
+  })
+  actions.push({
+    label: __('Export'),
+    onClick: () => { exportFilteredLeads() }
+  })
+  
+  return actions
+})
+
 
 onMounted(async () => {
   window.addEventListener('focus', handleFocus)
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   try {
     users.value = await call('frappe.client.get_list', {
       doctype: 'User',
@@ -838,6 +929,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('focus', handleFocus)
+  window.removeEventListener('resize', checkMobile)
 })
 
 onActivated(() => {
@@ -854,6 +946,11 @@ const triggerResize = ref(false)
 const updatedPageCount = ref(20)
 const viewControls = ref(null)
 
+function updateSelections(selectedRows = []) {
+  viewControls.value?.updateSelections?.(selectedRows)
+  selections.value = (selectedRows || []).map((row) => row.name).filter(Boolean)
+}
+
 
 
 function onLeadsImported() {
@@ -863,26 +960,47 @@ function onLeadsImported() {
   }
 }
 
-async function captureUatLead(close) {
-  captureLoading.value = true
+function resetIntakeDraft() {
+  Object.assign(intakeDraft, {
+    channel: 'Web Form',
+    lead_name: '',
+    organization: '',
+    email: '',
+    mobile_no: '',
+    source: 'Web Form',
+    campaign: '',
+    referrer_type: '',
+    referrer: '',
+    referral_fee: '',
+    npwp: '',
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_content: '',
+  })
+}
+
+function syncIntakeSource() {
+  intakeDraft.source = intakeDraft.channel
+  if (intakeDraft.channel === 'Referral' && !intakeDraft.referrer_type) {
+    intakeDraft.referrer_type = 'Customer'
+  }
+  if (intakeDraft.channel === 'Campaign' && !intakeDraft.campaign) {
+    intakeDraft.campaign = intakeDraft.utm_campaign || 'Campaign Intake'
+  }
+}
+
+async function captureLeadFromIntake(close) {
+  intakeLoading.value = true
   try {
     const result = await call('crm.api.lead_management.capture_lead', {
-      data: captureDraft,
-      channel: captureDraft.source || 'Web Form',
+      data: intakeDraft,
+      channel: intakeDraft.channel || intakeDraft.source || 'Web Form',
     })
     if (result.created) {
       toast.success(__('Lead created'))
-      Object.assign(captureDraft, {
-        lead_name: '',
-        organization: '',
-        email: '',
-        mobile_no: '',
-        source: 'Web Form',
-        campaign: '',
-        referrer: '',
-        npwp: '',
-      })
-      showCaptureDialog.value = false
+      resetIntakeDraft()
+      showLeadIntakeDialog.value = false
       close?.()
       onLeadsImported()
       router.push({ name: 'Lead', params: { leadId: result.lead } })
@@ -890,7 +1008,7 @@ async function captureUatLead(close) {
       toast.error(__('Duplicate lead found. Review duplicate candidates before creating.'))
     }
   } finally {
-    captureLoading.value = false
+    intakeLoading.value = false
   }
 }
 
@@ -944,7 +1062,7 @@ async function submitReassign() {
     })
     toast.success(__('Leads reassigned'))
     onLeadsImported()
-    selections.value = []
+    updateSelections([])
   } catch (e) {
     toast.error(e?.message || __('Reassign failed'))
   }
@@ -967,7 +1085,7 @@ async function submitTag() {
     })
     toast.success(__('Tags applied'))
     onLeadsImported()
-    selections.value = []
+    updateSelections([])
   } catch (e) {
     toast.error(e?.message || __('Tagging failed'))
   }
@@ -1019,13 +1137,14 @@ async function submitClose() {
     }
     toast.success(__('Leads closed'))
     onLeadsImported()
-    selections.value = []
+    updateSelections([])
   } catch (e) {
     toast.error(e?.message || __('Close failed'))
   }
 }
 
 async function deleteSelectedLeads() {
+  if (!selections.value.length) return
   if (!confirm(__('Are you sure you want to delete the selected leads?'))) return
   try {
     for (const name of selections.value) {
@@ -1033,7 +1152,7 @@ async function deleteSelectedLeads() {
     }
     toast.success(__('Leads deleted'))
     onLeadsImported()
-    selections.value = []
+    updateSelections([])
   } catch (e) {
     toast.error(e?.message || __('Delete failed'))
   }
@@ -1053,7 +1172,7 @@ async function submitMerge() {
     await call('crm.api.lead_management.merge_leads', { primary, duplicate })
     toast.success(__('Leads merged'))
     onLeadsImported()
-    selections.value = []
+    updateSelections([])
   } catch (e) {
     toast.error(e?.message || __('Merge failed'))
   }

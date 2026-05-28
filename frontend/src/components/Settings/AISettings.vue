@@ -91,15 +91,23 @@
           />
         </div>
 
-        <!-- Current effective model display -->
+        <!-- Model info card -->
         <div class="rounded-lg border border-teal-100 bg-teal-50 px-4 py-3 text-xs text-teal-800 max-w-sm">
           <div class="font-semibold mb-1">{{ __('Currently active') }}</div>
           <div>{{ __('Provider') }}: <span class="font-mono">{{ localProvider }}</span></div>
           <div>{{ __('Model') }}: <span class="font-mono">{{ effectiveModel }}</span></div>
+          <div v-if="modelInfo" class="mt-1.5 border-t border-teal-200 pt-1.5">
+            <div class="flex gap-2">{{ __('Context') }}: <span class="font-mono">{{ modelInfo.context }}</span></div>
+          </div>
+        </div>
+
+        <!-- Validation errors -->
+        <div v-if="validationError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700 max-w-sm">
+          {{ validationError }}
         </div>
 
         <div class="pt-2">
-          <Button @click="save" :loading="saving">
+          <Button @click="save" :loading="saving" :disabled="!!validationError">
             {{ __('Save Settings') }}
           </Button>
         </div>
@@ -180,12 +188,49 @@ watch(() => settings.doc, (doc) => {
   }
 }, { immediate: true })
 
+const MODEL_INFO = {
+  'kimi-k2.6': { context: '128K' },
+  'moonshot-v1-8k': { context: '8K' },
+  'moonshot-v1-32k': { context: '32K' },
+  'moonshot-v1-128k': { context: '128K' },
+  'gpt-4o': { context: '128K' },
+  'gpt-4o-mini': { context: '128K' },
+  'gpt-4-turbo': { context: '128K' },
+  'o1-mini': { context: '128K' },
+  'claude-3-5-sonnet-20241022': { context: '200K' },
+  'claude-3-5-haiku-20241022': { context: '200K' },
+  'claude-3-opus-20240229': { context: '200K' },
+  'gemini-2.0-flash': { context: '1M' },
+  'gemini-1.5-pro': { context: '2M' },
+  'gemini-1.5-flash': { context: '1M' },
+}
+
+const validationError = ref('')
+
 const providerModels = computed(() => PROVIDER_MODELS[localProvider.value] || [])
 
 const effectiveModel = computed(() => {
   if (localModel.value === '__custom__') return localCustomModel.value || '(not set)'
   return localModel.value || providerModels.value[0]?.value || '(not set)'
 })
+
+const modelInfo = computed(() => MODEL_INFO[effectiveModel.value] || null)
+
+function validateModel() {
+  const model = localModel.value === '__custom__' ? localCustomModel.value : localModel.value
+  if (!model || !model.trim()) {
+    validationError.value = __('Model name cannot be empty.')
+    return false
+  }
+  if (model !== model.trim()) {
+    validationError.value = __('Model name contains leading or trailing whitespace.')
+    return false
+  }
+  validationError.value = ''
+  return true
+}
+
+watch(effectiveModel, () => validateModel())
 
 const apiKeyPlaceholder = computed(() => {
   switch (localProvider.value) {
@@ -208,6 +253,10 @@ watch(localProvider, (newProvider) => {
 })
 
 async function save() {
+  if (!validateModel()) {
+    toast.error(validationError.value)
+    return
+  }
   const effectiveModelVal = localModel.value === '__custom__' ? localCustomModel.value : localModel.value
 
   saving.value = true

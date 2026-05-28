@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "flow",
+  "version",
+  "status",
+  "column_break_pub",
+  "published_by",
+  "published_at",
+  "section_break_note",
+  "change_note",
+  "section_break_flow_json",
+  "flow_json"
+ ],
+ "fields": [
+  {"default": "CRM-WFV-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-WFV-.YYYY.-"},
+  {"fieldname": "flow", "fieldtype": "Link", "in_list_view": 1, "in_standard_filter": 1, "label": "Parent Flow", "options": "CRM Workflow", "reqd": 1},
+  {"fieldname": "version", "fieldtype": "Int", "in_list_view": 1, "label": "Version", "reqd": 1},
+  {"default": "Published", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Published\nArchived"},
+  {"fieldname": "column_break_pub", "fieldtype": "Column Break"},
+  {"fieldname": "published_by", "fieldtype": "Link", "label": "Published By", "options": "User"},
+  {"fieldname": "published_at", "fieldtype": "Datetime", "label": "Published At"},
+  {"fieldname": "section_break_note", "fieldtype": "Section Break"},
+  {"fieldname": "change_note", "fieldtype": "Small Text", "label": "Change Note"},
+  {"fieldname": "section_break_flow_json", "fieldtype": "Section Break"},
+  {"fieldname": "flow_json", "fieldtype": "Long Text", "label": "Flow JSON"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Workflow Version",
+ "naming_rule": "By naming series",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "email": 1, "export": 1, "print": 1, "read": 1, "report": 1, "role": "Sales Manager", "share": 1, "write": 1},
+  {"create": 0, "delete": 0, "email": 0, "export": 0, "print": 0, "read": 1, "report": 0, "role": "Sales User", "share": 0, "write": 0}
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "flow",
+ "track_changes": 1
+}

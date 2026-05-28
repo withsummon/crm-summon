@@ -1,7 +1,7 @@
 <template>
   <div class="portfolio-monitoring min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
     <!-- Header -->
-    <header class="border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <header class="border-b border-slate-200 bg-white px-6 py-4 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-30 shadow-sm gap-4">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center">
           <FeatherIcon name="pie-chart" class="w-5 h-5 text-teal-400" />
@@ -15,7 +15,7 @@
         </div>
       </div>
 
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-4 flex-wrap gap-3">
         <div class="flex bg-slate-100 rounded-lg p-0.5 border border-slate-200">
           <button 
             v-for="p in ['MTD', 'YTD', '12M', 'Custom']" 
@@ -486,29 +486,31 @@
             <div v-if="!(matrixData?.rows?.length)" class="p-8 text-center text-slate-500 text-sm">
               Loading concentration matrix...
             </div>
-            <div v-else class="grid grid-cols-5 gap-3">
-              <div class="col-span-1"></div>
-              <div v-for="prov in (matrixData?.regions || [])" :key="prov" class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest py-2">
-                {{ prov }}
-              </div>
+            <div v-else class="overflow-x-auto">
+              <div class="grid grid-cols-5 gap-3 min-w-[720px] pb-2">
+                <div class="col-span-1"></div>
+                <div v-for="prov in (matrixData?.regions || [])" :key="prov" class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest py-2">
+                  {{ prov }}
+                </div>
 
-              <template v-for="row in (matrixData?.rows || [])" :key="row.industry">
-                <div class="col-span-1 font-bold text-xs text-slate-600 flex items-center pr-3 border-r border-slate-200">
-                  {{ row.industry }}
-                </div>
-                <div 
-                  v-for="cell in row.cells" 
-                  :key="cell.region"
-                  @click="selectedMatrixCell = { industry: row.industry, region: cell.region, details: cell.details }"
-                  :class="[
-                    'rounded-lg p-4 cursor-pointer text-center transition-all hover:scale-105',
-                    cell.intensity === 'high' ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' : cell.intensity === 'medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30' : 'bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20'
-                  ]"
-                >
-                  <strong class="text-sm block">{{ cell.os }}</strong>
-                  <span class="text-[9px] font-semibold uppercase tracking-wider block opacity-70">{{ cell.accounts }} Accs</span>
-                </div>
-              </template>
+                <template v-for="row in (matrixData?.rows || [])" :key="row.industry">
+                  <div class="col-span-1 font-bold text-xs text-slate-600 flex items-center pr-3 border-r border-slate-200">
+                    {{ row.industry }}
+                  </div>
+                  <div 
+                    v-for="cell in row.cells" 
+                    :key="cell.region"
+                    @click="selectedMatrixCell = { industry: row.industry, region: cell.region, details: cell.details }"
+                    :class="[
+                      'rounded-lg p-4 cursor-pointer text-center transition-all hover:scale-105',
+                      cell.intensity === 'high' ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' : cell.intensity === 'medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30' : 'bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20'
+                    ]"
+                  >
+                    <strong class="text-sm block">{{ cell.os }}</strong>
+                    <span class="text-[9px] font-semibold uppercase tracking-wider block opacity-70">{{ cell.accounts }} Accs</span>
+                  </div>
+                </template>
+              </div>
             </div>
 
             <div v-if="selectedMatrixCell" class="bg-slate-50 rounded-xl p-5 border border-teal-500/30 mt-6 space-y-4">

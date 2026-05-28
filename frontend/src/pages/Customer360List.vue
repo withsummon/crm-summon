@@ -33,7 +33,8 @@
         <div class="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
           {{ __('Customer Directory') }}
         </div>
-        <div class="overflow-x-auto">
+        <!-- Desktop Table view -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full min-w-[980px] text-sm">
             <thead>
               <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -95,6 +96,40 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Card List view -->
+        <div class="block md:hidden divide-y divide-slate-100">
+          <div
+            v-for="row in rows"
+            :key="row.name"
+            class="p-4 active:bg-slate-50 transition cursor-pointer"
+            @click="openCustomer(row)"
+          >
+            <div class="flex justify-between items-start mb-2.5">
+              <div class="font-mono text-xs font-bold text-slate-500">{{ row.name }}</div>
+              <Badge :label="row.kyc_status || 'Pending'" :theme="row.kyc_status === 'Verified' ? 'green' : 'orange'" variant="subtle" size="sm" />
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-xs font-black text-teal-700">
+                {{ initials(row.customer_name || row.name) }}
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-sm text-slate-800 truncate">{{ row.customer_name || row.name }}</div>
+                <div class="text-xs text-slate-500">{{ row.customer_type || __('Customer') }} • {{ row.customer_group || row.territory || '-' }}</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-center text-xs pt-2 mt-2 border-t border-slate-100">
+              <div class="font-mono font-bold text-teal-700 text-sm">{{ formatCurrency(row.total_outstanding) }}</div>
+              <div class="text-slate-400 font-semibold">{{ row.risk_grade || __('Unrated') }} ({{ __('Score') }} {{ row.score || 0 }})</div>
+            </div>
+          </div>
+          <div v-if="!customers.loading && rows.length === 0" class="p-8 text-center text-sm text-slate-400">
+            {{ __('No customers found') }}
+          </div>
+          <div v-if="customers.loading" class="p-8 text-center text-sm text-slate-400">
+            {{ __('Loading customer list...') }}
+          </div>
         </div>
       </div>
     </div>

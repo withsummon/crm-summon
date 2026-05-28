@@ -100,8 +100,54 @@ class CRMLead(Document):
 			self.log_assignment_change(assignment_type="Initial", reason="Initial lead owner")
 		self.update_uat_score()
 
+		# Auto-initiate visual workflow flow execution on creation
+		from crm.utils.workflow_engine import start_flow_execution
+		try:
+			start_flow_execution(self.name)
+		except Exception:
+			pass
+
 	def on_update(self):
 		self.update_uat_score()
+
+	def on_trash(self):
+		# Clear reference in CRM Lead Intake Log
+		if frappe.db.table_exists("CRM Lead Intake Log"):
+			frappe.db.set_value("CRM Lead Intake Log", {"lead": self.name}, "lead", None, update_modified=False)
+
+		# Delete related CRM Lead Tag Link records
+		if frappe.db.table_exists("CRM Lead Tag Link"):
+			frappe.db.delete("CRM Lead Tag Link", {"lead": self.name})
+
+		# Delete related CRM Lead Assignment Log records
+		if frappe.db.table_exists("CRM Lead Assignment Log"):
+			frappe.db.delete("CRM Lead Assignment Log", {"lead": self.name})
+
+		# Delete related CRM Lead Duplicate Candidate records
+		if frappe.db.table_exists("CRM Lead Duplicate Candidate"):
+			frappe.db.delete("CRM Lead Duplicate Candidate", {"lead": self.name})
+			frappe.db.delete("CRM Lead Duplicate Candidate", {"duplicate_lead": self.name})
+
+		# Delete related CRM AI RAG Chunk records
+		if frappe.db.table_exists("CRM AI RAG Chunk"):
+			frappe.db.delete("CRM AI RAG Chunk", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related CRM Notification records
+		if frappe.db.table_exists("CRM Notification"):
+			frappe.db.delete("CRM Notification", {"reference_doctype": self.doctype, "reference_name": self.name})
+			frappe.db.delete("CRM Notification", {"notification_type_doctype": self.doctype, "notification_type_doc": self.name})
+
+		# Delete related CRM Task records
+		if frappe.db.table_exists("CRM Task"):
+			frappe.db.delete("CRM Task", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related FCRM Note records
+		if frappe.db.table_exists("FCRM Note"):
+			frappe.db.delete("FCRM Note", {"reference_doctype": self.doctype, "reference_docname": self.name})
+
+		# Delete related CRM Call Log records
+		if frappe.db.table_exists("CRM Call Log"):
+			frappe.db.delete("CRM Call Log", {"reference_doctype": self.doctype, "reference_docname": self.name})
 
 	def before_save(self):
 		self.apply_sla()
@@ -112,6 +158,77 @@ class CRMLead(Document):
 				self.status = "New"
 			else:
 				self.status = frappe.get_all("CRM Lead Status", {"type": "Open"}, pluck="name")[0]
+		if not self.is_new() and self.has_value_changed("status"):
+			self.validate_status_transition()
+
+	def validate_status_transition(self):
+		old_status = self.get_doc_before_save().status if self.get_doc_before_save() else None
+		if not old_status or not self.status:
+			return
+
+		old_type = frappe.get_cached_value("CRM Lead Status", old_status, "type")
+		new_type = frappe.get_cached_value("CRM Lead Status", self.status, "type")
+		if not old_type or not new_type:
+			return
+
+		TYPE_ORDER = ["Open", "Ongoing", "On Hold", "Won", "Lost"]
+
+		def _type_idx(t):
+			return TYPE_ORDER.index(t) if t in TYPE_ORDER else -1
+
+		old_idx = _type_idx(old_type)
+		new_idx = _type_idx(new_type)
+
+		# Terminal states (Won, Lost) cannot be left
+		if old_type in ("Won", "Lost") and new_type != old_type:
+			frappe.throw(
+				_("Cannot change status from a terminal stage ({0}).").format(old_type),
+				frappe.ValidationError,
+			)
+
+		# Any stage can move to Lost (terminal exit)
+		if new_type == "Lost":
+			return
+
+		# Won can only be reached from Ongoing
+		if new_type == "Won" and old_type != "Ongoing":
+			frappe.throw(
+				_("Cannot move to Won from {0} ({1}). Move through an active pipeline stage first.").format(
+					old_status, old_type
+				),
+				frappe.ValidationError,
+			)
+
+		# On Hold can only be entered from Ongoing and can only return to Ongoing
+		if new_type == "On Hold" and old_type != "Ongoing":
+			frappe.throw(
+				_("Can only move to On Hold from an active pipeline stage."),
+				frappe.ValidationError,
+			)
+		if old_type == "On Hold" and new_type != "Ongoing":
+			frappe.throw(
+				_("Can only move from On Hold back to an active pipeline stage."),
+				frappe.ValidationError,
+			)
+
+		# Enforce forward-only progression within non-terminal types
+		if old_idx >= 0 and new_idx >= 0 and new_idx < old_idx:
+			frappe.throw(
+				_(
+					"Cannot move backward in the lead pipeline from {0} ({1}) to {2} ({3})."
+				).format(old_status, old_type, self.status, new_type),
+				frappe.ValidationError,
+			)
+
+		# Prevent skipping intermediate types (e.g., Open → On Hold, Ongoing → Won already handled above)
+		if new_type not in ("Won", "Lost") and new_idx - old_idx > 1:
+			skipped = [t for t in TYPE_ORDER if old_idx < _type_idx(t) < new_idx]
+			frappe.throw(
+				_("Cannot skip pipeline stage type {0}. Move through {1} first.").format(
+					new_type, ", ".join(skipped)
+				),
+				frappe.ValidationError,
+			)
 
 	def set_full_name(self):
 		if self.first_name:

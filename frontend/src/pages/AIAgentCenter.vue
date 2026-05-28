@@ -106,9 +106,12 @@
                 >
                   <div v-if="message.loading" class="flex items-center gap-2 text-sm text-slate-500">
                     <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-teal-600" />
-                    {{ __('Querying Kimi K2.6 with RAG sources...') }}
+                    {{ message.statusMessage || __('Memproses analisis terstruktur dengan Kimi K2.6 dan RAG...') }}
                   </div>
-                  <div v-else class="prose prose-sm max-w-none" :class="message.role === 'user' ? 'prose-invert' : ''" v-html="renderMarkdown(message.content)" />
+                  <div v-else-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-6">
+                    {{ message.content }}
+                  </div>
+                  <StructuredResponseCard v-else :response="message.structuredResponse" :fallback="message.content" />
 
                   <div v-if="message.sources?.length" class="mt-3 border-t border-slate-200 pt-3">
                     <button class="text-xs font-semibold text-teal-700" @click="selectedSources = message.sources">
@@ -189,13 +192,20 @@
           </div>
           <div class="min-h-0 flex-1 overflow-y-auto p-4">
             <div v-if="activeSideTab === 'Context'" class="space-y-4">
-              <PanelBlock title="Agent UAT">
+              <PanelBlock title="Production Scope">
                 <ul class="space-y-2 text-xs text-slate-600">
                   <li v-for="item in selectedAgent?.uat || []" :key="item" class="flex gap-2">
                     <FeatherIcon name="check-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-600" />
                     <span>{{ item }}</span>
                   </li>
                 </ul>
+              </PanelBlock>
+              <PanelBlock title="Agent Tools">
+                <div class="flex flex-wrap gap-1.5">
+                  <span v-for="tool in selectedAgent?.tools || []" :key="tool" class="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                    {{ tool.replaceAll('_', ' ') }}
+                  </span>
+                </div>
               </PanelBlock>
               <PanelBlock title="Sources">
                 <div v-if="selectedSources.length" class="space-y-3">
@@ -222,7 +232,7 @@
               <PanelBlock title="Sandbox">
                 <textarea v-model="sandboxPrompt" rows="5" class="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-teal-500" />
                 <Button class="mt-2 w-full" size="sm" variant="solid" :label="__('Run Sandbox')" :loading="isSandboxing" @click="runSandbox" />
-                <p v-if="sandboxResult" class="mt-2 text-xs leading-5 text-slate-600">{{ sandboxResult }}</p>
+                <StructuredResponseCard v-if="sandboxResult" class="mt-3" :response="sandboxResult" :fallback="sandboxFallback" compact />
               </PanelBlock>
               <PanelBlock title="RAG">
                 <div class="space-y-2 text-xs text-slate-600">
@@ -264,15 +274,15 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import AIDeskIcon from '@/components/Icons/AIDeskIcon.vue'
+import StructuredResponseCard from '@/components/AI/StructuredResponseCard.vue'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { Badge, Button, FeatherIcon, call, toast } from 'frappe-ui'
-import DOMPurify from 'dompurify'
 import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 
 const agents = ref([])
 const selectedAgent = ref(null)
-const STORAGE_KEY = 'ai_agent_center_messages'
-const messages = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(m => ({ ...m, loading: false })))
+const LEGACY_STORAGE_KEY = 'ai_agent_center_messages'
+const messages = ref([])
 const inputMessage = ref('')
 const sessionId = ref(null)
 const isLoading = ref(false)
@@ -286,25 +296,60 @@ const costDashboard = ref({ total_cost: 0, rows: [] })
 const auditLog = ref([])
 const ragStatus = ref({})
 const sandboxPrompt = ref('Summarize portfolio risk signals from the indexed CRM data.')
-const sandboxResult = ref('')
+const sandboxResult = ref(null)
+const sandboxFallback = ref('')
 const chatContainer = ref(null)
 
 watch(messages, (newMessages) => {
-  // Save non-loading messages to localStorage
-  const toSave = newMessages.filter(m => !m.loading)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+  persistAgentConversation(newMessages)
 }, { deep: true })
 
 const quickSuggestions = computed(() => [
-  'Summarize top credit risks from Customer 360 data.',
-  'Draft next-best actions for relationship managers today.',
-  'Find document validation issues and missing evidence.',
-  'Create an early-warning portfolio watchlist.',
+  'Ringkas risiko kredit utama dari data Customer 360.',
+  'Susun next-best action untuk relationship manager hari ini.',
+  'Identifikasi isu validasi dokumen dan bukti yang kurang.',
+  'Buat watchlist early-warning portofolio.',
 ])
 
 function selectAgent(agent) {
+  persistAgentConversation(messages.value)
   selectedAgent.value = agent
   localStorage.setItem('ai_agent_center_selected_agent', agent.key)
+  loadAgentConversation(agent)
+}
+
+function agentStorageKey(agentKey) {
+  return `ai_agent_center_messages:${agentKey || 'general'}`
+}
+
+function agentSessionKey(agentKey) {
+  return `ai_agent_center_session:${agentKey || 'general'}`
+}
+
+function loadAgentConversation(agent) {
+  const key = agent?.key || 'general'
+  const storedMessages = localStorage.getItem(agentStorageKey(key))
+  const legacyMessages = key === 'general' ? localStorage.getItem(LEGACY_STORAGE_KEY) : null
+  messages.value = parseStoredMessages(storedMessages || legacyMessages)
+  sessionId.value = localStorage.getItem(agentSessionKey(key)) || null
+  selectedSources.value = []
+}
+
+function parseStoredMessages(raw) {
+  try {
+    return JSON.parse(raw || '[]').map((message) => ({ ...message, loading: false }))
+  } catch {
+    return []
+  }
+}
+
+function persistAgentConversation(nextMessages = messages.value) {
+  const key = selectedAgent.value?.key
+  if (!key) return
+  const toSave = nextMessages.filter((message) => !message.loading)
+  localStorage.setItem(agentStorageKey(key), JSON.stringify(toSave))
+  if (sessionId.value) localStorage.setItem(agentSessionKey(key), sessionId.value)
+  else localStorage.removeItem(agentSessionKey(key))
 }
 
 function formatCost(value) {
@@ -314,28 +359,6 @@ function formatCost(value) {
 function openAISettings() {
   activeSettingsPage.value = 'AI Settings'
   showSettings.value = true
-}
-
-function renderMarkdown(text) {
-  if (!text) return ''
-  let html = String(text)
-    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/^- (.*$)/gm, '<li>$1</li>')
-    .replace(/^\|(.*)\|$/gm, (match) => {
-      const cells = match.split('|').filter((cell) => cell.trim())
-      if (cells.every((cell) => /^[\s-]+$/.test(cell))) return ''
-      return '<tr>' + cells.map((cell) => `<td>${cell.trim()}</td>`).join('') + '</tr>'
-    })
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-  html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-  html = html.replace(/(<tr>.*<\/tr>)/gs, '<table>$1</table>')
-  if (!html.startsWith('<')) html = `<p>${html}</p>`
-  return DOMPurify.sanitize(html)
 }
 
 function scrollToBottom() {
@@ -348,6 +371,7 @@ async function loadAgents() {
   agents.value = await call('crm.api.ai_agent_center.get_agents')
   const selectedKey = localStorage.getItem('ai_agent_center_selected_agent')
   selectedAgent.value = agents.value.find((agent) => agent.key === selectedKey) || agents.value[0]
+  loadAgentConversation(selectedAgent.value)
 }
 
 async function loadAdminData() {
@@ -409,18 +433,19 @@ async function streamAgentResponse({ agent, content, loadingId }) {
       const payload = event.payload || {}
       if (event.type === 'meta') {
         sessionId.value = payload.session_id || sessionId.value
+        persistAgentConversation()
       } else if (event.type === 'sources') {
         target.sources = payload.sources || []
         selectedSources.value = payload.sources || []
-      } else if (event.type === 'delta') {
-        target.loading = false
-        target.content = `${target.content || ''}${payload.delta || ''}`
+      } else if (event.type === 'status') {
+        target.statusMessage = payload.message || target.statusMessage
         scrollToBottom()
       } else if (event.type === 'actions') {
         target.actions = payload.actions || []
       } else if (event.type === 'done') {
         target.loading = false
         target.content = payload.response || target.content
+        target.structuredResponse = payload.structured_response || null
         target.sources = payload.sources || target.sources || []
         target.actions = payload.actions || target.actions || []
         target.model = payload.model
@@ -428,9 +453,11 @@ async function streamAgentResponse({ agent, content, loadingId }) {
         target.messageId = payload.message_id
         sessionId.value = payload.session_id || sessionId.value
         selectedSources.value = target.sources || []
+        persistAgentConversation()
       } else if (event.type === 'error') {
         target.loading = false
         target.content = payload.message || 'AI Agent Center request failed.'
+        target.structuredResponse = null
       }
     }
   }
@@ -442,7 +469,7 @@ async function sendMessage(text) {
   const agent = selectedAgent.value || agents.value[0]
   messages.value.push({ id: crypto.randomUUID(), role: 'user', content })
   const loadingId = crypto.randomUUID()
-  messages.value.push({ id: loadingId, role: 'assistant', content: '', loading: true })
+  messages.value.push({ id: loadingId, role: 'assistant', content: '', structuredResponse: null, loading: true, statusMessage: __('Mengambil sumber dan konteks...') })
   inputMessage.value = ''
   isLoading.value = true
   scrollToBottom()
@@ -452,7 +479,7 @@ async function sendMessage(text) {
     await loadAdminData()
   } catch (error) {
     const target = messages.value.find((message) => message.id === loadingId)
-    Object.assign(target, { content: error?.messages?.[0] || error.message || 'AI Agent Center request failed.', loading: false })
+    Object.assign(target, { content: error?.messages?.[0] || error.message || 'AI Agent Center request failed.', structuredResponse: null, loading: false })
   } finally {
     isLoading.value = false
     scrollToBottom()
@@ -510,9 +537,10 @@ async function runSandbox() {
   isSandboxing.value = true
   try {
     const result = await call('crm.api.ai_agent_center.run_sandbox', {
-      input_payload: { prompt: sandboxPrompt.value },
+      input_payload: { prompt: sandboxPrompt.value, agent_key: selectedAgent.value?.key || 'general' },
     })
-    sandboxResult.value = result.response
+    sandboxResult.value = result.structured_response || null
+    sandboxFallback.value = result.response || ''
     await loadAdminData()
   } finally {
     isSandboxing.value = false
@@ -523,7 +551,9 @@ function clearChat() {
   messages.value = []
   sessionId.value = null
   selectedSources.value = []
-  localStorage.removeItem(STORAGE_KEY)
+  const key = selectedAgent.value?.key || 'general'
+  localStorage.removeItem(agentStorageKey(key))
+  localStorage.removeItem(agentSessionKey(key))
 }
 
 const PanelBlock = {
@@ -542,21 +572,3 @@ onMounted(async () => {
   await loadAdminData()
 })
 </script>
-
-<style scoped>
-:deep(.prose table) {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8125rem;
-}
-:deep(.prose td) {
-  border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.55rem;
-}
-:deep(.prose h1),
-:deep(.prose h2),
-:deep(.prose h3) {
-  margin-top: 0.2rem;
-  margin-bottom: 0.55rem;
-}
-</style>

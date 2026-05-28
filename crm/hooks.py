@@ -9,6 +9,12 @@ app_logo_url = "/assets/crm/images/bni-logo.png"
 app_icon_title = "BNI CRM"
 app_icon_route = "/crm"
 
+website_context = {
+	"splash_image": "/assets/crm/images/bni-logo.png"
+}
+
+
+
 # Apps
 # ------------------
 
@@ -238,6 +244,7 @@ scheduler_events = {
 			"crm.lead_syncing.background_sync.sync_leads_from_sources_5_minutes",
 			"crm.lead_jobs.recompute_lead_sla",
 			"crm.lead_jobs.fire_sla_alerts",
+			"crm.utils.workflow_engine.process_sla_background_job",
 		],
 		"*/10 * * * *": ["crm.lead_syncing.background_sync.sync_leads_from_sources_10_minutes"],
 		"*/15 * * * *": [

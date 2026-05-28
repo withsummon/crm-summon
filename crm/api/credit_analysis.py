@@ -1282,6 +1282,9 @@ def _peers(application, ratios):
 def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=None):
 	borrower = application.get("borrower_name") or _customer_name(application.get("borrower")) or application.name
 	recommendation = recommendation or _recommendation_payload(risk_grade, dscr)
+	purpose = application.get("purpose") or "Working capital and general banking facility review."
+	risk_text = f"Primary risks: {', '.join(recommendation['risk_factors'])}."
+	rec_text = f"{recommendation['decision']}: {recommendation['reasoning']}"
 	summary = [
 		f"{borrower} requests {application.get('facility_type') or 'credit facility'} of IDR {round(flt(application.get('requested_amount')), 0):,.0f}.",
 		f"Latest risk grade is {risk_grade['grade']} with score {risk_grade['score']} / 1000.",
@@ -1289,24 +1292,14 @@ def _memo_payload(application, rows, ratios, dscr, risk_grade, recommendation=No
 		f"Financial spreading covers {len(set(row['year'] for row in rows))} years across PL/BS/CF.",
 		f"Recommendation is {recommendation['decision']} with {recommendation['confidence']}% confidence.",
 	]
-	content = "\n".join(
+	content = "\n\n".join(
 		[
-			"# Credit Analysis Memorandum",
-			"",
-			"## Borrower",
-			summary[0],
-			"",
-			"## Purpose",
-			application.get("purpose") or "Working capital and general banking facility review.",
-			"",
-			"## Financials",
-			summary[2],
-			"",
-			"## Risks",
-			f"Primary risks: {', '.join(recommendation['risk_factors'])}.",
-			"",
-			"## Recommendation",
-			f"{recommendation['decision']}: {recommendation['reasoning']}",
+			f"CREDIT ANALYSIS MEMORANDUM",
+			f"Borrower\n{summary[0]}",
+			f"Purpose\n{purpose}",
+			f"Financials\n{summary[2]}",
+			f"Risks\n{risk_text}",
+			f"Recommendation\n{rec_text}",
 		]
 	)
 	return {
@@ -1493,6 +1486,132 @@ def _default_export(application):
 		"email_distribution": "Draft Queue",
 		"message": _("PDF renderer/email adapter can process this export payload."),
 	}
+
+
+@frappe.whitelist()
+def get_published_workflows():
+	"""Return published workflows for manual assignment to a credit application."""
+	if not _doctype_ready("CRM Workflow"):
+		return []
+	flows = frappe.get_all(
+		"CRM Workflow",
+		filters={"status": "Published"},
+		fields=["name", "title", "description", "product_type", "current_version"],
+		order_by="title asc",
+	)
+	return flows
+
+
+@frappe.whitelist()
+def assign_workflow(application_id: str, workflow_name: str):
+	"""Assign a published workflow to a credit application and start execution."""
+	from crm.utils.workflow_engine import start_flow_execution
+
+	app = _get_application(application_id)
+	flow = frappe.get_doc("CRM Workflow", workflow_name)
+
+	if flow.status != "Published":
+		frappe.throw(_("Workflow is not published."))
+
+	if _doctype_ready("CRM Credit Application"):
+		frappe.db.set_value("CRM Credit Application", application_id, "credit_flow", workflow_name)
+		frappe.db.set_value("CRM Credit Application", application_id, "credit_flow_version", flow.current_version)
+		frappe.db.commit()
+
+	exec_doc = start_flow_execution(application_id)
+	if not exec_doc:
+		frappe.throw(_("Failed to start workflow execution."))
+
+	return {
+		"ok": True,
+		"execution_id": exec_doc.name,
+		"workflow": workflow_name,
+		"current_node": exec_doc.current_node,
+	}
+
+
+@frappe.whitelist()
+def get_workflow_step_configs(application_id: str):
+	"""Return form node configs from the active workflow as step definitions for Credit Analysis tabs."""
+	exec_records = frappe.get_all(
+		"CRM Workflow Execution",
+		filters={"application": application_id, "status": "Running"},
+		fields=["name", "flow_version_json"],
+		limit=1,
+	)
+	if not exec_records:
+		return []
+
+	flow_data = exec_records[0]
+	try:
+		parsed = json.loads(flow_data.flow_version_json) if isinstance(flow_data.flow_version_json, str) else flow_data.flow_version_json
+		nodes = parsed.get("nodes", [])
+	except Exception:
+		return []
+
+	steps = []
+	for node in nodes:
+		node_data = node.get("data", {})
+		node_type = node_data.get("nodeType", "") or node.get("type", "")
+		node_id = node.get("id", "")
+		label = node_data.get("label") or node_data.get("name") or node_id
+
+		if node_type == "FormNode":
+			config = node_data.get("config") or {}
+			steps.append({
+				"step_id": node_id,
+				"label": label,
+				"node_type": "FormNode",
+				"sections": config.get("sections", []),
+				"fields": config.get("fields", []),
+				"available_actions": config.get("availableActions", ["save_draft", "submit"]),
+			})
+		elif node_type in ("ApprovalNode",):
+			config = node_data.get("config") or {}
+			steps.append({
+				"step_id": node_id,
+				"label": label,
+				"node_type": "ApprovalNode",
+				"sections": config.get("sections", []),
+				"fields": config.get("fields", []),
+				"available_actions": config.get("availableActions", ["approve", "reject", "return"]),
+			})
+
+	return steps
+
+
+@frappe.whitelist()
+def get_workflow_creation_config(workflow_name: str):
+	"""Return FormNode configs from a published workflow for use in the creation dialog."""
+	flow = frappe.get_doc("CRM Workflow", workflow_name)
+	if flow.status != "Published":
+		frappe.throw(_("Workflow is not published."))
+
+	flow_json = flow.flow_json
+	try:
+		parsed = json.loads(flow_json) if isinstance(flow_json, str) else flow_json
+		nodes = parsed.get("nodes", [])
+	except Exception:
+		return []
+
+	steps = []
+	for node in nodes:
+		node_data = node.get("data", {})
+		node_type = node_data.get("nodeType", "")
+		if node_type != "FormNode":
+			continue
+		node_id = node.get("id", "")
+		label = node_data.get("label") or node_data.get("name") or node_id
+		config = node_data.get("config") or {}
+		steps.append({
+			"step_id": node_id,
+			"label": label,
+			"node_type": "FormNode",
+			"sections": config.get("sections", []),
+			"fields": config.get("fields", []),
+		})
+
+	return steps
 
 
 @frappe.whitelist()
@@ -1695,9 +1814,24 @@ def run_cashflow_projection(application_id: str, years: int = 5, drivers=None):
 	return result
 
 
+def _strip_markdown(text):
+	"""Remove markdown syntax and leading/trailing whitespace from text."""
+	if not text:
+		return ""
+	text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+	text = re.sub(r"\*(.+?)\*", r"\1", text)
+	text = re.sub(r"^-\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"^\d+\.\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"^>\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"`(.+?)`", r"\1", text)
+	text = re.sub(r"\n{3,}", "\n\n", text)
+	return text.strip()
+
+
 def _call_credit_agent(application, prompt, fallback):
 	try:
-		from crm.api.ai_agent_center import query_agent
+		from crm.api.ai_agent_center import _normalize_structured_response, _plain_text_from_structured, query_agent
 
 		is_mocked_agent = hasattr(query_agent, "mock_calls")
 		customer = application.get("borrower")
@@ -1711,19 +1845,73 @@ def _call_credit_agent(application, prompt, fallback):
 
 		response = query_agent("credit_analyst", prompt, customer=customer)
 		text = cstr((response or {}).get("response")).strip()
-		if not text or "do not have enough grounded CRM/RAG sources" in text:
+		if not text or "belum memiliki sumber crm/rag" in text.lower() or "do not have enough grounded CRM/RAG sources" in text:
 			raise ValueError("Credit agent did not have enough grounded RAG sources.")
+		if not response.get("structured_response"):
+			response["structured_response"] = _normalize_structured_response(
+				{
+					"title": "Output Credit Analyst",
+					"executive_summary": text,
+					"sections": [{"title": "Analisis", "summary": text, "items": [], "metrics": []}],
+					"sources": response.get("sources") or [],
+					"limitations": ["Model atau mock lama tidak mengembalikan structured_response."],
+				},
+				"credit_analyst",
+				response.get("sources") or [],
+				response.get("confidence") or 0.74,
+			)
+			response["response"] = _plain_text_from_structured(response["structured_response"])
 		return response
 	except Exception:
+		from crm.api.ai_agent_center import _normalize_structured_response, _plain_text_from_structured
+
+		sources = [{"title": "Credit Analysis workspace", "doctype": "CRM Credit Application", "docname": application.name}]
+		structured = _normalize_structured_response(
+			{
+				"title": "Output Credit Analyst berbasis workspace",
+				"executive_summary": fallback,
+				"sections": [{"title": "Ringkasan Kredit", "summary": fallback, "items": [], "metrics": []}],
+				"sources": sources,
+				"limitations": ["AI Agent Center menggunakan fallback lokal karena RAG/LLM belum tersedia atau tidak memiliki sumber cukup."],
+			},
+			"credit_analyst",
+			sources,
+			0.74,
+		)
 		return {
-			"response": fallback,
-			"sources": [{"title": "Credit Analysis workspace", "reference_doctype": "CRM Credit Application", "reference_docname": application.name}],
+			"response": _plain_text_from_structured(structured),
+			"structured_response": structured,
+			"sources": sources,
 			"confidence": 0.74,
 			"model": "kimi-k2.6",
 			"tokens": 0,
 			"cost": 0,
 			"fallback": True,
 		}
+
+
+def _structured_summary_bullets(structured, fallback_text=None, limit=5):
+	bullets = []
+	if structured:
+		for section in structured.get("sections") or []:
+			if section.get("summary"):
+				bullets.append(cstr(section.get("summary")).strip())
+			for item in section.get("items") or []:
+				bullets.append(cstr(item).strip())
+		for rec in structured.get("recommendations") or []:
+			text = rec.get("title") or rec.get("recommendation") or rec.get("next_step")
+			if text:
+				bullets.append(cstr(text).strip())
+	if not bullets:
+		bullets = [line.strip("- ").strip("* ").strip() for line in cstr(fallback_text).split("\n") if line.strip()]
+	seen = set()
+	unique = []
+	for bullet in bullets:
+		if not bullet or bullet in seen:
+			continue
+		seen.add(bullet)
+		unique.append(bullet)
+	return unique[:limit]
 
 
 @frappe.whitelist()
@@ -1736,14 +1924,16 @@ def generate_credit_summary(application_id: str):
 		f"Generate a five-bullet executive credit summary for application {application.name}. Use Credit Analysis ratios, DSCR, collateral, bureau, and sources only.",
 		fallback,
 	)
-	payload = {"summary": response["response"], "sources": response.get("sources") or [], "confidence": response.get("confidence"), "model": response.get("model")}
+	structured = response.get("structured_response")
+	payload = {"summary": response["response"], "structured_response": structured, "sources": response.get("sources") or [], "confidence": response.get("confidence"), "model": response.get("model")}
 	_replace_artifact(application.name, application.get("borrower"), "executive_summary", "AI Executive Summary", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	
 	# Also update the credit_memo's summary_bullets!
-	bullets = [line.strip("- ").strip("* ").strip() for line in response["response"].split("\n") if line.strip()]
+	bullets = _structured_summary_bullets(structured, response["response"])
 	if bullets:
 		memo = workspace.get("memo") or {}
 		memo["summary_bullets"] = bullets[:5]
+		memo["summary_structured_response"] = structured
 		_replace_artifact(application.name, application.get("borrower"), "credit_memo", "AI Credit Memo Draft", memo, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 
 	frappe.db.commit()
@@ -1761,7 +1951,7 @@ def generate_credit_memo(application_id: str):
 		fallback,
 	)
 	payload = deepcopy(workspace["memo"])
-	payload.update({"content": response["response"], "sources": response.get("sources") or payload.get("sources"), "model": response.get("model"), "confidence": response.get("confidence")})
+	payload.update({"content": response["response"], "structured_response": response.get("structured_response"), "sources": response.get("sources") or payload.get("sources"), "model": response.get("model"), "confidence": response.get("confidence")})
 	_replace_artifact(application.name, application.get("borrower"), "credit_memo", "AI Credit Memo Draft", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	_replace_artifact(application.name, application.get("borrower"), f"credit_memo_version_{payload['version']}", "Credit Memo Version", payload, source="AI Agent Center", confidence=response.get("confidence") or 0.74)
 	frappe.db.commit()
@@ -1779,7 +1969,7 @@ def generate_credit_recommendation(application_id: str):
 		fallback,
 	)
 	payload = deepcopy(workspace["recommendation"])
-	payload.update({"narrative": response["response"], "sources": response.get("sources") or [], "model": response.get("model"), "confidence": payload.get("confidence") or int((response.get("confidence") or 0.74) * 100)})
+	payload.update({"narrative": response["response"], "structured_response": response.get("structured_response"), "sources": response.get("sources") or [], "model": response.get("model"), "confidence": payload.get("confidence") or int((response.get("confidence") or 0.74) * 100)})
 	_replace_artifact(application.name, application.get("borrower"), "recommendation", "AI Recommendation", payload, source="AI Agent Center", confidence=(payload.get("confidence") or 0) / 100)
 	frappe.db.commit()
 	return payload

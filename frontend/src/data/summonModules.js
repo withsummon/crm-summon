@@ -101,6 +101,26 @@ export const summonModules = [
   },
   {
     label: 'Workflow Engine',
+    sheet: '27_WorkflowEngine',
+    description:
+      'Visual BPMN-like flow designer for dynamic workflow journey orchestration with conditional routing, complex approval matrix, and delegation across all modules.',
+    priority: 'High',
+    status: 'available',
+    routeName: 'Workflow List',
+    href: '/crm/lending-risk/workflow-engine',
+    group: 'Lending & Risk',
+    icon: 'git-pull-request',
+    features: [
+      'Visual Flow Canvas',
+      'Dynamic Form Control',
+      'Conditional Routing',
+      'Complex Approval Matrix',
+      'Flow Versioning',
+      'Execution Monitoring',
+    ],
+  },
+  {
+    label: 'Workflow Engine',
     sheet: '06_Workflow',
     description:
       'No-code workflow builder with approvals, SLA timers, conditional branching, and automation nodes.',
@@ -430,6 +450,7 @@ export const summonModules = [
       'Mobile-responsive workspace for field Relationship Managers, lead capture, visits, and on-the-go LOS actions.',
     priority: 'Medium',
     status: 'available',
+    pwaInstall: true,
     href: '/crm/dashboard',
     group: 'Channels & Portal',
     icon: 'smartphone',

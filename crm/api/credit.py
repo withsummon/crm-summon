@@ -3,7 +3,7 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, flt, now_datetime
+from frappe.utils import cstr, date_diff, flt, getdate, now_datetime, nowdate
 
 
 PUBLIC_SOURCE_URLS = {
@@ -54,6 +54,32 @@ CUSTOMER_360_CUSTOMER_FIELD_DOCTYPES = {
 	"CRM Customer Tag",
 }
 LARGE_CURRENCY_SQL_TYPE = "decimal(30,9)"
+CUSTOMER_360_ADAPTERS = {
+	"ekyc": {
+		"label": "Dukcapil / e-KYC",
+		"required_configuration": "Configure an official Dukcapil/e-KYC provider credential and consent workflow.",
+	},
+	"aml_pep": {
+		"label": "AML / PEP Screening",
+		"required_configuration": "Configure an AML/PEP screening provider and match review queue.",
+	},
+	"bureau": {
+		"label": "SLIK / Pefindo Bureau",
+		"required_configuration": "Configure SLIK/Pefindo sandbox or production credential with borrower consent storage.",
+	},
+	"core_banking": {
+		"label": "Core Banking Facility Feed",
+		"required_configuration": "Configure core banking account, facility, repayment, and outstanding balance feed.",
+	},
+	"account_otp": {
+		"label": "Bank Account OTP Verification",
+		"required_configuration": "Configure bank account verification or OTP provider.",
+	},
+	"collateral_registry": {
+		"label": "Collateral Registry / Appraisal Feed",
+		"required_configuration": "Configure collateral registry, appraisal, and insurance validation provider.",
+	},
+}
 
 
 def _doctype_ready(doctype: str) -> bool:
@@ -200,12 +226,15 @@ def update_customer_profile(customer: str, payload: dict):
 
 
 @frappe.whitelist()
-def save_customer_summary(customer: str, summary: str):
+def save_customer_summary(customer: str, summary: str, structured_response=None, sources=None, confidence=None, limitations=None):
 	if not customer or not frappe.db.exists("Customer", customer):
 		frappe.throw(_("Customer not found"))
 	summary = cstr(summary).strip()
 	if not summary:
 		frappe.throw(_("Summary is required"))
+	structured_response = _json_loads(structured_response) if isinstance(structured_response, str) else structured_response or {}
+	sources = _json_loads(sources) if isinstance(sources, str) else sources or []
+	limitations = _json_loads(limitations) if isinstance(limitations, str) else limitations or []
 	existing = None
 	if _doctype_ready("FCRM Note"):
 		rows = frappe.get_all(
@@ -234,7 +263,59 @@ def save_customer_summary(customer: str, summary: str):
 				"reference_docname": customer,
 		}
 	).insert()
+	if structured_response:
+		_save_customer_summary_insights(customer, structured_response, sources, confidence, limitations)
 	return doc.as_dict()
+
+
+def _save_customer_summary_insights(customer: str, structured_response: dict, sources=None, confidence=None, limitations=None):
+	if not _doctype_ready("CRM AI Insight"):
+		return []
+	created = []
+	recommendations = structured_response.get("recommendations") or []
+	actions = structured_response.get("actions") or []
+	items = recommendations if isinstance(recommendations, list) else []
+	for action in actions if isinstance(actions, list) else []:
+		if isinstance(action, dict):
+			items.append(
+				{
+					"title": action.get("title") or action.get("label") or action.get("action_key") or "AI next action",
+					"detail": action.get("description") or action.get("reason") or "",
+					"priority": action.get("priority") or "",
+				}
+			)
+	for index, item in enumerate(items[:5], start=1):
+		if isinstance(item, str):
+			title = item[:140]
+			detail = item
+		else:
+			title = cstr(item.get("title") or item.get("recommendation") or f"AI recommendation {index}")[:140]
+			detail = cstr(item.get("detail") or item.get("description") or item.get("rationale") or item)
+		doc = frappe.get_doc(
+			{
+				"doctype": "CRM AI Insight",
+				"customer": customer,
+				"insight_type": "Cross-sell" if "cross" in title.lower() else "Risk",
+				"title": title or f"AI recommendation {index}",
+				"confidence_score": flt(confidence or structured_response.get("confidence") or 0) * 100
+				if flt(confidence or structured_response.get("confidence") or 0) <= 1
+				else flt(confidence or structured_response.get("confidence") or 0),
+				"status": "Open",
+				"suggested_action": detail[:1000],
+				"notes": json.dumps(
+					{
+						"source": "AI Customer Summary",
+						"sources": sources or structured_response.get("sources") or [],
+						"limitations": limitations or structured_response.get("limitations") or [],
+						"generated_at": now_datetime(),
+					},
+					default=str,
+					indent=2,
+				),
+			}
+		).insert(ignore_permissions=True)
+		created.append(doc.name)
+	return created
 
 
 @frappe.whitelist()
@@ -287,7 +368,7 @@ def global_customer_search(query: str = "", limit: int = 20):
 def get_customer_360_table(query: str = "", filters=None, limit: int = 100):
 	query = cstr(query).strip().lower()
 	limit = int(limit or 100)
-	customers = frappe.get_all("Customer", fields=_customer_fields() + ["modified"], limit=limit, order_by="modified desc")
+	customers = frappe.get_all("Customer", fields=_customer_fields(), limit=limit, order_by="modified desc")
 	rows = []
 	for customer in customers:
 		if query:
@@ -728,8 +809,9 @@ def _validate_customer360_doc(doctype: str, doc):
 			frappe.throw(_("NPWP must contain 15 or 16 digits."))
 		if doc.get("watchlist") and not cstr(doc.get("watchlist_reason")).strip():
 			frappe.throw(_("Watchlist reason is required."))
+		if doc.get("next_review_date") and _is_past_date(doc.get("next_review_date")) and not doc.get("renewal_workflow_status"):
+			doc.renewal_workflow_status = "Triggered"
 	if doctype == "CRM Relationship" and doc.get("customer") and doc.get("relationship_type") == "Shareholder":
-		filters = {"customer": doc.customer, "relationship_type": "Shareholder"}
 		rows = _list_records("CRM Relationship", doc.customer)
 		total = sum(
 			flt(row.get("ownership_percent"))
@@ -739,6 +821,51 @@ def _validate_customer360_doc(doctype: str, doc):
 		total += flt(doc.get("ownership_percent"))
 		if total > 100:
 			frappe.throw(_("Shareholder ownership cannot exceed 100%. Current total would be {0}%.").format(total))
+	if doctype == "CRM Bank Account" and doc.get("customer") and doc.get("is_primary"):
+		rows = _list_records("CRM Bank Account", doc.customer)
+		existing_primary = next((row for row in rows if row.get("is_primary") and row.get("name") != doc.get("name")), None)
+		if existing_primary:
+			frappe.throw(_("Only one primary bank account is allowed per customer. Existing primary: {0}").format(existing_primary.get("account_number") or existing_primary.get("name")))
+	if doctype == "CRM Customer Document" and doc.get("expiry_date"):
+		doc.expiry_status = _document_expiry_status(doc.get("expiry_date"))
+	if doctype == "CRM Collateral" and flt(doc.get("ltv_percent")) > 100:
+		frappe.throw(_("Collateral LTV cannot exceed 100%."))
+	if doctype == "CRM Bureau Report" and doc.get("score") not in (None, ""):
+		_validate_range("Bureau score", flt(doc.get("score")), 0, 1000)
+	if doctype == "CRM Risk Profile" and doc.get("internal_score") not in (None, ""):
+		_validate_range("Internal score", flt(doc.get("internal_score")), 0, 1000)
+	if doctype == "CRM AI Insight" and doc.get("confidence_score") not in (None, ""):
+		_validate_range("Confidence score", flt(doc.get("confidence_score")), 0, 100)
+
+
+def _validate_range(label: str, value: float, minimum: float, maximum: float):
+	if value < minimum or value > maximum:
+		frappe.throw(_("{0} must be between {1} and {2}.").format(label, minimum, maximum))
+
+
+def _is_past_date(value) -> bool:
+	try:
+		return bool(value and getdate(value) < getdate(nowdate()))
+	except Exception:
+		return False
+
+
+def _days_until(value):
+	try:
+		return date_diff(getdate(value), getdate(nowdate()))
+	except Exception:
+		return None
+
+
+def _document_expiry_status(expiry_date):
+	days = _days_until(expiry_date)
+	if days is None:
+		return "Not Applicable"
+	if days < 0:
+		return "Expired"
+	if days <= 30:
+		return "Expiring Soon"
+	return "Valid"
 
 
 def _demo_credit_applications():
@@ -968,6 +1095,17 @@ def refresh_public_company_snapshot(ticker: str):
 
 
 @frappe.whitelist()
+def check_customer360_adapter(customer: str, adapter_key: str):
+	if not customer or not frappe.db.exists("Customer", customer):
+		frappe.throw(_("Customer not found"))
+	statuses = _build_external_adapters(customer)
+	for status in statuses:
+		if status.get("key") == adapter_key:
+			return status
+	frappe.throw(_("Unknown Customer 360 adapter: {0}").format(adapter_key))
+
+
+@frappe.whitelist()
 def get_customer_360(customer: str, filters=None):
 	if not customer:
 		frappe.throw(_("Customer is required"))
@@ -995,23 +1133,31 @@ def get_customer_360(customer: str, filters=None):
 	notes = _list_reference_records("FCRM Note", customer)
 	events = _list_reference_records("Event", customer)
 	saved_summary = _get_saved_customer_summary(notes)
+	summary = _build_customer_summary(
+		customer_doc,
+		kyc,
+		facilities,
+		bureau_reports,
+		relationships,
+		risk_profiles,
+		bank_accounts,
+		documents,
+		transactions,
+		ai_insights,
+		tags,
+		saved_summary,
+	)
+	relationship_graph = _build_relationship_graph(customer_doc, relationships, facilities, collaterals, bank_accounts, risk_profiles, tags)
+	risk_controls = _build_risk_controls(kyc, relationships, documents, transactions, risk_profiles, bank_accounts, collaterals)
+	data_quality = _build_data_quality(customer_doc, kyc, relationships, bank_accounts, documents, facilities, risk_controls)
+	external_adapters = _build_external_adapters(customer, kyc, bureau_reports, bank_accounts, collaterals)
+	compliance_status = _build_compliance_status(kyc, relationships, bureau_reports, risk_controls, external_adapters)
+	next_actions = _build_next_actions(data_quality, risk_controls, ai_insights, external_adapters)
+	audit_summary = _build_audit_summary(customer_doc, kyc, notes, CUSTOMER_360_CUSTOMER_FIELD_DOCTYPES)
 
 	return {
 		"customer": customer_doc,
-		"summary": _build_customer_summary(
-			customer_doc,
-			kyc,
-			facilities,
-			bureau_reports,
-			relationships,
-			risk_profiles,
-			bank_accounts,
-			documents,
-			transactions,
-			ai_insights,
-			tags,
-			saved_summary,
-		),
+		"summary": summary,
 		"kyc": kyc,
 		"facilities": facilities,
 		"collaterals": collaterals,
@@ -1046,6 +1192,13 @@ def get_customer_360(customer: str, filters=None):
 			transactions,
 			risk_profiles,
 		),
+		"relationship_graph": relationship_graph,
+		"data_quality": data_quality,
+		"external_adapters": external_adapters,
+		"risk_controls": risk_controls,
+		"compliance_status": compliance_status,
+		"next_actions": next_actions,
+		"audit_summary": audit_summary,
 	}
 
 
@@ -1062,7 +1215,7 @@ def _list_records(doctype: str, customer: str | None, customer_field: str = "cus
 
 
 def _customer_fields():
-	fields = ["name", "customer_name", "customer_type", "customer_group", "territory", "website", "tax_id"]
+	fields = ["name", "customer_name", "customer_type", "customer_group", "territory", "website", "tax_id", "modified"]
 	meta = frappe.get_meta("Customer")
 	for fieldname in ("mobile_no", "email_id"):
 		if meta.has_field(fieldname):
@@ -1092,6 +1245,220 @@ def _latest_record(doctype: str, customer: str | None):
 
 def _latest_bureau_report(customer: str | None):
 	return _latest_record("CRM Bureau Report", customer)
+
+
+def _build_external_adapters(customer: str, kyc=None, bureau_reports=None, bank_accounts=None, collaterals=None):
+	manual_signals = {
+		"ekyc": (kyc or {}).get("ekyc_result"),
+		"aml_pep": None,
+		"bureau": (bureau_reports or [{}])[0].get("source") if bureau_reports else None,
+		"core_banking": None,
+		"account_otp": next((row.get("otp_status") for row in bank_accounts or [] if row.get("otp_status")), None),
+		"collateral_registry": next((row.get("reappraisal_status") for row in collaterals or [] if row.get("reappraisal_status")), None),
+	}
+	statuses = []
+	for key, config in CUSTOMER_360_ADAPTERS.items():
+		manual_signal = manual_signals.get(key)
+		statuses.append(
+			{
+				"key": key,
+				"label": config["label"],
+				"status": "Not Configured",
+				"message": _("No official provider is configured. Existing values are manual review data only.") if manual_signal else _("Official provider is not configured."),
+				"required_configuration": config["required_configuration"],
+				"last_checked": now_datetime(),
+				"manual_signal": manual_signal or "",
+				"customer": customer,
+			}
+		)
+	return statuses
+
+
+def _build_relationship_graph(customer, relationships, facilities, collaterals, bank_accounts, risk_profiles, tags):
+	customer_id = f"customer:{customer.name}"
+	nodes = [
+		{
+			"id": customer_id,
+			"label": customer.get("customer_name") or customer.name,
+			"type": "Customer",
+			"customer": customer.name,
+			"status": customer.get("customer_type") or "",
+		}
+	]
+	edges = []
+	filters = {"Customer"}
+
+	def add_node(node):
+		if not any(existing["id"] == node["id"] for existing in nodes):
+			nodes.append(node)
+			filters.add(node["type"])
+
+	def add_edge(source, target, relation, value=0):
+		edges.append({"source": source, "target": target, "relation": relation, "value": flt(value)})
+
+	for rel in relationships:
+		rel_type = rel.get("relationship_type") or "Relationship"
+		node_id = f"customer:{rel.get('related_customer')}" if rel.get("related_customer") else f"relationship:{rel.get('name')}"
+		add_node(
+			{
+				"id": node_id,
+				"label": rel.get("related_party") or rel.get("related_customer") or rel_type,
+				"type": rel_type,
+				"customer": rel.get("related_customer") or "",
+				"status": rel.get("aml_pep_status") or rel.get("background_check_status") or "",
+				"exposure": flt(rel.get("exposure")),
+				"ownership_percent": flt(rel.get("ownership_percent")),
+				"is_ubo": bool(rel.get("is_ubo")),
+				"source_name": rel.get("name"),
+			}
+		)
+		add_edge(customer_id, node_id, rel_type, rel.get("exposure") or rel.get("ownership_percent"))
+
+	for row in facilities:
+		node_id = f"facility:{row.get('name')}"
+		add_node({"id": node_id, "label": row.get("facility_type") or row.get("product_type") or "Facility", "type": "Facility", "status": row.get("status") or "", "exposure": flt(row.get("outstanding")), "source_name": row.get("name")})
+		add_edge(customer_id, node_id, "Facility", row.get("outstanding"))
+
+	for row in collaterals:
+		node_id = f"collateral:{row.get('name')}"
+		add_node({"id": node_id, "label": row.get("asset") or row.get("collateral_type") or "Collateral", "type": "Collateral", "status": row.get("status") or "", "exposure": flt(row.get("collateral_value")), "source_name": row.get("name")})
+		target = f"facility:{row.get('linked_facility')}" if row.get("linked_facility") else customer_id
+		add_edge(target if any(node["id"] == target for node in nodes) else customer_id, node_id, "Secured By", row.get("collateral_value"))
+
+	for row in bank_accounts:
+		node_id = f"bank:{row.get('name')}"
+		add_node({"id": node_id, "label": row.get("bank") or "Bank Account", "type": "Bank Account", "status": row.get("verification_status") or "", "source_name": row.get("name")})
+		add_edge(customer_id, node_id, "Bank Account")
+
+	for row in risk_profiles[:1]:
+		node_id = f"risk:{row.get('name')}"
+		add_node({"id": node_id, "label": row.get("risk_grade") or "Risk Profile", "type": "Risk", "status": "NPL" if row.get("npl_flag") else row.get("watchlist_status") or "", "source_name": row.get("name")})
+		add_edge(customer_id, node_id, "Risk Profile")
+
+	for row in tags:
+		node_id = f"tag:{row.get('tag')}"
+		add_node({"id": node_id, "label": row.get("tag") or "Tag", "type": "Tag", "status": row.get("color") or "", "source_name": row.get("name")})
+		add_edge(customer_id, node_id, "Tagged")
+
+	return {"nodes": nodes, "edges": edges, "filters": sorted(filters)}
+
+
+def _build_risk_controls(kyc, relationships, documents, transactions, risk_profiles, bank_accounts, collaterals):
+	shareholders = [row for row in relationships if row.get("relationship_type") == "Shareholder"]
+	shareholder_total = sum(flt(row.get("ownership_percent")) for row in shareholders)
+	latest_risk = risk_profiles[0] if risk_profiles else {}
+	expired_documents = [row for row in documents if row.get("expiry_status") == "Expired" or _is_past_date(row.get("expiry_date"))]
+	missed_payments = [row for row in transactions if row.get("transaction_type") == "Missed Payment"]
+	expiring_insurance = [
+		row
+		for row in collaterals
+		if row.get("insurance_expiry") and _days_until(row.get("insurance_expiry")) is not None and _days_until(row.get("insurance_expiry")) <= 30
+	]
+	primary_account = next((row for row in bank_accounts if row.get("is_primary")), None)
+	return {
+		"watchlist": bool((kyc or {}).get("watchlist")) or latest_risk.get("watchlist_status") == "Yes",
+		"npl_flag": bool(latest_risk.get("npl_flag")),
+		"overdue_kyc": bool((kyc or {}).get("next_review_date") and _is_past_date((kyc or {}).get("next_review_date"))),
+		"expired_documents": len(expired_documents),
+		"missed_payments": len(missed_payments),
+		"ownership_balanced": round(shareholder_total, 2) == 100 if shareholders else False,
+		"shareholder_total": shareholder_total,
+		"primary_account_verified": bool(primary_account and primary_account.get("verification_status") == "Verified"),
+		"collateral_insurance_expiring": len(expiring_insurance),
+	}
+
+
+def _build_data_quality(customer, kyc, relationships, bank_accounts, documents, facilities, risk_controls):
+	missing = []
+	warnings = []
+
+	def require(condition, field, label, severity="High"):
+		if not condition:
+			missing.append({"field": field, "label": label, "severity": severity})
+
+	require(customer.get("customer_name"), "customer_name", _("Customer name"))
+	require(customer.get("customer_type"), "customer_type", _("Customer type"))
+	require((kyc or {}).get("npwp") or customer.get("tax_id"), "npwp", _("NPWP"))
+	require((kyc or {}).get("registered_address"), "registered_address", _("Registered address"))
+	require((kyc or {}).get("nik") or customer.get("customer_type") != "Individual", "nik", _("NIK / KTP"), "Medium")
+	require(bank_accounts, "bank_accounts", _("At least one bank account"), "Medium")
+	require(facilities, "facilities", _("At least one credit facility"), "Medium")
+
+	if relationships and not risk_controls.get("ownership_balanced"):
+		warnings.append(_("Shareholder ownership is not balanced to 100%."))
+	if risk_controls.get("overdue_kyc"):
+		warnings.append(_("KYC review is overdue."))
+	if risk_controls.get("expired_documents"):
+		warnings.append(_("{0} customer document(s) expired.").format(risk_controls.get("expired_documents")))
+	if risk_controls.get("missed_payments"):
+		warnings.append(_("{0} missed payment transaction(s) found.").format(risk_controls.get("missed_payments")))
+	if risk_controls.get("collateral_insurance_expiring"):
+		warnings.append(_("{0} collateral insurance record(s) expire within 30 days.").format(risk_controls.get("collateral_insurance_expiring")))
+
+	stale_records = []
+	for rowset, label in ((documents, "Documents"), (facilities, "Facilities"), (bank_accounts, "Bank accounts")):
+		for row in rowset:
+			if row.get("modified") and date_diff(getdate(nowdate()), getdate(row.get("modified"))) > 365:
+				stale_records.append({"doctype": label, "name": row.get("name"), "modified": row.get("modified")})
+
+	score = max(0, 100 - len(missing) * 8 - len(warnings) * 5 - len(stale_records) * 2)
+	return {
+		"score": score,
+		"missing_required_fields": missing,
+		"stale_records": stale_records[:20],
+		"expired_documents": [row for row in documents if row.get("expiry_status") == "Expired" or _is_past_date(row.get("expiry_date"))],
+		"warnings": warnings,
+	}
+
+
+def _build_compliance_status(kyc, relationships, bureau_reports, risk_controls, external_adapters):
+	aml_rows = [row for row in relationships if row.get("relationship_type") in ("Director", "Commissioner", "UBO", "Shareholder")]
+	return {
+		"kyc_status": (kyc or {}).get("status") or "Pending",
+		"ekyc_result": (kyc or {}).get("ekyc_result") or "Manual Review",
+		"next_review_date": (kyc or {}).get("next_review_date"),
+		"overdue_kyc": risk_controls.get("overdue_kyc"),
+		"aml_pep_clear": len([row for row in aml_rows if row.get("aml_pep_status") == "Clear"]),
+		"aml_pep_pending": len([row for row in aml_rows if row.get("aml_pep_status") in ("Manual", "Pending Vendor", "Potential Match", "Unavailable", None)]),
+		"bureau_status": (bureau_reports[0].get("kol_status") if bureau_reports else "Not Available"),
+		"bureau_source": (bureau_reports[0].get("source") if bureau_reports else ""),
+		"watchlist": risk_controls.get("watchlist"),
+		"adapter_blockers": [row for row in external_adapters if row.get("status") == "Not Configured"],
+	}
+
+
+def _build_next_actions(data_quality, risk_controls, ai_insights, external_adapters):
+	actions = []
+	for missing in data_quality.get("missing_required_fields", [])[:5]:
+		actions.append({"type": "data_quality", "title": _("Complete {0}").format(missing.get("label")), "priority": "P1", "source": "Data Quality", "action_key": "open_profile", "payload": missing})
+	if risk_controls.get("overdue_kyc"):
+		actions.append({"type": "compliance", "title": _("Renew overdue KYC review"), "priority": "P0", "source": "KYC", "action_key": "open_kyc", "payload": {}})
+	if risk_controls.get("expired_documents"):
+		actions.append({"type": "document", "title": _("Replace expired customer documents"), "priority": "P0", "source": "Documents", "action_key": "open_documents", "payload": {"count": risk_controls.get("expired_documents")}})
+	if risk_controls.get("missed_payments"):
+		actions.append({"type": "risk", "title": _("Review missed payment behavior"), "priority": "P0", "source": "Transactions", "action_key": "open_transactions", "payload": {"count": risk_controls.get("missed_payments")}})
+	if not risk_controls.get("ownership_balanced"):
+		actions.append({"type": "ownership", "title": _("Complete shareholder ownership to 100%"), "priority": "P1", "source": "Ownership", "action_key": "open_ownership", "payload": {"shareholder_total": risk_controls.get("shareholder_total")}})
+	for insight in [row for row in ai_insights if row.get("status") == "Open"][:3]:
+		actions.append({"type": "ai_insight", "title": insight.get("title"), "priority": "P1", "source": "AI Insight", "action_key": "open_ai_insight", "payload": {"name": insight.get("name")}})
+	for adapter in external_adapters[:2]:
+		actions.append({"type": "adapter", "title": _("Configure {0}").format(adapter.get("label")), "priority": "P2", "source": "External Adapter", "action_key": "check_adapter", "payload": {"adapter_key": adapter.get("key")}})
+	return actions[:12]
+
+
+def _build_audit_summary(customer, kyc, notes, tracked_doctypes):
+	tracked = []
+	for doctype in sorted(tracked_doctypes):
+		if not _doctype_ready(doctype):
+			continue
+		tracked.append({"doctype": doctype, "count": frappe.db.count(doctype, {"customer": customer.name}) if frappe.get_meta(doctype).has_field("customer") else 0})
+	latest_summary = next((note for note in notes or [] if note.get("title") == "AI Customer Summary"), None)
+	return {
+		"last_profile_update": customer.get("modified"),
+		"last_kyc_update": (kyc or {}).get("modified"),
+		"last_summary_update": (latest_summary or {}).get("modified"),
+		"tracked_doctypes": tracked,
+	}
 
 
 def _list_reference_records(doctype: str, customer: str, limit: int = 20):
@@ -1174,6 +1541,37 @@ def _build_customer_summary(
 	shareholders = [row for row in relationships if row.get("relationship_type") == "Shareholder"]
 	shareholder_total = sum(flt(row.get("ownership_percent")) for row in shareholders)
 	summary_bullets = _summary_bullets(customer, kyc, facilities, bureau_reports, relationships, risk_profiles, transactions, ai_insights)
+	confidence = min(0.95, 0.35 + (0.08 * len([rows for rows in (facilities, bureau_reports, relationships, risk_profiles, transactions, ai_insights) if rows])))
+	structured_response = {
+		"schema_version": "1.0",
+		"agent_key": "customer_insight",
+		"title": _("Customer 360 Summary"),
+		"executive_summary": saved_summary or " ".join(summary_bullets[:2]),
+		"confidence": round(confidence, 2),
+		"sections": [
+			{"title": _("Exposure"), "items": [summary_bullets[0]]},
+			{"title": _("Compliance"), "items": [summary_bullets[2], summary_bullets[3]]},
+			{"title": _("Follow-up"), "items": [summary_bullets[4]]},
+		],
+		"recommendations": [
+			{
+				"title": row.get("title"),
+				"detail": row.get("suggested_action") or row.get("notes") or "",
+				"confidence": flt(row.get("confidence_score")),
+			}
+			for row in ai_insights[:3]
+		],
+		"risks": [
+			{"title": _("Watchlist"), "severity": "High" if (kyc or {}).get("watchlist") else "Low"},
+			{"title": _("Missed payments"), "severity": "High" if any(row.get("transaction_type") == "Missed Payment" for row in transactions) else "Low"},
+		],
+		"actions": [],
+		"sources": [
+			{"id": "S1", "title": _("Customer profile"), "doctype": "Customer", "docname": customer.get("name"), "excerpt": customer.get("customer_name") or customer.get("name")},
+			{"id": "S2", "title": _("Customer 360 linked records"), "doctype": "Customer", "docname": customer.get("name"), "excerpt": _("Facilities, KYC, bureau, relationship, transaction, and insight records.")},
+		],
+		"limitations": [_("External verification adapters are not configured unless explicitly shown as configured.")],
+	}
 	return {
 		"total_outstanding": total_outstanding,
 		"active_facilities": len([row for row in facilities if row.get("status") == "Active"]),
@@ -1196,6 +1594,7 @@ def _build_customer_summary(
 		"tags": len(tags),
 		"summary_bullets": summary_bullets,
 		"summary_text": saved_summary or "\n".join(f"- {row}" for row in summary_bullets),
+		"structured_response": structured_response,
 	}
 
 

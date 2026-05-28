@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full bg-slate-50 font-sans">
-    <div v-if="!routeApplication" class="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0">
+    <div v-if="!routeApplication && (!isMobile || !selectedApp)" class="w-full md:w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 h-full">
       <div class="p-4 border-b border-slate-200">
         <h2 class="text-lg font-bold text-slate-800 mb-3">{{ __('Credit Analysis Queue') }}</h2>
         <div class="relative">
@@ -43,7 +43,7 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div v-if="!isMobile || selectedApp" class="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <div v-if="!selectedApp" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
         <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
           <FeatherIcon name="file-text" class="h-10 w-10 text-slate-300" />
@@ -85,17 +85,55 @@
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
+            <Button v-if="isMobile && !routeApplication" variant="outline" :label="__('Back to Queue')" @click="selectedApp = null">
+              <template #prefix>
+                <FeatherIcon name="chevron-left" class="h-4 w-4" />
+              </template>
+            </Button>
             <Button v-if="routeApplication" variant="outline" :label="__('Back to List')" @click="goToCreditList">
               <template #prefix>
                 <FeatherIcon name="arrow-left" class="h-4 w-4" />
               </template>
             </Button>
-            <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
-            <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
-              <template #prefix>
-                <FeatherIcon name="check-circle" class="h-4 w-4" />
-              </template>
-            </Button>
+
+            <!-- Dynamic Credit Flow Action Bar -->
+            <template v-if="currentFlowState.data?.ok && currentFlowState.data.available_actions?.length">
+              <Button
+                v-for="act in currentFlowState.data.available_actions"
+                :key="act"
+                :variant="act === 'submit' || act === 'approve' ? 'solid' : 'outline'"
+                :theme="act === 'reject' ? 'red' : 'teal'"
+                :label="labelizeAction(act)"
+                :loading="busy"
+                @click="handleFlowAction(act)"
+              />
+            </template>
+            
+            <!-- Fallback Static Buttons (when no workflow assigned) -->
+            <template v-else-if="!workflowSteps.loading && !workflowSteps.data?.length">
+              <Button variant="outline" :loading="busy" :label="__('Save Draft')" @click="saveCurrentSpreading" />
+              <Button variant="solid" :loading="busy" :label="__('Submit Memo')" @click="submitApproval">
+                <template #prefix>
+                  <FeatherIcon name="check-circle" class="h-4 w-4" />
+                </template>
+              </Button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Visual Journey Progress Banner -->
+        <div v-if="currentFlowState.data?.ok && currentFlowState.data.execution_id" class="bg-teal-50/60 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between gap-4 shrink-0 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700">{{ __('Visual Journey Stage:') }}</span>
+            <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold">
+              {{ currentFlowState.data.current_node_label || currentFlowState.data.current_node }}
+            </span>
+            <span class="text-slate-400 font-medium">({{ currentFlowState.data.current_node_type }})</span>
+          </div>
+
+          <div v-if="currentFlowState.data.sla_deadline" class="text-slate-500 flex items-center gap-1.5">
+            <FeatherIcon name="clock" class="h-3.5 w-3.5 text-slate-400" />
+            <span>{{ __('SLA Deadline:') }} {{ currentFlowState.data.sla_deadline.split(' ')[1] || currentFlowState.data.sla_deadline }}</span>
           </div>
         </div>
 
@@ -173,10 +211,9 @@
                       <td class="py-3 px-4 text-xs font-semibold uppercase text-slate-400">{{ row.statement_type }}</td>
                       <td class="py-3 px-4 font-semibold text-slate-800">{{ row.metric_label }}</td>
                       <td v-for="year in years" :key="`${row.key}-${year}`" class="py-2 px-3 text-right">
-                        <input
+                        <RupiahInput
                           v-if="row.cells[year]"
-                          v-model.number="row.cells[year].adjusted_amount"
-                          type="number"
+                          v-model="row.cells[year].adjusted_amount"
                           class="w-32 rounded border border-slate-200 bg-white px-2 py-1 text-right font-mono text-xs focus:border-teal-600 focus:outline-none"
                         />
                         <span v-else class="text-slate-300">-</span>
@@ -525,12 +562,15 @@
             <section class="grid grid-cols-1 xl:grid-cols-3 gap-5">
               <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-4">
                 <h3 class="font-bold text-slate-800 mb-3">{{ __('Executive Summary') }}</h3>
-                <ul class="space-y-2 text-sm text-slate-700">
+                <StructuredResponseCard v-if="summaryStructured" :response="summaryStructured" compact />
+                <ul v-else class="space-y-2 text-sm text-slate-700">
                   <li v-for="item in memo.summary_bullets || []" :key="item" class="rounded border border-slate-100 bg-slate-50 p-2">{{ item }}</li>
                 </ul>
+                <StructuredResponseCard v-if="recommendationStructured" class="mt-3" :response="recommendationStructured" compact />
               </div>
               <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-4 xl:col-span-2">
                 <h3 class="font-bold text-slate-800 mb-3">{{ __('Credit Memo Editor') }}</h3>
+                <StructuredResponseCard v-if="memoStructured" class="mb-3" :response="memoStructured" />
                 <textarea
                   v-model="memoContent"
                   class="h-[360px] w-full rounded-lg border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 focus:outline-none focus:border-teal-600"
@@ -574,6 +614,66 @@
               </table>
             </section>
           </div>
+
+          <!-- Workflow Form Step (dynamic from workflow form config) -->
+          <div v-else-if="activeStepConfig" class="space-y-5">
+            <section
+              v-for="section in activeStepConfig.sections"
+              :key="section.sectionId"
+              class="bg-white border border-slate-200 rounded-lg shadow-sm"
+            >
+              <div class="p-4 border-b border-slate-200">
+                <h3 class="font-bold text-slate-800">{{ section.label }}</h3>
+                <p v-if="section.description" class="text-xs text-slate-500 mt-1">{{ section.description }}</p>
+              </div>
+              <div class="p-4 space-y-4">
+                <div
+                  v-for="field in stepFields(section.sectionId)"
+                  :key="field.fieldname"
+                  class="flex flex-col gap-1.5"
+                >
+                  <label class="text-xs font-semibold text-slate-700">
+                    {{ field.label }}
+                    <span v-if="field.mandatory" class="text-red-500 ml-0.5">*</span>
+                  </label>
+                  <input
+                    v-if="['Data', 'Int', 'Float', 'Currency'].includes(getFieldType(field.fieldname))"
+                    v-model="workflowFormData[field.fieldname]"
+                    type="text"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <select
+                    v-else-if="getFieldType(field.fieldname) === 'Select'"
+                    v-model="workflowFormData[field.fieldname]"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none bg-white"
+                    :disabled="field.readOnly"
+                  >
+                    <option value="">{{ __('Pilih...') }}</option>
+                  </select>
+                  <textarea
+                    v-else-if="['Small Text', 'Text'].includes(getFieldType(field.fieldname))"
+                    v-model="workflowFormData[field.fieldname]"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <input
+                    v-else
+                    v-model="workflowFormData[field.fieldname]"
+                    type="text"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    :placeholder="field.label"
+                    :readonly="field.readOnly"
+                  />
+                  <p v-if="!field.visible" class="text-[10px] text-amber-600 italic">
+                    {{ __('(Field tersembunyi)') }}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -582,9 +682,11 @@
 
 <script setup>
 import { Button, FeatherIcon, Badge, FileUploader, usePageMeta, toast, createResource, call } from 'frappe-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import html2pdf from 'html2pdf.js'
+import RupiahInput from '@/components/Controls/RupiahInput.vue'
+import StructuredResponseCard from '@/components/AI/StructuredResponseCard.vue'
 
 const MetricCard = {
   props: ['label', 'value', 'icon'],
@@ -612,25 +714,56 @@ const InfoRow = {
 const searchQuery = ref('')
 const selectedApp = ref(null)
 const activeTab = ref('spreading')
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 const memoContent = ref('')
 const spreadRows = ref([])
 const importResult = ref(null)
 const busy = ref(false)
+const workflowFormData = ref({})
 const route = useRoute()
 const router = useRouter()
 const routeApplication = computed(() => String(route.params.applicationId || ''))
 
-const tabs = [
-  { key: 'spreading', label: 'Financial Spreading' },
-  { key: 'extraction', label: 'AI Extraction' },
-  { key: 'ratios', label: 'Ratios & Trends' },
-  { key: 'dscr', label: 'DSCR & Cashflow' },
-  { key: 'benchmark', label: 'Benchmark & Peers' },
-  { key: 'risk', label: 'Risk Grade' },
-  { key: 'scenarios', label: 'Scenarios & Sensitivity' },
-  { key: 'collateral', label: 'Collateral & News' },
-  { key: 'memo', label: 'Memo & Approval' },
-]
+const workflowSteps = createResource({
+  url: 'crm.api.credit_analysis.get_workflow_step_configs',
+  makeParams() {
+    return { application_id: selectedApp.value?.name }
+  },
+  auto: false,
+  onSuccess() {
+    const steps = workflowSteps.data || []
+    if (steps.length) {
+      activeTab.value = steps[0].step_id
+    }
+  },
+})
+
+const activeStepConfig = computed(() => {
+  const steps = workflowSteps.data || []
+  return steps.find((s) => s.step_id === activeTab.value) || null
+})
+
+const tabs = computed(() => {
+  const steps = workflowSteps.data || []
+  const fallback = [
+    { key: 'spreading', label: 'Financial Spreading' },
+    { key: 'extraction', label: 'AI Extraction' },
+    { key: 'ratios', label: 'Ratios & Trends' },
+    { key: 'dscr', label: 'DSCR & Cashflow' },
+    { key: 'benchmark', label: 'Benchmark & Peers' },
+    { key: 'risk', label: 'Risk Grade' },
+    { key: 'scenarios', label: 'Scenarios & Sensitivity' },
+    { key: 'collateral', label: 'Collateral & News' },
+    { key: 'memo', label: 'Memo & Approval' },
+  ]
+  if (steps.length) {
+    return steps.map((s) => ({ key: s.step_id, label: s.label }))
+  }
+  return fallback
+})
 
 const queue = createResource({
   url: 'crm.api.credit.get_credit_application_queue',
@@ -639,6 +772,15 @@ const queue = createResource({
     if (routeApplication.value) loadRouteApplication()
     else if (!selectedApp.value && data?.length) selectApp(data[0])
   },
+})
+
+// Dynamic Visual Flow Execution State resource
+const currentFlowState = createResource({
+  url: 'crm.api.workflow_execution.get_current_state',
+  makeParams() {
+    return { application_id: selectedApp.value?.name }
+  },
+  auto: false
 })
 
 const analysis = createResource({
@@ -694,6 +836,9 @@ const extractionReviewCells = computed(() => {
 })
 const memo = computed(() => workspace.value.memo || {})
 const recommendation = computed(() => workspace.value.recommendation || {})
+const summaryStructured = computed(() => memo.value.summary_structured_response || null)
+const memoStructured = computed(() => memo.value.structured_response || null)
+const recommendationStructured = computed(() => recommendation.value.structured_response || null)
 const proofRows = computed(() => workspace.value.proof || [])
 
 const spreadMatrix = computed(() => {
@@ -719,7 +864,12 @@ function selectApp(app) {
   selectedApp.value = app
   activeTab.value = 'spreading'
   importResult.value = null
+  workflowFormData.value = {}
   analysis.fetch()
+  if (app && app.name) {
+    currentFlowState.submit()
+    workflowSteps.submit()
+  }
 }
 
 function loadRouteApplication() {
@@ -865,10 +1015,24 @@ async function generateSummary() {
   await runAction(() => call('crm.api.credit_analysis.generate_credit_summary', { application_id: selectedApp.value.name }), __('AI executive summary generated'))
 }
 
+function stripMarkdown(text) {
+  if (!text) return text
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^-\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/^>\s+/gm, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 async function generateMemo() {
   await runAction(async () => {
     const result = await call('crm.api.credit_analysis.generate_credit_memo', { application_id: selectedApp.value.name })
-    memoContent.value = result.content || memoContent.value
+    memoContent.value = stripMarkdown(result.content) || memoContent.value
     return result
   }, __('AI credit memo generated'))
 }
@@ -879,6 +1043,37 @@ async function generateRecommendation() {
 
 async function submitApproval() {
   await runAction(() => call('crm.api.credit_analysis.submit_memo_for_approval', { application_id: selectedApp.value.name }), __('Memo submitted to approval route'))
+}
+
+function labelizeAction(action) {
+  if (action === 'submit') return __('Submit Memo')
+  if (action === 'save_draft') return __('Save Draft')
+  if (action === 'approve') return __('Approve')
+  if (action === 'reject') return __('Reject')
+  if (action === 'return') return __('Return to RM')
+  return action.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+async function handleFlowAction(action) {
+  busy.value = true
+  try {
+    const res = await call('crm.api.workflow_execution.submit_action', {
+      application_id: selectedApp.value.name,
+      action_name: action
+    })
+    if (res && res.ok === false) {
+      toast.error(res.message || __('Action execution failed.'))
+    } else {
+      toast.success(__('Action applied successfully.'))
+      queue.fetch()
+      currentFlowState.submit()
+      workflowSteps.submit()
+    }
+  } catch (e) {
+    toast.error(e.message || __('Action failed.'))
+  } finally {
+    busy.value = false
+  }
 }
 
 function downloadBlob(blob, filename) {
@@ -954,9 +1149,36 @@ async function exportMemo() {
   }
 }
 
+function stepFields(sectionId) {
+  if (!activeStepConfig.value) return []
+  return (activeStepConfig.value.fields || []).filter((f) => f.placement === sectionId && f.visible !== false)
+}
+
+function getFieldType(fieldname) {
+  const map = {
+    borrower: 'Link', borrower_name: 'Data', borrower_type: 'Select',
+    requested_amount: 'Currency', facility_type: 'Data', risk_grade: 'Data',
+    purpose: 'Small Text', credit_limit: 'Currency', plafond: 'Currency',
+    tenor_months: 'Int', interest_rate: 'Float', repayment_scheme: 'Data',
+    collateral_type: 'Data', collateral_value: 'Currency', ltv_percent: 'Float',
+    coverage_ratio: 'Float', collateral_description: 'Small Text',
+    revenue: 'Currency', ebitda: 'Currency', net_profit: 'Currency',
+    total_assets: 'Currency', total_liabilities: 'Currency', equity: 'Currency',
+    der: 'Float', current_ratio: 'Float',
+    branch: 'Data', segment: 'Data', priority: 'Data', npwp: 'Data',
+  }
+  return map[fieldname] || 'Data'
+}
+
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   if (routeApplication.value) loadRouteApplication()
   else if (queue.data?.length && !selectedApp.value) selectApp(queue.data[0])
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 watch(routeApplication, () => {

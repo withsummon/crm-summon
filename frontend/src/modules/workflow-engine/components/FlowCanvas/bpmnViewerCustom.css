@@ -1,0 +1,88 @@
+/* BPMN-JS Read-Only Execution Monitor Theme */
+
+/* Completed Node Highlights */
+.bpmn-node-completed .djs-visual rect,
+.bpmn-node-completed .djs-visual circle,
+.bpmn-node-completed .djs-visual polygon,
+.bpmn-node-completed .djs-visual path {
+  stroke: #10b981 !important;
+  fill: rgba(16, 185, 129, 0.06) !important;
+  stroke-width: 2.5px !important;
+  transition: all 0.3s ease;
+}
+
+.bpmn-node-completed .djs-visual text {
+  fill: #065f46 !important;
+  font-weight: 600 !important;
+}
+
+/* Active Node Highlights (Pulsing Teal) */
+.bpmn-node-active .djs-visual rect,
+.bpmn-node-active .djs-visual circle,
+.bpmn-node-active .djs-visual polygon,
+.bpmn-node-active .djs-visual path {
+  stroke: #0d9488 !important;
+  fill: rgba(13, 148, 136, 0.08) !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.4));
+  animation: bpmnTealPulse 2s infinite ease-in-out;
+}
+
+.bpmn-node-active .djs-visual text {
+  fill: #0f766e !important;
+  font-weight: 700 !important;
+}
+
+/* Skipped/Unreached Node Highlights (Muted Slate) */
+.bpmn-node-skipped {
+  opacity: 0.55 !important;
+}
+
+.bpmn-node-skipped .djs-visual rect,
+.bpmn-node-skipped .djs-visual circle,
+.bpmn-node-skipped .djs-visual polygon,
+.bpmn-node-skipped .djs-visual path {
+  stroke: #cbd5e1 !important;
+  fill: #f8fafc !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 4, 4 !important;
+}
+
+.bpmn-node-skipped .djs-visual text {
+  fill: #64748b !important;
+  text-decoration: line-through !important;
+}
+
+/* Standard Canvas Enhancements for BNI look & feel */
+.bpmn-viewer-container {
+  background-color: #fafafa;
+  background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  position: relative;
+}
+
+.bpmn-viewer-container .bjs-powered-by {
+  display: none !important;
+}
+
+/* Pulsing Teal Animation */
+@keyframes bpmnTealPulse {
+  0% {
+    stroke: #0d9488;
+    fill: rgba(13, 148, 136, 0.08);
+    filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.3));
+  }
+  50% {
+    stroke: #14b8a6;
+    fill: rgba(20, 184, 166, 0.16);
+    filter: drop-shadow(0 0 12px rgba(20, 184, 166, 0.6));
+  }
+  100% {
+    stroke: #0d9488;
+    fill: rgba(13, 148, 136, 0.08);
+    filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.3));
+  }
+}

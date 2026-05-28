@@ -53,7 +53,14 @@
   "priority",
   "target_date",
   "internal_notes",
-  "npwp"
+  "npwp",
+  "credit_flow",
+  "credit_flow_version",
+  "credit_flow_execution",
+  "current_flow_node",
+  "current_flow_node_label",
+  "flow_form_config",
+  "flow_available_actions"
  ],
  "fields": [
   {"default": "CRM-CA-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-CA-.YYYY.-"},
@@ -103,7 +110,14 @@
   {"fieldname": "priority", "fieldtype": "Data", "label": "Priority"},
   {"fieldname": "target_date", "fieldtype": "Date", "label": "Target Date"},
   {"fieldname": "internal_notes", "fieldtype": "Text", "label": "Internal Notes"},
-  {"fieldname": "npwp", "fieldtype": "Data", "label": "NPWP"}
+  {"fieldname": "npwp", "fieldtype": "Data", "label": "NPWP"},
+  {"fieldname": "credit_flow", "fieldtype": "Link", "label": "Credit Flow", "options": "CRM Credit Flow"},
+  {"fieldname": "credit_flow_version", "fieldtype": "Int", "label": "Credit Flow Version"},
+  {"fieldname": "credit_flow_execution", "fieldtype": "Link", "label": "Credit Flow Execution", "options": "CRM Credit Flow Execution"},
+  {"fieldname": "current_flow_node", "fieldtype": "Data", "label": "Current Flow Node ID"},
+  {"fieldname": "current_flow_node_label", "fieldtype": "Data", "label": "Current Flow Node Label"},
+  {"fieldname": "flow_form_config", "fieldtype": "Long Text", "label": "Current Form Config JSON"},
+  {"fieldname": "flow_available_actions", "fieldtype": "Long Text", "label": "Current Available Actions JSON"}
  ],
  "index_web_pages_for_search": 1,
  "links": [],

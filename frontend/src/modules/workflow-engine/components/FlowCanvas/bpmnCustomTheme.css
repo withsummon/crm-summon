@@ -1,0 +1,82 @@
+/* bpmnCustomTheme.css
+ * 
+ * Brand design system styles for bpmn-js modeler in BNI FCRM / Summon
+ */
+
+/* Container and Canvas Background with Dot-Grid pattern */
+.bpmn-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #f8fafc; /* slate 50 */
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px); /* dot pattern */
+  background-size: 20px 20px;
+}
+
+/* Hide default BPMN-JS sidebar palette to enforce our custom, premium BNI sidebar */
+.djs-palette {
+  display: none !important;
+}
+
+/* Modeler element styling */
+.djs-container {
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif !important;
+}
+
+/* Smooth transitions for connections */
+.djs-connection .djs-visual path {
+  stroke: #64748b !important; /* slate 500 */
+  stroke-width: 2px !important;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+.djs-connection:hover .djs-visual path,
+.djs-connection.selected .djs-visual path {
+  stroke: #7c3aed !important; /* purple 600 */
+  stroke-width: 3px !important;
+}
+
+/* Nodes styling: standard brand colors */
+.djs-shape .djs-visual rect,
+.djs-shape .djs-visual circle,
+.djs-shape .djs-visual polygon {
+  stroke: #cbd5e1 !important; /* slate 300 */
+  stroke-width: 1.5px !important;
+  fill: #ffffff !important;
+  transition: stroke 0.15s ease, filter 0.15s ease;
+}
+
+/* Custom visual feedback on hover/select */
+.djs-shape:hover .djs-visual rect,
+.djs-shape:hover .djs-visual circle,
+.djs-shape:hover .djs-visual polygon {
+  stroke: #0d9488 !important; /* teal 600 */
+  filter: drop-shadow(0 4px 6px -1px rgb(13 148 136 / 0.1)) drop-shadow(0 2px 4px -2px rgb(13 148 136 / 0.1));
+}
+
+.djs-shape.selected .djs-visual rect,
+.djs-shape.selected .djs-visual circle,
+.djs-shape.selected .djs-visual polygon {
+  stroke: #7c3aed !important; /* purple 600 */
+  stroke-width: 2.5px !important;
+  filter: drop-shadow(0 10px 15px -3px rgb(124 58 237 / 0.15));
+}
+
+/* Element context pad (popup controls) custom theme */
+.djs-context-pad {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px border #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+  padding: 4px !important;
+}
+
+.djs-context-pad .entry {
+  border-radius: 4px !important;
+  transition: background-color 0.15s ease;
+}
+
+.djs-context-pad .entry:hover {
+  background-color: #f1f5f9 !important;
+}

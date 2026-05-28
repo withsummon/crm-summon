@@ -130,7 +130,7 @@ const overrideScore = ref(0)
 const overrideReason = ref('')
 
 const summary = createResource({
-  url: 'crm.api.lead_management.get_lead_uat_summary',
+  url: 'crm.api.lead_management.get_lead_summary',
   makeParams: () => ({ lead: props.leadName }),
 })
 

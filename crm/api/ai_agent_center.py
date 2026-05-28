@@ -2,6 +2,8 @@ import json
 import re
 import uuid
 import importlib.util
+import html
+import io
 from decimal import Decimal
 
 import frappe
@@ -94,8 +96,38 @@ GENERAL_AGENT = {
 	"uat": ["Universal chat", "RAG grounded answers", "CRM action execution"],
 }
 
-LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up"}
+LOW_RISK_ACTIONS = {"create_task", "create_note", "draft_communication", "create_recommendation", "book_follow_up", "generate_pdf_report"}
 HIGH_RISK_ACTIONS = {"update_record", "send_communication", "fire_workflow", "export_regulatory_draft"}
+
+AGENT_TOOLS = {
+	"credit_analyst": ["financial_spreading", "ratio_analysis", "dscr_projection", "scenario_simulation", "create_recommendation", "generate_pdf_report"],
+	"relationship_manager": ["next_best_action", "draft_communication", "book_follow_up", "create_task", "generate_pdf_report"],
+	"collection_officer": ["overdue_prioritization", "draft_communication", "book_follow_up", "create_task", "generate_pdf_report"],
+	"document_validator": ["document_completeness_check", "authenticity_flags", "create_note", "generate_pdf_report"],
+	"financial_analyst": ["trend_analysis", "benchmark_comparison", "scenario_simulation", "generate_pdf_report"],
+	"proposal_generator": ["proposal_draft", "pricing_logic", "create_recommendation", "generate_pdf_report"],
+	"risk_analyst": ["risk_signal_scan", "risk_score_explanation", "create_recommendation", "generate_pdf_report"],
+	"customer_support": ["customer_answer_draft", "human_handoff_task", "draft_communication", "generate_pdf_report"],
+	"compliance_checker": ["aml_pep_scan", "suspicious_activity_draft", "export_regulatory_draft", "generate_pdf_report"],
+	"portfolio_monitor": ["portfolio_early_warning_scan", "watchlist_recommendation", "create_task", "generate_pdf_report"],
+	"general": ["rag_answer", "create_task", "create_note", "generate_pdf_report"],
+}
+
+OUTPUT_PROFILES = {
+	"credit_analyst": ["Ringkasan Kredit", "Analisis Keuangan", "Rasio & DSCR", "Rekomendasi Keputusan", "Covenant & Syarat"],
+	"relationship_manager": ["Prioritas Nasabah/Lead", "Next Best Action", "Draft Komunikasi", "Follow-up", "Peluang Cross-sell"],
+	"collection_officer": ["Prioritas Penagihan", "Recovery Likelihood", "Strategi Dunning", "PTP / Negosiasi", "Eskalasi"],
+	"document_validator": ["Kelengkapan Dokumen", "Validasi Tanda Tangan/Stempel/Tanggal", "Indikasi Anomali", "Skor Validasi", "Perbaikan Dokumen"],
+	"financial_analyst": ["Tren Year-on-Year", "Benchmark Industri", "Anomali Keuangan", "Simulasi Skenario", "Implikasi Kredit"],
+	"proposal_generator": ["Ringkasan Proposal", "Kebutuhan Nasabah", "Struktur Produk", "Pricing & Syarat", "Draft Proposal"],
+	"risk_analyst": ["Sinyal Risiko", "Risk Score", "Faktor Pendorong", "Perbandingan Historis", "Mitigasi"],
+	"customer_support": ["Jawaban Nasabah", "Konteks Pertanyaan", "Langkah Penyelesaian", "Handoff", "Kepuasan"],
+	"compliance_checker": ["Temuan Compliance", "AML/PEP Screening", "Indikasi Suspicious Activity", "Draft SAR", "Tindak Lanjut"],
+	"portfolio_monitor": ["Ringkasan Portofolio", "Early Warning Signals", "Watchlist", "Dampak Risiko", "Aksi Monitoring"],
+	"general": ["Ringkasan", "Temuan Utama", "Rekomendasi", "Aksi", "Sumber"],
+}
+
+STRUCTURED_SCHEMA_VERSION = "1.0"
 
 
 def _get_agent(agent_key):
@@ -103,6 +135,10 @@ def _get_agent(agent_key):
 		if agent["key"] == agent_key:
 			return agent
 	return GENERAL_AGENT
+
+
+def _agent_tools(agent_key):
+	return AGENT_TOOLS.get(agent_key) or AGENT_TOOLS["general"]
 
 
 def _doctype_ready(doctype):
@@ -249,20 +285,202 @@ def _audit(agent_key, model, prompt, response, sources=None, tokens=0, cost=Deci
 	)
 
 
+def _source_payload(sources):
+	payload = []
+	for index, source in enumerate(sources or [], start=1):
+		if isinstance(source, dict):
+			payload.append(
+				{
+					"id": source.get("id") or source.get("name") or f"S{index}",
+					"title": source.get("title") or source.get("doctype") or f"Sumber {index}",
+					"doctype": source.get("doctype"),
+					"docname": source.get("docname"),
+					"excerpt": source.get("excerpt") or source.get("content") or "",
+				}
+			)
+		else:
+			payload.append({"id": f"S{index}", "title": cstr(source), "doctype": None, "docname": None, "excerpt": cstr(source)})
+	return payload
+
+
+def _agent_section_titles(agent_key):
+	return OUTPUT_PROFILES.get(agent_key) or OUTPUT_PROFILES["general"]
+
+
+def _response_shell(agent_key, title=None, summary=None, confidence=0, sources=None, limitations=None):
+	agent = _get_agent(agent_key)
+	try:
+		normalized_confidence = float(confidence or 0)
+	except Exception:
+		normalized_confidence = 0
+	return {
+		"schema_version": STRUCTURED_SCHEMA_VERSION,
+		"agent_key": agent["key"],
+		"title": title or agent["name"],
+		"executive_summary": summary or "Belum ada ringkasan yang dapat ditampilkan.",
+		"confidence": normalized_confidence,
+		"sections": [],
+		"recommendations": [],
+		"risks": [],
+		"actions": [],
+		"sources": _source_payload(sources),
+		"limitations": limitations or [],
+	}
+
+
+def _json_schema_instruction(agent):
+	sections = _agent_section_titles(agent["key"])
+	return json.dumps(
+		{
+			"schema_version": STRUCTURED_SCHEMA_VERSION,
+			"agent_key": agent["key"],
+			"title": "Judul singkat output",
+			"executive_summary": "Ringkasan eksekutif 2-4 kalimat dalam Bahasa Indonesia",
+			"confidence": 0.0,
+			"sections": [
+				{
+					"title": title,
+					"summary": "Narasi singkat berbasis sumber",
+					"items": ["Poin temuan tanpa markdown"],
+					"metrics": [{"label": "Nama metrik", "value": "Nilai", "status": "neutral"}],
+				}
+				for title in sections
+			],
+			"recommendations": [{"title": "Rekomendasi", "rationale": "Alasan", "priority": "medium", "next_step": "Langkah berikut", "confidence": 0.0}],
+			"risks": [{"title": "Risiko", "severity": "medium", "description": "Deskripsi", "mitigation": "Mitigasi"}],
+			"actions": [{"_action": "create_task", "risk_level": "low", "payload": {"title": "Judul task", "description": "Deskripsi"}}],
+			"sources": [{"id": "S1", "title": "Nama sumber", "doctype": "Customer", "docname": "ID", "excerpt": "Cuplikan sumber"}],
+			"limitations": ["Data yang belum tersedia atau asumsi yang harus diverifikasi"],
+		},
+		ensure_ascii=False,
+		indent=2,
+	)
+
+
 def _system_prompt(agent, rag_context, customer=None):
+	tools = ", ".join(_agent_tools(agent["key"]))
 	return (
-		f"You are {agent['name']}, a {agent['role']} for BNI SUMMON CRM.\n"
-		"Answer in the user's language, be concise, professional, and banking-specific.\n"
-		"Use only the provided CRM/RAG sources for factual customer, credit, risk, document, and transaction claims.\n"
-		"If sources are insufficient, say what is missing instead of inventing facts.\n"
-		"Return Markdown with tables when useful. Include a short 'Sources' section referencing source numbers.\n"
-		"Actions must be returned as JSON in a fenced block with _action, payload, and risk_level.\n"
-		"Low-risk actions may create tasks, notes, draft communications, recommendations, or follow-ups.\n"
-		"High-risk actions must request confirmation.\n\n"
+		f"Anda adalah {agent['name']}, {agent['role']} untuk BNI SUMMON CRM.\n"
+		"Jawab selalu dalam Bahasa Indonesia profesional, ringkas, dan spesifik untuk konteks banking/CRM.\n"
+		"Gunakan hanya sumber CRM/RAG yang diberikan untuk klaim faktual terkait nasabah, kredit, risiko, dokumen, transaksi, dan portofolio.\n"
+		"Jika sumber tidak cukup, jelaskan data yang kurang di field limitations. Jangan mengarang fakta.\n"
+		"WAJIB mengembalikan hanya JSON valid. Jangan gunakan markdown, heading markdown, tabel markdown, fenced code block, atau teks di luar JSON.\n"
+		"Gunakan schema JSON berikut secara ketat; pertahankan semua key utama meskipun nilainya kosong:\n"
+		f"{_json_schema_instruction(agent)}\n"
+		"Field actions hanya boleh berisi action yang benar-benar diminta user atau relevan sebagai low-risk draft. "
+		"High-risk action wajib risk_level high dan akan menunggu konfirmasi.\n"
+		"Jika user meminta laporan/PDF/export, tambahkan action generate_pdf_report dengan payload title, reference_doctype, reference_docname bila tersedia.\n\n"
 		f"Customer context: {customer or 'not scoped'}\n"
-		f"Agent UAT obligations: {', '.join(agent.get('uat') or [])}\n\n"
+		f"Agent production obligations: {', '.join(agent.get('uat') or [])}\n\n"
+		f"Available tools: {tools}\n\n"
 		f"RAG sources:\n{rag_context or 'No RAG sources available.'}"
 	)
+
+
+def _markdown_to_report_html(text):
+	escaped = html.escape(text or "").strip()
+	lines = []
+	for line in escaped.splitlines():
+		if line.startswith("### "):
+			lines.append(f"<h3>{line[4:]}</h3>")
+		elif line.startswith("## "):
+			lines.append(f"<h2>{line[3:]}</h2>")
+		elif line.startswith("# "):
+			lines.append(f"<h1>{line[2:]}</h1>")
+		elif line.startswith("- "):
+			lines.append(f"<p>&bull; {line[2:]}</p>")
+		elif line:
+			lines.append(f"<p>{line}</p>")
+		else:
+			lines.append("<br>")
+	return "\n".join(lines)
+
+
+def _create_pdf_report(payload):
+	from frappe.utils.pdf import get_pdf
+
+	title = cstr(payload.get("title") or "AI Agent Report").strip() or "AI Agent Report"
+	structured = payload.get("structured_response") or payload.get("structured") or None
+	content = payload.get("content") or payload.get("report") or payload.get("summary") or ""
+	if structured and not content:
+		content = _plain_text_from_structured(structured)
+	if not content:
+		frappe.throw(_("PDF report content is required"))
+	body_html = _structured_report_html(structured) if structured else _markdown_to_report_html(content)
+	report_html = f"""
+		<html>
+			<head>
+				<meta charset="utf-8">
+				<style>
+					body {{ font-family: Arial, sans-serif; color: #0f172a; font-size: 12px; line-height: 1.55; }}
+					h1 {{ color: #0f766e; font-size: 22px; margin-bottom: 8px; }}
+					h2 {{ color: #0f172a; font-size: 16px; margin-top: 18px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }}
+					h3 {{ color: #334155; font-size: 13px; margin-top: 14px; }}
+					p {{ margin: 6px 0; }}
+					table {{ width: 100%; border-collapse: collapse; margin: 8px 0; }}
+					td {{ border: 1px solid #cbd5e1; padding: 5px 7px; }}
+					.meta {{ color: #64748b; font-size: 10px; margin-bottom: 18px; }}
+				</style>
+			</head>
+			<body>
+				<h1>{html.escape(title)}</h1>
+				<div class="meta">Generated by AI Agent Center on {frappe.utils.now()}</div>
+				{body_html}
+			</body>
+		</html>
+	"""
+	try:
+		pdf = get_pdf(report_html)
+	except OSError:
+		pdf = _create_reportlab_pdf(title, content)
+	file_name = frappe.scrub(f"{title}-{uuid.uuid4().hex[:8]}") + ".pdf"
+	private_dir = frappe.get_site_path("private", "files")
+	frappe.create_folder(private_dir)
+	file_path = frappe.get_site_path("private", "files", file_name)
+	with open(file_path, "wb") as file:
+		file.write(pdf)
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": file_name,
+			"file_url": f"/private/files/{file_name}",
+			"is_private": 1,
+			"attached_to_doctype": payload.get("reference_doctype"),
+			"attached_to_name": payload.get("reference_docname"),
+		}
+	).insert(ignore_permissions=True)
+	return {"doctype": "File", "name": file_doc.name, "file_url": file_doc.file_url, "file_name": file_doc.file_name}
+
+
+def _create_reportlab_pdf(title, content):
+	from reportlab.lib.pagesizes import A4
+	from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+	from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+	buffer = io.BytesIO()
+	styles = getSampleStyleSheet()
+	styles.add(ParagraphStyle(name="BNITitle", parent=styles["Title"], textColor="#0f766e", fontSize=18, leading=22))
+	styles.add(ParagraphStyle(name="BNIHeading", parent=styles["Heading2"], textColor="#0f172a", fontSize=13, leading=16, spaceBefore=10))
+	styles.add(ParagraphStyle(name="BNIBody", parent=styles["BodyText"], fontSize=10, leading=14, spaceAfter=5))
+	doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+	story = [
+		Paragraph(html.escape(title), styles["BNITitle"]),
+		Paragraph(f"Generated by AI Agent Center on {html.escape(frappe.utils.now())}", styles["BNIBody"]),
+		Spacer(1, 10),
+	]
+	for raw_line in cstr(content).splitlines():
+		line = raw_line.strip()
+		if not line:
+			story.append(Spacer(1, 6))
+			continue
+		if line.startswith("#"):
+			story.append(Paragraph(html.escape(line.lstrip("#").strip()), styles["BNIHeading"]))
+		elif line.startswith("- "):
+			story.append(Paragraph(f"&bull; {html.escape(line[2:].strip())}", styles["BNIBody"]))
+		else:
+			story.append(Paragraph(html.escape(line), styles["BNIBody"]))
+	doc.build(story)
+	return buffer.getvalue()
 
 
 def _extract_actions(text):
@@ -279,6 +497,213 @@ def _extract_actions(text):
 
 def _clean_action_blocks(text):
 	return re.sub(r"```json\s*\{.*?\"_action\".*?\}\s*```", "", text or "", flags=re.DOTALL).strip()
+
+
+def _extract_json_object(text):
+	text = cstr(text or "").strip()
+	if not text:
+		return None
+	fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
+	if fenced:
+		text = fenced.group(1).strip()
+	if text.startswith("{"):
+		try:
+			return json.loads(text)
+		except Exception:
+			pass
+	start = text.find("{")
+	if start < 0:
+		return None
+	depth = 0
+	in_string = False
+	escape = False
+	for index in range(start, len(text)):
+		char = text[index]
+		if escape:
+			escape = False
+			continue
+		if char == "\\":
+			escape = True
+			continue
+		if char == '"':
+			in_string = not in_string
+			continue
+		if in_string:
+			continue
+		if char == "{":
+			depth += 1
+		elif char == "}":
+			depth -= 1
+			if depth == 0:
+				try:
+					return json.loads(text[start : index + 1])
+				except Exception:
+					return None
+	return None
+
+
+def _as_list_of_text(value):
+	if not value:
+		return []
+	if isinstance(value, str):
+		return [value]
+	if isinstance(value, (list, tuple)):
+		return [cstr(item) if not isinstance(item, dict) else cstr(item.get("text") or item.get("summary") or item) for item in value if item]
+	return [cstr(value)]
+
+
+def _normalize_metrics(value):
+	metrics = []
+	if isinstance(value, dict):
+		value = [{"label": key, "value": val} for key, val in value.items()]
+	for item in value or []:
+		if isinstance(item, dict):
+			metrics.append(
+				{
+					"label": cstr(item.get("label") or item.get("name") or "Metrik"),
+					"value": cstr(item.get("value") if item.get("value") is not None else item.get("amount") if item.get("amount") is not None else "-"),
+					"status": cstr(item.get("status") or "neutral").lower(),
+				}
+			)
+	return metrics
+
+
+def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
+	agent = _get_agent(agent_key)
+	if not isinstance(data, dict):
+		data = {}
+	normalized = _response_shell(
+		agent["key"],
+		title=cstr(data.get("title") or agent["name"]),
+		summary=cstr(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat."),
+		confidence=data.get("confidence") if data.get("confidence") is not None else confidence,
+		sources=data.get("sources") or sources,
+		limitations=_as_list_of_text(data.get("limitations")),
+	)
+	if normalized["confidence"] > 1:
+		normalized["confidence"] = round(normalized["confidence"] / 100, 4)
+	sections = data.get("sections") if isinstance(data.get("sections"), list) else []
+	for section in sections:
+		if isinstance(section, str):
+			normalized["sections"].append({"title": section, "summary": "", "items": [], "metrics": []})
+			continue
+		if not isinstance(section, dict):
+			continue
+		normalized["sections"].append(
+			{
+				"title": cstr(section.get("title") or "Analisis"),
+				"summary": cstr(section.get("summary") or section.get("content") or ""),
+				"items": _as_list_of_text(section.get("items") or section.get("bullets")),
+				"metrics": _normalize_metrics(section.get("metrics")),
+			}
+		)
+	if not normalized["sections"]:
+		normalized["sections"] = [
+			{"title": title, "summary": "", "items": [], "metrics": []}
+			for title in _agent_section_titles(agent["key"])[:3]
+		]
+	for key, fallback_title in (("recommendations", "Rekomendasi"), ("risks", "Risiko")):
+		rows = data.get(key) if isinstance(data.get(key), list) else []
+		for row in rows:
+			if isinstance(row, str):
+				normalized[key].append({"title": fallback_title, "description": row})
+			elif isinstance(row, dict):
+				normalized[key].append({k: row.get(k) for k in row.keys()})
+	actions = data.get("actions") if isinstance(data.get("actions"), list) else []
+	normalized["actions"] = [action for action in actions if isinstance(action, dict) and action.get("_action")]
+	return normalized
+
+
+def _parse_structured_response(raw_content, agent_key, sources=None, confidence=0):
+	data = _extract_json_object(raw_content)
+	if data is not None:
+		return _normalize_structured_response(data, agent_key, sources=sources, confidence=confidence)
+	fallback = _response_shell(
+		agent_key,
+		title="Output AI perlu divalidasi",
+		summary=cstr(raw_content or "Model tidak mengembalikan JSON valid.")[:800],
+		confidence=0,
+		sources=sources,
+		limitations=["Model tidak mengembalikan JSON valid. Output dinormalisasi agar aman ditampilkan."],
+	)
+	fallback["sections"] = [
+		{
+			"title": "Output Mentah",
+			"summary": cstr(raw_content or "")[:1200],
+			"items": [],
+			"metrics": [],
+		}
+	]
+	return fallback
+
+
+def _plain_text_from_structured(structured):
+	if not structured:
+		return ""
+	lines = [cstr(structured.get("title")), cstr(structured.get("executive_summary"))]
+	for section in structured.get("sections") or []:
+		lines.append(cstr(section.get("title")))
+		if section.get("summary"):
+			lines.append(cstr(section.get("summary")))
+		for item in section.get("items") or []:
+			lines.append(f"- {cstr(item)}")
+	for rec in structured.get("recommendations") or []:
+		title = rec.get("title") or rec.get("recommendation") or "Rekomendasi"
+		rationale = rec.get("rationale") or rec.get("reasoning") or rec.get("next_step") or ""
+		lines.append(f"{title}: {rationale}".strip())
+	for limitation in structured.get("limitations") or []:
+		lines.append(f"Batasan: {limitation}")
+	return "\n".join(line for line in lines if line).strip()
+
+
+def _guardrail_structured_response(agent_key, sources=None, confidence=0):
+	response = _response_shell(
+		agent_key,
+		title="Data belum cukup untuk dianalisis",
+		summary="Saya belum memiliki sumber CRM/RAG yang cukup untuk menjawab dengan aman. Mohon index atau lampirkan data nasabah, dokumen, atau transaksi yang relevan terlebih dahulu.",
+		confidence=confidence,
+		sources=sources,
+		limitations=["Sumber terindeks belum cukup untuk membuat klaim faktual.", "Tidak ada analisis spekulatif yang dibuat."],
+	)
+	response["sections"] = [
+		{
+			"title": "Data yang Dibutuhkan",
+			"summary": "Tambahkan dokumen atau konteks CRM yang relevan agar agent dapat membuat analisis berbasis sumber.",
+			"items": ["Customer/application context", "Dokumen pendukung", "Data transaksi atau portofolio terkait"],
+			"metrics": [],
+		}
+	]
+	return response
+
+
+def _structured_report_html(structured):
+	if not structured:
+		return ""
+	parts = [f"<p>{html.escape(cstr(structured.get('executive_summary')))}</p>"]
+	for section in structured.get("sections") or []:
+		parts.append(f"<h2>{html.escape(cstr(section.get('title') or 'Analisis'))}</h2>")
+		if section.get("summary"):
+			parts.append(f"<p>{html.escape(cstr(section.get('summary')))}</p>")
+		if section.get("metrics"):
+			parts.append("<table>")
+			for metric in section.get("metrics"):
+				parts.append(f"<tr><td>{html.escape(cstr(metric.get('label')))}</td><td>{html.escape(cstr(metric.get('value')))}</td></tr>")
+			parts.append("</table>")
+		for item in section.get("items") or []:
+			parts.append(f"<p>&bull; {html.escape(cstr(item))}</p>")
+	if structured.get("recommendations"):
+		parts.append("<h2>Rekomendasi</h2>")
+		for rec in structured.get("recommendations"):
+			parts.append(f"<p><strong>{html.escape(cstr(rec.get('title') or 'Rekomendasi'))}</strong>: {html.escape(cstr(rec.get('rationale') or rec.get('next_step') or ''))}</p>")
+	if structured.get("risks"):
+		parts.append("<h2>Risiko</h2>")
+		for risk in structured.get("risks"):
+			parts.append(f"<p><strong>{html.escape(cstr(risk.get('title') or 'Risiko'))}</strong>: {html.escape(cstr(risk.get('description') or ''))}</p>")
+	if structured.get("limitations"):
+		parts.append("<h2>Batasan</h2>")
+		for limitation in structured.get("limitations"):
+			parts.append(f"<p>&bull; {html.escape(cstr(limitation))}</p>")
+	return "\n".join(parts)
 
 
 def _execute_low_risk_action(agent_key, session_id, action):
@@ -342,6 +767,8 @@ def _execute_low_risk_action(agent_key, session_id, action):
 			},
 		)
 		result = {"doctype": "CRM AI Recommendation", "name": result_name}
+	elif action_type == "generate_pdf_report":
+		result = _create_pdf_report(payload)
 	else:
 		result = {"message": "Action queued for manual handling"}
 
@@ -378,11 +805,20 @@ def _queue_high_risk_action(agent_key, session_id, action):
 	return {"action_id": action_id, "status": "Pending Confirmation"}
 
 
-def _handle_actions(agent_key, session_id, reply_text):
+def _handle_actions(agent_key, session_id, reply_text_or_actions, structured_response=None):
 	results = []
-	for action in _extract_actions(reply_text):
+	if isinstance(reply_text_or_actions, list):
+		actions = reply_text_or_actions
+	else:
+		actions = _extract_actions(reply_text_or_actions)
+	for action in actions:
 		action_type = action.get("_action")
 		risk = (action.get("risk_level") or ("high" if action_type in HIGH_RISK_ACTIONS else "low")).lower()
+		if action_type == "generate_pdf_report":
+			payload = action.setdefault("payload", {})
+			payload.setdefault("title", (structured_response or {}).get("title") or "AI Agent Report")
+			payload.setdefault("content", _plain_text_from_structured(structured_response))
+			payload.setdefault("structured_response", structured_response)
 		if action_type in LOW_RISK_ACTIONS and risk != "high":
 			results.append(_execute_low_risk_action(agent_key, session_id, action))
 		else:
@@ -408,7 +844,7 @@ def get_agents():
 			"SELECT MAX(creation) FROM `tabCRM AI Audit Log` WHERE agent_key=%s",
 			(agent["key"],),
 		)[0][0]
-		rows.append({**agent, "model": settings.kimi_model or DEFAULT_KIMI_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
+		rows.append({**agent, "tools": _agent_tools(agent["key"]), "model": settings.kimi_model or DEFAULT_KIMI_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
 	return rows
 
 
@@ -422,22 +858,25 @@ def query_agent(agent_key="general", message=None, session_id=None, customer=Non
 
 	rag = query_rag(message, agent_key=agent["key"], customer=customer)
 	if not rag["passes_guardrail"]:
-		response = _("I do not have enough grounded CRM/RAG sources to answer that safely. Please index or attach the relevant customer/document data first.")
+		structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
+		response = _plain_text_from_structured(structured)
 		message_id = _save_message(session_id, agent["key"], "assistant", response, rag["sources"])
-		_audit(agent["key"], DEFAULT_KIMI_MODEL, message, response, rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
-		return {"response": response, "session_id": session_id, "message_id": message_id, "sources": rag["sources"], "actions": [], "confidence": rag["confidence"]}
+		_audit(agent["key"], DEFAULT_KIMI_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
+		return {"response": response, "structured_response": structured, "session_id": session_id, "message_id": message_id, "sources": rag["sources"], "actions": [], "confidence": rag["confidence"]}
 
 	settings = get_ai_settings()
 	system_prompt = _system_prompt(agent, rag["context"], customer=customer)
 	messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
 	result = call_kimi_chat(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode)
-	actions = _handle_actions(agent["key"], session_id, result.content)
-	reply = _clean_action_blocks(result.content)
+	structured = _parse_structured_response(result.content, agent["key"], rag["sources"], rag["confidence"])
+	actions = _handle_actions(agent["key"], session_id, structured.get("actions") or [], structured)
+	reply = _plain_text_from_structured(structured)
 	message_id = _save_message(session_id, agent["key"], "assistant", reply, rag["sources"], result.total_tokens, result.cost)
-	_audit(agent["key"], result.model, message, reply, rag["sources"], result.total_tokens, result.cost, rag["confidence"])
+	_audit(agent["key"], result.model, message, json.dumps(structured, ensure_ascii=False), rag["sources"], result.total_tokens, result.cost, rag["confidence"])
 	frappe.db.commit()
 	return {
 		"response": reply,
+		"structured_response": structured,
 		"session_id": session_id,
 		"message_id": message_id,
 		"sources": rag["sources"],
@@ -465,19 +904,22 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			current_session = _save_session(agent["key"], customer=customer, session_id=session_id, title=agent["name"])
 			_save_message(current_session, agent["key"], "user", message)
 			yield _sse("meta", {"session_id": current_session, "agent_key": agent["key"]})
+			yield _sse("status", {"code": "mengambil_sumber", "message": "Mengambil sumber CRM/RAG yang relevan..."})
 
 			rag = query_rag(message, agent_key=agent["key"], customer=customer)
 			if not rag["passes_guardrail"]:
-				reply = _("I do not have enough grounded CRM/RAG sources to answer that safely. Please index or attach the relevant customer/document data first.")
+				structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
+				reply = _plain_text_from_structured(structured)
 				message_id = _save_message(current_session, agent["key"], "assistant", reply, rag["sources"])
-				_audit(agent["key"], DEFAULT_KIMI_MODEL, message, reply, rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
+				_audit(agent["key"], DEFAULT_KIMI_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
 				frappe.db.commit()
 				yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
-				yield _sse("delta", {"delta": reply})
+				yield _sse("status", {"code": "memvalidasi_output", "message": "Output dibatasi karena sumber belum cukup."})
 				yield _sse(
 					"done",
 					{
 						"response": reply,
+						"structured_response": structured,
 						"session_id": current_session,
 						"message_id": message_id,
 						"sources": rag["sources"],
@@ -494,27 +936,30 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			system_prompt = _system_prompt(agent, rag["context"], customer=customer)
 			messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
 			yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
+			yield _sse("status", {"code": "menghasilkan_analisis", "message": "Menghasilkan analisis terstruktur Bahasa Indonesia..."})
 
 			content_parts = []
 			stream_meta = frappe._dict({"model": settings.kimi_model or DEFAULT_KIMI_MODEL, "total_tokens": 0, "cost": Decimal("0")})
 			for event in stream_kimi_chat_events(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode):
 				if event.event == "delta":
 					content_parts.append(event.delta)
-					yield _sse("delta", {"delta": event.delta})
 				elif event.event == "done":
 					stream_meta = event
 
 			full_content = "".join(content_parts)
-			actions = _handle_actions(agent["key"], current_session, full_content)
-			reply = _clean_action_blocks(full_content)
+			yield _sse("status", {"code": "memvalidasi_output", "message": "Memvalidasi schema output dan action plan..."})
+			structured = _parse_structured_response(full_content, agent["key"], rag["sources"], rag["confidence"])
+			actions = _handle_actions(agent["key"], current_session, structured.get("actions") or [], structured)
+			reply = _plain_text_from_structured(structured)
 			message_id = _save_message(current_session, agent["key"], "assistant", reply, rag["sources"], stream_meta.total_tokens, stream_meta.cost)
-			_audit(agent["key"], stream_meta.model, message, reply, rag["sources"], stream_meta.total_tokens, stream_meta.cost, rag["confidence"])
+			_audit(agent["key"], stream_meta.model, message, json.dumps(structured, ensure_ascii=False), rag["sources"], stream_meta.total_tokens, stream_meta.cost, rag["confidence"])
 			frappe.db.commit()
 			yield _sse("actions", {"actions": actions})
 			yield _sse(
 				"done",
 				{
 					"response": reply,
+					"structured_response": structured,
 					"session_id": current_session,
 					"message_id": message_id,
 					"sources": rag["sources"],
@@ -570,9 +1015,9 @@ def generate_summary(scope, docname, length="Standard"):
 		frappe.throw(_("Customer not found"))
 	length = length if length in {"TL;DR", "Standard", "Detailed"} else "Standard"
 	prompt = (
-		f"Generate a {length} AI Customer Summary and actionable banking insights for customer {docname}. "
-		"Cover credit exposure, KYC, risk, documents, transactions, relationships, and next best actions. "
-		"Use only sourced CRM/RAG facts."
+		f"Buat ringkasan AI Customer Summary level {length} untuk customer {docname}. "
+		"Bahas exposure kredit, KYC, risiko, dokumen, transaksi, relationship, peluang, dan next best action. "
+		"Gunakan hanya fakta CRM/RAG yang memiliki sumber dan kembalikan JSON terstruktur sesuai schema AI Agent Center."
 	)
 	response = query_agent("risk_analyst", prompt, customer=docname)
 	summary = response["response"]
@@ -695,6 +1140,8 @@ def get_audit_log(filters=None):
 def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 	payload = frappe.parse_json(input_payload) if isinstance(input_payload, str) else (input_payload or {})
 	prompt = payload.get("prompt") or payload.get("message") or ""
+	agent_key = payload.get("agent_key") or "general"
+	agent = _get_agent(agent_key)
 	if prompt_id:
 		row = frappe.db.sql("SELECT prompt FROM `tabCRM AI Prompt` WHERE name=%s", (prompt_id,), as_dict=True)
 		if row:
@@ -703,14 +1150,16 @@ def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 		frappe.throw(_("Sandbox prompt is required"))
 	result = call_kimi_chat(
 		[
-			{"role": "system", "content": "You are testing an AI Agent Center prompt in sandbox mode. Do not mutate production data."},
+			{"role": "system", "content": _system_prompt(agent, "Sandbox mode: no production mutation. Gunakan payload user sebagai input uji; jika tidak ada sumber, isi limitations.", customer=payload.get("customer"))},
 			{"role": "user", "content": prompt},
 		],
 		model=model_override,
 	)
-	_audit("sandbox", result.model, prompt, result.content, [], result.total_tokens, result.cost, 1, "Sandbox")
+	structured = _parse_structured_response(result.content, agent["key"], [], 1)
+	response = _plain_text_from_structured(structured)
+	_audit("sandbox", result.model, prompt, json.dumps(structured, ensure_ascii=False), [], result.total_tokens, result.cost, 1, "Sandbox")
 	frappe.db.commit()
-	return {"response": result.content, "model": result.model, "tokens": result.total_tokens, "cost": float(result.cost)}
+	return {"response": response, "structured_response": structured, "model": result.model, "tokens": result.total_tokens, "cost": float(result.cost)}
 
 
 @frappe.whitelist()
@@ -720,9 +1169,20 @@ def reindex_rag(scope=None, docname=None):
 
 @frappe.whitelist()
 def save_ai_settings(provider, model, base_url=None, api_key=None):
+	VALID_PROVIDERS = {"Kimi", "OpenAI", "Anthropic", "Gemini", "Custom"}
+	if provider not in VALID_PROVIDERS:
+		frappe.throw(_("Invalid AI provider: {0}. Must be one of: {1}").format(provider, ", ".join(sorted(VALID_PROVIDERS))))
+
+	raw = (model or "").strip()
+	if not raw:
+		frappe.throw(_("Model name cannot be empty."))
+	if raw != model:
+		frappe.throw(_("Model name contains leading or trailing whitespace."))
+	normalized = normalize_kimi_model(raw)
+
 	settings = frappe.get_doc("FCRM Settings", "FCRM Settings")
 	settings.ai_provider = provider
-	settings.kimi_model = normalize_kimi_model(model)
+	settings.kimi_model = normalized
 	if base_url is not None:
 		settings.kimi_base_url = (base_url or "https://api.moonshot.ai/v1").rstrip("/")
 	if api_key:

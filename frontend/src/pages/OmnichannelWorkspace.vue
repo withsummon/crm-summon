@@ -114,6 +114,31 @@
 
           <!-- For External Channels (Email, SMS, WhatsApp, Voice) -->
           <div v-else class="space-y-4 pt-3">
+            <div v-if="selectedChannel === 'WhatsApp'" class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+              <div class="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-wide text-emerald-800">{{ __('Demo Recipients') }}</div>
+                  <div class="text-xs text-emerald-700">{{ __('Use a prepared WhatsApp number for test chat') }}</div>
+                </div>
+                <FeatherIcon v-if="demoRecipientLoading" name="loader" class="h-4 w-4 animate-spin text-emerald-700" />
+              </div>
+              <div class="grid gap-2">
+                <button
+                  v-for="recipient in demoWhatsAppRecipients"
+                  :key="recipient.number"
+                  class="flex items-center justify-between rounded-lg border border-emerald-100 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-emerald-300"
+                  :disabled="demoRecipientLoading"
+                  @click="selectDemoWhatsAppRecipient(recipient)"
+                >
+                  <span>
+                    <span class="block font-semibold text-slate-800">{{ recipient.label }}</span>
+                    <span class="text-xs text-slate-500">{{ recipient.display }}</span>
+                  </span>
+                  <FeatherIcon name="chevron-right" class="h-4 w-4 text-emerald-600" />
+                </button>
+              </div>
+            </div>
+
             <!-- Customer Search Input -->
             <div class="relative">
               <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -307,7 +332,7 @@
 
             <div class="omni-messages">
               <article
-                v-for="message in detail?.messages || []"
+                v-for="message in visibleMessages"
                 :key="message.name"
                 :class="['omni-message', message.direction === 'Outbound' ? 'outbound' : '', message.direction === 'Internal' ? 'internal' : '']"
               >
@@ -322,6 +347,13 @@
                   {{ __('Attachment') }}
                 </a>
               </article>
+              <button
+                v-if="(detail?.messages?.length || 0) > MESSAGE_LIMIT"
+                class="omni-load-more"
+                @click="messageLimit += MESSAGE_LIMIT"
+              >
+                {{ __('Show %{count} more', { count: Math.min(MESSAGE_LIMIT, (detail?.messages?.length || 0) - messageLimit) }) }}
+              </button>
             </div>
 
             <div class="omni-composer">
@@ -415,8 +447,9 @@
 
 <script setup>
 import { call, Dialog, FeatherIcon, FileUploader, toast } from 'frappe-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { globalStore } from '../stores/global'
 
 const router = useRouter()
 
@@ -463,7 +496,27 @@ const newChatRecipient = ref('')
 const newChatSubject = ref('')
 const newChatFirstMessage = ref('')
 const newChatLoading = ref(false)
+const demoRecipientLoading = ref(false)
 let customerSearchTimer = null
+
+const MESSAGE_LIMIT = 100
+const messageLimit = ref(MESSAGE_LIMIT)
+
+const visibleMessages = computed(() => {
+  const all = detail.value?.messages || []
+  return all.slice(-Math.min(messageLimit.value, all.length))
+})
+
+watch(detail, () => {
+  messageLimit.value = MESSAGE_LIMIT
+})
+
+const { $socket } = globalStore()
+
+const demoWhatsAppRecipients = [
+  { label: 'Demo WhatsApp 0319', display: '+62 855-9115-0319', number: '6285591150319' },
+  { label: 'Demo WhatsApp 0730', display: '+62 857-7424-0730', number: '6285774240730' },
+]
 
 // Tag dialog
 const showTagDialog = ref(false)
@@ -492,7 +545,19 @@ const customerName = computed(() => {
   )
 })
 
-onMounted(loadConversations)
+onMounted(() => {
+  loadConversations()
+  $socket.on('omnichannel_message', (data) => {
+    loadConversations()
+    if (selectedConversationId.value === data.conversation) {
+      loadConversation(data.conversation)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  $socket.off('omnichannel_message')
+})
 
 watch(selectedConversationId, async (name) => {
   if (!name) return
@@ -806,6 +871,27 @@ function selectNewChatCustomer(customer) {
   newChatFirstMessage.value = ''
 }
 
+async function selectDemoWhatsAppRecipient(recipient) {
+  if (demoRecipientLoading.value) return
+  demoRecipientLoading.value = true
+  try {
+    const customer = await call('crm.api.omnichannel.ensure_demo_whatsapp_customer', {
+      recipient: recipient.number,
+    })
+    selectedNewChatCustomer.value = customer
+    customerSearch.value = ''
+    customerResults.value = []
+    newChatRecipient.value = recipient.number
+    newChatSubject.value = `WhatsApp Demo - ${recipient.label}`
+    newChatFirstMessage.value = `Halo, ini pesan test dari Summon CRM untuk ${recipient.display}.`
+    toast.success(__('Demo recipient selected'))
+  } catch (err) {
+    toast.error(err?.messages?.[0] || err.message || __('Failed to prepare demo recipient'))
+  } finally {
+    demoRecipientLoading.value = false
+  }
+}
+
 async function startExternalChat() {
   if (!selectedNewChatCustomer.value || !newChatRecipient.value || !newChatFirstMessage.value) return
   newChatLoading.value = true
@@ -963,6 +1049,7 @@ async function startExternalChat() {
 .omni-list-pane {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .omni-list-header,
@@ -1152,8 +1239,10 @@ async function startExternalChat() {
 .omni-thread {
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   border-right: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .omni-sla-bar {
@@ -1169,6 +1258,7 @@ async function startExternalChat() {
 
 .omni-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 18px;
 }
@@ -1344,6 +1434,24 @@ async function startExternalChat() {
   padding-left: 10px;
   color: #334155;
   font-size: 12px;
+}
+
+.omni-load-more {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f766e;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.omni-load-more:hover {
+  background: #f0fdfa;
 }
 
 @media (max-width: 1180px) {

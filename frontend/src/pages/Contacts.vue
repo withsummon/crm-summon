@@ -96,6 +96,14 @@ const rows = computed(() => {
     return []
   return contacts.value?.data.data.map((contact) => {
     let _rows = {}
+    
+    // Always ensure full_name is populated in rows
+    _rows['full_name'] = {
+      label: contact.full_name,
+      image_label: contact.full_name,
+      image: contact.image,
+    }
+
     contacts.value?.data.rows.forEach((row) => {
       _rows[row] = contact[row]
 
@@ -147,6 +155,19 @@ const rows = computed(() => {
 
 const columns = computed(() => {
   let _columns = contacts.value?.data?.columns || []
+
+  // Ensure Name (full_name) is always present as the first column
+  if (_columns.length && !_columns.some(col => (col.key || col.value) === 'full_name')) {
+    _columns = [
+      {
+        label: __('Name'),
+        type: 'Data',
+        key: 'full_name',
+        width: '17rem',
+      },
+      ..._columns
+    ]
+  }
 
   // Set align right for last column
   if (_columns.length) {

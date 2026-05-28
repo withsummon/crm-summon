@@ -88,7 +88,8 @@
                     :key="module.sheet"
                     :icon="module.icon"
                     :label="__(module.label)"
-                    :href="module.href"
+                    :href="module.pwaInstall ? '' : module.href"
+                    :beforeNavigate="module.pwaInstall ? () => { showPwaInstallModal = true; sidebarOpened.value = false } : null"
                     class="mx-2 my-0.5"
                   >
                     <template #right>
@@ -117,6 +118,7 @@
       >
         <DialogOverlay class="fixed inset-0 bg-surface-gray-5 bg-opacity-50" />
       </TransitionChild>
+      <PwaInstallModal v-model="showPwaInstallModal" />
     </Dialog>
   </TransitionRoot>
 </template>
@@ -139,12 +141,14 @@ import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import SidebarLink from '@/components/SidebarLink.vue'
+import PwaInstallModal from '@/components/Modals/PwaInstallModal.vue'
 import { viewsStore } from '@/stores/views'
 import { unreadNotificationsCount } from '@/stores/notifications'
 import { summonModuleGroups } from '@/data/summonModules'
-import { computed, h } from 'vue'
+import { computed, h, ref } from 'vue'
 import { mobileSidebarOpened as sidebarOpened } from '@/composables/settings'
 
+const showPwaInstallModal = ref(false)
 const { getPinnedViews, getPublicViews } = viewsStore()
 
 const links = [

@@ -1,8 +1,10 @@
 import frappe
 from unittest import TestCase
 from unittest.mock import patch
+from frappe.utils import add_days, nowdate
 
 from crm.api.credit import (
+	check_customer360_adapter,
 	create_or_update_customer360_record,
 	export_customer_profile,
 	global_customer_search,
@@ -107,7 +109,7 @@ class TestCreditAPI(TestCase):
 		with patch("crm.api.credit._doctype_ready", return_value=True), patch("crm.api.credit.frappe.get_all", return_value=[]):
 			self.assertEqual(get_credit_application_queue(), [])
 
-	def test_customer_360_new_uat_records_are_aggregated(self):
+	def test_customer_360_new_records_are_aggregated(self):
 		customer = self.make_customer()
 		create_or_update_customer360_record(
 			"CRM KYC Review",
@@ -117,14 +119,15 @@ class TestCreditAPI(TestCase):
 				"npwp": "123456789012345",
 				"nik": "1234567890123456",
 				"watchlist": 1,
-				"watchlist_reason": "UAT risk review",
+				"watchlist_reason": "Production risk review",
+				"registered_address": "Jl. Sudirman Kav. 1",
 			},
 		)
 		create_or_update_customer360_record(
 			"CRM Relationship",
 			{
 				"customer": customer.name,
-				"related_party": "UAT Owner",
+				"related_party": "Production Owner",
 				"relationship_type": "Shareholder",
 				"ownership_percent": 100,
 				"is_ubo": 1,
@@ -132,7 +135,7 @@ class TestCreditAPI(TestCase):
 		)
 		for doctype, doc in {
 			"CRM Bank Account": {"bank": "BNI", "account_number": "123", "verification_status": "Verified"},
-			"CRM Customer Document": {"title": "KTP", "document_type": "KYC", "expiry_status": "Valid"},
+			"CRM Customer Document": {"title": "KTP", "document_type": "KYC", "expiry_date": add_days(nowdate(), -1)},
 			"CRM Customer Communication": {"subject": "Follow up", "channel": "Email"},
 			"CRM Transaction History": {"transaction_type": "Repayment", "amount": 5000},
 			"CRM Risk Profile": {"risk_grade": "B+", "internal_score": 780},
@@ -142,19 +145,73 @@ class TestCreditAPI(TestCase):
 			doc["customer"] = customer.name
 			create_or_update_customer360_record(doctype, doc)
 
-		save_customer_summary(customer.name, "- UAT summary")
+		save_customer_summary(
+			customer.name,
+			"- Production summary",
+			structured_response={
+				"confidence": 0.82,
+				"recommendations": [{"title": "Review working capital top-up", "detail": "Customer has verified KYC and clean repayment behavior."}],
+				"sources": [{"title": "Customer profile", "doctype": "Customer", "docname": customer.name}],
+			},
+		)
 		profile = get_customer_360(customer.name)
 
+		for key in ("relationship_graph", "data_quality", "external_adapters", "risk_controls", "compliance_status", "next_actions", "audit_summary"):
+			self.assertIn(key, profile)
 		self.assertEqual(profile["summary"]["kyc_status"], "Verified")
 		self.assertTrue(profile["summary"]["watchlist"])
 		self.assertTrue(profile["summary"]["shareholder_balanced"])
+		self.assertIn("structured_response", profile["summary"])
+		self.assertGreaterEqual(profile["data_quality"]["score"], 60)
+		self.assertEqual(profile["risk_controls"]["expired_documents"], 1)
+		self.assertTrue(any(node["type"] == "Shareholder" for node in profile["relationship_graph"]["nodes"]))
+		self.assertTrue(any(adapter["status"] == "Not Configured" for adapter in profile["external_adapters"]))
 		self.assertEqual(len(profile["bank_accounts"]), 1)
 		self.assertEqual(len(profile["documents"]), 1)
 		self.assertEqual(len(profile["communications"]), 1)
 		self.assertEqual(len(profile["transactions"]), 1)
 		self.assertEqual(profile["summary"]["risk_grade"], "B+")
-		self.assertEqual(len(profile["ai_insights"]), 1)
+		self.assertGreaterEqual(len(profile["ai_insights"]), 1)
 		self.assertEqual(len(profile["tags"]), 1)
+
+	def test_customer_360_production_safe_validations(self):
+		customer = self.make_customer()
+
+		with self.assertRaises(frappe.ValidationError):
+			create_or_update_customer360_record(
+				"CRM KYC Review",
+				{"customer": customer.name, "watchlist": 1, "nik": "1234567890123456", "npwp": "123456789012345"},
+			)
+
+		create_or_update_customer360_record(
+			"CRM Relationship",
+			{"customer": customer.name, "related_party": "Owner A", "relationship_type": "Shareholder", "ownership_percent": 70},
+		)
+		with self.assertRaises(frappe.ValidationError):
+			create_or_update_customer360_record(
+				"CRM Relationship",
+				{"customer": customer.name, "related_party": "Owner B", "relationship_type": "Shareholder", "ownership_percent": 40},
+			)
+
+		create_or_update_customer360_record(
+			"CRM Bank Account",
+			{"customer": customer.name, "bank": "BNI", "account_number": "001", "is_primary": 1},
+		)
+		with self.assertRaises(frappe.ValidationError):
+			create_or_update_customer360_record(
+				"CRM Bank Account",
+				{"customer": customer.name, "bank": "BNI", "account_number": "002", "is_primary": 1},
+			)
+
+		with self.assertRaises(frappe.ValidationError):
+			create_or_update_customer360_record(
+				"CRM Risk Profile",
+				{"customer": customer.name, "risk_grade": "A", "internal_score": 1200},
+			)
+
+		adapter = check_customer360_adapter(customer.name, "bureau")
+		self.assertEqual(adapter["status"], "Not Configured")
+		self.assertIn("required_configuration", adapter)
 
 	def test_customer_360_validation_search_export_and_merge_preview(self):
 		customer = self.make_customer()
@@ -174,7 +231,7 @@ class TestCreditAPI(TestCase):
 		results = global_customer_search(customer.customer_name[:8])
 		self.assertTrue(any(row["name"] == customer.name for row in results))
 
-		export = export_customer_profile(customer.name, scope="Full Profile", watermark="UAT", password="secret")
+		export = export_customer_profile(customer.name, scope="Full Profile", watermark="Confidential", password="secret")
 		self.assertEqual(export["customer"], customer.name)
 		self.assertIn("password_protected", export.get("notes", ""))
 

@@ -22,7 +22,7 @@
       <EventArea :doctype="doctype" :docname="docname" />
     </div>
     <div v-else-if="title == 'Chat'" class="flex h-full flex-col">
-      <ChatPanel :doctype="doctype" :docname="docname" class="flex h-full flex-col" />
+      <ChatPanel :doctype="doctype" :docname="docname" :leadEmail="doc.email" :leadMobile="doc.mobile_no" :leadName="doc.lead_name" class="flex h-full flex-col" />
     </div>
     <div
       v-else-if="

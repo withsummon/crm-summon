@@ -40,12 +40,11 @@ const routes = [
       {
         path: 'dashboard',
         name: 'CRM Core Dashboard',
-        component: () => import('@/pages/CRMCoreDashboard.vue'),
+        component: () => import('@/pages/ExecutiveDashboard.vue'),
       },
       {
         path: 'executive-dashboard',
-        name: 'Executive Dashboard',
-        component: () => import('@/pages/ExecutiveDashboard.vue'),
+        redirect: { name: 'CRM Core Dashboard' },
       },
       {
         path: 'insights-dashboard',
@@ -175,13 +174,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Lending Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Lending Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Lending & Risk' },
+        redirect: { name: 'Loan Origination System' },
       },
       {
         path: 'loan-origination-system',
@@ -223,6 +216,41 @@ const routes = [
         name: 'Covenant Monitoring',
         component: () => import('@/pages/CovenantMonitoring.vue'),
       },
+      // ─── Workflow Engine ───────────────────────────────────
+      {
+        path: 'workflow-engine',
+        name: 'Workflow List',
+        component: () =>
+          import('@/modules/workflow-engine/pages/WorkflowList.vue'),
+      },
+      {
+        path: 'workflow-engine/new',
+        name: 'Workflow New',
+        component: () =>
+          import('@/modules/workflow-engine/pages/WorkflowDesigner.vue'),
+      },
+      {
+        path: 'workflow-engine/:flowId',
+        name: 'Workflow Detail',
+        component: () =>
+          import('@/modules/workflow-engine/pages/WorkflowDesigner.vue'),
+        props: true,
+      },
+      {
+        path: 'workflow-engine/:flowId/monitor',
+        name: 'Workflow Monitor',
+        component: () =>
+          import('@/modules/workflow-engine/pages/WorkflowMonitor.vue'),
+        props: true,
+      },
+      // Legacy redirect
+      {
+        path: 'credit-flow-designer/:pathMatch(.*)*',
+        redirect: to => {
+          const sub = to.params.pathMatch ? '/' + (Array.isArray(to.params.pathMatch) ? to.params.pathMatch.join('/') : to.params.pathMatch) : ''
+          return `/lending-risk/workflow-engine${sub}`
+        },
+      },
     ],
   },
   // ─── Operations ──────────────────────────────────────────
@@ -231,13 +259,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Operations Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Operations Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Operations' },
+        redirect: { name: 'Document Management' },
       },
       {
         path: 'document-management',
@@ -266,21 +288,15 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Admin Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Admin Dashboard',
-        component: () => import('@/pages/AdminPlatform.vue'),
+        redirect: { name: 'Reporting & BI' },
       },
       {
         path: 'workflow-engine',
-        name: 'Workflow Engine',
-        component: () => import('@/modules/admin/pages/WorkflowEngine.vue'),
+        redirect: { name: 'Workflow List' },
       },
       {
         path: 'workflow',
-        redirect: { name: 'Workflow Engine' },
+        redirect: { name: 'Workflow List' },
       },
       {
         path: 'reporting-bi',
@@ -378,13 +394,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: { name: 'Channels Dashboard' },
-      },
-      {
-        path: 'dashboard',
-        name: 'Channels Dashboard',
-        component: () => import('@/pages/ModuleDashboard.vue'),
-        props: { moduleGroup: 'Channels & Portal' },
+        redirect: { name: 'Omnichannel Workspace' },
       },
       {
         path: 'omnichannel-workspace',

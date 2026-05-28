@@ -38,6 +38,15 @@
                 </tbody>
               </table>
             </div>
+            <div class="summon-c360-card">
+              <div class="summon-c360-label">${__("Customer 360 Actions")}</div>
+              <div class="summon-c360-actions" style="margin-top:10px">
+                <button class="summon-c360-button primary" type="button" data-c360-list-action="crm">${__("Open CRM Workspace")}</button>
+                <button class="summon-c360-button" type="button" data-c360-list-action="add">${__("New Customer")}</button>
+                <button class="summon-c360-button" type="button" data-c360-list-action="refresh">${__("Refresh List")}</button>
+              </div>
+              <div class="summon-c360-text" style="margin-top:10px">${__("Desk remains the source of truth; SUMMON adds production-safe risk, KYC, graph, and AI context.")}</div>
+            </div>
           </div>
         </div>
       </div>
