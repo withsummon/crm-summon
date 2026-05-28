@@ -504,14 +504,61 @@
                     </div>
                     <div v-if="lvl.note" class="mt-1.5 text-xs text-gray-600 bg-gray-50 rounded-lg p-2 border border-gray-200 italic">"{{ lvl.note }}"</div>
                     <!-- SLA timer -->
-                    <div v-if="lvl.state==='Pending'" class="mt-2 flex items-center gap-2">
-                      <div class="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-amber-400 rounded-full" style="width: 60%" />
+                    <div v-if="lvl.state==='Pending'" class="mt-2 space-y-2">
+                      <div class="flex items-center gap-2">
+                        <div class="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                          <div class="h-full bg-amber-400 rounded-full" style="width: 60%" />
+                        </div>
+                        <span class="text-[10px] text-amber-600 font-semibold">SLA: 14h remaining</span>
                       </div>
-                      <span class="text-[10px] text-amber-600 font-semibold">SLA: 14h remaining</span>
+                      <div class="flex items-center gap-2">
+                        <button @click="openDelegate(lvl)" class="flex items-center gap-1.5 text-[10px] border border-[#006699] text-[#006699] rounded-lg px-2.5 py-1 hover:bg-[#E6F4FA] transition-colors font-semibold">
+                          <FeatherIcon name="user-check" class="h-3 w-3" />Delegate
+                        </button>
+                        <span v-if="lvl.delegatedTo" class="text-[10px] text-gray-400">→ delegated to <span class="font-semibold text-gray-600">{{ lvl.delegatedTo }}</span></span>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- SLA Escalation Config -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">Auto-Escalation</h4>
+                  <p class="text-[10px] text-gray-400 mt-0.5">Escalate automatically when SLA is breached</p>
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <div class="relative" @click="autoEscalation = !autoEscalation">
+                    <div class="w-9 h-5 rounded-full transition-colors" :class="autoEscalation ? 'bg-[#FF6600]' : 'bg-gray-300'" />
+                    <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" :class="autoEscalation ? 'left-4.5' : 'left-0.5'" />
+                  </div>
+                  <span class="text-xs text-gray-600">{{ autoEscalation ? 'Enabled' : 'Disabled' }}</span>
+                </label>
+              </div>
+              <table class="w-full text-xs">
+                <thead><tr class="border-b border-gray-100 bg-gray-50">
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500">Level</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500">Escalate After</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500">Escalate To</th>
+                  <th class="px-3 py-2 text-left font-semibold text-gray-500">Status</th>
+                </tr></thead>
+                <tbody>
+                  <tr v-for="r in escalationRules" :key="r.id" class="border-b border-gray-50">
+                    <td class="px-3 py-2.5 font-semibold text-gray-800">{{ r.role }}</td>
+                    <td class="px-3 py-2.5 text-gray-600">{{ r.slaHours }}h</td>
+                    <td class="px-3 py-2.5 text-gray-600">{{ r.escalateTo }}</td>
+                    <td class="px-3 py-2.5">
+                      <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="r.breached ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'">{{ r.breached ? 'Breached' : 'On Track' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-if="autoEscalation" class="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                <FeatherIcon name="alert-triangle" class="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <p class="text-[10px] text-amber-700">Risk Officer SLA breached — escalation notification sent to Division Director</p>
               </div>
             </div>
 
@@ -795,6 +842,45 @@
       </div>
     </div>
   </div>
+
+  <!-- Toast -->
+  <transition name="fade">
+    <div v-if="toast" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
+      <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF8533]" />{{ toast }}
+    </div>
+  </transition>
+
+  <!-- Delegate Modal -->
+  <div v-if="showDelegateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showDelegateModal = false">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
+          <FeatherIcon name="user-check" class="h-5 w-5 text-[#006699]" />
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-800">Delegate Approver</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{{ delegateTarget?.approver }} · {{ delegateTarget?.role }}</p>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Delegate To <span class="text-red-400">*</span></label>
+          <select v-model="delegatee" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
+            <option value="">Select officer…</option>
+            <option v-for="o in delegateOptions" :key="o">{{ o }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Reason</label>
+          <input v-model="delegateReason" type="text" placeholder="e.g. Out of office until 30 May" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button @click="showDelegateModal = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Cancel</button>
+        <button @click="submitDelegate" :disabled="!delegatee" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-40 transition-colors">Delegate</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -844,6 +930,9 @@ const currentStep = ref(1)
 const searchQuery = ref('')
 const saving = ref(false)
 const autoSaved = ref(false)
+const toast = ref('')
+let toastTimer = null
+function showToast(msg) { toast.value = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.value = '' }, 2500) }
 const showModal = ref(false)
 const newApp = ref({ borrower_name: '', borrower_type: 'Individual' })
 const deleteTarget = ref(null)
@@ -940,10 +1029,24 @@ const appraisals = [
 ]
 
 const approvalLevels = ref([
-  { id: 1, approver: 'Dewi Kusuma', role: 'Relationship Manager', state: 'Approved', date: '22 May 2026', note: 'Borrower profile strong, recommend approval.' },
-  { id: 2, approver: 'Ahmad Fauzi', role: 'Credit Head', state: 'Approved', date: '23 May 2026', note: 'Financial ratios satisfactory. Proceed to committee.' },
-  { id: 3, approver: 'Sari Indrawati', role: 'Risk Officer', state: 'Pending', date: null, note: null },
-  { id: 4, approver: 'Bimo Prakoso', role: 'Division Director', state: 'Waiting', date: null, note: null },
+  { id: 1, approver: 'Dewi Kusuma', role: 'Relationship Manager', state: 'Approved', date: '22 May 2026', note: 'Borrower profile strong, recommend approval.', delegatedTo: null },
+  { id: 2, approver: 'Ahmad Fauzi', role: 'Credit Head', state: 'Approved', date: '23 May 2026', note: 'Financial ratios satisfactory. Proceed to committee.', delegatedTo: null },
+  { id: 3, approver: 'Sari Indrawati', role: 'Risk Officer', state: 'Pending', date: null, note: null, delegatedTo: null },
+  { id: 4, approver: 'Bimo Prakoso', role: 'Division Director', state: 'Waiting', date: null, note: null, delegatedTo: null },
+])
+
+const showDelegateModal = ref(false)
+const delegateTarget = ref(null)
+const delegatee = ref('')
+const delegateReason = ref('')
+const delegateOptions = ['Reza Mahendra', 'Rina Putri', 'Hendra Gunawan', 'Dewi Lestari', 'Fajar Santoso']
+
+const autoEscalation = ref(true)
+const escalationRules = ref([
+  { id: 1, role: 'Relationship Manager', slaHours: 24, escalateTo: 'Credit Head', breached: false },
+  { id: 2, role: 'Credit Head', slaHours: 24, escalateTo: 'Risk Officer', breached: false },
+  { id: 3, role: 'Risk Officer', slaHours: 16, escalateTo: 'Division Director', breached: true },
+  { id: 4, role: 'Division Director', slaHours: 24, escalateTo: 'CEO', breached: false },
 ])
 
 const committeeMembers = ref([
@@ -1129,6 +1232,20 @@ function fakeUpload() {
       setTimeout(() => { uploadProgress.value = 0; uploadingFile.value = '' }, 800)
     }
   }, 200)
+}
+
+function openDelegate(lvl) {
+  delegateTarget.value = lvl
+  delegatee.value = ''
+  delegateReason.value = ''
+  showDelegateModal.value = true
+}
+
+function submitDelegate() {
+  if (!delegateTarget.value || !delegatee.value) return
+  delegateTarget.value.delegatedTo = delegatee.value
+  showDelegateModal.value = false
+  showToast(`Approval delegated to ${delegatee.value}`)
 }
 
 function confirmDelete(app) {
