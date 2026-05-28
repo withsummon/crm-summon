@@ -16,13 +16,13 @@
     </LayoutHeader>
 
     <!-- Tab strip -->
-    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-5">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex gap-5 overflow-x-auto">
+    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex gap-3 overflow-x-auto">
           <button
             v-for="tab in TABS"
             :key="tab.view"
-            class="border-b-2 py-2.5 text-base transition-colors whitespace-nowrap"
+            class="border-b-2 py-2 text-base transition-colors whitespace-nowrap"
             :class="activeView === tab.view
               ? 'border-ink-gray-8 font-medium text-ink-gray-9'
               : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
@@ -74,12 +74,12 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto bg-surface-gray-1">
-      <div class="max-w-6xl px-5 py-5">
+      <div class="w-full px-3 py-2">
 
         <!-- ── INBOX ───────────────────────────────────────────── -->
         <template v-if="activeView === 'inbox'">
           <!-- KPI strip -->
-          <div class="mb-4 grid gap-3 md:grid-cols-5">
+          <div class="mb-3 grid gap-3 md:grid-cols-5">
             <KpiCard label="My Open" :value="ctx.data?.counters?.open ?? 0" icon="inbox" />
             <KpiCard label="Due Today" :value="ctx.data?.counters?.due_today ?? 0" icon="calendar" theme="blue" />
             <KpiCard label="Overdue" :value="ctx.data?.counters?.overdue ?? 0" icon="alert-circle" theme="red" />
@@ -137,7 +137,7 @@
           </div>
 
           <!-- Bulk action bar -->
-          <div v-if="selected.length" class="mb-3 flex items-center justify-between rounded-md border border-outline-gray-2 bg-white px-4 py-2 shadow-sm">
+          <div v-if="selected.length" class="mb-3 flex items-center justify-between rounded-md border border-outline-gray-2 bg-white px-3 py-1.5 shadow-sm">
             <span class="text-sm text-ink-gray-7">{{ selected.length }} {{ __('selected') }}</span>
             <div class="flex gap-2">
               <Button size="sm" variant="outline" label="Complete" @click="bulkComplete" />
@@ -145,7 +145,7 @@
             </div>
           </div>
 
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
             <div v-if="inbox.loading" class="flex h-40 items-center justify-center">
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
@@ -158,7 +158,7 @@
               <div
                 v-for="t in inboxRows"
                 :key="t.name"
-                class="flex min-w-0 items-center gap-3 border-b border-outline-gray-1 px-4 py-2.5 last:border-b-0 hover:bg-surface-gray-1 cursor-pointer"
+                class="flex min-w-0 items-center gap-3 border-b border-outline-gray-1 px-3 py-1.5 last:border-b-0 hover:bg-surface-gray-1 cursor-pointer"
                 @click="openDrawer(t.name)"
               >
                 <input
@@ -247,7 +247,7 @@
             <div
               v-for="col in BOARD_COLUMNS"
               :key="col.status"
-              class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm"
+              class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm"
               @dragover.prevent
               @drop="onDropToColumn($event, col.status)"
             >
@@ -296,8 +296,8 @@
 
         <!-- ── CALENDAR ───────────────────────────────────────── -->
         <template v-else-if="activeView === 'calendar'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm p-5">
-            <div class="mb-4 flex items-center justify-between">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm p-3">
+            <div class="mb-3 flex items-center justify-between">
               <div>
                 <h2 class="text-base font-semibold text-ink-gray-9">{{ monthLabel }}</h2>
                 <p class="mt-0.5 text-xs text-ink-gray-5">{{ __('Tasks rendered by due date. Click to open.') }}</p>
@@ -322,7 +322,7 @@
               >
                 <div class="flex items-center justify-between">
                   <span :class="cell.isToday ? 'flex h-5 w-5 items-center justify-center rounded-full text-white text-[11px] font-medium' : 'text-[11px] text-ink-gray-6'"
-                        :style="cell.isToday ? 'background: #008C95' : ''">
+                        :style="cell.isToday ? 'background: #FF6600' : ''">
                     {{ cell.day }}
                   </span>
                 </div>
@@ -345,18 +345,18 @@
 
         <!-- ── GANTT ───────────────────────────────────────────── -->
         <template v-else-if="activeView === 'gantt'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
-            <div class="border-b border-outline-gray-1 px-5 py-3">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="border-b border-outline-gray-1 px-3 py-2">
               <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Timeline & Dependencies') }}</h2>
               <p class="mt-0.5 text-xs text-ink-gray-5">{{ __('Bars sized by start → due; critical path highlighted in red.') }}</p>
             </div>
             <div v-if="gantt.loading" class="flex h-32 items-center justify-center">
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
-            <div v-else-if="!gantt.data?.tasks?.length" class="px-5 py-12 text-center text-sm text-ink-gray-4">
+            <div v-else-if="!gantt.data?.tasks?.length" class="px-4 py-12 text-center text-sm text-ink-gray-4">
               {{ __('No tasks to plot.') }}
             </div>
-            <div v-else class="overflow-x-auto px-5 py-4">
+            <div v-else class="overflow-x-auto px-4 py-4">
               <div class="min-w-[720px]">
                 <div class="mb-2 flex border-b border-outline-gray-1 text-[11px] text-ink-gray-5">
                   <div class="w-64 shrink-0 pb-1">{{ __('Task') }}</div>
@@ -378,7 +378,7 @@
                   <div class="relative h-5 flex-1 rounded bg-surface-gray-1">
                     <div
                       class="absolute top-0 bottom-0 rounded"
-                      :style="`left: ${t.barLeft}%; width: ${t.barWidth}%; background: ${t.isCritical ? '#dc2626' : '#008C95'}`"
+                      :style="`left: ${t.barLeft}%; width: ${t.barWidth}%; background: ${t.isCritical ? '#dc2626' : '#FF6600'}`"
                     />
                     <FeatherIcon
                       v-if="t.is_milestone"
@@ -395,8 +395,8 @@
 
         <!-- ── WORKLOAD ────────────────────────────────────────── -->
         <template v-else-if="activeView === 'workload'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
-            <div class="border-b border-outline-gray-1 px-5 py-3">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="border-b border-outline-gray-1 px-3 py-2">
               <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Team Workload') }}</h2>
               <p class="mt-0.5 text-xs text-ink-gray-5">{{ __('Open tasks per user — colour-coded by load.') }}</p>
             </div>
@@ -406,13 +406,13 @@
             <table v-else class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-4 py-2.5 font-medium">{{ __('User') }}</th>
-                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Open') }}</th>
-                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Overdue') }}</th>
-                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Blocked') }}</th>
-                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Capacity') }}</th>
-                  <th class="px-4 py-2.5 font-medium text-center">{{ __('Logged') }}</th>
-                  <th class="px-4 py-2.5 font-medium">{{ __('Load') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('User') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Open') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Overdue') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Blocked') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Capacity') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Logged') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Load') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -421,7 +421,7 @@
                   :key="row.user"
                   class="border-b border-outline-gray-1 last:border-b-0"
                 >
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-2">
                     <div class="flex items-center gap-2">
                       <Avatar :image="row.user_image" :label="row.full_name" size="sm" />
                       <div>
@@ -430,16 +430,16 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-center text-ink-gray-7">{{ row.open }}</td>
-                  <td class="px-4 py-3 text-center">
+                  <td class="px-3 py-2 text-center text-ink-gray-7">{{ row.open }}</td>
+                  <td class="px-3 py-2 text-center">
                     <Badge :label="String(row.overdue)" :theme="row.overdue ? 'red' : 'gray'" variant="subtle" />
                   </td>
-                  <td class="px-4 py-3 text-center">
+                  <td class="px-3 py-2 text-center">
                     <Badge :label="String(row.blocked)" :theme="row.blocked ? 'orange' : 'gray'" variant="subtle" />
                   </td>
-                  <td class="px-4 py-3 text-center text-ink-gray-7">{{ row.capacity }}</td>
-                  <td class="px-4 py-3 text-center text-ink-gray-7">{{ row.logged_hours != null ? row.logged_hours + 'h' : (row.logged_minutes ? Math.round(row.logged_minutes / 60) + 'h' : '—') }}</td>
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-2 text-center text-ink-gray-7">{{ row.capacity }}</td>
+                  <td class="px-3 py-2 text-center text-ink-gray-7">{{ row.logged_hours != null ? row.logged_hours + 'h' : (row.logged_minutes ? Math.round(row.logged_minutes / 60) + 'h' : '—') }}</td>
+                  <td class="px-3 py-2">
                     <div class="h-2 w-32 overflow-hidden rounded-full bg-surface-gray-2">
                       <div
                         class="h-full rounded-full"
@@ -474,15 +474,15 @@
             <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
           </div>
           <template v-else>
-            <div class="mb-4 grid gap-3 md:grid-cols-4">
+            <div class="mb-3 grid gap-3 md:grid-cols-4">
               <KpiCard label="SLA Compliance" :value="`${analytics.data?.compliance_pct ?? 0}%`" icon="check-circle" theme="teal" />
               <KpiCard label="Avg Resolve" :value="formatMinutes(analytics.data?.avg_resolve_minutes ?? 0)" icon="clock" />
               <KpiCard label="Breaches" :value="String(analytics.data?.breached ?? 0)" icon="alert-circle" theme="red" />
               <KpiCard label="Escalations" :value="String(analytics.data?.escalation_count ?? 0)" icon="trending-up" theme="orange" />
             </div>
 
-            <div class="grid gap-4 lg:grid-cols-3">
-              <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm lg:col-span-2">
+            <div class="grid gap-3 lg:grid-cols-3">
+              <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm lg:col-span-2">
                 <h3 class="mb-3 text-sm font-medium text-ink-gray-7">{{ __('Daily breach vs completion') }}</h3>
                 <div class="flex h-40 items-end gap-1">
                   <div
@@ -497,16 +497,16 @@
                     />
                     <div
                       class="rounded-b"
-                      :style="`height: ${Math.min(100, d.completed * 8)}%; background: #008C95`"
+                      :style="`height: ${Math.min(100, d.completed * 8)}%; background: #FF6600`"
                     />
                   </div>
                 </div>
-                <div class="mt-2 flex gap-4 text-xs text-ink-gray-5">
+                <div class="mt-2 flex gap-3 text-xs text-ink-gray-5">
                   <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#dc2626"></span>Breached</span>
-                  <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#008C95"></span>Completed</span>
+                  <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#FF6600"></span>Completed</span>
                 </div>
               </div>
-              <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+              <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
                 <h3 class="mb-3 text-sm font-medium text-ink-gray-7">{{ __('Bottleneck groups') }}</h3>
                 <div class="space-y-3">
                   <div v-for="g in (analytics.data?.groups || []).slice(0, 6)" :key="g.key">
@@ -517,7 +517,7 @@
                     <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
                       <div
                         class="h-full rounded-full"
-                        :style="`width: ${g.compliance}%; background: ${g.compliance < 80 ? '#dc2626' : '#008C95'}`"
+                        :style="`width: ${g.compliance}%; background: ${g.compliance < 80 ? '#dc2626' : '#FF6600'}`"
                       />
                     </div>
                   </div>
@@ -530,8 +530,8 @@
 
         <!-- ── TEMPLATES ──────────────────────────────────────── -->
         <template v-else-if="activeView === 'templates'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
-            <div class="border-b border-outline-gray-1 px-5 py-3">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="border-b border-outline-gray-1 px-3 py-2">
               <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Task Templates') }}</h2>
               <p class="mt-0.5 text-xs text-ink-gray-5">{{ __('Reusable bundles of subtasks + checklist applied to leads, deals, or applications.') }}</p>
             </div>
@@ -539,7 +539,7 @@
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
             <div v-else>
-              <div v-for="tpl in templates.data || []" :key="tpl.name" class="border-b border-outline-gray-1 px-5 py-4 last:border-b-0">
+              <div v-for="tpl in templates.data || []" :key="tpl.name" class="border-b border-outline-gray-1 px-4 py-4 last:border-b-0">
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
                     <div class="flex items-center gap-2">
@@ -562,7 +562,7 @@
                   </div>
                 </div>
               </div>
-              <div v-if="!(templates.data || []).length" class="px-5 py-10 text-center text-sm text-ink-gray-5">
+              <div v-if="!(templates.data || []).length" class="px-4 py-10 text-center text-sm text-ink-gray-5">
                 {{ __('No templates yet.') }}
               </div>
             </div>
@@ -571,8 +571,8 @@
 
         <!-- ── SETUP ──────────────────────────────────────────── -->
         <template v-else-if="activeView === 'setup'">
-          <div class="mb-5 rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
-            <div class="border-b border-outline-gray-1 px-5 py-3">
+          <div class="mb-3 rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="border-b border-outline-gray-1 px-3 py-2">
               <h3 class="text-base font-semibold text-ink-gray-9">{{ __('Task Types — SLA Matrix') }}</h3>
             </div>
             <div v-if="taskTypes.loading" class="flex h-24 items-center justify-center">
@@ -581,42 +581,42 @@
             <table v-else class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-5 py-2 font-medium">{{ __('Type') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Critical') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('High') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Medium') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Low') }}</th>
-                  <th class="px-5 py-2 font-medium text-center">{{ __('Business hours') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Actions') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Type') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Critical') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('High') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Medium') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Low') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Business hours') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="t in taskTypes.data || []" :key="t.name" class="border-b border-outline-gray-1 last:border-b-0">
-                  <td class="px-5 py-2.5">
-                    <span class="inline-flex h-2 w-2 rounded-full mr-2" :style="`background: ${t.color || '#008C95'}`" />
+                  <td class="px-3 py-1.5">
+                    <span class="inline-flex h-2 w-2 rounded-full mr-2" :style="`background: ${t.color || '#FF6600'}`" />
                     <span class="text-ink-gray-8">{{ t.type_name }}</span>
                   </td>
-                  <td class="px-5 py-2.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Critical) }}</td>
-                  <td class="px-5 py-2.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.High) }}</td>
-                  <td class="px-5 py-2.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Medium) }}</td>
-                  <td class="px-5 py-2.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Low) }}</td>
-                  <td class="px-5 py-2.5 text-center">
+                  <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Critical) }}</td>
+                  <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.High) }}</td>
+                  <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Medium) }}</td>
+                  <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Low) }}</td>
+                  <td class="px-3 py-1.5 text-center">
                     <Badge :label="t.business_hours_only ? 'Yes' : 'No'" :theme="t.business_hours_only ? 'green' : 'gray'" variant="subtle" />
                   </td>
-                  <td class="px-5 py-2.5 text-right">
+                  <td class="px-3 py-1.5 text-right">
                     <Button size="sm" variant="ghost" label="Edit" @click="openTypeDialog(t)" />
                     <Button size="sm" variant="ghost" @click="deleteTaskType(t)">
                       <FeatherIcon name="trash-2" class="h-4 w-4 text-ink-gray-4 hover:text-red-500" />
                     </Button>
                   </td>
                 </tr>
-                <tr v-if="!(taskTypes.data || []).length"><td colspan="7" class="px-5 py-10 text-center text-sm text-ink-gray-5">{{ __('No task types.') }}</td></tr>
+                <tr v-if="!(taskTypes.data || []).length"><td colspan="7" class="px-4 py-10 text-center text-sm text-ink-gray-5">{{ __('No task types.') }}</td></tr>
               </tbody>
             </table>
           </div>
 
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
-            <div class="border-b border-outline-gray-1 px-5 py-3 flex items-center justify-between">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="border-b border-outline-gray-1 px-3 py-2 flex items-center justify-between">
               <h3 class="text-base font-semibold text-ink-gray-9">{{ __('Escalation Rules') }}</h3>
               <Button size="sm" variant="outline" label="New Rule" @click="openRuleDialog(null)">
                 <template #prefix><FeatherIcon name="plus" class="h-3.5 w-3.5" /></template>
@@ -628,32 +628,32 @@
             <table v-else class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-5 py-2 font-medium">{{ __('Rule') }}</th>
-                  <th class="px-5 py-2 font-medium">{{ __('Type') }}</th>
-                  <th class="px-5 py-2 font-medium text-center">{{ __('Level') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Past Due') }}</th>
-                  <th class="px-5 py-2 font-medium">{{ __('Action') }}</th>
-                  <th class="px-5 py-2 font-medium">{{ __('Recipient') }}</th>
-                  <th class="px-5 py-2 font-medium text-right">{{ __('Actions') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Rule') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Type') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-center">{{ __('Level') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Past Due') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Action') }}</th>
+                  <th class="px-3 py-1.5 font-medium">{{ __('Recipient') }}</th>
+                  <th class="px-3 py-1.5 font-medium text-right">{{ __('Actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="r in rules.data || []" :key="r.name" class="border-b border-outline-gray-1 last:border-b-0">
-                  <td class="px-5 py-2.5 text-ink-gray-8">{{ r.rule_name }}</td>
-                  <td class="px-5 py-2.5 text-ink-gray-7">{{ r.task_type || '—' }}</td>
-                  <td class="px-5 py-2.5 text-center text-ink-gray-7">{{ r.level }}</td>
-                  <td class="px-5 py-2.5 text-right text-ink-gray-7">{{ formatMinutes(r.after_minutes_past_due) }}</td>
-                  <td class="px-5 py-2.5">
+                  <td class="px-3 py-1.5 text-ink-gray-8">{{ r.rule_name }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ r.task_type || '—' }}</td>
+                  <td class="px-3 py-1.5 text-center text-ink-gray-7">{{ r.level }}</td>
+                  <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(r.after_minutes_past_due) }}</td>
+                  <td class="px-3 py-1.5">
                     <Badge :label="r.action" :theme="r.action === 'reassign' ? 'orange' : r.action === 'flag' ? 'red' : 'blue'" variant="subtle" />
                   </td>
-                  <td class="px-5 py-2.5 text-ink-gray-7">{{ r.recipient_user || r.recipient_role || '—' }}</td>
-                  <td class="px-5 py-2.5 text-right">
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ r.recipient_user || r.recipient_role || '—' }}</td>
+                  <td class="px-3 py-1.5 text-right">
                     <Button size="sm" variant="ghost" @click="deleteEscalationRule(r)">
                       <FeatherIcon name="trash-2" class="h-4 w-4 text-ink-gray-4 hover:text-red-500" />
                     </Button>
                   </td>
                 </tr>
-                <tr v-if="!(rules.data || []).length"><td colspan="6" class="px-5 py-10 text-center text-sm text-ink-gray-5">{{ __('No rules yet.') }}</td></tr>
+                <tr v-if="!(rules.data || []).length"><td colspan="6" class="px-4 py-10 text-center text-sm text-ink-gray-5">{{ __('No rules yet.') }}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1150,7 +1150,7 @@ function loadColor(open, capacity) {
   const r = open / Math.max(1, capacity)
   if (r > 1) return '#dc2626'
   if (r > 0.7) return '#d97706'
-  return '#008C95'
+  return '#FF6600'
 }
 
 let searchTimer = null
@@ -1415,7 +1415,7 @@ const KpiCard = defineComponent({
         h('span', { class: 'text-[11px] font-medium uppercase tracking-wide text-ink-gray-5' }, props.label),
         h(FeatherIcon, { name: props.icon || 'circle', class: 'h-3.5 w-3.5 text-ink-gray-4' }),
       ]),
-      h('div', { class: 'mt-1.5 text-xl font-semibold leading-tight', style: props.theme === 'red' ? 'color:#dc2626' : props.theme === 'orange' ? 'color:#d97706' : props.theme === 'blue' ? 'color:#1d4ed8' : props.theme === 'teal' ? 'color:#008C95' : 'color:#111827' }, props.value),
+      h('div', { class: 'mt-1.5 text-xl font-semibold leading-tight', style: props.theme === 'red' ? 'color:#dc2626' : props.theme === 'orange' ? 'color:#d97706' : props.theme === 'blue' ? 'color:#1d4ed8' : props.theme === 'teal' ? 'color:#FF6600' : 'color:#111827' }, props.value),
     ])
   },
 })

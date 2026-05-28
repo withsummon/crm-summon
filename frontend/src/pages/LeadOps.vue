@@ -6,8 +6,8 @@
       </template>
     </LayoutHeader>
 
-    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-10 py-3">
-      <div class="flex items-center gap-6">
+    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-6 py-3">
+      <div class="flex items-center gap-3">
         <button
           v-for="tab in TABS"
           :key="tab.key"
@@ -21,31 +21,31 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto bg-surface-gray-1 px-10 py-6">
+    <div class="flex-1 overflow-y-auto bg-surface-gray-1 px-6 py-4">
 
       <template v-if="activeTab === 'whatsapp'">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-base font-semibold text-ink-gray-9">WhatsApp Intake Queue</h2>
           <Button variant="outline" size="sm" label="Reload" @click="loadWhatsapp" />
         </div>
-        <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+        <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
           <table class="w-full text-sm">
             <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
               <tr>
-                <th class="px-4 py-2.5">From</th>
-                <th class="px-4 py-2.5">Phone</th>
-                <th class="px-4 py-2.5">Message</th>
-                <th class="px-4 py-2.5">Received</th>
-                <th class="px-4 py-2.5 text-right">Actions</th>
+                <th class="px-3 py-1.5">From</th>
+                <th class="px-3 py-1.5">Phone</th>
+                <th class="px-3 py-1.5">Message</th>
+                <th class="px-3 py-1.5">Received</th>
+                <th class="px-3 py-1.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="m in whatsappMessages" :key="m.id" class="border-b border-outline-gray-1 last:border-b-0">
-                <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ m.name }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-7 font-mono text-xs">{{ m.phone }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-7 max-w-md truncate">{{ m.body }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-5 text-xs">{{ formatDate(m.received_at) }}</td>
-                <td class="px-4 py-2.5 text-right">
+                <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ m.name }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-7 font-mono text-xs">{{ m.phone }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-7 max-w-md truncate">{{ m.body }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-5 text-xs">{{ formatDate(m.received_at) }}</td>
+                <td class="px-3 py-1.5 text-right">
                   <Button variant="solid" size="sm" label="Create Lead" :loading="creatingLeadId === m.id" @click="createLeadFromWhatsapp(m)" />
                 </td>
               </tr>
@@ -62,24 +62,24 @@
           <h2 class="text-base font-semibold text-ink-gray-9">Email Intake Queue</h2>
           <Button variant="outline" size="sm" label="Reload" @click="loadEmail" />
         </div>
-        <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+        <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
           <table class="w-full text-sm">
             <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
               <tr>
-                <th class="px-4 py-2.5">From</th>
-                <th class="px-4 py-2.5">Subject</th>
-                <th class="px-4 py-2.5">Snippet</th>
-                <th class="px-4 py-2.5">Received</th>
-                <th class="px-4 py-2.5 text-right">Actions</th>
+                <th class="px-3 py-1.5">From</th>
+                <th class="px-3 py-1.5">Subject</th>
+                <th class="px-3 py-1.5">Snippet</th>
+                <th class="px-3 py-1.5">Received</th>
+                <th class="px-3 py-1.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="e in emailMessages" :key="e.id" class="border-b border-outline-gray-1 last:border-b-0">
-                <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ e.from }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-7">{{ e.subject }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-7 max-w-md truncate">{{ e.snippet }}</td>
-                <td class="px-4 py-2.5 text-ink-gray-5 text-xs">{{ formatDate(e.received_at) }}</td>
-                <td class="px-4 py-2.5 text-right">
+                <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ e.from }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-7">{{ e.subject }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-7 max-w-md truncate">{{ e.snippet }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-5 text-xs">{{ formatDate(e.received_at) }}</td>
+                <td class="px-3 py-1.5 text-right">
                   <Button variant="solid" size="sm" label="Create Lead" :loading="creatingLeadId === e.id" @click="createLeadFromEmail(e)" />
                 </td>
               </tr>
@@ -92,8 +92,8 @@
       </template>
 
       <template v-else-if="activeTab === 'nurture'">
-        <div class="grid gap-4 lg:grid-cols-[280px_1fr]">
-          <aside class="rounded-[14px] border border-outline-gray-2 bg-white p-3 shadow-sm h-fit">
+        <div class="grid gap-3 lg:grid-cols-[280px_1fr]">
+          <aside class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm h-fit">
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-sm font-semibold text-ink-gray-8">Sequences</h3>
               <Button variant="ghost" size="sm" label="+ New" @click="newSequence" />
@@ -111,15 +111,15 @@
               </button>
             </div>
           </aside>
-          <section v-if="selectedSequence" class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
-            <div class="mb-4 flex items-center justify-between">
+          <section v-if="selectedSequence" class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
               <input v-model="selectedSequence.name" class="text-base font-semibold text-ink-gray-9 bg-transparent outline-none border-b border-transparent focus:border-outline-gray-2" />
               <div class="flex gap-2">
                 <Button variant="outline" size="sm" label="Delete" @click="deleteSequence(selectedSequence)" />
                 <Button variant="solid" size="sm" label="Save" @click="saveSequence(selectedSequence)" />
               </div>
             </div>
-            <div class="grid gap-3 md:grid-cols-2 mb-4">
+            <div class="grid gap-3 md:grid-cols-2 mb-3">
               <div>
                 <label class="mb-1 block text-xs font-medium text-ink-gray-7">Trigger</label>
                 <select v-model="selectedSequence.trigger" class="w-full rounded-md border border-outline-gray-2 px-3 py-2 text-sm">
@@ -155,14 +155,14 @@
       </template>
 
       <template v-else-if="activeTab === 'widget'">
-        <div class="grid gap-4 lg:grid-cols-2">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+        <div class="grid gap-3 lg:grid-cols-2">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
             <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Embed Snippet</h2>
             <p class="text-sm text-ink-gray-5 mb-3">Paste this into your website to capture leads directly into the CRM.</p>
             <pre class="rounded-md bg-surface-gray-1 p-3 text-xs font-mono overflow-x-auto"><code>{{ widgetSnippet }}</code></pre>
             <Button class="mt-3" variant="outline" size="sm" label="Copy" @click="copyWidget" />
           </div>
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
             <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Field Configuration</h2>
             <div class="space-y-2">
               <label v-for="f in widgetFields" :key="f.key" class="flex items-center gap-2 text-sm">
@@ -186,7 +186,7 @@
       </template>
 
       <template v-else-if="activeTab === 'mobile'">
-        <div class="grid gap-4 lg:grid-cols-[360px_1fr]">
+        <div class="grid gap-3 lg:grid-cols-[360px_1fr]">
           <div class="mx-auto w-[360px] rounded-3xl border-[10px] border-gray-800 bg-white shadow-xl overflow-hidden">
             <div class="bg-gray-800 h-6"></div>
             <div class="p-3 bg-surface-gray-1 h-[640px] overflow-y-auto">
@@ -206,7 +206,7 @@
               </div>
             </div>
           </div>
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
             <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Mobile Lead View (PWA)</h2>
             <p class="text-sm text-ink-gray-6">This view is also available at <span class="font-mono text-xs">/m/leads</span>. Install the PWA from the share menu in your browser to use it as a native-feeling app.</p>
             <ul class="mt-4 list-disc pl-5 text-sm text-ink-gray-7 space-y-1">
@@ -228,6 +228,7 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import { Badge, Button, call, toast, usePageMeta } from 'frappe-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
+import { loadPersisted, persistRef } from '@/utils/persist'
 
 const viewControls = ref(null)
 const activeTab = ref('whatsapp')
@@ -299,7 +300,7 @@ async function createLeadFromEmail(e) {
   }
 }
 
-const sequences = ref([
+const sequences = ref(loadPersisted('crm:leads:nurtureSequences', [
   {
     id: 1,
     name: 'New Lead Welcome',
@@ -324,7 +325,8 @@ const sequences = ref([
       { action: 'Assign Task', detail: 'Follow-up call' },
     ],
   },
-])
+]))
+persistRef('crm:leads:nurtureSequences', sequences)
 const selectedSequence = ref(sequences.value[0])
 
 function newSequence() {
@@ -354,15 +356,17 @@ function deleteSequence(s) {
   selectedSequence.value = sequences.value[0] || null
 }
 
-const widgetFields = ref([
+const widgetFields = ref(loadPersisted('crm:leads:widgetFields', [
   { key: 'name', label: 'Full Name', enabled: true, required: true },
   { key: 'email', label: 'Email', enabled: true, required: true },
   { key: 'phone', label: 'Phone', enabled: true, required: false },
   { key: 'company', label: 'Company', enabled: true, required: false },
   { key: 'amount', label: 'Requested Amount', enabled: false, required: false },
   { key: 'message', label: 'Message', enabled: true, required: false },
-])
-const widgetRouting = ref('round_robin')
+]))
+persistRef('crm:leads:widgetFields', widgetFields)
+const widgetRouting = ref(loadPersisted('crm:leads:widgetRouting', 'round_robin'))
+persistRef('crm:leads:widgetRouting', widgetRouting)
 
 const widgetSnippet = computed(() => `<script src="${origin()}/assets/crm/widget.js" data-fields="${widgetFields.value.filter((f) => f.enabled).map((f) => f.key).join(',')}" data-routing="${widgetRouting.value}"><\/script>`)
 

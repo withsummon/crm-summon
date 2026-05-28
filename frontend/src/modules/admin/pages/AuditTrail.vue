@@ -51,7 +51,7 @@
       </template>
     </LayoutHeader>
 
-    <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-10 py-5">
+    <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-6 py-3">
       <div class="flex min-w-max items-center justify-start gap-10">
         <div class="flex items-center gap-8">
           <button
@@ -71,12 +71,12 @@
         <div class="flex shrink-0 items-center gap-2">
           <button
             class="flex items-center gap-2 rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-7"
-            :class="liveTail ? 'border-crm-teal text-crm-teal' : ''"
+            :class="liveTail ? 'border-[#FF6600] text-[#FF6600]' : ''"
             @click="liveTail = !liveTail"
           >
             <span
               class="h-2 w-2 rounded-full"
-              :class="liveTail ? 'bg-crm-teal' : 'bg-ink-gray-3'"
+              :class="liveTail ? 'bg-[#FF6600]' : 'bg-ink-gray-3'"
             />
             {{ __('Live Tail') }}
           </button>
@@ -85,10 +85,10 @@
     </div>
 
     <div class="flex-1 overflow-y-auto bg-surface-gray-1">
-      <div class="w-full px-10 py-6">
+      <div class="w-full px-6 py-4">
         <ErrorMessage
           v-if="errorMessage"
-          class="mb-4"
+          class="mb-3"
           :message="errorMessage"
         />
 
@@ -98,7 +98,7 @@
 
         <template v-else>
           <template v-if="activeTab === 'activity'">
-            <div class="mb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div class="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <StatCard
                 v-for="card in complianceCards"
                 :key="card.label"
@@ -110,7 +110,7 @@
               />
             </div>
 
-            <div class="mb-4 rounded-[14px] border border-outline-gray-2 bg-white p-4 shadow-sm">
+            <div class="mb-3 rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <div class="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_repeat(5,minmax(140px,auto))]">
                 <div class="relative">
                   <FeatherIcon
@@ -121,7 +121,7 @@
                     v-model="filters.query"
                     type="text"
                     :placeholder="__('Search user, entity, IP, payload...')"
-                    class="h-9 w-full rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
+                    class="h-8 w-full rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20"
                   />
                 </div>
                 <select v-model="filters.category" class="audit-select">
@@ -165,7 +165,7 @@
               title="Field-Level Change History"
               description="Before/after field changes from Frappe Version plus CRM audit diff payloads."
             />
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
               <EmptyState
                 v-if="!fieldChangeRows.length"
                 icon="git-compare"
@@ -176,7 +176,7 @@
                 <button
                   v-for="row in fieldChangeRows"
                   :key="row.name"
-                  class="w-full p-4 text-left hover:bg-surface-gray-1"
+                  class="w-full p-3 text-left hover:bg-surface-gray-1"
                   @click="openDrawer(row)"
                 >
                   <div class="flex flex-wrap items-start justify-between gap-3">
@@ -200,7 +200,7 @@
                       <div class="mt-1 flex min-w-0 items-center gap-2 text-xs">
                         <span class="truncate text-ink-red-3">{{ change.old || '—' }}</span>
                         <FeatherIcon name="arrow-right" class="h-3 w-3 shrink-0 text-ink-gray-4" />
-                        <span class="truncate text-crm-teal">{{ change.new || '—' }}</span>
+                        <span class="truncate text-[#FF6600]">{{ change.new || '—' }}</span>
                       </div>
                     </div>
                   </div>
@@ -214,7 +214,7 @@
               title="Login & Authentication Log"
               description="Success/failure activity with IP, device, geolocation, and suspicious flags."
             />
-            <div class="mb-4 grid gap-4 md:grid-cols-4">
+            <div class="mb-3 grid gap-3 md:grid-cols-4">
               <StatCard label="Success Today" :value="String(loginStats.success)" icon="log-in" />
               <StatCard label="Failed Today" :value="String(loginStats.failed)" icon="alert-circle" :warn="loginStats.failed > 0" />
               <StatCard label="Unique IPs" :value="String(loginStats.ips)" icon="map-pin" />
@@ -264,7 +264,7 @@
               title="Real-Time Alerts"
               description="Suspicious activity rules, triggered alerts, and acknowledgement workflow."
             />
-            <div class="grid gap-5 lg:grid-cols-2">
+            <div class="grid gap-3 lg:grid-cols-2">
               <RulePanel :rules="alertRules" />
               <SimpleTable :rows="alertRows" :columns="alertColumns" empty-title="No fired alerts found" @open="openDrawer" />
             </div>
@@ -290,7 +290,7 @@
               title="Compliance Dashboard"
               description="Compliance health, trends, and drill-down entry points."
             />
-            <div class="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div class="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <StatCard
                 v-for="card in complianceCards"
                 :key="card.label"
@@ -301,7 +301,7 @@
                 :warn="card.warn"
               />
             </div>
-            <div class="grid gap-5 lg:grid-cols-2">
+            <div class="grid gap-3 lg:grid-cols-2">
               <TrendPanel title="Events by Category" :items="categoryBreakdown" />
               <TrendPanel title="Severity Heatmap" :items="severityBreakdown" />
             </div>
@@ -312,9 +312,9 @@
               title="Tamper Detection & Retention"
               description="Hash-chain verification, retention rules, immutable storage, and legal hold."
             />
-            <div class="grid gap-5 lg:grid-cols-2">
-              <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
-                <div class="flex items-start justify-between gap-4">
+            <div class="grid gap-3 lg:grid-cols-2">
+              <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+                <div class="flex items-start justify-between gap-3">
                   <div>
                     <h3 class="text-base font-medium text-ink-gray-9">{{ __('Tamper Detection') }}</h3>
                     <p class="mt-1 text-sm text-ink-gray-5">
@@ -330,7 +330,7 @@
                   {{ __('Last verified') }}: {{ lastVerified || __('Not verified in this session') }}
                 </p>
               </div>
-              <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+              <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
                 <h3 class="text-base font-medium text-ink-gray-9">{{ __('Retention Policy') }}</h3>
                 <div class="mt-4 space-y-3">
                   <div
@@ -369,20 +369,20 @@
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Action') }}</label>
-            <input v-model="recordForm.action" type="text" :placeholder="__('e.g. override, export, view')" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+            <input v-model="recordForm.action" type="text" :placeholder="__('e.g. override, export, view')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Actor') }}</label>
-            <input v-model="recordForm.actor" type="text" :placeholder="__('User name or email')" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+            <input v-model="recordForm.actor" type="text" :placeholder="__('User name or email')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
           </div>
           <div class="grid gap-3 md:grid-cols-2">
             <div>
               <label class="text-xs text-ink-gray-5">{{ __('Target Doctype') }}</label>
-              <input v-model="recordForm.target_doctype" type="text" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+              <input v-model="recordForm.target_doctype" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
             </div>
             <div>
               <label class="text-xs text-ink-gray-5">{{ __('Target Name') }}</label>
-              <input v-model="recordForm.target_name" type="text" class="mt-1 h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+              <input v-model="recordForm.target_name" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
             </div>
           </div>
           <div>
@@ -396,7 +396,7 @@
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Summary') }}</label>
-            <textarea v-model="recordForm.summary" rows="3" class="mt-1 w-full rounded-md border border-outline-gray-2 bg-white px-3 py-2 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+            <textarea v-model="recordForm.summary" rows="3" class="mt-1 w-full rounded-md border border-outline-gray-2 bg-white px-3 py-2 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
           </div>
         </div>
       </template>
@@ -408,7 +408,7 @@
 
     <Dialog v-model="drawer.open" :options="{ title: drawer.title }">
       <template #body-content>
-        <div v-if="drawer.row" class="space-y-4 text-sm">
+        <div v-if="drawer.row" class="space-y-3 text-sm">
           <div class="grid gap-3 md:grid-cols-2">
             <DetailItem label="Timestamp" :value="formatDate(drawer.row.timestamp)" />
             <DetailItem label="Actor" :value="drawer.row.actor || '—'" />
@@ -856,7 +856,7 @@ const SectionHeader = defineComponent({
   props: { title: String, description: String },
   setup(props) {
     return () =>
-      h('div', { class: 'mb-4 flex flex-wrap items-end justify-between gap-3' }, [
+      h('div', { class: 'mb-3 flex flex-wrap items-end justify-between gap-3' }, [
         h('div', [
           h('h2', { class: 'text-xl font-semibold text-ink-gray-9' }, __(props.title)),
           h('p', { class: 'mt-1 text-sm text-ink-gray-5' }, __(props.description)),
@@ -869,12 +869,12 @@ const StatCard = defineComponent({
   props: { label: String, value: String, sub: String, icon: String, warn: Boolean },
   setup(props) {
     return () =>
-      h('div', { class: 'rounded-[14px] border border-outline-gray-2 bg-white p-4 shadow-sm' }, [
+      h('div', { class: 'rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm' }, [
         h('div', { class: 'flex items-center justify-between gap-3' }, [
           h('p', { class: 'text-sm text-ink-gray-5' }, __(props.label)),
           h(FeatherIcon, {
             name: props.icon || 'activity',
-            class: props.warn ? 'h-4 w-4 text-crm-warning' : 'h-4 w-4 text-crm-teal',
+            class: props.warn ? 'h-4 w-4 text-crm-warning' : 'h-4 w-4 text-[#FF6600]',
           }),
         ]),
         h('p', { class: 'mt-2 text-2xl font-semibold text-ink-gray-9' }, props.value),
@@ -900,19 +900,19 @@ const AuditTable = defineComponent({
   emits: ['open'],
   setup(props, { emit }) {
     return () =>
-      h('div', { class: 'overflow-hidden rounded-[14px] border border-outline-gray-2 bg-white shadow-sm' }, [
+      h('div', { class: 'overflow-hidden rounded-[10px] border border-outline-gray-2 bg-white shadow-sm' }, [
         props.rows?.length
           ? h('div', { class: 'overflow-x-auto' }, [
               h('table', { class: 'w-full min-w-[980px] text-sm' }, [
                 h('thead', { class: 'border-b border-outline-gray-2 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5' }, [
                   h('tr', [
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Timestamp')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Category')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Action')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Actor')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Target')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('Severity')),
-                    h('th', { class: 'px-4 py-2.5 font-medium' }, __('IP / Geo')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Timestamp')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Category')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Action')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Actor')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Target')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('Severity')),
+                    h('th', { class: 'px-3 py-1.5 font-medium' }, __('IP / Geo')),
                   ]),
                 ]),
                 h('tbody', props.rows.map((row) =>
@@ -921,16 +921,16 @@ const AuditTable = defineComponent({
                     class: 'cursor-pointer border-b border-outline-gray-1 last:border-b-0 hover:bg-surface-gray-1',
                     onClick: () => emit('open', row),
                   }, [
-                    h('td', { class: 'whitespace-nowrap px-4 py-3 text-ink-gray-6' }, formatDate(row.timestamp)),
-                    h('td', { class: 'px-4 py-3' }, h(Badge, { label: labelize(row.category), theme: 'teal', variant: 'subtle' })),
-                    h('td', { class: 'px-4 py-3 text-ink-gray-8' }, labelize(row.action)),
-                    h('td', { class: 'px-4 py-3 text-ink-gray-8' }, row.actor || '—'),
-                    h('td', { class: 'px-4 py-3' }, [
+                    h('td', { class: 'whitespace-nowrap px-3 py-2 text-ink-gray-6' }, formatDate(row.timestamp)),
+                    h('td', { class: 'px-3 py-2' }, h(Badge, { label: labelize(row.category), theme: 'teal', variant: 'subtle' })),
+                    h('td', { class: 'px-3 py-2 text-ink-gray-8' }, labelize(row.action)),
+                    h('td', { class: 'px-3 py-2 text-ink-gray-8' }, row.actor || '—'),
+                    h('td', { class: 'px-3 py-2' }, [
                       h('div', { class: 'font-medium text-ink-gray-9' }, row.target_doctype || '—'),
                       h('div', { class: 'text-xs text-ink-gray-5' }, row.target_name || row.summary || '—'),
                     ]),
-                    h('td', { class: 'px-4 py-3' }, h(Badge, { label: labelize(row.severity), theme: severityTheme(row.severity), variant: 'subtle' })),
-                    h('td', { class: 'px-4 py-3 text-ink-gray-6' }, [row.ip, row.geo].filter(Boolean).join(' · ') || '—'),
+                    h('td', { class: 'px-3 py-2' }, h(Badge, { label: labelize(row.severity), theme: severityTheme(row.severity), variant: 'subtle' })),
+                    h('td', { class: 'px-3 py-2 text-ink-gray-6' }, [row.ip, row.geo].filter(Boolean).join(' · ') || '—'),
                   ]),
                 )),
               ]),
@@ -945,12 +945,12 @@ const SimpleTable = defineComponent({
   emits: ['open'],
   setup(props, { emit }) {
     return () =>
-      h('div', { class: 'overflow-hidden rounded-[14px] border border-outline-gray-2 bg-white shadow-sm' }, [
+      h('div', { class: 'overflow-hidden rounded-[10px] border border-outline-gray-2 bg-white shadow-sm' }, [
         props.rows?.length
           ? h('div', { class: 'overflow-x-auto' }, [
               h('table', { class: 'w-full min-w-[760px] text-sm' }, [
                 h('thead', { class: 'border-b border-outline-gray-2 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5' }, [
-                  h('tr', props.columns.map((column) => h('th', { class: 'px-4 py-2.5 font-medium', key: column.key }, __(column.label)))),
+                  h('tr', props.columns.map((column) => h('th', { class: 'px-3 py-1.5 font-medium', key: column.key }, __(column.label)))),
                 ]),
                 h('tbody', props.rows.map((row) =>
                   h('tr', {
@@ -959,7 +959,7 @@ const SimpleTable = defineComponent({
                     onClick: () => emit('open', row),
                   }, props.columns.map((column) => {
                     const value = column.format ? column.format(row[column.key]) : row[column.key]
-                    return h('td', { class: 'px-4 py-3 text-ink-gray-8', key: column.key }, column.badge
+                    return h('td', { class: 'px-3 py-2 text-ink-gray-8', key: column.key }, column.badge
                       ? h(Badge, { label: labelize(value), theme: severityTheme(row[column.key]), variant: 'subtle' })
                       : value || '—')
                   })),
@@ -976,13 +976,13 @@ const SegmentedControl = defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     return () =>
-      h('div', { class: 'mb-4 inline-flex rounded-md border border-outline-gray-2 bg-white p-1' },
+      h('div', { class: 'mb-3 inline-flex rounded-md border border-outline-gray-2 bg-white p-1' },
         props.options.map((option) =>
           h('button', {
             key: option.key,
             class: [
               'rounded px-3 py-1.5 text-sm transition-colors',
-              props.modelValue === option.key ? 'bg-crm-teal text-white' : 'text-ink-gray-6 hover:bg-surface-gray-1',
+              props.modelValue === option.key ? 'bg-[#FF6600] text-white' : 'text-ink-gray-6 hover:bg-surface-gray-1',
             ],
             onClick: () => emit('update:modelValue', option.key),
           }, __(option.label)),
@@ -995,7 +995,7 @@ const RulePanel = defineComponent({
   props: { rules: Array },
   setup(props) {
     return () =>
-      h('div', { class: 'rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm' }, [
+      h('div', { class: 'rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm' }, [
         h('h3', { class: 'text-base font-medium text-ink-gray-9' }, __('Active Rules')),
         h('div', { class: 'mt-4 space-y-3' }, props.rules.map((rule) =>
           h('div', { key: rule.name, class: 'rounded-md border border-outline-gray-1 p-3' }, [
@@ -1018,7 +1018,7 @@ const ReportCard = defineComponent({
   emits: ['run'],
   setup(props, { emit }) {
     return () =>
-      h('div', { class: 'rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm' }, [
+      h('div', { class: 'rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm' }, [
         h('div', { class: 'flex items-start justify-between gap-3' }, [
           h('div', [
             h('h3', { class: 'font-medium text-ink-gray-9' }, props.report.name),
@@ -1037,7 +1037,7 @@ const TrendPanel = defineComponent({
   props: { title: String, items: Array },
   setup(props) {
     return () =>
-      h('div', { class: 'rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm' }, [
+      h('div', { class: 'rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm' }, [
         h('h3', { class: 'text-base font-medium text-ink-gray-9' }, __(props.title)),
         h('div', { class: 'mt-4 space-y-3' }, props.items.map((item) =>
           h('div', { key: item.label }, [
@@ -1047,7 +1047,7 @@ const TrendPanel = defineComponent({
             ]),
             h('div', { class: 'h-2 overflow-hidden rounded-full bg-surface-gray-2' }, [
               h('div', {
-                class: 'h-full rounded-full bg-crm-teal',
+                class: 'h-full rounded-full bg-[#FF6600]',
                 style: { width: `${Math.max(8, Math.min(100, item.value * 14))}%` },
               }),
             ]),
@@ -1116,7 +1116,7 @@ usePageMeta(() => ({ title: __('Audit Trail') }))
 }
 
 .audit-select:focus {
-  border-color: #008C95;
+  border-color: #FF6600;
   box-shadow: 0 0 0 2px rgb(0 140 149 / 20%);
 }
 </style>

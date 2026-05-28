@@ -51,13 +51,13 @@
     </LayoutHeader>
 
     <!-- Tab strip -->
-    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-5">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex gap-5">
+    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex gap-3">
           <button
             v-for="tab in TABS"
             :key="tab.view"
-            class="border-b-2 py-2.5 text-base transition-colors whitespace-nowrap"
+            class="border-b-2 py-2 text-base transition-colors whitespace-nowrap"
             :class="isActiveTab(tab.view)
               ? 'border-ink-gray-8 font-medium text-ink-gray-9'
               : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
@@ -103,7 +103,7 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto">
-      <div class="max-w-6xl px-6 py-6">
+      <div class="w-full px-6 py-4">
 
         <!-- ── DASHBOARD ───────────────────────────── -->
         <template v-if="activeView === 'dashboard'">
@@ -117,7 +117,7 @@
             <Button class="mt-3" size="sm" variant="outline" label="Retry" @click="dashboard.reload()" />
           </div>
           <template v-else>
-            <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <StatCard label="Active Facilities" :value="String(dashboard.data?.active_facilities ?? 0)" icon="credit-card" />
               <StatCard label="Applications in Progress" :value="String(dashboard.data?.pending_applications ?? 0)" icon="file-text" />
               <StatCard
@@ -130,8 +130,8 @@
               <StatCard label="Notifications" :value="String(dashboard.data?.notifications?.length ?? 0)" icon="bell" />
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-3">
-              <div class="space-y-5 lg:col-span-2">
+            <div class="grid gap-3 lg:grid-cols-3">
+              <div class="space-y-3 lg:col-span-2">
                 <div class="flex items-center justify-between">
                   <span class="text-base font-medium text-ink-gray-9">Active Facilities</span>
                   <button class="text-sm text-ink-blue-3 hover:underline" @click="navigate('facilities')">View all</button>
@@ -143,10 +143,10 @@
                   <div
                     v-for="f in facilities.data"
                     :key="f.name"
-                    class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-4 hover:border-outline-gray-3"
+                    class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-3 hover:border-outline-gray-3"
                     @click="loadFacility(f.name)"
                   >
-                    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+                    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                       <div class="min-w-0">
                         <p class="truncate text-base font-medium leading-5 text-ink-gray-9">{{ f.customer }}</p>
                         <div class="mt-1 flex items-center gap-2">
@@ -161,9 +161,9 @@
                     </div>
                     <div class="mt-5">
                       <div class="h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                        <div class="h-full rounded-full bg-crm-teal" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
+                        <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
                       </div>
-                      <div class="mt-2 flex items-center justify-between gap-4 text-sm leading-5 text-ink-gray-4">
+                      <div class="mt-2 flex items-center justify-between gap-3 text-sm leading-5 text-ink-gray-4">
                         <span>{{ pct(f.outstanding, f.limit_amount) }}% utilised</span>
                         <span :class="isDueSoon(f.due_date) ? 'font-medium text-crm-warning' : ''">Due {{ formatDate(f.due_date) }}</span>
                       </div>
@@ -182,10 +182,10 @@
                   <div
                     v-for="app in inProgressApps"
                     :key="app.name"
-                    class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-4 hover:border-outline-gray-3"
+                    class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-3 hover:border-outline-gray-3"
                     @click="selectedApp = app; activeView = 'app-detail'"
                   >
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-start justify-between gap-3">
                       <div>
                         <p class="text-base font-medium text-ink-gray-9">{{ app.borrower_name }}</p>
                         <p class="text-sm text-ink-gray-5">{{ app.facility_type }} · {{ formatAmount(app.requested_amount) }}</p>
@@ -193,7 +193,7 @@
                       <Badge :label="app.stage_label" theme="blue" variant="subtle" />
                     </div>
                     <div class="mt-3 flex gap-0.5">
-                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-crm-teal' : 'bg-surface-gray-2'" />
+                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#FF6600]' : 'bg-surface-gray-2'" />
                     </div>
                     <p class="mt-1 text-xs text-ink-gray-4">Stage {{ app.stage_index }} of 8</p>
                   </div>
@@ -201,8 +201,8 @@
                 </div>
               </div>
 
-              <div class="space-y-5">
-                <div v-if="actionNeeded.length > 0" class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+              <div class="space-y-3">
+                <div v-if="actionNeeded.length > 0" class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                   <div class="mb-2 flex items-center gap-2">
                     <FeatherIcon name="alert-circle" class="h-4 w-4 text-crm-warning" />
                     <p class="text-base font-medium text-ink-gray-9">Action Needed</p>
@@ -211,7 +211,7 @@
                   <Button class="mt-3 w-full" size="sm" variant="outline" label="Upload Documents" @click="navigate('documents')" />
                 </div>
 
-                <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+                <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                   <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Quick Actions</p>
                   <div class="space-y-0.5">
                     <button
@@ -226,10 +226,10 @@
                   </div>
                 </div>
 
-                <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+                <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                   <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Relationship Manager</p>
                   <div class="flex items-center gap-3">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-crm-teal text-sm font-bold text-white">{{ rm.initials }}</div>
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF6600] text-sm font-bold text-white">{{ rm.initials }}</div>
                     <div>
                       <p class="text-base font-medium text-ink-gray-9">{{ rm.name }}</p>
                       <p class="text-sm text-ink-gray-5">{{ rm.role }}</p>
@@ -251,13 +251,13 @@
             <table class="w-full text-base">
               <thead>
                 <tr class="border-b border-outline-gray-2 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
-                  <th class="px-4 py-3">Borrower</th>
-                  <th class="px-4 py-3">Facility</th>
-                  <th class="px-4 py-3 text-right">Amount</th>
-                  <th class="px-4 py-3">Stage</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3">Progress</th>
-                  <th class="px-4 py-3 text-right">Actions</th>
+                  <th class="px-3 py-2">Borrower</th>
+                  <th class="px-3 py-2">Facility</th>
+                  <th class="px-3 py-2 text-right">Amount</th>
+                  <th class="px-3 py-2">Stage</th>
+                  <th class="px-3 py-2">Status</th>
+                  <th class="px-3 py-2">Progress</th>
+                  <th class="px-3 py-2 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-outline-gray-1">
@@ -267,22 +267,22 @@
                   class="cursor-pointer hover:bg-surface-gray-1"
                   @click="selectedApp = app; activeView = 'app-detail'"
                 >
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-2">
                     <p class="font-medium text-ink-gray-9">{{ app.borrower_name }}</p>
                     <p class="text-xs text-ink-gray-4">{{ app.name }}</p>
                   </td>
-                  <td class="px-4 py-3 text-ink-gray-7">{{ app.facility_type }}</td>
-                  <td class="px-4 py-3 text-right font-mono text-ink-gray-7">{{ formatAmount(app.requested_amount) }}</td>
-                  <td class="px-4 py-3 text-ink-gray-5">{{ app.stage_index }}/8</td>
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-2 text-ink-gray-7">{{ app.facility_type }}</td>
+                  <td class="px-3 py-2 text-right font-mono text-ink-gray-7">{{ formatAmount(app.requested_amount) }}</td>
+                  <td class="px-3 py-2 text-ink-gray-5">{{ app.stage_index }}/8</td>
+                  <td class="px-3 py-2">
                     <Badge :label="app.stage_label" :theme="stageBadgeTheme(app.status)" variant="subtle" />
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-2">
                     <div class="flex w-20 gap-0.5">
-                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-crm-teal' : 'bg-surface-gray-2'" />
+                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#FF6600]' : 'bg-surface-gray-2'" />
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-right">
+                  <td class="px-3 py-2 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <Button size="sm" variant="subtle" label="Edit" @click.stop="openEditApp(app)" />
                       <Button size="sm" variant="subtle" theme="red" label="Cancel" @click.stop="cancelApplication(app)" />
@@ -301,11 +301,11 @@
 
         <!-- ── APPLICATION DETAIL ────────────────── -->
         <template v-else-if="activeView === 'app-detail' && selectedApp">
-	          <div class="grid gap-5 lg:grid-cols-3">
-	            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5 lg:col-span-2">
-              <p class="mb-4 text-base font-medium text-ink-gray-9">Application Progress</p>
+	          <div class="grid gap-3 lg:grid-cols-3">
+	            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3 lg:col-span-2">
+              <p class="mb-3 text-base font-medium text-ink-gray-9">Application Progress</p>
               <div>
-                <div v-for="(stage, idx) in STAGES" :key="stage" class="flex gap-4">
+                <div v-for="(stage, idx) in STAGES" :key="stage" class="flex gap-3">
                   <div class="flex flex-col items-center">
                     <div
                       class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
@@ -318,7 +318,7 @@
                       v-if="idx < STAGES.length - 1"
                       class="my-1 w-px flex-1"
                       style="min-height:18px"
-                      :class="idx + 1 < selectedApp.stage_index ? 'bg-crm-teal' : 'bg-outline-gray-2'"
+                      :class="idx + 1 < selectedApp.stage_index ? 'bg-[#FF6600]' : 'bg-outline-gray-2'"
                     />
                   </div>
                   <div class="pb-4 pt-0.5">
@@ -333,8 +333,8 @@
               </div>
             </div>
 
-            <div class="space-y-4">
-              <div v-if="selectedApp.status === 'Document Review'" class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+            <div class="space-y-3">
+              <div v-if="selectedApp.status === 'Document Review'" class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <div class="mb-2 flex items-center gap-2">
                   <FeatherIcon name="alert-circle" class="h-4 w-4 text-crm-warning" />
                   <p class="text-base font-medium text-ink-gray-9">Action Required</p>
@@ -343,7 +343,7 @@
 	                <Button class="mt-3 w-full" size="sm" variant="solid" label="Upload Documents" @click="docApplicationName = selectedApp.name; navigate('documents')" />
               </div>
 
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Details</p>
                 <div class="space-y-2">
                   <div class="flex justify-between text-base">
@@ -369,12 +369,12 @@
                 </div>
               </div>
 
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="text-sm text-ink-gray-5">Need help with your application?</p>
                 <Button class="mt-2 w-full" size="sm" variant="outline" label="Contact Support" @click="navigate('tickets')" />
               </div>
 
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Actions</p>
                 <div class="space-y-2">
                   <Button
@@ -419,14 +419,14 @@
           <div v-if="facilities.loading" class="flex h-48 items-center justify-center">
             <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
           </div>
-	          <div v-else-if="facilities.data?.length" class="grid gap-4 md:grid-cols-2">
+	          <div v-else-if="facilities.data?.length" class="grid gap-3 md:grid-cols-2">
             <div
               v-for="f in facilities.data"
               :key="f.name"
-              class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-5 hover:border-outline-gray-3"
+              class="cursor-pointer rounded-lg border border-outline-gray-2 bg-surface-white p-3 hover:border-outline-gray-3"
               @click="loadFacility(f.name)"
             >
-              <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+              <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
                     <Badge :label="f.facility_type" theme="teal" variant="subtle" />
@@ -438,19 +438,19 @@
                 <FeatherIcon name="chevron-right" class="mt-1 h-4 w-4 text-ink-gray-4" />
               </div>
               <div class="mt-6">
-                <div class="mb-2 flex items-center justify-between gap-4 text-sm leading-5">
+                <div class="mb-2 flex items-center justify-between gap-3 text-sm leading-5">
                   <span>Outstanding</span>
                   <span class="font-medium text-ink-gray-9">{{ formatAmount(f.outstanding) }}</span>
                 </div>
                 <div class="h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                  <div class="h-full rounded-full bg-crm-teal" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
+                  <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
                 </div>
-                <div class="mt-2 flex items-center justify-between gap-4 text-sm leading-5 text-ink-gray-4">
+                <div class="mt-2 flex items-center justify-between gap-3 text-sm leading-5 text-ink-gray-4">
                   <span>Limit: {{ formatAmount(f.limit_amount) }}</span>
                   <span>{{ pct(f.outstanding, f.limit_amount) }}% used</span>
                 </div>
                 <div
-                  class="mt-5 flex items-center justify-between gap-4 rounded-md px-4 py-3"
+                  class="mt-5 flex items-center justify-between gap-3 rounded-md px-3 py-2"
                   :class="isDueSoon(f.due_date) ? 'bg-surface-gray-2' : 'bg-surface-gray-1'"
                 >
                   <span class="text-sm leading-5 text-ink-gray-5">Next payment due</span>
@@ -467,16 +467,16 @@
 
         <!-- ── FACILITY DETAIL ───────────────────── -->
         <template v-else-if="activeView === 'facility-detail' && selectedFacility">
-	          <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+	          <div class="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <p class="text-sm text-ink-gray-5">Outstanding Balance</p>
               <p class="mt-1 text-xl font-semibold text-ink-gray-9">{{ formatAmount(selectedFacility.outstanding) }}</p>
               <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                <div class="h-full rounded-full bg-crm-teal" :style="{ width: pct(selectedFacility.outstanding, selectedFacility.limit_amount) + '%' }" />
+                <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(selectedFacility.outstanding, selectedFacility.limit_amount) + '%' }" />
               </div>
               <p class="mt-1 text-xs text-ink-gray-4">of {{ formatAmount(selectedFacility.limit_amount) }} limit</p>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <p class="text-sm text-ink-gray-5">Facility Type</p>
               <p class="mt-1 text-xl font-semibold text-ink-gray-9">{{ selectedFacility.facility_type }}</p>
 	              <p class="mt-1 text-xs text-ink-gray-4">
@@ -485,21 +485,21 @@
 	                <span v-if="selectedFacility.tenor"> · {{ selectedFacility.tenor }}</span>
 	              </p>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 p-4" :class="isDueSoon(selectedFacility.due_date) ? 'bg-surface-gray-2' : 'bg-surface-white'">
+            <div class="rounded-lg border border-outline-gray-2 p-3" :class="isDueSoon(selectedFacility.due_date) ? 'bg-surface-gray-2' : 'bg-surface-white'">
               <p class="text-sm text-ink-gray-5">Next Payment Due</p>
               <p class="mt-1 text-xl font-semibold" :class="isDueSoon(selectedFacility.due_date) ? 'text-crm-warning' : 'text-ink-gray-9'">
                 {{ formatDate(selectedFacility.due_date) }}
               </p>
               <p class="mt-1 text-xs text-ink-gray-4">{{ daysUntil(selectedFacility.due_date) }}</p>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <p class="text-sm text-ink-gray-5">Account Health</p>
               <p class="mt-1 text-xl font-semibold text-green-600">{{ selectedFacility.health || 'Good' }}</p>
             </div>
           </div>
 
           <div id="print-area" class="overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white">
-            <div class="border-b border-outline-gray-2 px-4 py-3 text-base font-medium text-ink-gray-9">Payment Schedule</div>
+            <div class="border-b border-outline-gray-2 px-3 py-2 text-base font-medium text-ink-gray-9">Payment Schedule</div>
             <div v-if="facilityDetail.loading" class="flex h-20 items-center justify-center">
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
@@ -507,12 +507,12 @@
               <table class="w-full text-base">
                 <thead>
                   <tr class="border-b border-outline-gray-2 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
-                    <th class="px-4 py-3">#</th>
-                    <th class="px-4 py-3">Due Date</th>
-                    <th class="px-4 py-3 text-right">Principal</th>
-                    <th class="px-4 py-3 text-right">Interest</th>
-                    <th class="px-4 py-3 text-right">Total</th>
-                    <th class="px-4 py-3 text-center">Status</th>
+                    <th class="px-3 py-2">#</th>
+                    <th class="px-3 py-2">Due Date</th>
+                    <th class="px-3 py-2 text-right">Principal</th>
+                    <th class="px-3 py-2 text-right">Interest</th>
+                    <th class="px-3 py-2 text-right">Total</th>
+                    <th class="px-3 py-2 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-outline-gray-1">
@@ -521,12 +521,12 @@
                     :key="row.no"
                     :class="row.status === 'Due' ? 'bg-surface-gray-1' : row.status === 'Paid' ? 'opacity-50' : ''"
                   >
-                    <td class="px-4 py-3 text-ink-gray-4">{{ row.no }}</td>
-                    <td class="px-4 py-3 font-medium text-ink-gray-9">{{ formatDate(row.due_date) }}</td>
-                    <td class="px-4 py-3 text-right font-mono text-ink-gray-7">{{ formatAmount(row.principal) }}</td>
-                    <td class="px-4 py-3 text-right font-mono text-ink-gray-7">{{ formatAmount(row.interest) }}</td>
-                    <td class="px-4 py-3 text-right font-mono font-semibold text-ink-gray-9">{{ formatAmount(row.total) }}</td>
-                    <td class="px-4 py-3 text-center">
+                    <td class="px-3 py-2 text-ink-gray-4">{{ row.no }}</td>
+                    <td class="px-3 py-2 font-medium text-ink-gray-9">{{ formatDate(row.due_date) }}</td>
+                    <td class="px-3 py-2 text-right font-mono text-ink-gray-7">{{ formatAmount(row.principal) }}</td>
+                    <td class="px-3 py-2 text-right font-mono text-ink-gray-7">{{ formatAmount(row.interest) }}</td>
+                    <td class="px-3 py-2 text-right font-mono font-semibold text-ink-gray-9">{{ formatAmount(row.total) }}</td>
+                    <td class="px-3 py-2 text-center">
                       <Badge
                         :label="row.status"
                         :theme="row.status === 'Paid' ? 'green' : row.status === 'Due' ? 'orange' : 'gray'"
@@ -539,11 +539,11 @@
             </div>
 	          </div>
 
-	          <div class="mt-5 grid gap-5 lg:grid-cols-3">
+	          <div class="mt-5 grid gap-3 lg:grid-cols-3">
 	            <div class="overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white lg:col-span-2">
-	              <div class="border-b border-outline-gray-2 px-4 py-3 text-base font-medium text-ink-gray-9">Payment History</div>
+	              <div class="border-b border-outline-gray-2 px-3 py-2 text-base font-medium text-ink-gray-9">Payment History</div>
 	              <div class="divide-y divide-outline-gray-1">
-	                <div v-for="tx in paymentTransactions" :key="tx.name" class="flex items-center justify-between px-4 py-3">
+	                <div v-for="tx in paymentTransactions" :key="tx.name" class="flex items-center justify-between px-3 py-2">
 	                  <div>
 	                    <p class="text-base font-medium text-ink-gray-9">{{ tx.transaction_type }}</p>
 	                    <p class="text-sm text-ink-gray-4">{{ formatDate(tx.transaction_date) }}</p>
@@ -553,10 +553,10 @@
 	                    <Badge :label="tx.status" :theme="tx.status === 'Posted' ? 'green' : tx.status === 'Failed' ? 'red' : 'orange'" variant="subtle" />
 	                  </div>
 	                </div>
-	                <p v-if="!paymentTransactions.length" class="px-4 py-6 text-sm text-ink-gray-4">No payment history yet</p>
+	                <p v-if="!paymentTransactions.length" class="px-4 py-4 text-sm text-ink-gray-4">No payment history yet</p>
 	              </div>
 	            </div>
-	            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+	            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
 	              <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Statements</p>
 	              <select v-model="statementPeriod" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base text-ink-gray-8 focus:outline-none">
 	                <option v-for="period in statementOptions" :key="period.value" :value="period.value">{{ period.label }}</option>
@@ -573,32 +573,32 @@
             <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
           </div>
           <template v-else-if="documentRows.length">
-	            <div class="mb-4 grid gap-3 md:grid-cols-4">
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4 text-center">
+	            <div class="mb-3 grid gap-3 md:grid-cols-4">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3 text-center">
                 <p class="text-2xl font-semibold text-green-600">{{ documentRows.filter(d => d.status_label === 'Approved').length }}</p>
                 <p class="mt-0.5 text-sm text-ink-gray-5">Approved</p>
               </div>
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4 text-center">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3 text-center">
                 <p class="text-2xl font-semibold text-red-500">{{ documentRows.filter(d => d.status_label === 'Rejected').length }}</p>
                 <p class="mt-0.5 text-sm text-ink-gray-5">Rejected</p>
               </div>
-	              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4 text-center">
+	              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3 text-center">
 	                <p class="text-2xl font-semibold text-ink-gray-7">{{ documentRows.filter(d => d.status_label === 'Pending Upload').length }}</p>
 	                <p class="mt-0.5 text-sm text-ink-gray-5">Pending Upload</p>
 	              </div>
-	              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4 text-center">
+	              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3 text-center">
 	                <p class="text-2xl font-semibold text-blue-600">{{ documentRows.filter(d => d.status_label === 'Pending Review').length }}</p>
 	                <p class="mt-0.5 text-sm text-ink-gray-5">Pending Review</p>
 	              </div>
             </div>
 
             <div class="overflow-hidden rounded-lg border border-outline-gray-2 bg-surface-white">
-              <div class="border-b border-outline-gray-2 px-4 py-3">
+              <div class="border-b border-outline-gray-2 px-3 py-2">
                 <span class="text-base font-medium text-ink-gray-9">Document Checklist</span>
                 <span v-if="docApplicationName" class="ml-2 font-mono text-xs text-ink-gray-4">{{ docApplicationName }}</span>
               </div>
               <div class="divide-y divide-outline-gray-1">
-                <div v-for="doc in documentRows" :key="doc.name" class="flex items-start justify-between gap-4 px-4 py-3">
+                <div v-for="doc in documentRows" :key="doc.name" class="flex items-start justify-between gap-3 px-3 py-2">
                   <div class="flex min-w-0 flex-1 items-start gap-3">
                     <div
                       class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
@@ -658,9 +658,9 @@
 
         <!-- ── SUPPORT ────────────────────────────── -->
         <template v-else-if="activeView === 'tickets'">
-	          <div class="grid gap-5 lg:grid-cols-3">
+	          <div class="grid gap-3 lg:grid-cols-3">
 	            <div class="lg:col-span-2">
-              <div class="mb-4 flex gap-1 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-1 w-fit">
+              <div class="mb-3 flex gap-1 rounded-md border border-outline-gray-2 bg-surface-gray-1 p-1 w-fit">
                 <button
                   v-for="tab in ['my', 'new']"
                   :key="tab"
@@ -677,8 +677,8 @@
                   <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
                 </div>
                 <div v-else-if="ticketRows.length" class="space-y-2">
-                  <div v-for="t in ticketRows" :key="t.name" class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
-                    <div class="flex items-start justify-between gap-4">
+                  <div v-for="t in ticketRows" :key="t.name" class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
+                    <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0 flex-1">
                         <p class="text-base font-medium text-ink-gray-9">{{ t.subject }}</p>
                         <p class="mt-0.5 text-sm text-ink-gray-4">{{ t.name }} · {{ formatDate(t.creation) }}</p>
@@ -708,8 +708,8 @@
                 </div>
               </div>
 
-              <div v-else class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
-                <div class="space-y-4">
+              <div v-else class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
+                <div class="space-y-3">
                   <div>
                     <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Category</label>
                     <select
@@ -759,11 +759,11 @@
               </div>
             </div>
 
-            <div class="space-y-4">
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+            <div class="space-y-3">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Your RM</p>
                 <div class="flex items-center gap-3">
-	                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-crm-teal text-sm font-bold text-white">{{ rm.initials }}</div>
+	                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF6600] text-sm font-bold text-white">{{ rm.initials }}</div>
 	                  <div>
 	                    <p class="text-base font-medium text-ink-gray-9">{{ rm.name }}</p>
 	                    <p class="text-sm text-ink-gray-5">{{ rm.phone }}</p>
@@ -771,7 +771,7 @@
 	                </div>
 	                <Button class="mt-3 w-full" size="sm" variant="outline" label="Open WhatsApp" @click="openWa" />
 	              </div>
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Common Issues</p>
                 <div class="space-y-2 text-sm text-ink-gray-6">
                   <p class="cursor-pointer hover:text-ink-blue-3" @click="ticketForm.category='Installment Payment'; ticketForm.subject='Question about my payment schedule'; ticketTab='new'">
@@ -791,7 +791,7 @@
 
         <!-- ── TOP-UP ─────────────────────────────── -->
         <template v-else-if="activeView === 'topup'">
-	          <div class="grid gap-5 lg:grid-cols-2">
+	          <div class="grid gap-3 lg:grid-cols-2">
             <div>
               <div v-if="topupSubmitted" class="rounded-lg border border-outline-gray-2 bg-surface-white p-8 text-center">
                 <FeatherIcon name="check-circle" class="mx-auto mb-3 h-10 w-10 text-green-500" />
@@ -803,13 +803,13 @@
                   <Button variant="outline" size="sm" label="Back to Facilities" @click="navigate('facilities')" />
                 </div>
               </div>
-              <div v-else class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
-                <div v-if="topupFacility" class="mb-4 rounded-md bg-surface-gray-1 p-3">
+              <div v-else class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
+                <div v-if="topupFacility" class="mb-3 rounded-md bg-surface-gray-1 p-3">
                   <p class="text-xs text-ink-gray-5">Facility</p>
                   <p class="text-base font-medium text-ink-gray-9">{{ topupFacility.facility_type }} — {{ topupFacility.customer }}</p>
                   <p class="text-sm text-ink-gray-5">Outstanding: {{ formatAmount(topupFacility.outstanding) }}</p>
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-3">
                   <div>
                     <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Requested Top-Up Amount</label>
                     <div class="flex items-center gap-2 rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 focus-within:border-outline-gray-4 focus-within:bg-surface-white">
@@ -844,8 +844,8 @@
                 </div>
               </div>
             </div>
-            <div class="space-y-4">
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-4">
+            <div class="space-y-3">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">What Happens Next</p>
                 <div class="space-y-3">
                   <div v-for="(step, i) in TOPUP_STEPS" :key="i" class="flex gap-3">
@@ -854,7 +854,7 @@
                   </div>
                 </div>
               </div>
-              <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-4 text-sm text-ink-gray-6">
+              <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-6">
                 <p class="font-medium text-ink-gray-8">Note</p>
                 <p class="mt-1">Top-up requests are subject to credit review. Processing typically takes 5–7 business days.</p>
               </div>
@@ -863,10 +863,10 @@
         </template>
 
         <template v-else-if="activeView === 'profile'">
-          <div class="grid gap-5 lg:grid-cols-3">
-            <div class="lg:col-span-2 rounded-lg border border-outline-gray-2 bg-surface-white p-5">
-              <h2 class="mb-4 text-base font-semibold text-ink-gray-9">My Profile</h2>
-              <div class="space-y-4">
+          <div class="grid gap-3 lg:grid-cols-3">
+            <div class="lg:col-span-2 rounded-lg border border-outline-gray-2 bg-surface-white p-3">
+              <h2 class="mb-3 text-base font-semibold text-ink-gray-9">My Profile</h2>
+              <div class="space-y-3">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Full Name</label>
                   <input v-model="profileForm.name" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none" />
@@ -875,7 +875,7 @@
                   <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Address</label>
                   <textarea v-model="profileForm.address" rows="2" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-base focus:border-outline-gray-4 focus:bg-surface-white focus:outline-none" />
                 </div>
-                <div class="grid gap-4 md:grid-cols-2">
+                <div class="grid gap-3 md:grid-cols-2">
                   <div>
                     <label class="mb-1.5 flex items-center justify-between text-sm font-medium text-ink-gray-7">
                       <span>Email <span class="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">OTP</span></span>
@@ -904,12 +904,12 @@
                 </div>
               </div>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-5 text-sm text-ink-gray-6">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-6">
               <p class="font-medium text-ink-gray-8">Security</p>
               <p class="mt-2">Changes to your email and phone require a one-time code (OTP) sent to your existing contact. Other fields save immediately.</p>
               <p class="mt-3 text-xs text-ink-gray-5">Last updated: {{ profileLastUpdated }}</p>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-5 text-sm text-ink-gray-6 md:col-span-3">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-6 md:col-span-3">
               <p class="font-medium text-ink-gray-8 mb-2">Notification Preferences</p>
               <div v-for="p in notifPrefs" :key="p.type" class="flex items-center justify-between border-t border-outline-gray-1 first:border-t-0 py-2">
                 <span>{{ p.label }}</span>
@@ -925,10 +925,10 @@
         </template>
 
         <template v-else-if="activeView === 'restructure'">
-          <div class="grid gap-5 lg:grid-cols-[1fr_320px]">
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+          <div class="grid gap-3 lg:grid-cols-[1fr_320px]">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Restructure Request</h2>
-              <div class="space-y-4">
+              <div class="space-y-3">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Facility</label>
                   <select v-model="restructureForm.facility" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm">
@@ -958,7 +958,7 @@
                 </div>
               </div>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-4 text-sm text-ink-gray-6">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-gray-1 p-3 text-sm text-ink-gray-6">
               <p class="font-medium text-ink-gray-8">Process</p>
               <ol class="mt-2 list-decimal pl-5 space-y-1">
                 <li>Your RM reviews the request and supporting documents.</li>
@@ -972,13 +972,13 @@
         </template>
 
         <template v-else-if="activeView === 'referral'">
-          <div class="grid gap-5 lg:grid-cols-[1fr_320px]">
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+          <div class="grid gap-3 lg:grid-cols-[1fr_320px]">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Refer a friend, earn rewards</h2>
               <p class="text-sm text-ink-gray-6">Share your referral code below. When someone you refer becomes a customer, you both receive a reward.</p>
-              <div class="mt-4 rounded-md border border-dashed border-crm-teal bg-teal-50 p-4">
+              <div class="mt-4 rounded-md border border-dashed border-[#FF6600] bg-[#006699]/10 p-3">
                 <p class="text-xs uppercase text-ink-gray-5 tracking-wider">Your code</p>
-                <p class="text-3xl font-bold font-mono text-crm-teal">{{ referralCode }}</p>
+                <p class="text-3xl font-bold font-mono text-[#FF6600]">{{ referralCode }}</p>
                 <Button class="mt-3" size="sm" variant="outline" label="Copy" @click="copyReferral" />
               </div>
               <div class="mt-4 flex gap-2">
@@ -987,7 +987,7 @@
                 <Button size="sm" variant="outline" label="Copy Link" @click="shareReferral('link')" />
               </div>
             </div>
-            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-5">
+            <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">Referral History</h3>
               <div v-for="r in referrals" :key="r.id" class="flex justify-between items-start py-2 border-t border-outline-gray-1 first:border-t-0">
                 <div>
@@ -1006,7 +1006,7 @@
 
     <Dialog v-model="showNewAppDialog" :options="{ title: 'Submit New Credit Application' }">
       <template #body-content>
-        <div class="space-y-4 pt-2">
+        <div class="space-y-3 pt-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Facility Type</label>
             <select
@@ -1084,7 +1084,7 @@
         v-if="assistantOpen"
         class="pointer-events-auto flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-white shadow-2xl"
       >
-        <div class="flex items-center justify-between gap-2 border-b border-outline-gray-2 px-4 py-3" style="background: #008C95">
+        <div class="flex items-center justify-between gap-2 border-b border-outline-gray-2 px-3 py-2" style="background: #FF6600">
           <div class="flex items-center gap-2 text-white">
             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
               <FeatherIcon name="zap" class="h-4 w-4" />
@@ -1108,7 +1108,7 @@
             <div
               class="max-w-[85%] whitespace-pre-line rounded-lg px-3 py-2 text-sm leading-relaxed"
               :class="msg.role === 'user'
-                ? 'bg-crm-teal text-white'
+                ? 'bg-[#FF6600] text-white'
                 : 'border border-outline-gray-2 bg-surface-white text-ink-gray-8'"
             >
               {{ msg.content }}
@@ -1141,7 +1141,7 @@
             @keydown.enter="askAssistant(assistantInput)"
           />
           <button
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-crm-teal text-white hover:opacity-90 disabled:opacity-50"
+            class="flex h-8 w-9 shrink-0 items-center justify-center rounded-md bg-[#FF6600] text-white hover:opacity-90 disabled:opacity-50"
             :disabled="!assistantInput || assistantLoading"
             @click="askAssistant(assistantInput)"
           >
@@ -1151,7 +1151,7 @@
       </div>
       <button
         class="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105"
-        style="background: #008C95"
+        style="background: #FF6600"
         @click="assistantOpen = !assistantOpen"
       >
         <FeatherIcon :name="assistantOpen ? 'chevron-down' : 'message-circle'" class="h-6 w-6" />
@@ -1160,7 +1160,7 @@
 
     <Dialog v-model="showNewDocDialog" :options="{ title: 'Upload Document' }">
       <template #body-content>
-        <div class="space-y-4 pt-2">
+        <div class="space-y-3 pt-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Title</label>
             <input
@@ -1207,7 +1207,7 @@
 
     <Dialog v-model="showEditAppDialog" :options="{ title: 'Edit Application' }">
       <template #body-content>
-        <div class="space-y-4 pt-2">
+        <div class="space-y-3 pt-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Requested Amount</label>
             <div class="flex items-center gap-2 rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 focus-within:border-outline-gray-4 focus-within:bg-surface-white">
@@ -1254,7 +1254,7 @@
 
     <Dialog v-model="showEditTicketDialog" :options="{ title: 'Edit Ticket' }">
       <template #body-content>
-        <div class="space-y-4 pt-2">
+        <div class="space-y-3 pt-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Subject</label>
             <input
@@ -1289,9 +1289,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, h, nextTick, onMounted } from 'vue'
+import { ref, reactive, computed, h, nextTick, onMounted, watch } from 'vue'
 import { Badge, Button, Dialog, FeatherIcon, LoadingIndicator, call, createResource, toast } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import { loadPersisted, persistRef } from '@/utils/persist'
 
 const props = defineProps({
   embedded: {
@@ -1375,25 +1376,33 @@ const statementPeriod = ref('')
 const statementDownloading = ref(false)
 const simulatedApps = ref([])
 
-const profileForm = reactive({ name: '', email: '', phone: '', address: '' })
+const profileForm = reactive({ name: '', email: '', phone: '', address: '', ...loadPersisted('crm:portal:profile', {}) })
 const profileOriginal = reactive({ name: '', email: '', phone: '', address: '' })
-const profileLastUpdated = ref('—')
+const profileLastUpdated = ref(loadPersisted('crm:portal:profileLastUpdated', '—'))
 const profileSaving = ref(false)
 const profileOtpStep = ref(false)
 const profileOtp = ref('')
 const profileOtpTarget = ref('')
 
+watch(profileForm, (val) => {
+  try { localStorage.setItem('crm:portal:profile', JSON.stringify({ ...val })) } catch {}
+}, { deep: true })
+persistRef('crm:portal:profileLastUpdated', profileLastUpdated)
+
 const language = ref(typeof window !== 'undefined' ? (localStorage.getItem('portalLang') || 'en') : 'en')
-const notifPrefs = ref([
+const notifPrefs = ref(loadPersisted('crm:portal:notifPrefs', [
   { type: 'payment', label: 'Payment reminders', email: true, sms: true, push: true },
   { type: 'document', label: 'Document requests', email: true, sms: false, push: true },
   { type: 'application', label: 'Application updates', email: true, sms: false, push: true },
   { type: 'marketing', label: 'Marketing & offers', email: false, sms: false, push: false },
-])
+]))
+persistRef('crm:portal:notifPrefs', notifPrefs)
 const restructureForm = reactive({ facility: '', target_tenor: 0, proposed_installment: 0, hardship: '' })
 const restructureSubmitting = ref(false)
-const referralCode = ref('')
-const referrals = ref([])
+const referralCode = ref(loadPersisted('crm:portal:referralCode', ''))
+persistRef('crm:portal:referralCode', referralCode)
+const referrals = ref(loadPersisted('crm:portal:referrals', []))
+persistRef('crm:portal:referrals', referrals)
 
 const showNewAppDialog = ref(false)
 const newAppSubmitting = ref(false)
@@ -1613,9 +1622,13 @@ function loadProfile() {
     phone: ctx.mobile_no || ctx.phone || '',
     address: ctx.address || '',
   }
-  Object.assign(profileForm, src)
   Object.assign(profileOriginal, src)
-  profileLastUpdated.value = ctx.modified ? formatDate(ctx.modified) : 'Never'
+  if (!profileForm.name && !profileForm.email && !profileForm.phone && !profileForm.address) {
+    Object.assign(profileForm, src)
+  }
+  if (profileLastUpdated.value === '—') {
+    profileLastUpdated.value = ctx.modified ? formatDate(ctx.modified) : 'Never'
+  }
 }
 
 function resetProfile() {
@@ -2252,8 +2265,8 @@ function stageBadgeTheme(status) {
 }
 
 function stageCircleClass(i, current) {
-  if (i < current) return 'bg-crm-teal text-white'
-  if (i === current) return 'border-2 border-crm-teal text-crm-teal bg-surface-white'
+  if (i < current) return 'bg-[#FF6600] text-white'
+  if (i === current) return 'border-2 border-[#FF6600] text-[#FF6600] bg-surface-white'
   return 'border-2 border-outline-gray-2 text-ink-gray-4 bg-surface-white'
 }
 
@@ -2261,7 +2274,7 @@ const StatCard = {
   props: ['label', 'value', 'sub', 'icon', 'warn'],
   setup(props) {
     return () => h('div', {
-      class: 'rounded-lg border border-outline-gray-2 bg-surface-white p-4',
+      class: 'rounded-lg border border-outline-gray-2 bg-surface-white p-3',
     }, [
       h('div', { class: 'flex items-center justify-between gap-3' }, [
         h('div', { class: 'text-xs font-medium uppercase tracking-wide text-ink-gray-5' }, props.label),
