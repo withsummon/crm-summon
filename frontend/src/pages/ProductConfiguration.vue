@@ -27,13 +27,13 @@
     </LayoutHeader>
 
     <!-- Tab strip -->
-    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-5">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex gap-5 overflow-x-auto">
+    <div class="shrink-0 border-b border-outline-gray-2 bg-surface-white px-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex gap-3 overflow-x-auto">
           <button
             v-for="tab in TABS"
             :key="tab.view"
-            class="border-b-2 py-2.5 text-base transition-colors whitespace-nowrap"
+            class="border-b-2 py-2 text-base transition-colors whitespace-nowrap"
             :class="isActiveTab(tab.view)
               ? 'border-ink-gray-8 font-medium text-ink-gray-9'
               : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
@@ -76,12 +76,12 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto bg-surface-gray-1">
-      <div class="max-w-6xl px-5 py-5">
+      <div class="w-full px-3 py-2">
 
         <!-- ── CATALOG ──────────────────────────────────────── -->
         <template v-if="activeView === 'catalog'">
           <!-- KPI strip -->
-          <div class="mb-4 grid gap-3 md:grid-cols-5">
+          <div class="mb-3 grid gap-3 md:grid-cols-5">
             <KpiCard :label="__('All Products')" :value="catalog?.counts?.total ?? 0" icon="package" />
             <KpiCard :label="__('Active')" :value="catalog?.counts?.active ?? 0" icon="check-circle" theme="teal" />
             <KpiCard :label="__('Draft')" :value="catalog?.counts?.draft ?? 0" icon="edit-3" />
@@ -114,7 +114,7 @@
             </select>
           </div>
 
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
             <div v-if="catalogLoading" class="flex h-40 items-center justify-center">
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
@@ -129,14 +129,14 @@
             <table v-else class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-4 py-2.5">{{ __('Code') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Name') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Type') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Status') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Amount Range') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Tenor') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Updated') }}</th>
-                  <th class="px-4 py-2.5"></th>
+                  <th class="px-3 py-1.5">{{ __('Code') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Name') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Type') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Status') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Amount Range') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Tenor') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Updated') }}</th>
+                  <th class="px-3 py-1.5"></th>
                 </tr>
               </thead>
               <tbody>
@@ -146,16 +146,16 @@
                   class="border-b border-outline-gray-1 last:border-b-0 hover:bg-surface-gray-1 cursor-pointer"
                   @click="openWizard(p.product_code)"
                 >
-                  <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ p.product_code }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-8">{{ p.product_name }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ p.product_type || '—' }}</td>
-                  <td class="px-4 py-2.5">
+                  <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ p.product_code }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-8">{{ p.product_name }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ p.product_type || '—' }}</td>
+                  <td class="px-3 py-1.5">
                     <StatusPill :status="p.status" />
                   </td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ fmtRange(p.min_amount, p.max_amount, p.currency) }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ fmtTenor(p.min_tenor_months, p.max_tenor_months) }}</td>
-                  <td class="px-4 py-2.5 text-xs text-ink-gray-5">{{ fmtDate(p.modified) }}</td>
-                  <td class="px-4 py-2.5 text-right">
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ fmtRange(p.min_amount, p.max_amount, p.currency) }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ fmtTenor(p.min_tenor_months, p.max_tenor_months) }}</td>
+                  <td class="px-3 py-1.5 text-xs text-ink-gray-5">{{ fmtDate(p.modified) }}</td>
+                  <td class="px-3 py-1.5 text-right">
                     <div class="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" @click.stop="cloneProductPrompt(p)">
                         <FeatherIcon name="copy" class="h-4 w-4 text-ink-gray-5" />
@@ -173,9 +173,9 @@
 
         <!-- ── DETAIL / WIZARD ─────────────────────────────── -->
         <template v-else-if="activeView === 'detail' && draft">
-          <div class="grid gap-4 md:grid-cols-[220px_1fr]">
+          <div class="grid gap-3 md:grid-cols-[220px_1fr]">
             <!-- Step nav -->
-            <aside class="rounded-[14px] border border-outline-gray-2 bg-white p-3 shadow-sm h-fit">
+            <aside class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm h-fit">
               <button
                 v-for="(s, i) in STEPS"
                 :key="s.key"
@@ -186,7 +186,7 @@
                 <span
                   class="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold"
                   :class="step >= i ? 'text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
-                  :style="step >= i ? 'background:#008C95' : ''"
+                  :style="step >= i ? 'background:#FF6600' : ''"
                 >{{ i + 1 }}</span>
                 {{ s.label }}
               </button>
@@ -220,8 +220,8 @@
             </aside>
 
             <!-- Step content -->
-            <section class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
-              <div class="mb-4 flex items-center justify-between">
+            <section class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+              <div class="mb-3 flex items-center justify-between">
                 <div>
                   <h2 class="text-base font-semibold text-ink-gray-9">{{ STEPS[step].label }}</h2>
                   <p class="mt-0.5 text-xs text-ink-gray-5">{{ STEPS[step].hint }}</p>
@@ -233,7 +233,7 @@
               </div>
 
               <!-- Step 1: Basics -->
-              <div v-if="step === 0" class="grid gap-4 md:grid-cols-2">
+              <div v-if="step === 0" class="grid gap-3 md:grid-cols-2">
                 <Field label="Product Code" required>
                   <input v-model="draft.product_code" class="field-input" :disabled="!!draft._existing" />
                 </Field>
@@ -257,8 +257,8 @@
               </div>
 
               <!-- Step 2: Pricing -->
-              <div v-else-if="step === 1" class="space-y-4">
-                <div class="grid gap-4 md:grid-cols-3">
+              <div v-else-if="step === 1" class="space-y-3">
+                <div class="grid gap-3 md:grid-cols-3">
                   <Field label="Min Amount">
                     <input v-model.number="draft.min_amount" type="number" class="field-input" />
                   </Field>
@@ -319,7 +319,7 @@
               </div>
 
               <!-- Step 3: Eligibility -->
-              <div v-else-if="step === 2" class="space-y-4">
+              <div v-else-if="step === 2" class="space-y-3">
                 <ChildTable
                   title="Eligibility Rules"
                   :rows="draft.eligibility_rules"
@@ -335,8 +335,8 @@
               </div>
 
               <!-- Step 4: Workflow -->
-              <div v-else-if="step === 3" class="space-y-4">
-                <div class="grid gap-4 md:grid-cols-2">
+              <div v-else-if="step === 3" class="space-y-3">
+                <div class="grid gap-3 md:grid-cols-2">
                   <Field label="Workflow">
                     <input v-model="draft.workflow" class="field-input" placeholder="e.g. LOS Standard" />
                   </Field>
@@ -360,7 +360,7 @@
               </div>
 
               <!-- Step 5: Documents -->
-              <div v-else-if="step === 4" class="space-y-4">
+              <div v-else-if="step === 4" class="space-y-3">
                 <ChildTable
                   title="Required Documents"
                   :rows="draft.document_requirements"
@@ -373,7 +373,7 @@
                   @add="draft.document_requirements.push({ mandatory: 1 })"
                   @remove="(i) => draft.document_requirements.splice(i, 1)"
                 />
-                <div class="rounded-md border border-outline-gray-2 bg-surface-gray-1 p-4">
+                <div class="rounded-md border border-outline-gray-2 bg-surface-gray-1 p-3">
                   <h3 class="text-sm font-semibold text-ink-gray-9 mb-2">{{ __('Preview') }}</h3>
                   <div class="grid gap-2 text-xs text-ink-gray-7 md:grid-cols-2">
                     <div><span class="text-ink-gray-5">{{ __('Code') }}:</span> {{ draft.product_code || '—' }}</div>
@@ -391,7 +391,7 @@
               </div>
 
               <!-- Step 6: Cross-Sell -->
-              <div v-else-if="step === 5" class="space-y-4">
+              <div v-else-if="step === 5" class="space-y-3">
                 <p class="text-sm text-ink-gray-6">{{ __('Define which products should be suggested to customers of this product.') }}</p>
                 <ChildTable
                   title="Cross-Sell Targets"
@@ -412,8 +412,8 @@
 
         <!-- ── CALCULATOR ──────────────────────────────────── -->
         <template v-else-if="activeView === 'calculator'">
-          <div class="grid gap-4 md:grid-cols-[1fr_1fr]">
-            <section class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+          <div class="grid gap-3 md:grid-cols-[1fr_1fr]">
+            <section class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <h2 class="text-base font-semibold text-ink-gray-9 mb-3">{{ __('Quote Inputs') }}</h2>
               <div class="grid gap-3">
                 <Field label="Product">
@@ -436,7 +436,7 @@
                 <Button variant="solid" size="sm" label="Calculate" :loading="quoteLoading" @click="runQuote" />
               </div>
             </section>
-            <section class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+            <section class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <h2 class="text-base font-semibold text-ink-gray-9 mb-3">{{ __('Result') }}</h2>
               <div v-if="!quoteResult" class="flex h-40 items-center justify-center text-sm text-ink-gray-5">
                 {{ __('Enter inputs and click Calculate.') }}
@@ -472,7 +472,7 @@
           <div v-if="analyticsLoading" class="flex h-40 items-center justify-center">
             <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
           </div>
-          <div v-else-if="analytics" class="space-y-4">
+          <div v-else-if="analytics" class="space-y-3">
             <div class="grid gap-3 md:grid-cols-5">
               <KpiCard :label="__('Total Products')" :value="analytics.totals.products" icon="package" />
               <KpiCard :label="__('Active')" :value="analytics.totals.active" icon="check-circle" theme="teal" />
@@ -480,29 +480,29 @@
               <KpiCard :label="__('Retired')" :value="analytics.totals.retired" icon="archive" />
               <KpiCard :label="__('Applications')" :value="analytics.totals.applications" icon="file-text" theme="blue" />
             </div>
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
               <table class="w-full text-sm">
                 <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
                   <tr>
-                    <th class="px-4 py-2.5">{{ __('Product') }}</th>
-                    <th class="px-4 py-2.5">{{ __('Status') }}</th>
-                    <th class="px-4 py-2.5 text-right">{{ __('Applications') }}</th>
-                    <th class="px-4 py-2.5 text-right">{{ __('Approvals') }}</th>
-                    <th class="px-4 py-2.5 text-right">{{ __('Disbursed') }}</th>
-                    <th class="px-4 py-2.5 text-right">{{ __('Avg Ticket') }}</th>
+                    <th class="px-3 py-1.5">{{ __('Product') }}</th>
+                    <th class="px-3 py-1.5">{{ __('Status') }}</th>
+                    <th class="px-3 py-1.5 text-right">{{ __('Applications') }}</th>
+                    <th class="px-3 py-1.5 text-right">{{ __('Approvals') }}</th>
+                    <th class="px-3 py-1.5 text-right">{{ __('Disbursed') }}</th>
+                    <th class="px-3 py-1.5 text-right">{{ __('Avg Ticket') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="p in analytics.per_product" :key="p.name" class="border-b border-outline-gray-1 last:border-b-0">
-                    <td class="px-4 py-2.5">
+                    <td class="px-3 py-1.5">
                       <div class="font-medium text-ink-gray-9">{{ p.product_code }}</div>
                       <div class="text-xs text-ink-gray-5">{{ p.product_name }}</div>
                     </td>
-                    <td class="px-4 py-2.5"><StatusPill :status="p.status" /></td>
-                    <td class="px-4 py-2.5 text-right text-ink-gray-8">{{ p.applications }}</td>
-                    <td class="px-4 py-2.5 text-right text-ink-gray-8">{{ p.approvals }}</td>
-                    <td class="px-4 py-2.5 text-right text-ink-gray-8">{{ p.disbursements }}</td>
-                    <td class="px-4 py-2.5 text-right text-ink-gray-7">{{ fmtMoney(p.avg_ticket, 'IDR') }}</td>
+                    <td class="px-3 py-1.5"><StatusPill :status="p.status" /></td>
+                    <td class="px-3 py-1.5 text-right text-ink-gray-8">{{ p.applications }}</td>
+                    <td class="px-3 py-1.5 text-right text-ink-gray-8">{{ p.approvals }}</td>
+                    <td class="px-3 py-1.5 text-right text-ink-gray-8">{{ p.disbursements }}</td>
+                    <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ fmtMoney(p.avg_ticket, 'IDR') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -512,8 +512,8 @@
 
         <!-- ── CROSS-SELL ────────────────────────────────────── -->
         <template v-else-if="activeView === 'crosssell'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
-            <div class="mb-4 flex items-center justify-between">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
               <div>
                 <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Cross-Sell Mappings') }}</h2>
                 <p class="text-xs text-ink-gray-5">{{ __('Suggest target products to customers based on their source product.') }}</p>
@@ -561,7 +561,7 @@
 
         <!-- ── APPROVALS ────────────────────────────────────── -->
         <template v-else-if="activeView === 'approvals'">
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm">
             <div v-if="approvalsLoading" class="flex h-40 items-center justify-center">
               <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
             </div>
@@ -573,23 +573,23 @@
             <table v-else class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-4 py-2.5">{{ __('Product') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Type') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Submitted By') }}</th>
-                  <th class="px-4 py-2.5">{{ __('Submitted') }}</th>
-                  <th class="px-4 py-2.5"></th>
+                  <th class="px-3 py-1.5">{{ __('Product') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Type') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Submitted By') }}</th>
+                  <th class="px-3 py-1.5">{{ __('Submitted') }}</th>
+                  <th class="px-3 py-1.5"></th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="p in pendingApprovals" :key="p.name" class="border-b border-outline-gray-1 last:border-b-0">
-                  <td class="px-4 py-2.5">
+                  <td class="px-3 py-1.5">
                     <div class="font-medium text-ink-gray-9">{{ p.product_code }}</div>
                     <div class="text-xs text-ink-gray-5">{{ p.product_name }}</div>
                   </td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ p.product_type }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ p.owner }}</td>
-                  <td class="px-4 py-2.5 text-xs text-ink-gray-5">{{ fmtDate(p.modified) }}</td>
-                  <td class="px-4 py-2.5 text-right">
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ p.product_type }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ p.owner }}</td>
+                  <td class="px-3 py-1.5 text-xs text-ink-gray-5">{{ fmtDate(p.modified) }}</td>
+                  <td class="px-3 py-1.5 text-right">
                     <div class="flex justify-end gap-2">
                       <Button size="sm" variant="outline" label="Open" @click="openWizard(p.product_code)" />
                       <Button size="sm" variant="solid" label="Approve" @click="approveByCode(p.product_code)" />
@@ -609,6 +609,7 @@
 <script setup>
 import { computed, h, onMounted, ref, defineComponent } from 'vue'
 import { Button, FeatherIcon, LoadingIndicator, call as _frappeCall, toast } from 'frappe-ui'
+import { loadPersisted, persistRef } from '@/utils/persist'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
 const call = (method, args = {}) => _frappeCall(method, args)
@@ -658,7 +659,8 @@ const pendingApprovals = ref([])
 const approvalsLoading = ref(false)
 
 const selectedVersion = ref(null)
-const crossSell = ref([])
+const crossSell = ref(loadPersisted('crm:product:crossSell', []))
+persistRef('crm:product:crossSell', crossSell)
 const crossSellSaving = ref(false)
 
 function addCrossSell() {
@@ -679,7 +681,7 @@ async function saveCrossSell() {
 async function loadCrossSell() {
   try {
     const data = await call('crm.api.products.get_cross_sell_mappings').catch(() => null)
-    crossSell.value = data?.mappings || []
+    if (data?.mappings?.length) crossSell.value = data.mappings
   } catch (_) {}
 }
 
@@ -960,7 +962,7 @@ const KpiCard = defineComponent({
         style: props.theme === 'red' ? 'color:#dc2626'
           : props.theme === 'orange' ? 'color:#d97706'
           : props.theme === 'blue' ? 'color:#1d4ed8'
-          : props.theme === 'teal' ? 'color:#008C95'
+          : props.theme === 'teal' ? 'color:#FF6600'
           : 'color:#111827',
       }, String(props.value ?? 0)),
     ])
@@ -1002,7 +1004,7 @@ const Metric = defineComponent({
   name: 'Metric',
   props: ['label', 'value', 'sub'],
   setup(props) {
-    return () => h('div', { class: 'rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2.5' }, [
+    return () => h('div', { class: 'rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2' }, [
       h('div', { class: 'text-[11px] font-medium uppercase tracking-wide text-ink-gray-5' }, props.label),
       h('div', { class: 'text-base font-semibold text-ink-gray-9' }, props.value),
       props.sub ? h('div', { class: 'text-[11px] text-ink-gray-5' }, props.sub) : null,

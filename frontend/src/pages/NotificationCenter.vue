@@ -19,8 +19,8 @@
       </template>
     </LayoutHeader>
 
-    <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-10 py-3">
-      <div class="flex items-center gap-6">
+    <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-6 py-3">
+      <div class="flex items-center gap-3">
         <button
           v-for="tab in PAGE_TABS"
           :key="tab.key"
@@ -34,13 +34,13 @@
       </div>
     </div>
 
-    <div v-if="activeTab === 'inbox'" class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-10 py-3">
-      <div class="flex min-w-max items-center justify-start gap-6">
+    <div v-if="activeTab === 'inbox'" class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-6 py-3">
+      <div class="flex min-w-max items-center justify-start gap-3">
         <button
           v-for="tab in INBOX_TABS"
           :key="tab.key"
           class="whitespace-nowrap border-b-2 px-1 py-2 text-sm leading-5 transition-colors"
-          :class="inboxTab === tab.key ? 'border-crm-teal font-medium text-ink-gray-9' : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
+          :class="inboxTab === tab.key ? 'border-[#FF6600] font-medium text-ink-gray-9' : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
           @click="inboxTab = tab.key"
         >
           {{ __(tab.label) }}
@@ -49,13 +49,13 @@
         <div class="flex-1"></div>
         <div class="relative">
           <FeatherIcon name="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-gray-4" />
-          <input v-model="query" type="text" :placeholder="__('Search notifications…')" class="h-9 w-64 rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20" />
+          <input v-model="query" type="text" :placeholder="__('Search notifications…')" class="h-8 w-64 rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
         </div>
       </div>
     </div>
 
     <div class="flex-1 overflow-y-auto bg-surface-gray-1">
-      <div class="w-full px-10 py-6">
+      <div class="w-full px-6 py-4">
 
         <!-- INBOX -->
         <template v-if="activeTab === 'inbox'">
@@ -71,11 +71,11 @@
             <div
               v-for="n in filteredNotifications"
               :key="n.name"
-              class="flex cursor-pointer items-start gap-4 rounded-[14px] border border-outline-gray-2 bg-white p-4 shadow-sm hover:bg-surface-gray-1"
+              class="flex cursor-pointer items-start gap-3 rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm hover:bg-surface-gray-1"
               @click="openNotification(n)"
             >
               <div class="mt-0.5 flex items-center gap-2.5">
-                <div class="size-[5px] rounded-full" :class="[n.read ? 'bg-transparent' : 'bg-crm-teal']" />
+                <div class="size-[5px] rounded-full" :class="[n.read ? 'bg-transparent' : 'bg-[#FF6600]']" />
                 <UserAvatar :user="n.from_user.name" size="lg" />
               </div>
               <div class="min-w-0 flex-1">
@@ -84,7 +84,7 @@
                   <Badge :label="labelize(n.type)" theme="teal" variant="subtle" size="sm" />
                   <Badge v-if="n.snoozed_until" :label="`Snoozed · ${formatDate(n.snoozed_until)}`" theme="orange" variant="subtle" size="sm" />
                   <Badge v-if="n.delivery_status" :label="n.delivery_status" :theme="deliveryTheme(n.delivery_status)" variant="subtle" size="sm" />
-                  <span v-if="!n.read" class="text-xs text-crm-teal">{{ __('Unread') }}</span>
+                  <span v-if="!n.read" class="text-xs text-[#FF6600]">{{ __('Unread') }}</span>
                 </div>
                 <p class="mt-1 text-sm text-ink-gray-7" v-html="sanitizeHTML(n.notification_text || n.message || '')" />
                 <div class="mt-2 flex items-center gap-3 text-xs text-ink-gray-5">
@@ -116,33 +116,33 @@
 
         <!-- RULES -->
         <template v-else-if="activeTab === 'rules'">
-          <div class="mb-4 flex items-center justify-between">
+          <div class="mb-3 flex items-center justify-between">
             <div>
               <h2 class="text-base font-semibold text-ink-gray-9">Notification Rules</h2>
               <p class="text-sm text-ink-gray-5">Trigger an action when an event matches a condition.</p>
             </div>
             <Button variant="solid" size="sm" label="+ New Rule" @click="openRuleEditor(null)" />
           </div>
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
             <table class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-4 py-2.5">Name</th>
-                  <th class="px-4 py-2.5">Event</th>
-                  <th class="px-4 py-2.5">Channels</th>
-                  <th class="px-4 py-2.5">Template</th>
-                  <th class="px-4 py-2.5">Enabled</th>
-                  <th class="px-4 py-2.5 text-right">Actions</th>
+                  <th class="px-3 py-1.5">Name</th>
+                  <th class="px-3 py-1.5">Event</th>
+                  <th class="px-3 py-1.5">Channels</th>
+                  <th class="px-3 py-1.5">Template</th>
+                  <th class="px-3 py-1.5">Enabled</th>
+                  <th class="px-3 py-1.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="r in rules" :key="r.id" class="border-b border-outline-gray-1 last:border-b-0">
-                  <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ r.name }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ r.event }}</td>
-                  <td class="px-4 py-2.5"><Badge v-for="c in r.channels" :key="c" :label="c" theme="teal" variant="subtle" size="sm" class="mr-1" /></td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ r.template || '—' }}</td>
-                  <td class="px-4 py-2.5"><input type="checkbox" v-model="r.enabled" class="rounded" /></td>
-                  <td class="px-4 py-2.5 text-right">
+                  <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ r.name }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ r.event }}</td>
+                  <td class="px-3 py-1.5"><Badge v-for="c in r.channels" :key="c" :label="c" theme="teal" variant="subtle" size="sm" class="mr-1" /></td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ r.template || '—' }}</td>
+                  <td class="px-3 py-1.5"><input type="checkbox" v-model="r.enabled" class="rounded" /></td>
+                  <td class="px-3 py-1.5 text-right">
                     <Button variant="ghost" size="sm" label="Edit" @click="openRuleEditor(r)" />
                     <Button variant="ghost" size="sm" label="Delete" @click="deleteRule(r)" />
                   </td>
@@ -157,31 +157,31 @@
 
         <!-- TEMPLATES -->
         <template v-else-if="activeTab === 'templates'">
-          <div class="mb-4 flex items-center justify-between">
+          <div class="mb-3 flex items-center justify-between">
             <div>
               <h2 class="text-base font-semibold text-ink-gray-9">Notification Templates</h2>
               <p class="text-sm text-ink-gray-5">Reusable message templates with variables like <code>&#123;&#123;customer&#125;&#125;</code>.</p>
             </div>
             <Button variant="solid" size="sm" label="+ New Template" @click="openTemplateEditor(null)" />
           </div>
-          <div class="rounded-[14px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
             <table class="w-full text-sm">
               <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
                 <tr>
-                  <th class="px-4 py-2.5">Name</th>
-                  <th class="px-4 py-2.5">Channel</th>
-                  <th class="px-4 py-2.5">Subject</th>
-                  <th class="px-4 py-2.5">Variables</th>
-                  <th class="px-4 py-2.5 text-right">Actions</th>
+                  <th class="px-3 py-1.5">Name</th>
+                  <th class="px-3 py-1.5">Channel</th>
+                  <th class="px-3 py-1.5">Subject</th>
+                  <th class="px-3 py-1.5">Variables</th>
+                  <th class="px-3 py-1.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="t in templates" :key="t.id" class="border-b border-outline-gray-1 last:border-b-0">
-                  <td class="px-4 py-2.5 font-medium text-ink-gray-9">{{ t.name }}</td>
-                  <td class="px-4 py-2.5"><Badge :label="t.channel" theme="teal" variant="subtle" size="sm" /></td>
-                  <td class="px-4 py-2.5 text-ink-gray-7">{{ t.subject || '—' }}</td>
-                  <td class="px-4 py-2.5 text-ink-gray-5 font-mono text-xs">{{ (t.variables || []).join(', ') || '—' }}</td>
-                  <td class="px-4 py-2.5 text-right">
+                  <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ t.name }}</td>
+                  <td class="px-3 py-1.5"><Badge :label="t.channel" theme="teal" variant="subtle" size="sm" /></td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ t.subject || '—' }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-5 font-mono text-xs">{{ (t.variables || []).join(', ') || '—' }}</td>
+                  <td class="px-3 py-1.5 text-right">
                     <Button variant="ghost" size="sm" label="Edit" @click="openTemplateEditor(t)" />
                     <Button variant="ghost" size="sm" label="Delete" @click="deleteTemplate(t)" />
                   </td>
@@ -196,15 +196,15 @@
 
         <!-- ANALYTICS -->
         <template v-else-if="activeTab === 'analytics'">
-          <div class="grid gap-3 md:grid-cols-4 mb-4">
-            <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="rounded-[14px] border border-outline-gray-2 bg-white p-4 shadow-sm">
+          <div class="grid gap-3 md:grid-cols-4 mb-3">
+            <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <p class="text-xs text-ink-gray-5">{{ kpi.label }}</p>
               <p class="mt-1 text-2xl font-semibold text-ink-gray-9">{{ kpi.value }}</p>
               <p class="text-xs text-ink-gray-5 mt-1">{{ kpi.sub }}</p>
             </div>
           </div>
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+          <div class="grid gap-3 md:grid-cols-2">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Channel</h3>
               <div v-for="c in analyticsByChannel" :key="c.channel" class="mb-3">
                 <div class="flex justify-between text-sm mb-1">
@@ -212,11 +212,11 @@
                   <span class="text-ink-gray-5">{{ c.delivered }}/{{ c.sent }} ({{ c.deliveryRate }}%)</span>
                 </div>
                 <div class="h-2 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-full rounded-full bg-crm-teal" :style="{ width: c.deliveryRate + '%' }" />
+                  <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: c.deliveryRate + '%' }" />
                 </div>
               </div>
             </div>
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Type</h3>
               <div v-for="t in analyticsByType" :key="t.type" class="mb-3">
                 <div class="flex justify-between text-sm mb-1">
@@ -228,12 +228,12 @@
                 </div>
               </div>
             </div>
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm md:col-span-2">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm md:col-span-2">
               <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">Volume (last 14 days)</h3>
               <div class="flex items-end gap-2 h-32">
                 <div v-for="(d, i) in analyticsTimeseries" :key="i" class="flex-1 flex flex-col items-center gap-1">
                   <span class="text-[10px] text-ink-gray-5">{{ d.count }}</span>
-                  <div class="w-full bg-crm-teal rounded-t" :style="{ height: (d.count / 50 * 100) + '%' }" />
+                  <div class="w-full bg-[#FF6600] rounded-t" :style="{ height: (d.count / 50 * 100) + '%' }" />
                   <span class="text-[10px] text-ink-gray-4">{{ d.day }}</span>
                 </div>
               </div>
@@ -243,10 +243,10 @@
 
         <!-- BROADCAST -->
         <template v-else-if="activeTab === 'broadcast'">
-          <div class="grid gap-4 lg:grid-cols-[1fr_320px]">
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
-              <h2 class="text-base font-semibold text-ink-gray-9 mb-4">New Broadcast</h2>
-              <div class="space-y-4">
+          <div class="grid gap-3 lg:grid-cols-[1fr_320px]">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+              <h2 class="text-base font-semibold text-ink-gray-9 mb-3">New Broadcast</h2>
+              <div class="space-y-3">
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-ink-gray-7">Audience Segment</label>
                   <select v-model="broadcast.segment" class="w-full rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm">
@@ -290,7 +290,7 @@
                 </div>
               </div>
             </div>
-            <div class="rounded-[14px] border border-outline-gray-2 bg-white p-5 shadow-sm">
+            <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
               <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">Recent Broadcasts</h3>
               <div v-for="b in broadcastHistory" :key="b.id" class="mb-3 rounded-md border border-outline-gray-1 p-3">
                 <p class="text-sm font-medium text-ink-gray-9">{{ b.subject || b.message.slice(0, 32) + '…' }}</p>
@@ -307,7 +307,7 @@
     <!-- Preferences Dialog -->
     <Dialog v-model="showPrefs" :options="{ title: __('Notification Preferences') }">
       <template #body-content>
-        <div class="space-y-4 text-sm">
+        <div class="space-y-3 text-sm">
           <div class="rounded-md border border-outline-gray-1 p-3 bg-surface-gray-1">
             <p class="font-medium text-ink-gray-8 text-xs uppercase tracking-wider">Digest schedule</p>
             <div class="mt-2 flex items-center gap-3 text-sm">
@@ -439,6 +439,7 @@ import {
 } from 'frappe-ui'
 import { computed, onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { loadPersisted, persistRef } from '@/utils/persist'
 
 const router = useRouter()
 const viewControls = ref(null)
@@ -490,16 +491,22 @@ function tabBadge(tab) {
   return typeof b === 'object' && 'value' in b ? b.value : b
 }
 
-const preferences = ref([
+const preferences = ref(loadPersisted('crm:notif:preferences', [
   { type: 'Mention', label: 'Mentions', description: 'When someone mentions you', email: true, in_app: true, sms: false, push: false },
   { type: 'Task', label: 'Tasks', description: 'Task assignments and updates', email: true, in_app: true, sms: false, push: true },
   { type: 'Assignment', label: 'Assignments', description: 'Lead/deal assignments', email: true, in_app: true, sms: false, push: false },
   { type: 'WhatsApp', label: 'WhatsApp', description: 'WhatsApp message notifications', email: false, in_app: true, sms: false, push: true },
   { type: 'SLA', label: 'SLA Alerts', description: 'SLA breach warnings', email: true, in_app: true, sms: true, push: true },
-])
+]))
+persistRef('crm:notif:preferences', preferences)
 
-const digestEnabled = ref(false)
-const digestTime = ref('09:00')
+const digestEnabled = ref(loadPersisted('crm:notif:digestEnabled', false))
+const digestTime = ref(loadPersisted('crm:notif:digestTime', '09:00'))
+persistRef('crm:notif:digestEnabled', digestEnabled)
+persistRef('crm:notif:digestTime', digestTime)
+
+const snoozeMap = ref(loadPersisted('crm:notif:snoozeMap', {}))
+persistRef('crm:notif:snoozeMap', snoozeMap)
 
 const visibleNotifications = computed(() => {
   const now = new Date()
@@ -530,7 +537,7 @@ async function fetchNotifications() {
     const data = await call('crm.api.notifications.get_notifications')
     notifications.value = (data || []).map((n) => ({
       ...n,
-      snoozed_until: n.snoozed_until || null,
+      snoozed_until: n.snoozed_until || snoozeMap.value[n.name] || null,
       delivery_status: n.delivery_status || null,
       channel: n.channel || null,
     }))
@@ -611,6 +618,7 @@ async function snoozeNotification(n, value) {
     until.setHours(until.getHours() + Number(value))
   }
   n.snoozed_until = until.toISOString()
+  snoozeMap.value = { ...snoozeMap.value, [n.name]: n.snoozed_until }
   snoozeMenuFor.value = null
   try {
     await call('crm.api.notifications.snooze_notification', { name: n.name, until: n.snoozed_until })
@@ -620,6 +628,9 @@ async function snoozeNotification(n, value) {
 
 async function unsnoozeNotification(n) {
   n.snoozed_until = null
+  const next = { ...snoozeMap.value }
+  delete next[n.name]
+  snoozeMap.value = next
   snoozeMenuFor.value = null
   try {
     await call('crm.api.notifications.unsnooze_notification', { name: n.name })
@@ -659,11 +670,12 @@ async function savePreferences() {
   }
 }
 
-const rules = ref([
+const rules = ref(loadPersisted('crm:notif:rules', [
   { id: 1, name: 'SLA Breach Alert', event: 'SLA Breached', condition: '', channels: ['Email', 'In-app', 'SMS'], recipients: 'owner, role:Manager', template: 'SLA Breach', enabled: true },
   { id: 2, name: 'New Lead Assignment', event: 'Lead Created', condition: '', channels: ['Email', 'In-app'], recipients: 'owner', template: 'Lead Welcome', enabled: true },
   { id: 3, name: 'Approval Required', event: 'Approval Required', condition: 'doc.amount > 1000000000', channels: ['Email', 'WhatsApp'], recipients: 'role:Approver', template: '', enabled: true },
-])
+]))
+persistRef('crm:notif:rules', rules)
 
 const showRuleEditor = ref(false)
 const editingRule = ref(null)
@@ -709,11 +721,12 @@ async function deleteRule(r) {
   try { await call('crm.api.notifications.delete_rule', { id: r.id }) } catch (_) {}
 }
 
-const templates = ref([
+const templates = ref(loadPersisted('crm:notif:templates', [
   { id: 1, name: 'SLA Breach', channel: 'Email', subject: 'SLA Breached on {{ref}}', body: 'The SLA on {{ref}} has been breached.', variables: ['ref', 'owner'] },
   { id: 2, name: 'Lead Welcome', channel: 'Email', subject: 'Welcome to BNI', body: 'Hi {{name}}, welcome.', variables: ['name'] },
   { id: 3, name: 'Payment Reminder', channel: 'SMS', subject: '', body: 'Hi {{name}}, your payment of {{amount}} is due {{due_date}}.', variables: ['name', 'amount', 'due_date'] },
-])
+]))
+persistRef('crm:notif:templates', templates)
 
 const showTemplateEditor = ref(false)
 const editingTemplate = ref(null)
@@ -787,9 +800,10 @@ const analyticsTimeseries = computed(() =>
 
 const broadcast = reactive({ segment: 'all', channels: ['Email'], template: '', message: '', when: 'now', schedule: '' })
 const broadcastSending = ref(false)
-const broadcastHistory = ref([
+const broadcastHistory = ref(loadPersisted('crm:notif:broadcastHistory', [
   { id: 1, subject: 'New year campaign 2026', message: 'Happy new year ...', segment: 'all', channels: ['Email'], sent: 1240, delivered: 1180, sent_at: '2026-01-01T08:00:00' },
-])
+]))
+persistRef('crm:notif:broadcastHistory', broadcastHistory)
 
 function toggleBroadcastChannel(ch) {
   const idx = broadcast.channels.indexOf(ch)
