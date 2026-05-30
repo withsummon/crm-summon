@@ -250,21 +250,19 @@
 
           <!-- History -->
           <template v-else-if="tab === 'History'">
-            <div v-if="!data.escalations.length" class="text-sm text-ink-gray-4">No history events yet.</div>
+            <div v-if="auditLoading" class="flex h-20 items-center justify-center"><LoadingIndicator class="h-4 w-4 text-ink-gray-4" /></div>
+            <div v-else-if="!auditEvents.length" class="text-sm text-ink-gray-4">No history events yet.</div>
             <div v-else class="space-y-2">
-              <div v-for="e in data.escalations" :key="e.name" class="rounded border border-outline-gray-1 p-2 text-sm">
+              <div v-for="e in auditEvents" :key="e.name" class="rounded border border-outline-gray-1 p-2 text-sm">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <Badge :label="`L${e.level}`" theme="orange" variant="subtle" />
-                    <span class="text-ink-gray-8">{{ e.action }}</span>
-                    <span v-if="e.recipient_user" class="text-xs text-ink-gray-5">→ {{ e.recipient_user }}</span>
+                    <Badge :label="e.event" :theme="eventTheme(e.event)" variant="subtle" size="sm" />
+                    <span class="text-xs text-ink-gray-5">{{ e.actor_name }}</span>
                   </div>
-                  <span class="text-xs text-ink-gray-4">{{ formatDate(e.fired_at) }}</span>
+                  <span class="text-xs text-ink-gray-4">{{ formatDate(e.event_at) }}</span>
                 </div>
-                <div v-if="e.acknowledged_at" class="mt-1 text-xs text-green-700">
-                  Acknowledged by {{ e.acknowledged_by }} · {{ formatDate(e.acknowledged_at) }}
-                </div>
-                <Button v-else class="mt-1" size="sm" variant="ghost" label="Acknowledge" @click="acknowledge(e.name)" />
+                <div v-if="e.field" class="mt-1 text-xs text-ink-gray-7 font-mono">{{ e.field }}: {{ e.old_value || '—' }} → {{ e.new_value || '—' }}</div>
+                <div v-if="e.payload_json" class="mt-1 text-[11px] text-ink-gray-5">{{ e.payload_json.slice(0, 120) }}</div>
               </div>
             </div>
           </template>
@@ -322,6 +320,27 @@ const assigneePicker = ref([])
 const newComment = ref('')
 const runningTimer = ref(null)
 const blockedDialog = reactive({ open: false, reason: '', targetStatus: 'Blocked' })
+const auditEvents = ref([])
+const auditLoading = ref(false)
+
+watch(tab, async (t) => {
+  if (t === 'History' && props.taskName) {
+    auditLoading.value = true
+    try {
+      const res = await call('crm.api.tasks.get_task_audit', { task: props.taskName })
+      auditEvents.value = res.events || []
+    } catch (e) {}
+    finally { auditLoading.value = false }
+  }
+})
+
+function eventTheme(ev) {
+  if (['Done', 'Completed', 'Approved'].includes(ev)) return 'green'
+  if (['Deleted', 'Canceled'].includes(ev)) return 'red'
+  if (['Comment Added', 'Time Log Added'].includes(ev)) return 'blue'
+  if (['Escalation Fired', 'Blocked'].includes(ev)) return 'orange'
+  return 'gray'
+}
 
 const taskRes = createResource({
   url: 'crm.api.tasks.get_task',
