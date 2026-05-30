@@ -13,7 +13,8 @@ const requiresCrmRole = (route) => {
   
   const flatCrmRoutes = [
     'Leads', 'Lead', 'Deals', 'Deal', 'Contacts', 'Contact',
-    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center'
+    'Organizations', 'Organization', 'Notes', 'Tasks', 'Calendar', 'Call Logs', 'AI Agent Center',
+    'Lead Tags', 'Lead Aging Report', 'Lead Referrals', 'Lead Campaigns', 'Lead Scoring Rules', 'Lead Web Forms'
   ]
   if (flatCrmRoutes.includes(route.name)) return true
   
@@ -90,6 +91,36 @@ const routes = [
         path: 'lead-ops',
         name: 'Lead Ops',
         redirect: '/crm-core/leads/view/lead-ops',
+      },
+      {
+        path: 'leads/tags',
+        name: 'Lead Tags',
+        component: () => import('@/pages/LeadTags.vue'),
+      },
+      {
+        path: 'leads/aging',
+        name: 'Lead Aging Report',
+        component: () => import('@/pages/LeadAgingReport.vue'),
+      },
+      {
+        path: 'leads/referrals',
+        name: 'Lead Referrals',
+        component: () => import('@/pages/LeadReferralLeaderboard.vue'),
+      },
+      {
+        path: 'leads/campaigns',
+        name: 'Lead Campaigns',
+        component: () => import('@/pages/LeadCampaigns.vue'),
+      },
+      {
+        path: 'leads/scoring',
+        name: 'Lead Scoring Rules',
+        component: () => import('@/pages/LeadScoringRules.vue'),
+      },
+      {
+        path: 'leads/webforms',
+        name: 'Lead Web Forms',
+        component: () => import('@/pages/LeadWebForms.vue'),
       },
       {
         path: 'leads/:leadId',
@@ -591,10 +622,23 @@ const routes = [
 
   // ─── Shared / Utility Routes ─────────────────────────────
   {
+    path: '/customer-portal/auth',
+    name: 'Customer Portal Auth',
+    component: () => import('@/pages/CustomerPortalAuth.vue'),
+    meta: { standalone: true },
+  },
+  {
     path: '/customer-portal',
     name: 'Customer Portal Web',
     component: () => import('@/pages/CustomerPortal.vue'),
     meta: { standalone: true },
+    beforeEnter: (to, from, next) => {
+      if (!localStorage.getItem('crm:portal:session')) {
+        next({ name: 'Customer Portal Auth' })
+      } else {
+        next()
+      }
+    },
   },
   {
     path: '/data-import',

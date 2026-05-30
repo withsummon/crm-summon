@@ -1,15 +1,29 @@
 #!bin/bash
+set -e
 
 if [ -d "/home/frappe/frappe-bench/apps/frappe" ]; then
     echo "Bench already exists, skipping init"
     cd frappe-bench
-    bench start
-    exit 0
+    exec bench start
 fi
 
 echo "Creating new bench..."
 
-bench init --skip-redis-config-generation frappe-bench --frappe-branch version-15
+# Pin Python 3.12 (Frappe v15 supports 3.10-3.12; the image's default 3.14
+# breaks @frappe.whitelist() registration in worker processes, causing
+# every API endpoint to 403 with "not whitelisted").
+PYTHON_VERSION="3.12.7"
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+if ! pyenv versions --bare | grep -qx "$PYTHON_VERSION"; then
+    pyenv install -s "$PYTHON_VERSION"
+fi
+pyenv global "$PYTHON_VERSION"
+hash -r
+echo "Using Python: $(python --version) at $(which python)"
+
+bench init --skip-redis-config-generation --python "$(pyenv which python)" frappe-bench --frappe-branch version-15
 
 cd frappe-bench
 
