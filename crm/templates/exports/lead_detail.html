@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ lead.lead_name or lead.name }}</title>
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 11px; margin: 24px; }
+  .h { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #FF6600; padding-bottom: 6px; margin-bottom: 12px; }
+  .h h1 { font-size: 18px; margin: 0; color: #1f2937; }
+  .h .id { color: #6b7280; font-size: 10px; }
+  .h .brand { color: #FF6600; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; font-weight: 600; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin: 16px 0 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 2px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 10.5px; }
+  .grid .k { color: #6b7280; }
+  .grid .v { color: #1f2937; font-weight: 500; }
+  .row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted #f3f4f6; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 9999px; background: #ecfeff; color: #0f766e; font-size: 9px; margin-right: 4px; }
+  .pill.orange { background: #fff7ed; color: #FF6600; }
+  .pill.red { background: #fef2f2; color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 4px 6px; background: #f9fafb; font-size: 9px; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
+  td { padding: 4px 6px; border-bottom: 1px solid #f3f4f6; font-size: 10px; }
+  footer { margin-top: 18px; font-size: 9px; color: #9ca3af; text-align: right; }
+</style>
+</head>
+<body>
+<div class="h">
+  <div>
+    <div class="brand">SUMMON CRM</div>
+    <h1>{{ lead.lead_name or lead.name }}</h1>
+    <div class="id">{{ lead.name }} &middot; {{ lead.status or 'New' }}</div>
+  </div>
+  <div style="text-align:right; font-size:10px; color:#6b7280">
+    <div>Generated {{ generated_on }}</div>
+    <div>By {{ generated_by }}</div>
+  </div>
+</div>
+
+<h2>Contact</h2>
+<div class="grid">
+  <div class="k">Organization</div><div class="v">{{ lead.organization or '—' }}</div>
+  <div class="k">Email</div><div class="v">{{ lead.email or '—' }}</div>
+  <div class="k">Phone</div><div class="v">{{ lead.mobile_no or lead.phone or '—' }}</div>
+  <div class="k">Owner</div><div class="v">{{ lead.lead_owner or '—' }}</div>
+</div>
+
+<h2>Score &amp; SLA</h2>
+<div class="grid">
+  <div class="k">Score</div><div class="v">{{ lead.lead_score or 0 }} ({{ lead.lead_score_band or 'Cold' }})</div>
+  <div class="k">Quality probability</div><div class="v">{{ lead.lead_quality_probability or 0 }}%</div>
+  <div class="k">SLA status</div><div class="v">{{ lead.sla_status or '—' }}</div>
+  <div class="k">Last activity</div><div class="v">{{ lead.last_activity_on or lead.modified }}</div>
+</div>
+
+<h2>Attribution</h2>
+<div class="grid">
+  <div class="k">Channel</div><div class="v">{{ lead.capture_channel or '—' }}</div>
+  <div class="k">Source</div><div class="v">{{ lead.source or '—' }}</div>
+  <div class="k">Campaign</div><div class="v">{{ lead.campaign or '—' }}</div>
+  <div class="k">utm_source / utm_medium / utm_campaign</div>
+  <div class="v">{{ lead.utm_source or '—' }} / {{ lead.utm_medium or '—' }} / {{ lead.utm_campaign or '—' }}</div>
+</div>
+
+<h2>Referral</h2>
+<div class="grid">
+  <div class="k">Referrer type</div><div class="v">{{ lead.referrer_type or '—' }}</div>
+  <div class="k">Referrer</div><div class="v">{{ lead.referrer or '—' }}</div>
+  <div class="k">Referral fee</div><div class="v">Rp {{ '{:,.0f}'.format(lead.referral_fee or 0) }}</div>
+</div>
+
+{% if tags %}
+<h2>Tags</h2>
+<div>
+  {% for t in tags %}<span class="pill">{{ t.tag }}</span>{% endfor %}
+</div>
+{% endif %}
+
+{% if activities %}
+<h2>Recent Activity (last {{ activities|length }})</h2>
+<table>
+  <thead><tr><th>When</th><th>Type</th><th>By</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for a in activities %}
+  <tr>
+    <td>{{ a.creation }}</td>
+    <td>{{ a.activity_type or a.type or '—' }}</td>
+    <td>{{ a.owner or '—' }}</td>
+    <td>{{ (a.message or a.subject or '')[:80] }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<footer>SUMMON CRM &middot; confidential</footer>
+</body>
+</html>

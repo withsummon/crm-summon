@@ -81,12 +81,13 @@
         <!-- ── CATALOG ──────────────────────────────────────── -->
         <template v-if="activeView === 'catalog'">
           <!-- KPI strip -->
-          <div class="mb-3 grid gap-3 md:grid-cols-5">
+          <div class="mb-3 grid gap-3 md:grid-cols-6">
             <KpiCard :label="__('All Products')" :value="catalog?.counts?.total ?? 0" icon="package" />
             <KpiCard :label="__('Active')" :value="catalog?.counts?.active ?? 0" icon="check-circle" theme="teal" />
             <KpiCard :label="__('Draft')" :value="catalog?.counts?.draft ?? 0" icon="edit-3" />
             <KpiCard :label="__('Pending')" :value="catalog?.counts?.pending ?? 0" icon="clock" theme="orange" />
             <KpiCard :label="__('Retired')" :value="catalog?.counts?.retired ?? 0" icon="archive" />
+            <KpiCard :label="__('Retiring Soon')" :value="retiringSoonCount" icon="alert-triangle" theme="orange" />
           </div>
 
           <!-- Filter strip -->
@@ -107,6 +108,7 @@
               <option value="Pending Approval">Pending Approval</option>
               <option value="Active">Active</option>
               <option value="Retired">Retired</option>
+              <option value="Scheduled">Scheduled</option>
             </select>
             <select v-model="filters.product_type" class="rounded-md border border-outline-gray-2 bg-white px-3 py-1.5 text-sm text-ink-gray-8" @change="loadCatalog">
               <option value="">{{ __('All types') }}</option>
@@ -150,7 +152,10 @@
                   <td class="px-3 py-1.5 text-ink-gray-8">{{ p.product_name }}</td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ p.product_type || '—' }}</td>
                   <td class="px-3 py-1.5">
-                    <StatusPill :status="p.status" />
+                    <div class="flex flex-wrap gap-1">
+                      <StatusPill :status="p.status" />
+                      <span v-if="p.retirement_status === 'Scheduled'" class="inline-flex items-center rounded-full bg-surface-amber-2 px-2 py-0.5 text-[11px] font-medium text-ink-amber-9">Retires {{ fmtDate(p.retirement_date) }}</span>
+                    </div>
                   </td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ fmtRange(p.min_amount, p.max_amount, p.currency) }}</td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ fmtTenor(p.min_tenor_months, p.max_tenor_months) }}</td>
@@ -160,8 +165,8 @@
                       <Button size="sm" variant="ghost" @click.stop="cloneProductPrompt(p)">
                         <FeatherIcon name="copy" class="h-4 w-4 text-ink-gray-5" />
                       </Button>
-                      <Button v-if="p.status !== 'Retired'" size="sm" variant="ghost" @click.stop="retirePrompt(p)">
-                        <FeatherIcon name="archive" class="h-4 w-4 text-ink-gray-5" />
+                      <Button size="sm" variant="ghost" @click.stop="openRetireDialog(p)">
+                        <FeatherIcon name="more-vertical" class="h-4 w-4 text-ink-gray-5" />
                       </Button>
                     </div>
                   </td>
@@ -334,15 +339,45 @@
                 />
               </div>
 
-              <!-- Step 4: Workflow -->
+              <!-- Step 4: Collateral -->
               <div v-else-if="step === 3" class="space-y-3">
+                <div v-if="(draft.collateral_rules || []).length" class="flex flex-wrap gap-2">
+                  <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] text-ink-gray-7">{{ draft.collateral_rules.length }} types</span>
+                  <span class="rounded-full bg-surface-gray-2 px-2 py-0.5 text-[11px] text-ink-gray-7">Insurance on {{ draft.collateral_rules.filter(r => r.insurance_required).length }}</span>
+                </div>
+                <ChildTable
+                  title="Collateral Rules"
+                  :rows="draft.collateral_rules"
+                  :columns="[
+                    { key: 'collateral_type', label: 'Type', type: 'text' },
+                    { key: 'mandatory', label: 'Mandatory', type: 'checkbox' },
+                    { key: 'min_ltv_pct', label: 'Min LTV %', type: 'number' },
+                    { key: 'min_coverage_pct', label: 'Min Coverage %', type: 'number' },
+                    { key: 'insurance_required', label: 'Insurance', type: 'checkbox' },
+                    { key: 'insurance_min_coverage_pct', label: 'Ins. Coverage %', type: 'number' },
+                    { key: 'reappraisal_months', label: 'Reappraisal (mo)', type: 'number' },
+                  ]"
+                  @add="draft.collateral_rules.push({ mandatory: 1 })"
+                  @remove="(i) => draft.collateral_rules.splice(i, 1)"
+                />
+              </div>
+
+              <!-- Step 5: Workflow -->
+              <div v-else-if="step === 4" class="space-y-3">
                 <div class="grid gap-3 md:grid-cols-2">
                   <Field label="Workflow">
                     <input v-model="draft.workflow" class="field-input" placeholder="e.g. LOS Standard" />
                   </Field>
                   <Field label="Form Template">
-                    <input v-model="draft.form_template" class="field-input" placeholder="e.g. KMK Application v3" />
+                    <select v-model="draft.form_template" class="field-input">
+                      <option value="">—</option>
+                      <option v-for="t in formTemplates" :key="t.name" :value="t.name">{{ t.template_name }}</option>
+                    </select>
                   </Field>
+                </div>
+                <div v-if="draft.form_template" class="flex gap-2">
+                  <Button size="sm" variant="outline" label="Preview" @click="previewTemplate" />
+                  <Button size="sm" variant="ghost" @click="activeView = 'form_templates'">Manage templates</Button>
                 </div>
                 <ChildTable
                   title="Approval Matrix"
@@ -359,8 +394,8 @@
                 />
               </div>
 
-              <!-- Step 5: Documents -->
-              <div v-else-if="step === 4" class="space-y-3">
+              <!-- Step 6: Documents -->
+              <div v-else-if="step === 5" class="space-y-3">
                 <ChildTable
                   title="Required Documents"
                   :rows="draft.document_requirements"
@@ -385,13 +420,14 @@
                     <div><span class="text-ink-gray-5">{{ __('Tiers') }}:</span> {{ (draft.interest_tiers || []).length }}</div>
                     <div><span class="text-ink-gray-5">{{ __('Fees') }}:</span> {{ (draft.fees || []).length }}</div>
                     <div><span class="text-ink-gray-5">{{ __('Eligibility Rules') }}:</span> {{ (draft.eligibility_rules || []).length }}</div>
+                    <div><span class="text-ink-gray-5">{{ __('Collateral Rules') }}:</span> {{ (draft.collateral_rules || []).length }}</div>
                     <div><span class="text-ink-gray-5">{{ __('Required Docs') }}:</span> {{ (draft.document_requirements || []).length }}</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Step 6: Cross-Sell -->
-              <div v-else-if="step === 5" class="space-y-3">
+              <!-- Step 7: Cross-Sell -->
+              <div v-else-if="step === 6" class="space-y-3">
                 <p class="text-sm text-ink-gray-6">{{ __('Define which products should be suggested to customers of this product.') }}</p>
                 <ChildTable
                   title="Cross-Sell Targets"
@@ -601,14 +637,128 @@
           </div>
         </template>
 
+        <!-- ── FORM TEMPLATES ─────────────────────────────────── -->
+        <template v-else-if="activeView === 'form_templates'">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="text-base font-semibold text-ink-gray-9">{{ __('Form Templates') }}</h2>
+            </div>
+            <div v-if="formTemplatesLoading" class="flex h-40 items-center justify-center"><LoadingIndicator class="h-5 w-5 text-ink-gray-4" /></div>
+            <table v-else class="w-full text-sm">
+              <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
+                <tr><th class="px-3 py-2">Template</th><th class="px-3 py-2">Applies To</th><th class="px-3 py-2">Status</th><th class="px-3 py-2 text-right">Fields</th><th class="px-3 py-2 text-right">Used By</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="t in formTemplates" :key="t.name" class="border-b border-outline-gray-1 last:border-b-0">
+                  <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ t.template_name }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ t.applies_to_product_type }}</td>
+                  <td class="px-3 py-1.5"><StatusPill :status="t.status" /></td>
+                  <td class="px-3 py-1.5 text-right">{{ t.field_count }}</td>
+                  <td class="px-3 py-1.5 text-right">{{ t.product_usage }}</td>
+                </tr>
+                <tr v-if="!formTemplates.length"><td colspan="5" class="px-3 py-8 text-center text-ink-gray-5">No templates yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <!-- ── RETIREMENTS ────────────────────────────────────── -->
+        <template v-else-if="activeView === 'retirements'">
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
+            <h2 class="text-base font-semibold text-ink-gray-9 mb-3">{{ __('Retirements') }}</h2>
+            <div v-if="retirementsLoading" class="flex h-40 items-center justify-center"><LoadingIndicator class="h-5 w-5 text-ink-gray-4" /></div>
+            <div v-else class="space-y-4">
+              <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-gray-5 mb-2">{{ __('Upcoming') }}</h3>
+                <table class="w-full text-sm">
+                  <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5"><tr><th class="px-3 py-2">Product</th><th class="px-3 py-2">Date</th><th class="px-3 py-2">Reason</th><th class="px-3 py-2">Replacement</th><th class="px-3 py-2 text-right"></th></tr></thead>
+                  <tbody>
+                    <tr v-for="p in retirements.upcoming" :key="p.name" class="border-b border-outline-gray-1 last:border-b-0">
+                      <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ p.product_code }}</td>
+                      <td class="px-3 py-1.5 text-ink-gray-7">{{ fmtDate(p.retirement_date) }}</td>
+                      <td class="px-3 py-1.5 text-ink-gray-7">{{ p.retirement_reason || '—' }}</td>
+                      <td class="px-3 py-1.5 text-ink-gray-7">{{ p.replacement_product || '—' }}</td>
+                      <td class="px-3 py-1.5 text-right"><Button size="sm" variant="outline" label="Cancel" @click="cancelRetirement(p)" /></td>
+                    </tr>
+                    <tr v-if="!retirements.upcoming.length"><td colspan="5" class="px-3 py-8 text-center text-ink-gray-5">No upcoming retirements.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-ink-gray-5 mb-2">{{ __('Past Log') }}</h3>
+                <table class="w-full text-sm">
+                  <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5"><tr><th class="px-3 py-2">Product</th><th class="px-3 py-2">Action</th><th class="px-3 py-2">Actor</th><th class="px-3 py-2">When</th></tr></thead>
+                  <tbody>
+                    <tr v-for="l in retirements.past" :key="l.name" class="border-b border-outline-gray-1 last:border-b-0">
+                      <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ l.product }}</td>
+                      <td class="px-3 py-1.5 text-ink-gray-7">{{ l.action }}</td>
+                      <td class="px-3 py-1.5 text-ink-gray-7">{{ l.actor }}</td>
+                      <td class="px-3 py-1.5 text-xs text-ink-gray-5">{{ fmtDate(l.creation) }}</td>
+                    </tr>
+                    <tr v-if="!retirements.past.length"><td colspan="4" class="px-3 py-8 text-center text-ink-gray-5">No retirement history.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </template>
+
       </div>
     </div>
+
+    <Dialog
+      v-model="retireDialog.open"
+      :options="{
+        title: retireDialog.product ? ('Retire ' + retireDialog.product.product_code) : 'Retire Product',
+        size: 'md',
+        actions: [
+          { label: 'Cancel', onClick: () => (retireDialog.open = false) },
+          { label: 'Confirm', variant: 'solid', onClick: confirmRetire },
+        ],
+      }"
+    >
+      <template #body-content>
+        <div class="space-y-3">
+          <div class="flex gap-2">
+            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="schedule" class="size-4 accent-[#FF6600]" /> Schedule</label>
+            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="immediate" class="size-4 accent-[#FF6600]" /> Retire now</label>
+          </div>
+          <div v-if="retireDialog.mode === 'schedule'">
+            <label class="mb-1 block text-xs font-medium text-ink-gray-6">Retirement Date</label>
+            <input v-model="retireDialog.date" type="date" class="h-8 w-full rounded-md border border-outline-gray-2 bg-white px-2 text-sm" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-gray-6">Reason</label>
+            <select v-model="retireDialog.reason" class="h-8 w-full rounded-md border border-outline-gray-2 bg-white px-2 text-sm">
+              <option value="">—</option>
+              <option>Replaced</option>
+              <option>Compliance</option>
+              <option>Low Volume</option>
+              <option>Strategic</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-gray-6">Replacement Product</label>
+            <input v-model="retireDialog.replacement_product" class="h-8 w-full rounded-md border border-outline-gray-2 bg-white px-2 text-sm" placeholder="Product code" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-gray-6">Migration Plan</label>
+            <textarea v-model="retireDialog.migration_plan" rows="3" class="w-full rounded-md border border-outline-gray-2 bg-white px-2 py-1.5 text-sm" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink-gray-6">Notes</label>
+            <textarea v-model="retireDialog.notes" rows="2" class="w-full rounded-md border border-outline-gray-2 bg-white px-2 py-1.5 text-sm" />
+          </div>
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
 import { computed, h, onMounted, ref, defineComponent } from 'vue'
-import { Button, FeatherIcon, LoadingIndicator, call as _frappeCall, toast } from 'frappe-ui'
+import { Button, Dialog, FeatherIcon, LoadingIndicator, call as _frappeCall, toast } from 'frappe-ui'
 import { loadPersisted, persistRef } from '@/utils/persist'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
@@ -624,8 +774,10 @@ const TABS = [
   { view: 'catalog', label: 'Catalog' },
   { view: 'calculator', label: 'Pricing Calculator' },
   { view: 'crosssell', label: 'Cross-Sell' },
+  { view: 'form_templates', label: 'Form Templates' },
   { view: 'analytics', label: 'Analytics' },
   { view: 'approvals', label: 'Approvals' },
+  { view: 'retirements', label: 'Retirements' },
 ]
 
 const TYPES = ['Working Capital', 'Investment', 'Consumer', 'Mortgage', 'Other']
@@ -634,6 +786,7 @@ const STEPS = [
   { key: 'basics', label: 'Basics', hint: 'Code, name, type, and description.' },
   { key: 'pricing', label: 'Pricing', hint: 'Amount/tenor limits, interest tiers, fees.' },
   { key: 'eligibility', label: 'Eligibility', hint: 'Who can apply for this product.' },
+  { key: 'collateral', label: 'Collateral', hint: 'Required collateral types, LTV, insurance, re-appraisal cadence.' },
   { key: 'workflow', label: 'Workflow', hint: 'Workflow, form template, approval matrix.' },
   { key: 'documents', label: 'Documents', hint: 'Required documents and preview.' },
   { key: 'crosssell', label: 'Cross-Sell', hint: 'Suggested products and eligibility criteria.' },
@@ -663,6 +816,13 @@ const crossSell = ref(loadPersisted('crm:product:crossSell', []))
 persistRef('crm:product:crossSell', crossSell)
 const crossSellSaving = ref(false)
 
+const formTemplates = ref([])
+const formTemplatesLoading = ref(false)
+const retirements = ref({ upcoming: [], past: [] })
+const retirementsLoading = ref(false)
+const retireDialog = ref({ open: false, product: null, mode: 'schedule', date: '', reason: '', replacement_product: '', migration_plan: '', notes: '' })
+const retiringSoonCount = computed(() => (catalog.value?.rows || []).filter(p => p.retirement_status === 'Scheduled' && p.retirement_date && (new Date(p.retirement_date) - new Date()) / (1000 * 60 * 60 * 24) <= 30).length)
+
 function addCrossSell() {
   crossSell.value.push({ id: Date.now(), source: '', target: '', segment: '', min_exposure: 0, reason: '' })
 }
@@ -683,6 +843,68 @@ async function loadCrossSell() {
     const data = await call('crm.api.products.get_cross_sell_mappings').catch(() => null)
     if (data?.mappings?.length) crossSell.value = data.mappings
   } catch (_) {}
+}
+
+async function loadFormTemplates() {
+  formTemplatesLoading.value = true
+  try {
+    const res = await call('crm.api.products.list_form_templates')
+    formTemplates.value = res.templates || []
+  } catch (e) {}
+  finally { formTemplatesLoading.value = false }
+}
+
+async function loadRetirements() {
+  retirementsLoading.value = true
+  try {
+    const res = await call('crm.api.products.list_retirements', { range: 'all' })
+    retirements.value = res
+  } catch (e) {}
+  finally { retirementsLoading.value = false }
+}
+
+function openRetireDialog(p) {
+  retireDialog.value = { open: true, product: p, mode: 'schedule', date: '', reason: '', replacement_product: '', migration_plan: '', notes: '' }
+}
+
+async function confirmRetire() {
+  const d = retireDialog.value
+  if (!d.product) return
+  try {
+    await call('crm.api.products.retire_product', { code: d.product.product_code, retirement_date: d.date, reason: d.reason, replacement_product: d.replacement_product, migration_plan: d.migration_plan, mode: d.mode, notes: d.notes })
+    notify.ok(d.mode === 'schedule' ? 'Scheduled' : 'Retired')
+    retireDialog.value.open = false
+    await loadCatalog()
+  } catch (e) {
+    notify.err(e?.message || 'Failed')
+  }
+}
+
+async function cancelRetirement(p) {
+  if (!confirm('Cancel retirement for ' + p.product_code + '?')) return
+  try {
+    await call('crm.api.products.cancel_retirement', { code: p.product_code })
+    notify.ok('Cancelled')
+    await loadCatalog()
+  } catch (e) {
+    notify.err(e?.message || 'Failed')
+  }
+}
+
+async function reactivateProduct(p) {
+  if (!confirm('Reactivate ' + p.product_code + '?')) return
+  try {
+    await call('crm.api.products.reactivate_product', { code: p.product_code })
+    notify.ok('Reactivated')
+    await loadCatalog()
+  } catch (e) {
+    notify.err(e?.message || 'Failed')
+  }
+}
+
+function previewTemplate() {
+  if (!draft.value?.form_template) return
+  window.open('/crm/lending-risk/product-configuration?preview_template=' + draft.value.form_template, '_blank')
 }
 
 function onVersionChange() {
@@ -726,6 +948,8 @@ function navigate(view) {
   activeView.value = view
   if (view === 'analytics') loadAnalytics()
   if (view === 'approvals') loadApprovals()
+  if (view === 'form_templates') loadFormTemplates()
+  if (view === 'retirements') loadRetirements()
   if (view === 'calculator' && !catalog.value) loadCatalog()
   if (view === 'crosssell') {
     if (!catalog.value) loadCatalog()
@@ -758,8 +982,8 @@ function emptyDraft() {
     min_tenor_months: 0, max_tenor_months: 0, tenor_increment_months: 1,
     repayment_frequency: 'Monthly', grace_period_days: 0,
     allow_balloon: 0, allow_step_schedule: 0,
-    workflow: '', form_template: '',
-    interest_tiers: [], fees: [], eligibility_rules: [], document_requirements: [], approval_tiers: [],
+    workflow: '', form_template: '', form_template_version: '',
+    interest_tiers: [], fees: [], eligibility_rules: [], collateral_rules: [], document_requirements: [], approval_tiers: [],
     _existing: false,
   }
 }
@@ -779,6 +1003,7 @@ async function openWizard(code) {
       interest_tiers: data.interest_tiers || [],
       fees: data.fees || [],
       eligibility_rules: data.eligibility_rules || [],
+      collateral_rules: data.collateral_rules || [],
       document_requirements: data.document_requirements || [],
       approval_tiers: data.approval_tiers || [],
       _existing: true,
@@ -862,14 +1087,7 @@ async function cloneProductPrompt(p) {
 }
 
 async function retirePrompt(p) {
-  if (!window.confirm(`Retire ${p.product_code}? New applications will be blocked.`)) return
-  try {
-    await call('crm.api.products.retire_product', { code: p.product_code })
-    notify.err('Product retired')
-    await loadCatalog()
-  } catch (e) {
-    notify.err(`Retire failed: ` + (e?.message || String(e)))
-  }
+  openRetireDialog(p)
 }
 
 async function runQuote() {

@@ -8,7 +8,7 @@ from frappe.utils import cint, flt, getdate, nowdate, today
 
 
 PRODUCT_DOCTYPE = "CRM Product"
-CHILD_FIELDS = ("interest_tiers", "fees", "eligibility_rules", "document_requirements", "approval_tiers")
+CHILD_FIELDS = ("interest_tiers", "fees", "eligibility_rules", "collateral_rules", "document_requirements", "approval_tiers")
 EDITOR_ROLES = {"System Manager", "Sales Manager"}
 
 
@@ -23,10 +23,19 @@ def _assert_editor():
 
 def _serialize_product(doc):
 	data = doc.as_dict()
-	# Trim heavy fields not needed downstream.
 	for key in ("docstatus", "owner", "_user_tags", "_comments", "_assign", "_liked_by"):
 		data.pop(key, None)
 	return data
+
+
+def validate_product_before_save(doc, method):
+	if doc.form_template:
+		applies = frappe.db.get_value("CRM Product Form Template", doc.form_template, "applies_to_product_type")
+		if applies and applies != "Any" and applies != doc.product_type:
+			frappe.throw(_("Form template applies to {0}, but product type is {1}.").format(applies, doc.product_type))
+	if doc.retirement_status == "Scheduled" and doc.retirement_date:
+		if getdate(doc.retirement_date) <= getdate(today()):
+			frappe.throw(_("Scheduled retirement date must be in the future."))
 
 
 @frappe.whitelist()
@@ -62,6 +71,9 @@ def get_product_catalog(filters=None):
 			"version",
 			"effective_date",
 			"retirement_date",
+			"retirement_status",
+			"retirement_reason",
+			"replacement_product",
 			"modified",
 			"marketing_tagline",
 		],
@@ -119,7 +131,9 @@ def save_product(payload):
 		"image", "min_amount", "max_amount", "min_tenor_months", "max_tenor_months",
 		"tenor_increment_months", "repayment_frequency", "grace_period_days",
 		"allow_balloon", "allow_step_schedule", "workflow", "form_template",
-		"retirement_notes", "disabled",
+		"form_template_version", "retirement_status", "retirement_scheduled_by",
+		"retirement_scheduled_on", "retirement_reason", "replacement_product",
+		"migration_plan", "retirement_notes", "disabled",
 	)
 	for f in parent_fields:
 		if f in payload:
@@ -191,16 +205,149 @@ def clone_product(code, new_code, new_name=None):
 
 
 @frappe.whitelist()
-def retire_product(code, retirement_date=None, notes=None):
+def retire_product(code, retirement_date=None, reason=None, replacement_product=None, migration_plan=None, mode="immediate", notes=None):
 	_assert_editor()
 	doc = frappe.get_doc(PRODUCT_DOCTYPE, code)
-	doc.status = "Retired"
-	doc.retirement_date = retirement_date or nowdate()
-	if notes:
-		doc.retirement_notes = notes
-	doc.save()
+	previous_status = doc.status
+	previous_retirement_date = doc.retirement_date
+	retirement_date = getdate(retirement_date) if retirement_date else None
+
+	if mode == "schedule":
+		if not retirement_date or retirement_date <= getdate(today()):
+			frappe.throw(_("Schedule date must be in the future. Use immediate retirement for today."))
+		doc.retirement_status = "Scheduled"
+		doc.retirement_date = retirement_date
+		doc.retirement_scheduled_by = frappe.session.user
+		doc.retirement_scheduled_on = frappe.utils.now()
+		doc.retirement_reason = reason
+		doc.replacement_product = replacement_product
+		doc.migration_plan = migration_plan
+		if notes:
+			doc.retirement_notes = notes
+		doc.save()
+		_write_retirement_log(doc, "Scheduled", previous_status, doc.status, previous_retirement_date, doc.retirement_date, reason, replacement_product)
+	else:
+		doc.status = "Retired"
+		doc.retirement_status = "Retired"
+		doc.retirement_date = retirement_date or nowdate()
+		doc.retirement_reason = reason
+		doc.replacement_product = replacement_product
+		doc.migration_plan = migration_plan
+		if notes:
+			doc.retirement_notes = notes
+		doc.save()
+		_write_retirement_log(doc, "Retired", previous_status, doc.status, previous_retirement_date, doc.retirement_date, reason, replacement_product)
+
 	frappe.db.commit()
 	return _serialize_product(doc)
+
+
+@frappe.whitelist()
+def cancel_retirement(code, note=None):
+	_assert_editor()
+	doc = frappe.get_doc(PRODUCT_DOCTYPE, code)
+	if doc.retirement_status != "Scheduled":
+		frappe.throw(_("Only scheduled retirements can be cancelled."))
+	previous_status = doc.status
+	previous_retirement_date = doc.retirement_date
+	doc.retirement_status = "None"
+	doc.retirement_date = None
+	doc.retirement_scheduled_by = None
+	doc.retirement_scheduled_on = None
+	doc.retirement_reason = None
+	doc.replacement_product = None
+	doc.migration_plan = None
+	doc.save()
+	_write_retirement_log(doc, "Cancelled", previous_status, doc.status, previous_retirement_date, None, note=note)
+	frappe.db.commit()
+	return _serialize_product(doc)
+
+
+@frappe.whitelist()
+def reactivate_product(code, note=None):
+	_assert_editor()
+	doc = frappe.get_doc(PRODUCT_DOCTYPE, code)
+	if doc.status != "Retired":
+		frappe.throw(_("Only retired products can be reactivated."))
+	previous_status = doc.status
+	doc.status = "Active"
+	doc.retirement_status = "None"
+	doc.retirement_date = None
+	doc.retirement_reason = None
+	doc.save()
+	_write_retirement_log(doc, "Reactivated", previous_status, doc.status, note=note)
+	frappe.db.commit()
+	return _serialize_product(doc)
+
+
+def _write_retirement_log(doc, action, previous_status=None, new_status=None, previous_retirement_date=None, new_retirement_date=None, reason=None, replacement_product=None, note=None):
+	if not frappe.db.table_exists("CRM Product Retirement Log"):
+		return
+	log = frappe.new_doc("CRM Product Retirement Log")
+	log.product = doc.name
+	log.action = action
+	log.previous_status = previous_status
+	log.new_status = new_status
+	log.previous_retirement_date = previous_retirement_date
+	log.new_retirement_date = new_retirement_date
+	log.reason = reason or doc.retirement_reason
+	log.replacement_product = replacement_product or doc.replacement_product
+	log.actor = frappe.session.user
+	log.note = note or doc.retirement_notes
+	log.insert(ignore_permissions=True)
+
+
+@frappe.whitelist()
+def list_retirements(range="all"):
+	if not frappe.db.table_exists("CRM Product Retirement Log"):
+		return {"upcoming": [], "past": []}
+	if range == "upcoming":
+		products = frappe.get_all(
+			PRODUCT_DOCTYPE,
+			filters={"retirement_status": "Scheduled"},
+			fields=["name", "product_code", "product_name", "retirement_date", "retirement_reason", "replacement_product", "retirement_scheduled_on"],
+			order_by="retirement_date asc",
+		)
+		return {"upcoming": products, "past": []}
+	logs = frappe.get_all(
+		"CRM Product Retirement Log",
+		fields=["name", "product", "action", "previous_status", "new_status", "previous_retirement_date", "new_retirement_date", "reason", "replacement_product", "actor", "note", "creation"],
+		order_by="creation desc",
+		limit=500,
+	)
+	return {"upcoming": [], "past": logs}
+
+
+@frappe.whitelist()
+def is_product_open_for_new_applications(code):
+	status = frappe.db.get_value(PRODUCT_DOCTYPE, code, ["status", "retirement_status", "retirement_date"], as_dict=True)
+	if not status:
+		return False
+	if status.status == "Retired":
+		return False
+	if status.retirement_status == "Scheduled" and status.retirement_date and getdate(status.retirement_date) <= getdate(today()):
+		return False
+	return True
+
+
+def process_scheduled_retirements():
+	if not frappe.db.table_exists(PRODUCT_DOCTYPE):
+		return
+	products = frappe.get_all(
+		PRODUCT_DOCTYPE,
+		filters={"retirement_status": "Scheduled", "retirement_date": ["<=", today()]},
+		fields=["name"],
+	)
+	for p in products:
+		doc = frappe.get_doc(PRODUCT_DOCTYPE, p.name)
+		previous_status = doc.status
+		doc.status = "Retired"
+		doc.retirement_status = "Retired"
+		doc.save()
+		_write_retirement_log(doc, "Retired", previous_status, doc.status, doc.retirement_date, doc.retirement_date)
+		frappe.publish_realtime("product_retired", {"product": doc.name})
+	if products:
+		frappe.db.commit()
 
 
 @frappe.whitelist()
@@ -375,7 +522,7 @@ def export_catalog_csv(filters=None):
 	writer.writerow([
 		"Code", "Name", "Type", "Status", "Currency",
 		"Min Amount", "Max Amount", "Min Tenor", "Max Tenor",
-		"Version", "Effective Date", "Retirement Date",
+		"Version", "Effective Date", "Retirement Date", "Has Collateral",
 	])
 	for r in data["rows"]:
 		writer.writerow([
@@ -384,5 +531,183 @@ def export_catalog_csv(filters=None):
 			r.get("min_amount"), r.get("max_amount"),
 			r.get("min_tenor_months"), r.get("max_tenor_months"),
 			r.get("version"), r.get("effective_date"), r.get("retirement_date"),
+			"Y" if frappe.db.count("CRM Product Collateral Rule", {"parent": r.get("name")}) > 0 else "N",
 		])
 	return {"filename": f"products-{nowdate()}.csv", "content": buf.getvalue()}
+
+
+@frappe.whitelist()
+def list_form_templates(product_type=None, status=None):
+	if not frappe.db.table_exists("CRM Product Form Template"):
+		return {"templates": []}
+	filters = {}
+	if status:
+		filters["status"] = status
+	if product_type:
+		filters["applies_to_product_type"] = ["in", [product_type, "Any"]]
+	templates = frappe.get_all(
+		"CRM Product Form Template",
+		filters=filters,
+		fields=["name", "template_name", "applies_to_product_type", "status", "modified"],
+		order_by="modified desc",
+	)
+	for t in templates:
+		t["field_count"] = frappe.db.count("CRM Product Form Template Field", {"parent": t.name})
+		t["product_usage"] = frappe.db.count(PRODUCT_DOCTYPE, {"form_template": t.name})
+	return {"templates": templates}
+
+
+@frappe.whitelist()
+def get_form_template(name):
+	doc = frappe.get_doc("CRM Product Form Template", name)
+	fields = []
+	for f in doc.fields or []:
+		fields.append({
+			"name": f.name,
+			"label": f.label,
+			"fieldname": f.fieldname,
+			"fieldtype": f.fieldtype,
+			"options": f.options,
+			"mandatory": f.mandatory,
+			"default_value": f.default_value,
+			"placeholder": f.placeholder,
+			"visible_if": f.visible_if,
+			"validation_regex": f.validation_regex,
+			"help_text": f.help_text,
+		})
+	products = frappe.get_all(PRODUCT_DOCTYPE, filters={"form_template": name}, fields=["product_code", "product_name"])
+	return {
+		"name": doc.name,
+		"template_name": doc.template_name,
+		"applies_to_product_type": doc.applies_to_product_type,
+		"status": doc.status,
+		"description": doc.description,
+		"fields": fields,
+		"products": products,
+	}
+
+
+@frappe.whitelist()
+def upsert_form_template(payload):
+	_assert_editor()
+	if isinstance(payload, str):
+		payload = json.loads(payload)
+	name = (payload.get("name") or "").strip()
+	template_name = (payload.get("template_name") or "").strip()
+	if not template_name:
+		frappe.throw(_("Template name is required."))
+	if name:
+		doc = frappe.get_doc("CRM Product Form Template", name)
+	else:
+		if frappe.db.exists("CRM Product Form Template", template_name):
+			frappe.throw(_("Template name already exists."))
+		doc = frappe.new_doc("CRM Product Form Template")
+		doc.template_name = template_name
+	doc.applies_to_product_type = payload.get("applies_to_product_type") or doc.applies_to_product_type or "Any"
+	doc.status = payload.get("status") or doc.status or "Draft"
+	doc.description = payload.get("description") or doc.description or ""
+	if "fields" in payload:
+		doc.set("fields", [])
+		for row in payload.get("fields") or []:
+			if isinstance(row, dict):
+				doc.append("fields", row)
+	doc.save(ignore_permissions=False)
+	frappe.db.commit()
+	return get_form_template(doc.name)
+
+
+@frappe.whitelist()
+def clone_form_template(name, new_name):
+	_assert_editor()
+	if not new_name:
+		frappe.throw(_("New name is required."))
+	if frappe.db.exists("CRM Product Form Template", new_name):
+		frappe.throw(_("Name already exists."))
+	src = frappe.get_doc("CRM Product Form Template", name)
+	clone = frappe.copy_doc(src)
+	clone.template_name = new_name
+	clone.status = "Draft"
+	clone.insert(ignore_permissions=False)
+	frappe.db.commit()
+	return get_form_template(clone.name)
+
+
+@frappe.whitelist()
+def activate_form_template(name):
+	_assert_editor()
+	doc = frappe.get_doc("CRM Product Form Template", name)
+	if not doc.fields:
+		frappe.throw(_("A template must have at least one field to be activated."))
+	doc.status = "Active"
+	doc.save()
+	frappe.db.commit()
+	return {"status": "Active"}
+
+
+@frappe.whitelist()
+def retire_form_template(name):
+	_assert_editor()
+	doc = frappe.get_doc("CRM Product Form Template", name)
+	doc.status = "Retired"
+	doc.save()
+	frappe.db.commit()
+	return {"status": "Retired"}
+
+
+@frappe.whitelist()
+def preview_form_template(name, sample_payload=None):
+	if isinstance(sample_payload, str):
+		sample_payload = json.loads(sample_payload)
+	sample = sample_payload or {}
+	template = get_form_template(name)
+	rendered = []
+	for f in template.get("fields") or []:
+		visible = True
+		vif = f.get("visible_if") or ""
+		if vif:
+			parts = vif.split()
+			if len(parts) == 3:
+				ref_val = sample.get(parts[0])
+				operator = parts[1]
+				expected = parts[2]
+				if operator == "==":
+					visible = str(ref_val) == expected
+				elif operator == "!=":
+					visible = str(ref_val) != expected
+				elif operator == "set":
+					visible = bool(ref_val)
+			err = None
+			regex = f.get("validation_regex") or ""
+			if regex:
+				import re
+				try:
+					if not re.match(regex, str(sample.get(f["fieldname"]) or "")):
+						err = "Validation failed"
+				except Exception:
+					pass
+		rendered.append({**f, "visible": visible, "error": err})
+	return {"fields": rendered}
+
+
+@frappe.whitelist()
+def evaluate_collateral_requirement(product_code, facility_amount, collaterals):
+	if isinstance(collaterals, str):
+		collaterals = json.loads(collaterals)
+	collaterals = collaterals or []
+	product = frappe.get_doc(PRODUCT_DOCTYPE, product_code)
+	facility_amount = flt(facility_amount)
+	gaps = []
+	if not product.collateral_rules:
+		return {"satisfied": True, "gaps": []}
+	for rule in product.collateral_rules:
+		rule = rule.as_dict()
+		matches = [c for c in collaterals if (c.get("collateral_type") or "").lower() == (rule.get("collateral_type") or "").lower()]
+		total_coverage = sum(flt(c.get("value") or 0) for c in matches)
+		if rule.get("mandatory") and not matches:
+			gaps.append({"type": rule.get("collateral_type"), "reason": "Mandatory collateral missing"})
+			continue
+		if rule.get("min_coverage_pct") and facility_amount > 0:
+			coverage_pct = (total_coverage / facility_amount) * 100
+			if coverage_pct < flt(rule.get("min_coverage_pct")):
+				gaps.append({"type": rule.get("collateral_type"), "reason": f"Coverage {coverage_pct:.1f}% < required {rule.get('min_coverage_pct')}%"})
+	return {"satisfied": len(gaps) == 0, "gaps": gaps}

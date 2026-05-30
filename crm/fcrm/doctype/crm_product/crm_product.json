@@ -44,7 +44,8 @@
   "eligibility_rules",
   "documents_section",
   "document_requirements",
-  "workflow_section",
+   "collateral_section",
+   "workflow_section",
   "workflow",
   "form_template",
   "column_break_workflow",
@@ -96,16 +97,26 @@
   {"fieldname": "eligibility_section", "fieldtype": "Section Break", "label": "Eligibility"},
   {"fieldname": "eligibility_rules", "fieldtype": "Table", "label": "Eligibility Rules", "options": "CRM Product Eligibility Rule"},
 
+  {"fieldname": "collateral_section", "fieldtype": "Section Break", "label": "Collateral"},
+  {"fieldname": "collateral_rules", "fieldtype": "Table", "label": "Collateral Rules", "options": "CRM Product Collateral Rule"},
+
   {"fieldname": "documents_section", "fieldtype": "Section Break", "label": "Documents"},
   {"fieldname": "document_requirements", "fieldtype": "Table", "label": "Document Requirements", "options": "CRM Product Document Requirement"},
 
   {"fieldname": "workflow_section", "fieldtype": "Section Break", "label": "Workflow & Approval"},
   {"fieldname": "workflow", "fieldtype": "Data", "label": "Workflow"},
-  {"fieldname": "form_template", "fieldtype": "Data", "label": "Form Template"},
+  {"fieldname": "form_template", "fieldtype": "Link", "label": "Form Template", "options": "CRM Product Form Template"},
+  {"fieldname": "form_template_version", "fieldtype": "Int", "label": "Form Template Version"},
   {"fieldname": "column_break_workflow", "fieldtype": "Column Break"},
   {"fieldname": "approval_tiers", "fieldtype": "Table", "label": "Approval Matrix", "options": "CRM Product Approval Tier"},
 
   {"fieldname": "lifecycle_section", "fieldtype": "Section Break", "label": "Lifecycle"},
+  {"fieldname": "retirement_status", "fieldtype": "Select", "label": "Retirement Status", "options": "None\nScheduled\nRetired", "default": "None"},
+  {"fieldname": "retirement_scheduled_by", "fieldtype": "Link", "label": "Retirement Scheduled By", "options": "User"},
+  {"fieldname": "retirement_scheduled_on", "fieldtype": "Datetime", "label": "Retirement Scheduled On"},
+  {"fieldname": "retirement_reason", "fieldtype": "Select", "label": "Retirement Reason", "options": "\nReplaced\nCompliance\nLow Volume\nStrategic\nOther"},
+  {"fieldname": "replacement_product", "fieldtype": "Link", "label": "Replacement Product", "options": "CRM Product"},
+  {"fieldname": "migration_plan", "fieldtype": "Long Text", "label": "Migration Plan"},
   {"fieldname": "retirement_notes", "fieldtype": "Small Text", "label": "Retirement / Migration Notes"},
   {"fieldname": "standard_rate", "fieldtype": "Currency", "label": "Standard Selling Rate", "hidden": 1}
  ],
