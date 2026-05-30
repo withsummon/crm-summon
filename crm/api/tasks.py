@@ -39,6 +39,64 @@ def _now():
 	return now_datetime()
 
 
+def _audit(task, event, field=None, old=None, new=None, payload=None, actor=None):
+	if not _doctype_ready("CRM Task Audit Event"):
+		return
+	try:
+		actor = actor or frappe.session.user
+		latest = frappe.get_all(
+			"CRM Task Audit Event",
+			filters={"task": task},
+			fields=["event_hash"],
+			order_by="creation desc",
+			limit=1,
+		)
+		prev_hash = latest[0].event_hash if latest else ""
+		import hashlib
+		payload_json = json.dumps(payload, default=str) if payload else ""
+		data = f"{prev_hash}|{actor}|{event}|{_now()}|{field or ''}|{str(old or '')}|{str(new or '')}|{payload_json}"
+		event_hash = hashlib.sha256(data.encode("utf-8")).hexdigest()
+		log = frappe.new_doc("CRM Task Audit Event")
+		log.task = task
+		log.actor = actor
+		log.actor_name = _user_full_name(actor)
+		log.event_at = _now()
+		log.event = event
+		log.field = field
+		log.old_value = str(old) if old is not None else ""
+		log.new_value = str(new) if new is not None else ""
+		log.payload_json = payload_json
+		log.ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else ""
+		log.user_agent = frappe.local.request.headers.get("User-Agent", "") if hasattr(frappe.local, "request") and hasattr(frappe.local.request, "headers") else ""
+		log.prev_hash = prev_hash
+		log.event_hash = event_hash
+		log.insert(ignore_permissions=True)
+	except Exception:
+		pass
+
+
+def _diff_doc(old_doc, new_doc, fields, task_name):
+	for f in fields:
+		old_val = old_doc.get(f)
+		new_val = new_doc.get(f)
+		if old_val != new_val:
+			_audit(task_name, "Field Changed", field=f, old=old_val, new=new_val)
+
+
+def _recompute_time_total(task_name):
+	if not _doctype_ready("CRM Task Time Log"):
+		return
+	rows = frappe.get_all(
+		"CRM Task Time Log",
+		filters={"task": task_name, "duration_minutes": [">", 0]},
+		fields=["duration_minutes", "billable"],
+	)
+	total = sum(r.duration_minutes or 0 for r in rows)
+	billable = sum(r.duration_minutes or 0 for r in rows if r.billable)
+	frappe.db.set_value("CRM Task", task_name, {"time_logged_minutes": total, "billable_minutes": billable}, update_modified=False)
+	frappe.db.commit()
+
+
 def _to_dt(value):
 	if not value:
 		return None
@@ -408,6 +466,7 @@ def create_task(payload):
 		})
 	doc.insert(ignore_permissions=True)
 	_sla_persist(doc)
+	_audit(doc.name, "Created", payload={"title": doc.title, "status": doc.status, "priority": doc.priority})
 	frappe.db.commit()
 	return doc.name
 
@@ -441,6 +500,7 @@ def transition(task, new_status, blocked_reason=None):
 	doc.status = new_status
 	doc.save(ignore_permissions=True)
 	_sla_persist(doc)
+	_audit(task, "Status Changed", field="status", old=old, new=new_status, payload={"blocked_reason": blocked_reason} if new_status == "Blocked" else None)
 	frappe.db.commit()
 	return get_task(task)
 
@@ -476,7 +536,53 @@ def set_assignees(task, users):
 	if isinstance(users, str):
 		users = json.loads(users)
 	doc = frappe.get_doc("CRM Task", task)
+	old_users = [a.user for a in doc.assignees] if doc.assignees else []
 	_replace_assignees(doc, users)
+	_audit(task, "Assignees Changed", old=json.dumps(old_users), new=json.dumps(users))
+	frappe.db.commit()
+	return get_task(task)
+
+
+@frappe.whitelist()
+def upsert_checklist(task, items):
+	if isinstance(items, str):
+		items = json.loads(items)
+	doc = frappe.get_doc("CRM Task", task)
+	old_items = [{"label": c.label, "done": c.done} for c in doc.checklist] if doc.checklist else []
+	doc.set("checklist", [])
+	for i, it in enumerate(items):
+		doc.append("checklist", {
+			"label": it.get("label"),
+			"done": 1 if it.get("done") else 0,
+			"done_at": it.get("done_at") or (_now() if it.get("done") else None),
+			"done_by": it.get("done_by") or (frappe.session.user if it.get("done") else None),
+			"position": it.get("position", i),
+		})
+	doc.save(ignore_permissions=True)
+	_audit(task, "Checklist Changed", payload={"old": old_items, "new": items})
+	frappe.db.commit()
+	return get_task(task)
+
+
+@frappe.whitelist()
+def add_dependency(task, depends_on, kind="blocked_by"):
+	doc = frappe.get_doc("CRM Task", task)
+	if depends_on == task:
+		frappe.throw(_("A task cannot depend on itself."))
+	doc.append("depends_on", {"depends_on": depends_on, "kind": kind})
+	doc.save(ignore_permissions=True)
+	_audit(task, "Dependency Added", payload={"depends_on": depends_on, "kind": kind})
+	frappe.db.commit()
+	return get_task(task)
+
+
+@frappe.whitelist()
+def remove_dependency(task, depends_on):
+	doc = frappe.get_doc("CRM Task", task)
+	new_deps = [d for d in doc.depends_on if d.depends_on != depends_on]
+	doc.set("depends_on", new_deps)
+	doc.save(ignore_permissions=True)
+	_audit(task, "Dependency Removed", payload={"depends_on": depends_on})
 	frappe.db.commit()
 	return get_task(task)
 
@@ -963,6 +1069,7 @@ def delete_task(name):
 		frappe.throw(_("Task already canceled"))
 	doc.status = "Canceled"
 	doc.save(ignore_permissions=True)
+	_audit(name, "Deleted")
 	frappe.db.commit()
 	return {"ok": True}
 
@@ -1001,12 +1108,14 @@ def update_task(name, fields):
 	if isinstance(fields, str):
 		fields = json.loads(fields)
 	doc = frappe.get_doc("CRM Task", name)
+	old_doc = doc.as_dict()
 	allowed = {"title", "description", "due_date", "priority", "task_type"}
 	for k, v in fields.items():
 		if k in allowed:
 			setattr(doc, k, v)
 	doc.save(ignore_permissions=True)
 	_sla_persist(doc)
+	_diff_doc(old_doc, doc, allowed, name)
 	frappe.db.commit()
 	return get_task(name)
 
@@ -1084,3 +1193,204 @@ def seed_task_sample_data():
 
 	frappe.db.commit()
 	return {"created": True, "tasks": [task1.name, task2.name]}
+
+
+@frappe.whitelist()
+def get_task_audit(task, limit=200, before=None):
+	if not _doctype_ready("CRM Task Audit Event"):
+		return {"events": [], "chain_ok": True}
+	filters = {"task": task}
+	if before:
+		filters["creation"] = ["<", before]
+	events = frappe.get_all(
+		"CRM Task Audit Event",
+		filters=filters,
+		fields=["name", "actor", "actor_name", "event_at", "event", "field", "old_value", "new_value", "payload_json", "ip_address", "event_hash", "prev_hash", "creation"],
+		order_by="creation desc",
+		limit=limit,
+	)
+	chain_ok = True
+	broken_at = None
+	for i in range(len(events) - 1, 0, -1):
+		if events[i].prev_hash != events[i - 1].event_hash:
+			chain_ok = False
+			broken_at = events[i].event_at
+			break
+	return {"events": events, "chain_ok": chain_ok, "broken_at": broken_at}
+
+
+@frappe.whitelist()
+def search_audit(task=None, actor=None, event=None, field=None, date_from=None, date_to=None, search=None, limit=200):
+	if not _doctype_ready("CRM Task Audit Event"):
+		return {"events": []}
+	filters = {}
+	if task:
+		filters["task"] = task
+	if actor:
+		filters["actor"] = actor
+	if event:
+		filters["event"] = event
+	if field:
+		filters["field"] = field
+	if date_from or date_to:
+		filters["event_at"] = ["between", [date_from or "1900-01-01", date_to or "2999-12-31"]]
+	q = (search or "").strip()
+	if q:
+		filters["_liked_by"] = ["like", f"%{q}%"]
+	events = frappe.get_all(
+		"CRM Task Audit Event",
+		filters=filters,
+		fields=["name", "task", "actor", "actor_name", "event_at", "event", "field", "old_value", "new_value", "payload_json", "ip_address", "event_hash", "creation"],
+		order_by="creation desc",
+		limit=limit,
+	)
+	return {"events": events}
+
+
+@frappe.whitelist()
+def verify_audit_chain(task):
+	if not _doctype_ready("CRM Task Audit Event"):
+		return {"ok": True}
+	events = frappe.get_all(
+		"CRM Task Audit Event",
+		filters={"task": task},
+		fields=["event_hash", "prev_hash", "event_at"],
+		order_by="creation asc",
+	)
+	for i in range(1, len(events)):
+		if events[i].prev_hash != events[i - 1].event_hash:
+			return {"ok": False, "broken_at": events[i].event_at}
+	return {"ok": True}
+
+
+@frappe.whitelist()
+def update_time_log(name, fields):
+	if not _doctype_ready("CRM Task Time Log"):
+		frappe.throw(_("Time logs not enabled"))
+	if isinstance(fields, str):
+		fields = json.loads(fields)
+	doc = frappe.get_doc("CRM Task Time Log", name)
+	if doc.locked:
+		frappe.throw(_("This time log is locked and cannot be edited."))
+	if fields.get("ended_at") is None and doc.ended_at is None:
+		frappe.throw(_("Use stop_timer for the running entry."))
+	old_task = doc.task
+	for k, v in fields.items():
+		if k in {"started_at", "ended_at", "duration_minutes", "billable", "note"}:
+			setattr(doc, k, v)
+	if doc.started_at and doc.ended_at:
+		seconds = time_diff_in_seconds(_to_dt(doc.ended_at), _to_dt(doc.started_at))
+		doc.duration_minutes = max(0, int(seconds / 60))
+	doc.edited_at = _now()
+	doc.edited_by = frappe.session.user
+	doc.save(ignore_permissions=True)
+	_recompute_time_total(doc.task)
+	_audit(doc.task, "Time Log Edited", payload={"time_log": doc.name, "minutes": doc.duration_minutes})
+	frappe.db.commit()
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
+def delete_time_log(name):
+	if not _doctype_ready("CRM Task Time Log"):
+		frappe.throw(_("Time logs not enabled"))
+	doc = frappe.get_doc("CRM Task Time Log", name)
+	task = doc.task
+	if doc.locked:
+		frappe.throw(_("This time log is locked and cannot be deleted."))
+	frappe.delete_doc("CRM Task Time Log", name, ignore_permissions=True)
+	_recompute_time_total(task)
+	_audit(task, "Time Log Deleted", payload={"time_log": name})
+	frappe.db.commit()
+	return {"deleted": name}
+
+
+@frappe.whitelist()
+def get_running_timer():
+	if not _doctype_ready("CRM Task Time Log"):
+		return None
+	row = frappe.get_all(
+		"CRM Task Time Log",
+		filters={"user": frappe.session.user, "ended_at": ["is", "not set"]},
+		fields=["name", "task", "started_at"],
+		order_by="started_at desc",
+		limit=1,
+	)
+	if not row:
+		return None
+	task_title = frappe.db.get_value("CRM Task", row[0].task, "title")
+	return {**row[0], "task_title": task_title}
+
+
+@frappe.whitelist()
+def time_report(date_from=None, date_to=None, group_by="user", task_type=None, user=None, billable=None):
+	if not _doctype_ready("CRM Task Time Log"):
+		return {"rows": [], "totals": {}}
+	filters = [["duration_minutes", ">", 0]]
+	if date_from and date_to:
+		filters.append(["started_at", "between", [date_from, date_to]])
+	if user:
+		filters.append(["user", "=", user])
+	if billable is not None:
+		filters.append(["billable", "=", cint(billable)])
+	rows = frappe.get_all(
+		"CRM Task Time Log",
+		filters=filters,
+		fields=["name", "task", "user", "started_at", "ended_at", "duration_minutes", "billable", "note"],
+		order_by="started_at desc",
+		limit=5000,
+	)
+	if len(rows) >= 5000:
+		return {"rows": [], "totals": {}, "truncated": True}
+	task_ids = list({r.task for r in rows})
+	task_map = {}
+	if task_ids and _doctype_ready("CRM Task"):
+		for t in frappe.get_all("CRM Task", filters={"name": ["in", task_ids]}, fields=["name", "title", "task_type"]):
+			task_map[t.name] = t
+	data = []
+	for r in rows:
+		t = task_map.get(r.task, {})
+		data.append({
+			**r,
+			"task_title": t.get("title"),
+			"task_type": t.get("task_type"),
+		})
+	groups = defaultdict(lambda: {"minutes": 0, "billable_minutes": 0, "entries": 0})
+	for r in data:
+		key = r.get(group_by) or "Unknown"
+		if group_by == "day":
+			key = str(r.get("started_at") or "")[:10] or "Unknown"
+		if group_by == "billable":
+			key = "Billable" if r.get("billable") else "Non-billable"
+		groups[key]["minutes"] += r.get("duration_minutes") or 0
+		if r.get("billable"):
+			groups[key]["billable_minutes"] += r.get("duration_minutes") or 0
+		groups[key]["entries"] += 1
+	result = [{"key": k, **v} for k, v in groups.items()]
+	totals = {
+		"minutes": sum(r.get("duration_minutes") or 0 for r in data),
+		"billable_minutes": sum(r.get("duration_minutes") or 0 for r in data if r.get("billable")),
+		"entries": len(data),
+	}
+	return {"rows": result, "totals": totals}
+
+
+def lock_stale_time_logs():
+	if not _doctype_ready("CRM Task Time Log"):
+		return
+	lock_days = 7
+	try:
+		lock_days = cint(frappe.db.get_single_value("CRM Settings", "time_log_lock_days") or 7)
+	except Exception:
+		pass
+	cutoff = add_to_date(_now(), days=-lock_days)
+	logs = frappe.get_all(
+		"CRM Task Time Log",
+		filters={"locked": 0, "ended_at": ["!=", None], "started_at": ["<", cutoff]},
+		fields=["name", "task"],
+	)
+	for log in logs:
+		frappe.db.set_value("CRM Task Time Log", log.name, "locked", 1)
+		_audit(log.task, "Time Log Locked", payload={"time_log": log.name})
+	if logs:
+		frappe.db.commit()

@@ -6,79 +6,40 @@
  "engine": "InnoDB",
   "field_order": [
    "notification_text",
-   "section_break_hace",
-   "from_user",
-   "type",
-   "column_break_dduu",
-   "to_user",
-   "read",
-   "archived",
-   "section_break_pbvx",
-   "reference_doctype",
-   "reference_name",
-   "column_break_eant",
-   "notification_type_doctype",
-   "notification_type_doc",
-   "comment",
-   "section_break_vpwa",
-   "message"
-  ],
- "fields": [
-  {
-   "fieldname": "from_user",
-   "fieldtype": "Link",
-   "label": "From User",
-   "options": "User"
-  },
-  {
-   "fieldname": "type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Type",
-   "options": "Mention\nTask\nAssignment\nWhatsApp",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_dduu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "to_user",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "To User",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "comment",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "label": "Comment",
-   "options": "Comment"
-  },
+    "section_break_hace",
+    "from_user",
+    "type",
+    "channel",
+    "level",
+    "delivery_status",
+    "column_break_dduu",
+    "to_user",
+    "read",
+    "archived",
+    "digest_id",
+    "device",
    {
-    "default": "0",
-    "fieldname": "read",
-    "fieldtype": "Check",
-    "label": "Read"
-   },
-   {
-    "default": "0",
-    "fieldname": "archived",
-    "fieldtype": "Check",
-    "label": "Archived"
-   },
-  {
-   "fieldname": "section_break_vpwa",
+    "fieldname": "section_break_vpwa",
    "fieldtype": "Section Break"
   },
-  {
-   "fieldname": "message",
-   "fieldtype": "HTML Editor",
-   "in_list_view": 1,
-   "label": "Message"
-  },
+    {
+     "default": "0",
+     "fieldname": "archived",
+     "fieldtype": "Check",
+     "label": "Archived"
+    },
+    {
+     "fieldname": "digest_id",
+     "fieldtype": "Link",
+     "label": "Digest Parent",
+     "options": "CRM Notification"
+    },
+    {
+     "fieldname": "device",
+     "fieldtype": "Link",
+     "label": "Device",
+     "options": "CRM Notification Device"
+    },
   {
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",

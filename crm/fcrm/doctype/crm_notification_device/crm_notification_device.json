@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "creation": "2026-05-28 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "token",
+  "platform",
+  "label",
+  "endpoint",
+  "p256dh",
+  "auth",
+  "last_used_at",
+  "active"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "User",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "token",
+   "fieldtype": "Long Text",
+   "label": "Token",
+   "reqd": 1
+  },
+  {
+   "fieldname": "platform",
+   "fieldtype": "Select",
+   "options": "Web\niOS\nAndroid",
+   "label": "Platform",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "endpoint",
+   "fieldtype": "Long Text",
+   "label": "Endpoint"
+  },
+  {
+   "fieldname": "p256dh",
+   "fieldtype": "Long Text",
+   "label": "P256DH"
+  },
+  {
+   "fieldname": "auth",
+   "fieldtype": "Long Text",
+   "label": "Auth"
+  },
+  {
+   "fieldname": "last_used_at",
+   "fieldtype": "Datetime",
+   "label": "Last Used At",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "default": "1",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Notification Device",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "write": 1,
+   "role": "System Manager"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Sales Manager"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

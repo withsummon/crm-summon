@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "creation": "2026-05-28 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "collateral_type",
+  "mandatory",
+  "min_ltv_pct",
+  "min_coverage_pct",
+  "insurance_required",
+  "insurance_min_coverage_pct",
+  "reappraisal_months",
+  "notes"
+ ],
+ "fields": [
+  {"fieldname": "collateral_type", "fieldtype": "Data", "in_list_view": 1, "label": "Collateral Type", "reqd": 1},
+  {"default": "1", "fieldname": "mandatory", "fieldtype": "Check", "in_list_view": 1, "label": "Mandatory"},
+  {"fieldname": "min_ltv_pct", "fieldtype": "Percent", "in_list_view": 1, "label": "Min LTV %"},
+  {"fieldname": "min_coverage_pct", "fieldtype": "Percent", "in_list_view": 1, "label": "Min Coverage %"},
+  {"default": "0", "fieldname": "insurance_required", "fieldtype": "Check", "in_list_view": 1, "label": "Insurance Required"},
+  {"fieldname": "insurance_min_coverage_pct", "fieldtype": "Percent", "label": "Insurance Min Coverage %"},
+  {"fieldname": "reappraisal_months", "fieldtype": "Int", "in_list_view": 1, "label": "Reappraisal (months)"},
+  {"fieldname": "notes", "fieldtype": "Small Text", "label": "Notes"}
+ ],
+ "istable": 1,
+ "modified": "2026-05-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "FCRM",
+ "name": "CRM Product Collateral Rule",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

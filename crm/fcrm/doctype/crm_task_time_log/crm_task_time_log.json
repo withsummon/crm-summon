@@ -14,17 +14,21 @@
   "section_break_note",
   "note"
  ],
- "fields": [
-  {"fieldname": "task", "fieldtype": "Link", "in_list_view": 1, "label": "Task", "options": "CRM Task", "reqd": 1},
-  {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "label": "User", "options": "User", "reqd": 1},
-  {"fieldname": "started_at", "fieldtype": "Datetime", "in_list_view": 1, "label": "Started At", "reqd": 1},
-  {"fieldname": "ended_at", "fieldtype": "Datetime", "label": "Ended At"},
-  {"fieldname": "column_break_top", "fieldtype": "Column Break"},
-  {"fieldname": "duration_minutes", "fieldtype": "Float", "in_list_view": 1, "label": "Duration (min)"},
-  {"default": "0", "fieldname": "billable", "fieldtype": "Check", "label": "Billable"},
-  {"fieldname": "section_break_note", "fieldtype": "Section Break"},
-  {"fieldname": "note", "fieldtype": "Small Text", "label": "Note"}
- ],
+  "fields": [
+    {"fieldname": "task", "fieldtype": "Link", "in_list_view": 1, "label": "Task", "options": "CRM Task", "reqd": 1},
+    {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "label": "User", "options": "User", "reqd": 1},
+    {"fieldname": "started_at", "fieldtype": "Datetime", "in_list_view": 1, "label": "Started At", "reqd": 1},
+    {"fieldname": "ended_at", "fieldtype": "Datetime", "label": "Ended At"},
+    {"fieldname": "column_break_top", "fieldtype": "Column Break"},
+    {"fieldname": "duration_minutes", "fieldtype": "Float", "in_list_view": 1, "label": "Duration (min)"},
+    {"default": "0", "fieldname": "billable", "fieldtype": "Check", "label": "Billable"},
+    {"default": "Timer", "fieldname": "source", "fieldtype": "Select", "label": "Source", "options": "Timer\nManual\nImported"},
+    {"default": "0", "fieldname": "locked", "fieldtype": "Check", "label": "Locked", "read_only": 1},
+    {"fieldname": "edited_at", "fieldtype": "Datetime", "label": "Edited At", "read_only": 1},
+    {"fieldname": "edited_by", "fieldtype": "Link", "label": "Edited By", "options": "User", "read_only": 1},
+    {"fieldname": "section_break_note", "fieldtype": "Section Break"},
+    {"fieldname": "note", "fieldtype": "Small Text", "label": "Note"}
+  ],
  "index_web_pages_for_search": 1,
  "links": [],
  "modified": "2026-05-24 00:00:00.000000",

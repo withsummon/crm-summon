@@ -259,6 +259,40 @@
             />
           </template>
 
+          <template v-else-if="activeTab === 'workflow'">
+            <SectionHeader
+              title="Workflow Execution Audit"
+              description="Per-run log, node-by-node trace, inputs/outputs per node, failures and retries."
+            />
+            <div class="mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                v-for="card in workflowCards"
+                :key="card.label"
+                :label="card.label"
+                :value="card.value"
+                :sub="card.sub"
+                :warn="card.warn"
+              />
+            </div>
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <select v-model="workflowFilters.status" class="audit-select">
+                <option value="">All statuses</option>
+                <option value="Running">Running</option>
+                <option value="Completed">Completed</option>
+                <option value="Failed">Failed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <input v-model="workflowFilters.search" type="text" placeholder="Search…" class="audit-input h-8 w-48" />
+              <Button variant="outline" size="sm" label="Export CSV" @click="exportWorkflowCSV" />
+            </div>
+            <SimpleTable
+              :rows="workflowRows"
+              :columns="workflowColumns"
+              empty-title="No workflow runs found"
+              @open="openWorkflowDrawer"
+            />
+          </template>
+
           <template v-else-if="activeTab === 'alerts'">
             <SectionHeader
               title="Real-Time Alerts"
@@ -456,6 +490,7 @@ const TABS = [
   { key: 'approvals', label: 'Approvals' },
   { key: 'access_exports', label: 'Access & Exports' },
   { key: 'api_ai', label: 'API & AI' },
+  { key: 'workflow', label: 'Workflow' },
   { key: 'alerts', label: 'Alerts' },
   { key: 'reports', label: 'Reports' },
   { key: 'compliance', label: 'Compliance' },
@@ -678,6 +713,40 @@ const complianceCards = computed(() => [
   { label: 'AML Alerts Open', value: String(alertRows.value.filter((row) => row.status !== 'Acknowledged').length), sub: 'Pending ack', icon: 'flag', warn: alertRows.value.some((row) => row.status !== 'Acknowledged') },
   { label: 'Failed Logins', value: String(loginStats.value.failed), sub: 'Current sample', icon: 'log-in', warn: loginStats.value.failed > 0 },
 ])
+const workflowFilters = reactive({ status: '', search: '' })
+const workflowRuns = ref([])
+const workflowSummary = ref({})
+
+const workflowCards = computed(() => [
+  { label: 'Total Runs', value: String(workflowSummary.value.total || 0), sub: 'Selected range', icon: 'activity' },
+  { label: 'Success Rate', value: `${workflowSummary.value.success_rate || 0}%`, sub: 'Selected range', icon: 'check-circle', warn: (workflowSummary.value.success_rate || 100) < 90 },
+  { label: 'Failures', value: String(workflowSummary.value.failures || 0), sub: 'Selected range', icon: 'alert-triangle', warn: (workflowSummary.value.failures || 0) > 0 },
+  { label: 'p95 Latency', value: `${workflowSummary.value.p95_latency || 0} ms`, sub: 'Selected range', icon: 'clock' },
+])
+
+const workflowRows = computed(() => {
+  let rows = workflowRuns.value
+  if (workflowFilters.status) rows = rows.filter((r) => r.status === workflowFilters.status)
+  if (workflowFilters.search) {
+    const q = workflowFilters.search.toLowerCase()
+    rows = rows.filter((r) =>
+      [r.flow_label, r.application, r.error_summary].some((v) => String(v || '').toLowerCase().includes(q)),
+    )
+  }
+  return rows
+})
+
+const workflowColumns = [
+  { key: 'started_at', label: 'Started', format: formatDate },
+  { key: 'flow_label', label: 'Flow' },
+  { key: 'status', label: 'Status', badge: true },
+  { key: 'document_type', label: 'DocType' },
+  { key: 'application', label: 'Application' },
+  { key: 'total_nodes', label: 'Nodes' },
+  { key: 'failed_nodes', label: 'Failed' },
+  { key: 'duration_ms', label: 'Duration (ms)' },
+]
+
 const categoryBreakdown = computed(() => countBy(normalizedEvents.value, 'category'))
 const severityBreakdown = computed(() => countBy(normalizedEvents.value, 'severity'))
 
@@ -1057,6 +1126,35 @@ const TrendPanel = defineComponent({
   },
 })
 
+async function fetchWorkflowData() {
+  try {
+    const runs = await call('crm.api.audit.get_workflow_runs', { filters: {}, limit: 200 })
+    workflowRuns.value = runs || []
+    const summary = await call('crm.api.audit.get_workflow_summary')
+    workflowSummary.value = summary || {}
+  } catch (e) {
+    // silently fail
+  }
+}
+
+function openWorkflowDrawer(row) {
+  drawer.row = row
+  drawer.title = `${row.flow_label || row.flow} · ${row.status}`
+  drawer.open = true
+}
+
+async function exportWorkflowCSV() {
+  try {
+    const result = await call('crm.api.audit.export_workflow_runs_csv', { filters: {} })
+    if (result.file_url) {
+      window.location.href = result.file_url
+    }
+    toast.success(__('Workflow export ready'))
+  } catch (e) {
+    toast.error(__('Export failed'))
+  }
+}
+
 async function fetchAuditContext() {
   try {
     const ctx = await call('crm.api.audit.get_audit_context')
@@ -1091,6 +1189,7 @@ async function recordEvent() {
 onMounted(async () => {
   await fetchAuditData()
   await fetchAuditContext()
+  await fetchWorkflowData()
   if (auditEvents.value.length < 5) {
     try {
       await call('crm.api.audit.seed_audit_sample_data')
@@ -1116,6 +1215,22 @@ usePageMeta(() => ({ title: __('Audit Trail') }))
 }
 
 .audit-select:focus {
+  border-color: #FF6600;
+  box-shadow: 0 0 0 2px rgb(0 140 149 / 20%);
+}
+
+.audit-input {
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #d1d8dd;
+  background: white;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #1f272e;
+  outline: none;
+}
+
+.audit-input:focus {
   border-color: #FF6600;
   box-shadow: 0 0 0 2px rgb(0 140 149 / 20%);
 }

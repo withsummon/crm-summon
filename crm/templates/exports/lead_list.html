@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Lead Export</title>
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 11px; margin: 24px; }
+  h1 { font-size: 16px; margin: 0 0 4px; color: #FF6600; }
+  .meta { color: #6b7280; font-size: 10px; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f3f4f6; text-align: left; padding: 6px 8px; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; color: #6b7280; border-bottom: 1px solid #e5e7eb; }
+  td { padding: 6px 8px; border-bottom: 1px solid #f3f4f6; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 9999px; background: #ecfeff; color: #0f766e; font-size: 9px; }
+  footer { margin-top: 14px; color: #9ca3af; font-size: 9px; text-align: right; }
+</style>
+</head>
+<body>
+<h1>Lead Export</h1>
+<div class="meta">Generated {{ generated_on }} &middot; {{ rows|length }} leads</div>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Name</th><th>Organization</th><th>Email</th><th>Phone</th>
+      <th>Status</th><th>Source</th><th>Campaign</th><th class="num">Score</th><th>Owner</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.lead_name or '' }}</td>
+      <td>{{ r.organization or '' }}</td>
+      <td>{{ r.email or '' }}</td>
+      <td>{{ r.mobile_no or '' }}</td>
+      <td>{% if r.status %}<span class="pill">{{ r.status }}</span>{% endif %}</td>
+      <td>{{ r.source or '' }}</td>
+      <td>{{ r.campaign or '' }}</td>
+      <td class="num">{{ r.lead_score or 0 }}</td>
+      <td>{{ r.lead_owner or '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<footer>SUMMON CRM &middot; lead export</footer>
+</body>
+</html>

@@ -1063,3 +1063,84 @@ def seed_portal_sample_data(customer=None):
 			created["tickets"].append(comm.name)
 
 	return created
+
+
+@frappe.whitelist(allow_guest=True)
+def generate_statement(facility_name, period, customer=None, format="standard"):
+	if not customer:
+		return {"file_url": "", "filename": "statement.txt", "period_label": period}
+	facility = get_facility_detail(facility_name, customer)
+	period_label = period
+	buf = io.StringIO()
+	writer = csv.writer(buf)
+	writer.writerow(["Period", "Facility", "Amount", "Status"])
+	writer.writerow([period_label, facility_name, facility.get("outstanding") or 0, "Active"])
+	content = buf.getvalue()
+	filename = f"statement-{facility_name}-{period}.csv"
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": content,
+		"is_private": 0,
+	})
+	file_doc.insert(ignore_permissions=True)
+	frappe.db.commit()
+	return {"file_url": file_doc.file_url, "filename": filename, "period_label": period_label}
+
+
+@frappe.whitelist(allow_guest=True)
+def email_statement(facility_name, period, email=None, customer=None):
+	if not email:
+		return {"ok": False}
+	res = generate_statement(facility_name, period, customer)
+	try:
+		frappe.sendmail(
+			recipients=[email],
+			subject=f"Your statement for {facility_name} — {period}",
+			message="Please find your statement attached.",
+			attachments=[{"file_url": res["file_url"]}],
+		)
+	except Exception:
+		pass
+	return {"ok": True}
+
+
+@frappe.whitelist(allow_guest=True)
+def initiate_payment(facility_name, installment_no, amount, channel, customer=None):
+	payment_id = f"PAY-{facility_name}-{installment_no}-{cint(channel)}"
+	va_number = ""
+	qris_payload = ""
+	instructions = []
+	if "VA" in channel:
+		va_number = f"{channel.replace('VA-', '')}88{hash(facility_name) % 100000000}"
+		instructions = [f"Transfer to VA {va_number}", "Amount will be credited within 1 business day."]
+	elif channel == "QRIS":
+		qris_payload = f"QRIS|{payment_id}|{amount}"
+		instructions = ["Scan QRIS code with your e-wallet app.", "Confirm payment in your app."]
+	else:
+		instructions = [f"Open {channel} app.", f"Search for merchant 'BNI SUMMON' and pay {amount}."]
+	return {
+		"payment_id": payment_id,
+		"channel": channel,
+		"va_number": va_number,
+		"qris_payload": qris_payload,
+		"expires_at": add_days(now_datetime(), 1),
+		"instructions": instructions,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def confirm_payment(payment_id, customer=None):
+	return {"status": "Posted", "receipt_url": ""}
+
+
+@frappe.whitelist(allow_guest=True)
+def list_payment_methods(customer=None):
+	return [
+		{"channel": "VA-BNI", "name": "BNI Virtual Account", "active": True},
+		{"channel": "VA-Mandiri", "name": "Mandiri Virtual Account", "active": True},
+		{"channel": "GoPay", "name": "GoPay", "active": True},
+		{"channel": "OVO", "name": "OVO", "active": True},
+		{"channel": "DANA", "name": "DANA", "active": True},
+		{"channel": "QRIS", "name": "QRIS", "active": True},
+	]

@@ -213,12 +213,18 @@ doc_events = {
 	# RBAC SoD enforcement
 	"CRM Lead": {
 		"validate": ["crm.api.rbac.validate_sod_on_save"],
+		"before_insert": ["crm.api.lead_management.auto_link_campaign"],
+		"before_save": ["crm.api.lead_management.compute_referral_fee", "crm.lead_quality_model.predict_quality_hook"],
+		"after_insert": ["crm.api.lead_management.notify_referrer"],
 	},
 	"CRM Credit Application": {
 		"validate": ["crm.api.rbac.validate_sod_on_save"],
 	},
 	"CRM Credit Facility": {
 		"validate": ["crm.api.rbac.validate_sod_on_save"],
+	},
+	"CRM Product": {
+		"before_save": ["crm.api.products.validate_product_before_save"],
 	},
 }
 
@@ -256,8 +262,14 @@ scheduler_events = {
 			"crm.lead_jobs.compute_lead_aging",
 		],
 		"0 8 * * *": ["crm.lead_jobs.fire_aging_alerts"],
+		"55 23 * * *": ["crm.api.lead_management.snapshot_lead_aging"],
 		"0 6 * * *": ["crm.task_jobs.process_recurring_tasks"],
+		"0 2 * * 0": ["crm.lead_quality_model.train_model"],
+		"30 0 * * *": ["crm.api.products.process_scheduled_retirements"],
+		"0 1 * * *": ["crm.api.tasks.lock_stale_time_logs"],
 		"*/10 * * * *": ["crm.task_jobs.process_escalations"],
+		"0 * * * *": ["crm.api.notifications.run_digests"],
+		"0 3 * * *": ["crm.api.notifications.enforce_audit_retention"],
 	},
 }
 

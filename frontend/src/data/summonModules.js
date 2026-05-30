@@ -126,8 +126,8 @@ export const summonModules = [
       'No-code workflow builder with approvals, SLA timers, conditional branching, and automation nodes.',
     priority: 'High',
     status: 'available',
-    href: '/crm/admin-platform/workflow-engine',
-    routeName: 'Workflow Engine',
+    href: '/crm/lending-risk/workflow-engine',
+    routeName: 'Workflow List',
     group: 'Admin & Platform',
     icon: 'git-branch',
     features: [

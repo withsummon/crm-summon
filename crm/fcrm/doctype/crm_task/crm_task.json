@@ -185,12 +185,19 @@
    "fieldtype": "Datetime",
    "label": "Blocked At"
   },
-  {
-   "default": "0",
-   "fieldname": "time_logged_minutes",
-   "fieldtype": "Float",
-   "label": "Time Logged (min)"
-  },
+   {
+    "default": "0",
+    "fieldname": "time_logged_minutes",
+    "fieldtype": "Float",
+    "label": "Time Logged (min)"
+   },
+   {
+    "default": "0",
+    "fieldname": "billable_minutes",
+    "fieldtype": "Float",
+    "label": "Billable Minutes",
+    "read_only": 1
+   },
   {
    "default": "0",
    "fieldname": "is_billable",

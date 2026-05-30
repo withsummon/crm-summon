@@ -14,7 +14,7 @@
         <div v-if="loading" class="flex h-40 items-center justify-center">
           <LoadingIndicator class="h-5 w-5 text-ink-gray-4" />
         </div>
-        <div v-else-if="summary" class="flex-1 space-y-5 overflow-y-auto p-4">
+        <div v-else-if="summary && !showHistory" class="flex-1 space-y-5 overflow-y-auto p-4">
           <div class="rounded-[14px] border border-outline-gray-2 bg-surface-gray-1 p-4">
             <div class="flex items-center justify-between">
               <div>
@@ -64,8 +64,14 @@
               </div>
               <div class="mt-1 flex items-center justify-between">
                 <span class="text-ink-gray-7">{{ __('Model confidence') }}</span>
-                <span class="font-semibold text-ink-gray-9">{{ summary.score?.confidence || 0 }}%</span>
+                <span class="font-semibold text-ink-gray-9">±{{ summary.score?.confidence || 0 }}%</span>
               </div>
+              <div v-if="activeQualityModel" class="mt-1 text-[11px] text-ink-gray-5">
+                Model {{ activeQualityModel.model_name }} · {{ formatDate(activeQualityModel.trained_on) }}
+              </div>
+              <button class="mt-2 text-xs text-[#FF6600] hover:underline" @click="openHistory">
+                {{ __('View model history') }}
+              </button>
             </div>
           </div>
 
@@ -102,10 +108,49 @@
             </div>
           </div>
 
+          <router-link :to="{ name: 'Lead Scoring Rules' }" class="block text-center text-sm text-[#FF6600] hover:underline" @click="emit('update:visible', false)">
+            {{ __('Manage rules') }}
+          </router-link>
           <Button class="w-full" variant="outline" @click="rerunScoring">
             <template #prefix><FeatherIcon name="refresh-cw" class="h-4 w-4" /></template>
             {{ __('Rerun Scoring Engine') }}
           </Button>
+        </div>
+
+        <div v-else-if="showHistory" class="flex-1 overflow-y-auto p-4">
+          <div class="mb-3 flex items-center gap-2">
+            <Button variant="ghost" size="sm" @click="showHistory = false">
+              <template #prefix><FeatherIcon name="arrow-left" class="h-4 w-4" /></template>
+              {{ __('Back') }}
+            </Button>
+            <div class="text-sm font-semibold text-ink-gray-9">{{ __('Model History') }}</div>
+          </div>
+          <div class="space-y-2">
+            <div
+              v-for="m in qualityModels.data?.models || []"
+              :key="m.name"
+              class="rounded border border-outline-gray-1 bg-white p-3 text-sm"
+            >
+              <div class="flex items-center justify-between">
+                <div class="font-medium text-ink-gray-9">{{ m.model_name }}</div>
+                <Badge v-if="m.is_active" label="Active" theme="green" variant="subtle" size="sm" />
+              </div>
+              <div class="mt-1 text-xs text-ink-gray-5">
+                Sample {{ m.sample_size }} · Accuracy {{ m.baseline_accuracy }} · AUC {{ m.baseline_auc }}
+              </div>
+              <div class="mt-2 flex gap-2">
+                <Button
+                  v-if="!m.is_active"
+                  variant="outline"
+                  size="sm"
+                  label="Activate"
+                  :loading="activatingModel === m.name"
+                  @click="activateQuality(m.name)"
+                />
+              </div>
+            </div>
+            <div v-if="!qualityModels.data?.models?.length" class="text-center text-sm text-ink-gray-5">No model history yet.</div>
+          </div>
         </div>
       </aside>
     </div>
@@ -128,24 +173,67 @@ const rules = ref([])
 const overrideBand = ref('')
 const overrideScore = ref(0)
 const overrideReason = ref('')
+const showHistory = ref(false)
+const activatingModel = ref('')
 
 const summary = createResource({
   url: 'crm.api.lead_management.get_lead_summary',
   makeParams: () => ({ lead: props.leadName }),
 })
 
+const qualityModels = createResource({
+  url: 'crm.api.lead_management.list_quality_models',
+  auto: false,
+})
+
+const activeQualityModel = ref(null)
+
 watch(() => props.visible, async (val) => {
   if (!val || !props.leadName) return
   loading.value = true
+  showHistory.value = false
   try {
     await summary.fetch()
     await loadRules()
+    await loadActiveQualityModel()
   } catch (e) {
     toast.error(__('Failed to load scoring data'))
   } finally {
     loading.value = false
   }
 })
+
+async function loadActiveQualityModel() {
+  try {
+    const res = await call('frappe.client.get_value', {
+      doctype: 'CRM Lead Quality Model',
+      filters: { is_active: 1 },
+      fieldname: ['model_name', 'trained_on', 'version'],
+    })
+    activeQualityModel.value = res || null
+  } catch (e) {
+    activeQualityModel.value = null
+  }
+}
+
+function openHistory() {
+  showHistory.value = true
+  qualityModels.fetch()
+}
+
+async function activateQuality(name) {
+  activatingModel.value = name
+  try {
+    await call('crm.api.lead_management.activate_quality_model', { model: name })
+    toast.success(__('Model activated'))
+    await qualityModels.fetch()
+    await loadActiveQualityModel()
+  } catch (e) {
+    toast.error(__('Activation failed'))
+  } finally {
+    activatingModel.value = ''
+  }
+}
 
 async function loadRules() {
   if (!frappe.db?.table_exists || !frappe.db.table_exists('CRM Lead Scoring Rule')) {
@@ -220,5 +308,12 @@ function bandTheme(band) {
   if (band === 'Hot') return 'green'
   if (band === 'Warm') return 'orange'
   return 'gray'
+}
+
+function formatDate(value) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return value
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 </script>

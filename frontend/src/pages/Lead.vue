@@ -16,6 +16,9 @@
         v-if="document.actions?.length"
         :actions="document.actions"
       />
+      <Button :label="__('Print')" variant="outline" :loading="printing" @click="printLead">
+        <template #prefix><FeatherIcon name="printer" class="h-3.5 w-3.5" /></template>
+      </Button>
       <AssignTo v-model="assignees.data" doctype="CRM Lead" :docname="leadId" />
       <Dropdown
         v-if="doc && document.statuses"
@@ -233,6 +236,57 @@
           </div>
           <div>
             <div class="mb-2 flex items-center justify-between">
+              <div class="text-xs font-semibold uppercase text-ink-gray-5">{{ __('Referral') }}</div>
+              <button
+                v-if="!referralEditing"
+                class="text-xs text-ink-gray-5 hover:text-ink-gray-8"
+                @click="beginReferralEdit"
+              >
+                {{ __('Edit') }}
+              </button>
+              <div v-else class="flex items-center gap-1">
+                <button class="text-xs text-ink-gray-5 hover:text-ink-gray-8" @click="referralEditing = false">{{ __('Cancel') }}</button>
+                <button class="text-xs font-medium text-[#FF6600]" :disabled="savingReferral" @click="saveReferral">{{ savingReferral ? __('Saving…') : __('Save') }}</button>
+              </div>
+            </div>
+            <div v-if="!referralEditing" class="grid grid-cols-3 gap-2 text-sm">
+              <div>
+                <div class="text-[10px] uppercase text-ink-gray-5">{{ __('Type') }}</div>
+                <div class="text-ink-gray-9">{{ uatSummary.data?.attribution?.referrer_type || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase text-ink-gray-5">{{ __('Referrer') }}</div>
+                <div class="truncate text-ink-gray-9">{{ uatSummary.data?.attribution?.referrer || '—' }}</div>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase text-ink-gray-5">{{ __('Fee') }}</div>
+                <div class="font-mono text-ink-gray-9">{{ formatRupiah(document?.doc?.referral_fee) }}</div>
+              </div>
+            </div>
+            <div v-else class="grid grid-cols-3 gap-2 text-sm">
+              <select
+                v-model="referralDraft.referrer_type"
+                class="h-8 rounded-md border border-outline-gray-2 bg-white px-2 text-xs focus:border-ink-gray-5 focus:outline-none"
+              >
+                <option value="">—</option>
+                <option>Customer</option>
+                <option>RM</option>
+                <option>Partner</option>
+                <option>Other</option>
+              </select>
+              <input
+                v-model="referralDraft.referrer"
+                type="text"
+                placeholder="Name or user@…"
+                class="col-span-2 h-8 rounded-md border border-outline-gray-2 bg-white px-2 text-xs focus:border-ink-gray-5 focus:outline-none"
+              />
+              <div class="col-span-3 text-[11px] text-ink-gray-5">
+                {{ __('Fee is recomputed on save based on type + expected value.') }}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="mb-2 flex items-center justify-between">
               <div class="text-xs font-semibold uppercase text-ink-gray-5">
                 {{ __('Duplicate Candidates') }}
               </div>
@@ -260,18 +314,65 @@
             </div>
             <div v-else class="text-sm text-ink-gray-5">{{ __('No duplicate candidates') }}</div>
           </div>
-          <div v-if="leadSummary.data?.tags?.length">
-            <div class="mb-2 text-xs font-semibold uppercase text-ink-gray-5">
-              {{ __('Tags') }}
+          <div>
+            <div class="mb-2 flex items-center justify-between">
+              <div class="text-xs font-semibold uppercase text-ink-gray-5">{{ __('Tags') }}</div>
+              <button
+                class="text-xs text-ink-gray-5 hover:text-ink-gray-8"
+                @click="$router.push({ name: 'Lead Tags' })"
+              >
+                {{ __('Manage') }}
+              </button>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <Badge
-                v-for="tag in leadSummary.data.tags"
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span
+                v-for="tag in uatSummary.data?.tags || []"
                 :key="tag.tag"
-                :label="tag.tag"
-                variant="subtle"
-                theme="teal"
-              />
+                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
+                :style="{ borderColor: (tag.color || '#0f766e') + '40', backgroundColor: (tag.color || '#0f766e') + '14', color: tag.color || '#0f766e' }"
+              >
+                {{ tag.tag }}
+                <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="removeTag(tag.tag)">×</button>
+              </span>
+              <div class="relative">
+                <button
+                  class="inline-flex items-center gap-1 rounded-full border border-dashed border-outline-gray-2 px-2 py-0.5 text-xs text-ink-gray-6 hover:text-ink-gray-8"
+                  @click="tagPickerOpen = !tagPickerOpen"
+                >
+                  + {{ __('Add tag') }}
+                </button>
+                <div
+                  v-if="tagPickerOpen"
+                  class="absolute left-0 top-full z-20 mt-1 w-56 rounded-md border border-outline-gray-2 bg-white p-2 shadow-lg"
+                >
+                  <input
+                    v-model="tagSearch"
+                    type="text"
+                    placeholder="Search or create…"
+                    class="mb-1 h-7 w-full rounded border border-outline-gray-2 px-2 text-xs focus:outline-none"
+                    @keydown.enter="addNewTag()"
+                  />
+                  <div class="max-h-40 overflow-y-auto">
+                    <button
+                      v-for="t in tagSuggestions"
+                      :key="t.name"
+                      class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-surface-gray-1"
+                      @click="addTag(t.tag)"
+                    >
+                      <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: t.color || '#0f766e' }" />
+                      {{ t.tag }}
+                    </button>
+                    <div v-if="!tagSuggestions.length && !tagSearch" class="px-2 py-1 text-xs text-ink-gray-5">{{ __('No tags yet') }}</div>
+                    <button
+                      v-if="tagSearch && !tagSuggestions.some((s) => s.tag.toLowerCase() === tagSearch.toLowerCase())"
+                      class="w-full rounded px-2 py-1 text-left text-xs text-[#FF6600] hover:bg-surface-gray-1"
+                      @click="addNewTag()"
+                    >
+                      + Create "{{ tagSearch }}"
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -374,6 +475,7 @@ import {
   createResource,
   FileUploader,
   Dropdown,
+  FeatherIcon,
   Badge,
   Tooltip,
   Avatar,
@@ -583,6 +685,105 @@ const leadSummary = createResource({
 async function refreshLeadSummary() {
   await call('crm.api.lead_management.score_lead', { lead: props.leadId })
   leadSummary.reload()
+}
+
+const printing = ref(false)
+async function printLead() {
+  printing.value = true
+  try {
+    const res = await call('crm.api.lead_management.print_lead', { lead: props.leadId })
+    if (res?.file_url) {
+      window.open(res.file_url, '_blank')
+    } else {
+      toast.error('Print failed')
+    }
+  } catch (e) {
+    toast.error(e?.message || 'Print failed')
+  } finally {
+    printing.value = false
+  }
+}
+
+const referralEditing = ref(false)
+const savingReferral = ref(false)
+const referralDraft = ref({ referrer_type: '', referrer: '' })
+function beginReferralEdit() {
+  referralDraft.value = {
+    referrer_type: uatSummary.data?.attribution?.referrer_type || '',
+    referrer: uatSummary.data?.attribution?.referrer || '',
+  }
+  referralEditing.value = true
+}
+async function saveReferral() {
+  savingReferral.value = true
+  try {
+    await call('frappe.client.set_value', {
+      doctype: 'CRM Lead',
+      name: props.leadId,
+      fieldname: {
+        referrer_type: referralDraft.value.referrer_type || '',
+        referrer: referralDraft.value.referrer || '',
+        referral_fee: 0,
+      },
+    })
+    referralEditing.value = false
+    uatSummary.reload()
+    if (document?.reload) document.reload()
+    toast.success('Referral updated')
+  } catch (e) {
+    toast.error(e?.message || 'Failed to save')
+  } finally {
+    savingReferral.value = false
+  }
+}
+function formatRupiah(n) {
+  const v = Number(n || 0)
+  if (!v) return 'Rp 0'
+  return 'Rp ' + v.toLocaleString('id-ID')
+}
+
+const tagPickerOpen = ref(false)
+const tagSearch = ref('')
+const allTags = createResource({
+  url: 'crm.api.lead_management.list_tags',
+  auto: true,
+  cache: 'leadTags',
+})
+const tagSuggestions = computed(() => {
+  const used = new Set((uatSummary.data?.tags || []).map((t) => t.tag.toLowerCase()))
+  const q = tagSearch.value.trim().toLowerCase()
+  return (allTags.data?.tags || [])
+    .filter((t) => !used.has(t.tag.toLowerCase()))
+    .filter((t) => !q || t.tag.toLowerCase().includes(q))
+    .slice(0, 8)
+})
+async function applyTags(next) {
+  try {
+    await call('crm.api.lead_management.set_tags_for_lead', {
+      lead: props.leadId,
+      tags: next,
+    })
+    uatSummary.reload()
+    allTags.reload()
+  } catch (e) {
+    toast.error(e?.message || 'Failed to update tags')
+  }
+}
+async function addTag(name) {
+  const current = (uatSummary.data?.tags || []).map((t) => t.tag)
+  if (current.includes(name)) return
+  tagPickerOpen.value = false
+  tagSearch.value = ''
+  await applyTags([...current, name])
+}
+async function addNewTag() {
+  const name = tagSearch.value.trim()
+  if (!name) return
+  await addTag(name)
+}
+async function removeTag(name) {
+  const next = (uatSummary.data?.tags || []).map((t) => t.tag).filter((t) => t !== name)
+  await applyTags(next)
 }
 
 async function refreshDuplicates() {

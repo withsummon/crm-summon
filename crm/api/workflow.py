@@ -2,6 +2,9 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import now_datetime
+import logging
+
+print("WORKFLOW MODULE LOADED", flush=True)
 
 
 @frappe.whitelist()
