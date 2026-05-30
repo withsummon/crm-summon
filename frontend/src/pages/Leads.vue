@@ -53,16 +53,21 @@
       >
         <template #prefix><FeatherIcon name="git-merge" class="h-4 w-4" /></template>
       </Button>
-      <Button
-        v-if="!isMobile"
-        variant="outline"
-        :label="__('Export')"
-        @click="exportFilteredLeads"
+      <Dropdown
+        :options="[
+          { label: __('Export as CSV'), onClick: () => exportFilteredLeads('CSV') },
+          { label: __('Export as Excel'), onClick: () => exportFilteredLeads('XLSX') },
+          { label: __('Export as PDF'), onClick: () => exportFilteredLeads('PDF') },
+        ]"
       >
-        <template #prefix>
-          <FeatherIcon name="download" class="h-4 w-4" />
+        <template #default="{ open }">
+          <Button variant="outline" :label="__('Export')" :iconRight="open ? 'chevron-up' : 'chevron-down'">
+            <template #prefix>
+              <FeatherIcon name="download" class="h-4 w-4" />
+            </template>
+          </Button>
         </template>
-      </Button>
+      </Dropdown>
       <Button
         v-if="!isMobile"
         variant="solid"
@@ -777,7 +782,7 @@ const quickView = reactive({ visible: false, leadName: '', style: {} })
 const scoringDrawer = reactive({ open: false, leadName: '' })
 const reassignDialog = reactive({ open: false, toUser: '', reason: '' })
 const tagDialog = reactive({ open: false, tag: '', color: '#0f766e' })
-  const exportDialog = reactive({ open: false, rowCount: 0, email: '' })
+  const exportDialog = reactive({ open: false, rowCount: 0, email: '', format: 'CSV' })
   const mergeDialog = reactive({ open: false, candidates: [], primary: '' })
   const closeDialog = reactive({ open: false, reason: '' })
 
@@ -1032,14 +1037,15 @@ async function captureLeadFromIntake(close) {
   }
 }
 
-async function exportFilteredLeads() {
+async function exportFilteredLeads(format = 'CSV') {
   const filters = {
     converted: 0,
     ...(leads.value?.params?.filters || {}),
   }
+  exportDialog.format = format
   const result = await call('crm.api.lead_management.export_leads', {
     filters,
-    format: 'CSV',
+    format,
   })
   if (result.async && result.row_count > 1000) {
     exportDialog.rowCount = result.row_count
@@ -1047,7 +1053,7 @@ async function exportFilteredLeads() {
     return
   }
   if (result.file_url) {
-    window.location.href = result.file_url
+    window.open(result.file_url, '_blank')
   }
   toast.success(__('Lead export prepared'))
 }
@@ -1056,11 +1062,11 @@ async function confirmExport() {
   const filters = { converted: 0, ...(leads.value?.params?.filters || {}) }
   const result = await call('crm.api.lead_management.export_leads', {
     filters,
-    format: 'CSV',
+    format: exportDialog.format || 'CSV',
     email_to: exportDialog.email || undefined,
   })
   if (result.file_url) {
-    window.location.href = result.file_url
+    window.open(result.file_url, '_blank')
   }
   toast.success(result.async ? __('Export queued. You will be emailed when ready.') : __('Lead export prepared'))
 }
@@ -1113,15 +1119,21 @@ async function submitTag() {
 
 function onKpiFilter(key) {
   if (!viewControls.value) return
+  const list = viewControls.value.list
+  if (!list) return
+  let filters = { ...list.value.params.filters }
   if (key === 'new_today') {
-    viewControls.value.applyFilter({ fieldname: 'creation', operator: 'Equals', value: new Date().toISOString().slice(0, 10) })
+    filters.creation = new Date().toISOString().slice(0, 10)
   } else if (key === 'aging_stale') {
-    viewControls.value.applyFilter({ fieldname: 'last_activity_on', operator: '<=', value: addDays(new Date(), -14).toISOString().slice(0, 10) })
+    filters.last_activity_on = ['<=', addDays(new Date(), -14).toISOString().slice(0, 10)]
   } else if (key === 'sla_breaching') {
-    viewControls.value.applyFilter({ fieldname: 'sla_status', operator: 'is', value: ['At Risk', 'Breached', 'Failed'] })
+    filters.sla_status = ['in', ['At Risk', 'Breached', 'Failed']]
   } else if (key === 'dedupe_pending') {
     router.push({ name: 'Leads', params: { viewType: 'list' }, query: { ...route.query, dedupe: '1' } })
+    return
   }
+  list.value.params.filters = filters
+  list.value.reload()
 }
 
 function addDays(date, days) {
