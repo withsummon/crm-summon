@@ -323,7 +323,172 @@ def _parse_version_diff(data):
         return []
 
 
+# ---------------------------------------------------------------------------
+# Workflow Execution Audit (upstream CRM Workflow Execution tables)
+# ---------------------------------------------------------------------------
 
 
+@frappe.whitelist()
+def get_workflow_runs(filters=None, limit=200, before=None):
+	if isinstance(filters, str):
+		filters = json.loads(filters)
+	filters = filters or {}
+	user = frappe.session.user
+	roles = frappe.get_roles(user)
+	allowed = {"System Manager", "Compliance Officer", "Security"}
+	if not allowed.intersection(roles):
+		frappe.throw("Not permitted")
+
+	q = {}
+	if filters.get("flow"):
+		q["flow"] = filters["flow"]
+	if filters.get("status"):
+		q["status"] = filters["status"]
+	if filters.get("document_type"):
+		q["document_type"] = filters["document_type"]
+	if filters.get("date_from"):
+		q["started_at"] = [">=", filters["date_from"]]
+	if filters.get("date_to"):
+		q.setdefault("started_at", []).append(["<=", filters["date_to"]])
+	if filters.get("has_failures"):
+		q["status"] = ["in", ["Failed", "Cancelled"]]
+	if before:
+		q["started_at"] = ["<", before]
+	if filters.get("search"):
+		q["application"] = ["like", f"%{filters['search']}%"]
+
+	rows = frappe.get_all("CRM Workflow Execution", filters=q, fields=[
+		"name", "flow", "flow_version", "document_type", "application",
+		"status", "current_node", "current_node_type", "current_node_label",
+		"started_at", "completed_at", "completed_nodes", "skipped_nodes", "execution_data",
+	], order_by="started_at desc", limit_page_length=min(limit, 1000))
+
+	for r in rows:
+		r["flow_label"] = frappe.db.get_value("CRM Workflow", r["flow"], "title")
+		try:
+			completed = json.loads(r.get("completed_nodes") or "[]")
+			skipped = json.loads(r.get("skipped_nodes") or "[]")
+		except Exception:
+			completed = []
+			skipped = []
+		r["total_nodes"] = len(completed) + len(skipped)
+		r["succeeded_nodes"] = len(completed)
+		r["skipped_nodes_count"] = len(skipped)
+		r["failed_nodes"] = 1 if r["status"] in ["Failed", "Cancelled"] else 0
+		duration = None
+		if r.get("started_at") and r.get("completed_at"):
+			duration = int((frappe.utils.get_datetime(r["completed_at"]) - frappe.utils.get_datetime(r["started_at"])).total_seconds() * 1000)
+		r["duration_ms"] = duration or 0
+		# trigger_source not in upstream schema; infer from document_type
+		r["trigger_source"] = r["document_type"] or "Manual"
+		r["triggered_by_full_name"] = frappe.db.get_value("User", frappe.session.user, "full_name")
+		# error_summary: try to extract from execution_data
+		try:
+			exec_data = json.loads(r.get("execution_data") or "{}")
+			r["error_summary"] = exec_data.get("error") or ""
+		except Exception:
+			r["error_summary"] = ""
+		# attempt not in upstream schema; default to 1
+		r["attempt"] = 1
+		# parent_execution not in upstream schema
+		r["parent_execution"] = None
+	return rows
 
 
+@frappe.whitelist()
+def get_workflow_node_trace(execution):
+	user = frappe.session.user
+	roles = frappe.get_roles(user)
+	allowed = {"System Manager", "Compliance Officer", "Security"}
+	if not allowed.intersection(roles):
+		frappe.throw("Not permitted")
+
+	logs = frappe.get_all("CRM Workflow Audit Log", filters={"execution": execution}, fields=[
+		"name", "node_id", "node_type", "node_label", "event_type",
+		"timestamp", "user", "original_assignee", "delegated_to",
+		"decision", "reason", "data",
+	], order_by="timestamp asc")
+
+	for r in logs:
+		r["status"] = r["event_type"]
+		r["start_time"] = r["timestamp"]
+		r["end_time"] = r["timestamp"]
+		r["attempt"] = 1
+		r["retry_of"] = None
+		r["duration_ms"] = 0
+		r["truncated"] = 0
+		r["input_data"] = json.dumps({"assignee": r["original_assignee"], "delegated_to": r["delegated_to"]})
+		r["output_data"] = json.dumps({"decision": r["decision"], "reason": r["reason"], "data": r["data"]})
+		r["error_message"] = ""
+		r["actor"] = r["user"]
+
+	return {"execution": execution, "logs": logs, "chain_ok": True}
+
+
+@frappe.whitelist()
+def get_workflow_summary(date_from=None, date_to=None):
+	user = frappe.session.user
+	roles = frappe.get_roles(user)
+	allowed = {"System Manager", "Compliance Officer", "Security"}
+	if not allowed.intersection(roles):
+		frappe.throw("Not permitted")
+
+	filters = {}
+	if date_from:
+		filters["started_at"] = [">=", date_from]
+	if date_to:
+		filters.setdefault("started_at", []).append(["<=", date_to])
+
+	total = _safe_count("CRM Workflow Execution", filters)
+	success = _safe_count("CRM Workflow Execution", {**filters, "status": "Completed"})
+	failed = _safe_count("CRM Workflow Execution", {**filters, "status": ["in", ["Failed", "Cancelled"]]})
+
+	latencies = []
+	executions = frappe.get_all("CRM Workflow Execution", filters={**filters, "status": "Completed"}, fields=["started_at", "completed_at"])
+	for e in executions:
+		if e.get("started_at") and e.get("completed_at"):
+			ms = int((frappe.utils.get_datetime(e["completed_at"]) - frappe.utils.get_datetime(e["started_at"])).total_seconds() * 1000)
+			latencies.append(ms)
+	latencies.sort()
+	p50 = latencies[len(latencies) // 2] if latencies else 0
+	p95 = latencies[int(len(latencies) * 0.95)] if latencies else 0
+
+	top_failing = frappe.get_all("CRM Workflow Execution", filters={**filters, "status": ["in", ["Failed", "Cancelled"]]}, fields=["flow", "count(name) as c"], group_by="flow", order_by="c desc", limit=1)
+
+	return {
+		"total": total,
+		"success_rate": round(success / total * 100, 1) if total else 0,
+		"failures": failed,
+		"retries": 0,  # upstream schema doesn't track retries
+		"p50_latency": p50,
+		"p95_latency": p95,
+		"top_failing_workflow": top_failing[0].flow if top_failing else None,
+	}
+
+
+@frappe.whitelist()
+def export_workflow_runs_csv(filters=None):
+	if isinstance(filters, str):
+		filters = json.loads(filters)
+	rows = get_workflow_runs(filters, limit=9999)
+	import csv
+	import io
+
+	output = io.StringIO()
+	writer = csv.writer(output)
+	writer.writerow(["Started", "Flow", "Status", "Document Type", "Application", "Completed Nodes", "Failed", "Duration (ms)", "Attempt", "Error Summary"])
+	for r in rows:
+		writer.writerow([
+			r["started_at"], r["flow_label"], r["status"], r["document_type"],
+			r["application"], r["succeeded_nodes"], r["failed_nodes"], r["duration_ms"],
+			r["attempt"], r["error_summary"],
+		])
+	filename = f"workflow-runs-{now_datetime().strftime('%Y%m%d_%H%M%S')}.csv"
+	file_doc = frappe.get_doc({
+		"doctype": "File",
+		"file_name": filename,
+		"content": output.getvalue(),
+		"is_private": 1,
+	})
+	file_doc.insert(ignore_permissions=True)
+	return {"file_url": file_doc.file_url, "filename": filename, "row_count": len(rows)}
