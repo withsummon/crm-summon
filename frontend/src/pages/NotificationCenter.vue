@@ -22,7 +22,7 @@
     <div class="shrink-0 overflow-x-auto border-b border-outline-gray-2 bg-surface-white px-6 py-3">
       <div class="flex items-center gap-3">
         <button
-          v-for="tab in PAGE_TABS"
+          v-for="tab in visiblePageTabs"
           :key="tab.key"
           class="whitespace-nowrap border-b-2 px-1 py-2 text-base leading-5 transition-colors"
           :class="activeTab === tab.key ? 'border-ink-gray-8 font-medium text-ink-gray-9' : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
@@ -241,6 +241,44 @@
           </div>
         </template>
 
+        <!-- AUDIT -->
+        <template v-else-if="activeTab === 'audit'">
+          <div class="mb-3 flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-semibold text-ink-gray-9">Audit Log</h2>
+              <p class="text-sm text-ink-gray-5">Immutable trail of every notification event.</p>
+            </div>
+            <Button variant="outline" size="sm" label="Export CSV" @click="exportAuditCSV" />
+          </div>
+          <div class="rounded-[10px] border border-outline-gray-2 bg-white shadow-sm overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs font-medium uppercase tracking-wide text-ink-gray-5">
+                <tr>
+                  <th class="px-3 py-1.5">Timestamp</th>
+                  <th class="px-3 py-1.5">Actor</th>
+                  <th class="px-3 py-1.5">Action</th>
+                  <th class="px-3 py-1.5">Notification</th>
+                  <th class="px-3 py-1.5">Channel</th>
+                  <th class="px-3 py-1.5">Recipient</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in auditRows" :key="row.name" class="border-b border-outline-gray-1 last:border-b-0">
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ formatDate(row.timestamp) }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ row.actor }}</td>
+                  <td class="px-3 py-1.5"><Badge :label="row.action" :theme="actionTheme(row.action)" variant="subtle" size="sm" /></td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ row.notification }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ row.channel || '—' }}</td>
+                  <td class="px-3 py-1.5 text-ink-gray-7">{{ row.recipient || '—' }}</td>
+                </tr>
+                <tr v-if="!auditRows.length">
+                  <td colspan="6" class="px-4 py-8 text-center text-ink-gray-5">No audit events yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
         <!-- BROADCAST -->
         <template v-else-if="activeTab === 'broadcast'">
           <div class="grid gap-3 lg:grid-cols-[1fr_320px]">
@@ -310,9 +348,34 @@
         <div class="space-y-3 text-sm">
           <div class="rounded-md border border-outline-gray-1 p-3 bg-surface-gray-1">
             <p class="font-medium text-ink-gray-8 text-xs uppercase tracking-wider">Digest schedule</p>
-            <div class="mt-2 flex items-center gap-3 text-sm">
-              <label class="flex items-center gap-2"><input type="checkbox" v-model="digestEnabled" /> Send daily digest at</label>
-              <input v-model="digestTime" type="time" class="rounded-md border border-outline-gray-2 px-2 py-1 text-sm" :disabled="!digestEnabled" />
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-ink-gray-5 mb-1">Mode</label>
+                <select v-model="digestMode" class="w-full rounded-md border border-outline-gray-2 bg-white px-2 py-1 text-sm">
+                  <option value="off">Off</option>
+                  <option value="hourly">Hourly</option>
+                  <option value="daily">Daily</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-ink-gray-5 mb-1">Time</label>
+                <input v-model="digestTime" type="time" class="w-full rounded-md border border-outline-gray-2 px-2 py-1 text-sm" :disabled="digestMode === 'off'" />
+              </div>
+              <div>
+                <label class="block text-xs text-ink-gray-5 mb-1">Quiet start</label>
+                <input v-model="quietStart" type="time" class="w-full rounded-md border border-outline-gray-2 px-2 py-1 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs text-ink-gray-5 mb-1">Quiet end</label>
+                <input v-model="quietEnd" type="time" class="w-full rounded-md border border-outline-gray-2 px-2 py-1 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs text-ink-gray-5 mb-1">Timezone</label>
+                <input v-model="timezone" type="text" class="w-full rounded-md border border-outline-gray-2 px-2 py-1 text-sm" />
+              </div>
+              <div class="flex items-end">
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" v-model="criticalBypass" /> Critical bypass</label>
+              </div>
             </div>
           </div>
           <div v-for="pref in preferences" :key="pref.type" class="rounded-md border border-outline-gray-1 px-3 py-2">
@@ -458,8 +521,14 @@ const PAGE_TABS = [
   { key: 'rules', label: 'Rules' },
   { key: 'templates', label: 'Templates' },
   { key: 'analytics', label: 'Analytics' },
+  { key: 'audit', label: 'Audit', adminOnly: true },
   { key: 'broadcast', label: 'Broadcast' },
 ]
+
+const userRoles = ref([])
+const visiblePageTabs = computed(() => {
+  return PAGE_TABS.filter((t) => !t.adminOnly || userRoles.value.includes('System Manager') || userRoles.value.includes('Notification Admin'))
+})
 
 const INBOX_TABS = [
   { key: 'all', label: 'All', badge: computed(() => visibleNotifications.value.length) },
@@ -500,13 +569,21 @@ const preferences = ref(loadPersisted('crm:notif:preferences', [
 ]))
 persistRef('crm:notif:preferences', preferences)
 
-const digestEnabled = ref(loadPersisted('crm:notif:digestEnabled', false))
-const digestTime = ref(loadPersisted('crm:notif:digestTime', '09:00'))
-persistRef('crm:notif:digestEnabled', digestEnabled)
-persistRef('crm:notif:digestTime', digestTime)
+
 
 const snoozeMap = ref(loadPersisted('crm:notif:snoozeMap', {}))
 persistRef('crm:notif:snoozeMap', snoozeMap)
+
+const digestMode = ref('off')
+const digestTime = ref('09:00')
+const quietStart = ref('22:00')
+const quietEnd = ref('07:00')
+const timezone = ref('Asia/Jakarta')
+const criticalBypass = ref(true)
+const soundEnabled = ref(true)
+
+const auditRows = ref([])
+const auditLoading = ref(false)
 
 const visibleNotifications = computed(() => {
   const now = new Date()
@@ -640,19 +717,24 @@ async function unsnoozeNotification(n) {
 async function fetchPreferences() {
   try {
     const data = await call('crm.api.notifications.get_preferences')
-    if (data) {
+    if (data && data.preferences) {
       preferences.value.forEach((pref) => {
-        const row = data[pref.type]
+        const row = data.preferences[pref.type]
         if (row) {
           pref.email = Boolean(row.email)
           pref.in_app = Boolean(row.in_app)
           pref.sms = Boolean(row.sms)
           pref.push = Boolean(row.push)
+          pref.sound_enabled = Boolean(row.sound_enabled)
         }
       })
       if (data.digest) {
-        digestEnabled.value = !!data.digest.enabled
+        digestMode.value = data.digest.mode || 'off'
         digestTime.value = data.digest.time || '09:00'
+        quietStart.value = data.digest.quiet_start || '22:00'
+        quietEnd.value = data.digest.quiet_end || '07:00'
+        timezone.value = data.digest.timezone || 'Asia/Jakarta'
+        criticalBypass.value = !!data.digest.critical_bypass
       }
     }
   } catch (e) {}
@@ -662,12 +744,51 @@ async function savePreferences() {
   try {
     await call('crm.api.notifications.save_preferences', {
       preferences: preferences.value,
-      digest: { enabled: digestEnabled.value, time: digestTime.value },
+      digest: {
+        mode: digestMode.value,
+        time: digestTime.value,
+        quiet_start: quietStart.value,
+        quiet_end: quietEnd.value,
+        timezone: timezone.value,
+        critical_bypass: criticalBypass.value,
+      },
     })
     toast.success(__('Preferences saved'))
   } catch (e) {
     toast.error(__('Failed to save preferences'))
   }
+}
+
+async function fetchAuditLog() {
+  auditLoading.value = true
+  try {
+    const res = await call('crm.api.notifications.get_audit_log', { filters: {}, limit: 50, offset: 0 })
+    auditRows.value = res?.rows || []
+  } catch (e) {
+    toast.error(__('Failed to load audit log'))
+  }
+  auditLoading.value = false
+}
+
+async function exportAuditCSV() {
+  try {
+    await call('crm.api.notifications.export_audit_csv', { filters: {} })
+  } catch (e) {}
+}
+
+function actionTheme(action) {
+  const map = {
+    created: 'gray',
+    sent: 'blue',
+    delivered: 'green',
+    read: 'teal',
+    snoozed: 'orange',
+    unsnoozed: 'orange',
+    archived: 'gray',
+    purged: 'red',
+    failed: 'red',
+  }
+  return map[action] || 'gray'
 }
 
 const rules = ref(loadPersisted('crm:notif:rules', [
@@ -866,8 +987,15 @@ function formatDate(value) {
 }
 
 onMounted(async () => {
+  userRoles.value = await call('frappe.client.get_list', {
+    doctype: 'Has Role',
+    filters: { parent: await call('frappe.session.user') },
+    fields: ['role'],
+    limit_page_length: 100,
+  }).then((rows) => rows.map((r) => r.role)).catch(() => [])
   await fetchNotifications()
   await fetchPreferences()
+  await fetchAuditLog()
   if (!notifications.value.length) {
     try {
       await call('crm.api.notifications.seed_notification_sample_data')
