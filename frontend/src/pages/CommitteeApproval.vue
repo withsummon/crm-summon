@@ -601,6 +601,33 @@
         </div>
       </div>
 
+      <!-- ───── TAB: Decisions ───── -->
+      <div v-if="activeTab === 'decisions'">
+        <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-ink-gray-7">{{ __('Decisions') }}</h3>
+            <Button variant="outline" size="sm" label="Reload" @click="loadDecisions" />
+          </div>
+          <div v-if="decisionsLoading" class="flex h-40 items-center justify-center"><LoadingIndicator class="h-5 w-5 text-ink-gray-4" /></div>
+          <table v-else class="w-full text-sm">
+            <thead class="border-b border-outline-gray-1 bg-surface-gray-1 text-left text-xs uppercase tracking-wide text-ink-gray-5">
+              <tr><th class="px-3 py-2">Application</th><th class="px-3 py-2">Committee</th><th class="px-3 py-2">Outcome</th><th class="px-3 py-2">Date</th><th class="px-3 py-2">Signatures</th><th class="px-3 py-2 text-right"></th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="d in decisionsList" :key="d.name" class="border-b border-outline-gray-1 last:border-b-0">
+                <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ d.applicant_name }}</td>
+                <td class="px-3 py-1.5 text-ink-gray-7">{{ d.committee_name }}</td>
+                <td class="px-3 py-1.5"><Badge :label="d.outcome" :theme="d.outcome === 'Approved' ? 'green' : 'red'" variant="subtle" size="sm" /></td>
+                <td class="px-3 py-1.5 text-xs text-ink-gray-5">{{ fmtDate(d.decided_at) }}</td>
+                <td class="px-3 py-1.5 text-xs text-ink-gray-7">{{ d.approve_count + d.reject_count + d.abstain_count }} / {{ d.quorum }}</td>
+                <td class="px-3 py-1.5 text-right"><Button size="sm" variant="ghost" @click="openAuditDrawer(d)">Audit</Button></td>
+              </tr>
+              <tr v-if="!decisionsList.length"><td colspan="6" class="px-3 py-8 text-center text-ink-gray-5">No decisions yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ───── TAB: Analytics ───── -->
       <div v-if="activeTab === 'analytics'">
         <!-- KPI Row -->
@@ -862,6 +889,33 @@
       </div>
     </div>
 
+    <!-- Audit Drawer -->
+    <div v-if="auditDrawer.open" class="fixed inset-0 z-50 flex justify-end">
+      <div class="absolute inset-0 bg-black/30" @click="auditDrawer.open = false" />
+      <aside class="relative flex h-full w-full max-w-[520px] flex-col bg-white shadow-xl">
+        <div class="flex items-center justify-between border-b border-outline-gray-2 px-5 py-4">
+          <div class="text-base font-semibold text-ink-gray-9">{{ __('Audit Trail') }}</div>
+          <Button variant="ghost" icon="x" @click="auditDrawer.open = false" />
+        </div>
+        <div class="flex-1 overflow-y-auto p-4">
+          <div v-if="auditDrawer.loading" class="flex h-20 items-center justify-center"><LoadingIndicator class="h-4 w-4 text-ink-gray-4" /></div>
+          <div v-else-if="!auditDrawer.events.length" class="text-sm text-ink-gray-4">No audit events.</div>
+          <div v-else class="space-y-2">
+            <div v-for="e in auditDrawer.events" :key="e.name" class="rounded border border-outline-gray-1 p-2 text-sm">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <Badge :label="e.event" theme="gray" variant="subtle" size="sm" />
+                  <span class="text-xs text-ink-gray-5">{{ e.actor_name }}</span>
+                </div>
+                <span class="text-xs text-ink-gray-4">{{ fmtDate(e.event_at) }}</span>
+              </div>
+              <div v-if="e.payload_json" class="mt-1 text-[11px] text-ink-gray-5">{{ e.payload_json.slice(0, 120) }}</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
     <!-- Success Toast -->
     <div v-if="toast" class="fixed bottom-6 right-6 bg-green-600 text-white px-3 py-2 rounded-[10px] shadow-lg text-sm font-medium z-50 flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
@@ -873,8 +927,8 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
-import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { Badge, Button, FeatherIcon, LoadingIndicator, usePageMeta } from 'frappe-ui'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { loadPersisted, persistRef } from '@/utils/persist'
 
 const viewControls = ref(null)
@@ -961,6 +1015,7 @@ const pageTabs = [
   { id: 'queue', label: 'Case Queue', badge: 8 },
   { id: 'meetings', label: 'Meetings' },
   { id: 'voting', label: 'Voting' },
+  { id: 'decisions', label: 'Decisions' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'agenda', label: 'Agenda' },
   { id: 'live', label: 'Live Mode' },
@@ -970,6 +1025,33 @@ const pageTabs = [
 
 const calendarFilter = ref('')
 const calendarMonth = ref(new Date().toISOString().slice(0, 7))
+
+const decisionsList = ref([])
+const decisionsLoading = ref(false)
+const auditDrawer = ref({ open: false, item: null, events: [], loading: false })
+
+async function loadDecisions() {
+  decisionsLoading.value = true
+  try {
+    const res = await call('crm.api.committee.get_decisions', { limit: 100 })
+    decisionsList.value = res || []
+  } catch (e) {}
+  finally { decisionsLoading.value = false }
+}
+
+async function openAuditDrawer(d) {
+  auditDrawer.value = { open: true, item: d, events: [], loading: true }
+  try {
+    const res = await call('crm.api.committee.get_audit_trail', { item: d.item })
+    auditDrawer.value.events = res.events || []
+  } catch (e) {}
+  finally { auditDrawer.value.loading = false }
+}
+
+watch(activeTab, (t) => {
+  if (t === 'decisions') loadDecisions()
+})
+
 const calendarEvents = computed(() => {
   const events = []
   meetings.value.forEach((m) => {
@@ -1421,6 +1503,12 @@ function saveCommittee() {
     showToast('Committee created successfully')
   }
   closeSetupModal()
+}
+
+function fmtDate(d) {
+  if (!d) return ''
+  const dt = new Date(d)
+  return isNaN(dt) ? '' : dt.toLocaleDateString()
 }
 
 function showToast(msg) {

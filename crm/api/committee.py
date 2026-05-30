@@ -76,6 +76,40 @@ def _user_committees(user=None):
 	return out
 
 
+def _log_audit(item, event, payload=None, actor=None):
+	if not _doctype_ready("CRM Committee Audit Event"):
+		return
+	try:
+		actor = actor or frappe.session.user
+		committee = frappe.db.get_value("CRM Committee Item", item, "committee")
+		latest = frappe.get_all(
+			"CRM Committee Audit Event",
+			filters={"item": item},
+			fields=["event_hash"],
+			order_by="creation desc",
+			limit=1,
+		)
+		prev_hash = latest[0].event_hash if latest else ""
+		payload_json = json.dumps(payload, default=str) if payload else ""
+		data = f"{prev_hash}|{actor}|{event}|{now_datetime()}|{payload_json}"
+		event_hash = hashlib.sha256(data.encode("utf-8")).hexdigest()
+		log = frappe.new_doc("CRM Committee Audit Event")
+		log.item = item
+		log.committee = committee
+		log.actor = actor
+		log.actor_name = frappe.db.get_value("User", actor, "full_name") or actor
+		log.event_at = now_datetime()
+		log.event = event
+		log.payload_json = payload_json
+		log.ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else ""
+		log.user_agent = frappe.local.request.headers.get("User-Agent", "") if hasattr(frappe.local, "request") and hasattr(frappe.local.request, "headers") else ""
+		log.prev_hash = prev_hash
+		log.event_hash = event_hash
+		log.insert(ignore_permissions=True)
+	except Exception:
+		pass
+
+
 def _committee_doc(name):
 	return frappe.get_doc("CRM Committee", name)
 
@@ -344,6 +378,7 @@ def _finalize_if_ready(item_doc):
 			)
 			dec.insert(ignore_permissions=True)
 			item_doc.db_set("status", "Decided")
+			_log_audit(item_doc.name, "Decision Final", payload={"outcome": t["outcome"], "tally": t})
 			if item_doc.application and frappe.db.exists("CRM Credit Application", item_doc.application):
 				next_stage = "Legal Documentation" if t["outcome"] == "Approved" else "Rejected"
 				frappe.db.set_value("CRM Credit Application", item_doc.application, "status", next_stage)
@@ -369,6 +404,7 @@ def create_committee_item(committee, applicant_name, facility_type, requested_am
 		"submitted_at": now_datetime(),
 	})
 	item.insert(ignore_permissions=True)
+	_log_audit(item.name, "Item Routed", payload={"committee": committee, "application": application})
 	frappe.db.commit()
 	return {"name": item.name, "message": "Committee item created"}
 
@@ -417,6 +453,8 @@ def submit_vote(item, decision, comment=None, conditions=None, signature_ack=0):
 		}
 	)
 	vote.insert(ignore_permissions=True)
+	_log_audit(item, "Vote Cast", payload={"decision": decision, "member": user})
+	_log_audit(item, "Signature Verified", payload={"signature_hash": sig_hash, "member": user})
 	if decision == "Refer Back":
 		item_doc.db_set("status", "Referred Back")
 		if item_doc.application:
@@ -431,6 +469,7 @@ def submit_vote(item, decision, comment=None, conditions=None, signature_ack=0):
 
 @frappe.whitelist()
 def refer_back(item, questions):
+	_log_audit(item, "Refer Back", payload={"questions": questions})
 	return submit_vote(item=item, decision="Refer Back", comment=questions, signature_ack=1)
 
 
@@ -854,3 +893,95 @@ def seed_committee_sample_data():
 
 	frappe.db.commit()
 	return {"created": True, "committees": [c1.name, c2.name]}
+
+
+@frappe.whitelist()
+def get_audit_trail(item=None, committee=None, actor=None, event=None, date_from=None, date_to=None, search=None, limit=200):
+	if not _doctype_ready("CRM Committee Audit Event"):
+		return {"events": [], "chain_ok": True}
+	filters = {}
+	if item:
+		filters["item"] = item
+	if committee:
+		filters["committee"] = committee
+	if actor:
+		filters["actor"] = actor
+	if event:
+		filters["event"] = event
+	if date_from or date_to:
+		filters["event_at"] = ["between", [date_from or "1900-01-01", date_to or "2999-12-31"]]
+	q = (search or "").strip()
+	if q:
+		filters["_liked_by"] = ["like", f"%{q}%"]
+	events = frappe.get_all(
+		"CRM Committee Audit Event",
+		filters=filters,
+		fields=["name", "item", "committee", "actor", "actor_name", "event_at", "event", "payload_json", "ip_address", "event_hash", "prev_hash", "creation"],
+		order_by="creation desc",
+		limit=limit,
+	)
+	chain_ok = True
+	broken_at = None
+	for i in range(len(events) - 1, 0, -1):
+		if events[i].prev_hash != events[i - 1].event_hash:
+			chain_ok = False
+			broken_at = events[i].event_at
+			break
+	return {"events": events, "chain_ok": chain_ok, "broken_at": broken_at}
+
+
+@frappe.whitelist()
+def verify_audit_chain(item):
+	if not _doctype_ready("CRM Committee Audit Event"):
+		return {"ok": True}
+	events = frappe.get_all(
+		"CRM Committee Audit Event",
+		filters={"item": item},
+		fields=["event_hash", "prev_hash", "event_at"],
+		order_by="creation asc",
+	)
+	for i in range(1, len(events)):
+		if events[i].prev_hash != events[i - 1].event_hash:
+			return {"ok": False, "broken_at": events[i].event_at}
+	return {"ok": True}
+
+
+@frappe.whitelist()
+def record_item_view(item):
+	_log_audit(item, "Item Viewed")
+	frappe.db.commit()
+	return {"ok": True}
+
+
+@frappe.whitelist()
+def add_comment(item, text):
+	if not text:
+		frappe.throw(_("Comment is required."))
+	frappe.get_doc({
+		"doctype": "Comment",
+		"comment_type": "Comment",
+		"reference_doctype": "CRM Committee Item",
+		"reference_name": item,
+		"comment_email": frappe.session.user,
+		"comment_by": frappe.db.get_value("User", frappe.session.user, "full_name") or frappe.session.user,
+		"content": text,
+	}).insert(ignore_permissions=True)
+	_log_audit(item, "Comment Added", payload={"text": text[:200]})
+	frappe.db.commit()
+	return {"ok": True}
+
+
+@frappe.whitelist()
+def apply_override(item, decision, reason):
+	if not _doctype_ready("CRM Committee Item"):
+		frappe.throw(_("Committee module is not initialized."))
+	roles = set(frappe.get_roles())
+	if not (roles & {"System Manager", "Sales Manager"}):
+		frappe.throw(_("Only managers can override decisions."))
+	item_doc = frappe.get_doc("CRM Committee Item", item)
+	if item_doc.status != "Decided":
+		frappe.throw(_("Only decided items can be overridden."))
+	item_doc.db_set("status", "Overridden")
+	_log_audit(item, "Override Applied", payload={"decision": decision, "reason": reason})
+	frappe.db.commit()
+	return {"ok": True}
