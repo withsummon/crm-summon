@@ -7,6 +7,7 @@
     "engine": "InnoDB",
     "field_order": [
         "rm",
+        "customer",
         "location_name",
         "address",
         "latitude",
@@ -23,6 +24,13 @@
             "label": "RM",
             "options": "User",
             "reqd": 1
+        },
+        {
+            "fieldname": "customer",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Customer",
+            "options": "Customer"
         },
         {
             "fieldname": "location_name",

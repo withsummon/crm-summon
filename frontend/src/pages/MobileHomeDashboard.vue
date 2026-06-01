@@ -331,6 +331,13 @@ const quickActions = [
     color: 'text-rose-600',
     onClick: () => router.push({ name: 'AI Assistant Mobile' }),
   },
+  {
+    label: 'Geo-Fence',
+    icon: 'navigation',
+    bg: 'bg-emerald-50',
+    color: 'text-emerald-600',
+    onClick: () => router.push({ name: 'Geo-Fence Reminders' }),
+  },
 ]
 
 const error = ref('')
