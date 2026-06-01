@@ -5,10 +5,14 @@ from frappe.query_builder import Order
 def ensure_customer_column():
     if not frappe.db.table_exists("CRM Geo Fence Reminder"):
         return
-    columns = frappe.db.get_table_columns("CRM Geo Fence Reminder")
-    if "customer" not in columns:
+    try:
         frappe.db.sql_ddl("ALTER TABLE `tabCRM Geo Fence Reminder` ADD COLUMN `customer` VARCHAR(255) NULL")
         frappe.db.commit()
+    except Exception as e:
+        if "1060" in str(e) or "Duplicate column name" in str(e):
+            pass
+        else:
+            raise e
 
 
 @frappe.whitelist()
