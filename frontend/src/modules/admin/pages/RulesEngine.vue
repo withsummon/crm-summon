@@ -1281,14 +1281,16 @@ const versionRuleName = ref('')
 const toastMessage = ref('')
 
 // ─── Constants ───
-const categories = ['Credit Risk', 'Pricing', 'Eligibility', 'Routing', 'Rejection', 'Exception']
+const categories = ['Credit Risk', 'Pricing', 'Eligibility', 'Routing', 'Rejection', 'Exception', 'Assignment', 'SLA Timer', 'Notification', 'Template']
 const statuses = ['Active', 'Draft', 'Pending Approval', 'Archived']
-const modules = ['CRM', 'LOS', 'Collections']
+const modules = ['CRM', 'LOS', 'Collections', 'Workflow Engine', 'Notification Center', 'Partner & Vendor', 'Administration']
 
 const conditionFields = [
   'applicant_age', 'credit_score', 'monthly_income', 'loan_amount',
   'employment_type', 'collateral_type', 'dti_ratio', 'slik_score',
-  'dpd', 'product_type', 'region', 'existing_customer'
+  'dpd', 'product_type', 'region', 'existing_customer', 'event_type',
+  'moment_type', 'customer_preferred_channel', 'ptp_due_date',
+  'sla_remaining_hours', 'vendor_type', 'request_priority'
 ]
 
 const operators = [
@@ -1309,7 +1311,8 @@ const operators = [
 const actionTypes = [
   'Set Field', 'Send Notification', 'Route To', 'Assign To',
   'Auto Approve', 'Auto Reject', 'Score Adjustment', 'Add Tag',
-  'Update Status', 'Trigger Workflow'
+  'Update Status', 'Trigger Workflow', 'Start SLA Timer',
+  'Create Task', 'Apply Template', 'Create Service Request'
 ]
 
 // ─── Page Tabs ───
@@ -1363,6 +1366,70 @@ const rules = ref([
     conditions: [{ field: 'region', operator: 'is_set', value: '' }],
     thenActions: [{ type: 'Assign To', params: 'regional_rm' }],
     elseActions: [{ type: 'Route To', params: 'default_pool' }],
+  },
+  {
+    id: 16, name: 'Lead Convert Follow-up Automation', category: 'Assignment', module: 'Workflow Engine',
+    status: 'Active', version: 'v1.0', lastModified: '2026-06-01', hitRate: 82,
+    description: 'When a qualified lead is converted, create Deal follow-up tasks and reminders for the assigned RM.',
+    priority: 1,
+    conditions: [
+      { field: 'event_type', operator: '==', value: 'Lead.Converted' },
+      { field: 'existing_customer', operator: '==', value: 'false' },
+    ],
+    thenActions: [
+      { type: 'Assign To', params: 'lead.assigned_rm' },
+      { type: 'Create Task', params: 'Follow up Deal within 1 day' },
+      { type: 'Send Notification', params: 'Assignment template: Deal assigned to you' },
+    ],
+    elseActions: [],
+  },
+  {
+    id: 17, name: 'Retention Visit SLA Timer', category: 'SLA Timer', module: 'Collections',
+    status: 'Active', version: 'v1.0', lastModified: '2026-06-01', hitRate: 64,
+    description: 'If an early warning or DPD retention case is detected, assign a visit task due within 7 days.',
+    priority: 1,
+    conditions: [
+      { field: 'dpd', operator: '>=', value: '30' },
+      { field: 'existing_customer', operator: '==', value: 'true' },
+    ],
+    thenActions: [
+      { type: 'Assign To', params: 'relationship_manager' },
+      { type: 'Start SLA Timer', params: 'Visit due in 7 days' },
+      { type: 'Send Notification', params: 'Task Prepare retention visit due tomorrow' },
+    ],
+    elseActions: [],
+  },
+  {
+    id: 18, name: 'Birthday and Credit Anniversary Reminder', category: 'Template', module: 'Notification Center',
+    status: 'Active', version: 'v1.0', lastModified: '2026-06-01', hitRate: 71,
+    description: 'Apply greeting template and notify RM for customer birthdays and credit anniversaries.',
+    priority: 2,
+    conditions: [
+      { field: 'moment_type', operator: 'in', value: 'birthday,credit_anniversary' },
+      { field: 'customer_preferred_channel', operator: 'is_set', value: '' },
+    ],
+    thenActions: [
+      { type: 'Apply Template', params: 'Personal greeting WhatsApp template' },
+      { type: 'Create Service Request', params: 'Referral Partner gift request if priority customer' },
+      { type: 'Send Notification', params: 'RM mobile reminder' },
+    ],
+    elseActions: [{ type: 'Send Notification', params: 'RM in-app reminder' }],
+  },
+  {
+    id: 19, name: 'Vendor Gift Request SLA Assignment', category: 'Assignment', module: 'Partner & Vendor',
+    status: 'Active', version: 'v1.0', lastModified: '2026-06-01', hitRate: 58,
+    description: 'Assign gift or referral service requests to the right vendor owner with SLA tracking.',
+    priority: 2,
+    conditions: [
+      { field: 'vendor_type', operator: '==', value: 'Referral Partner' },
+      { field: 'request_priority', operator: 'in', value: 'High,Urgent' },
+    ],
+    thenActions: [
+      { type: 'Assign To', params: 'Ops Growth owner' },
+      { type: 'Start SLA Timer', params: '24h fulfillment SLA' },
+      { type: 'Send Notification', params: 'Vendor portal assignment' },
+    ],
+    elseActions: [{ type: 'Start SLA Timer', params: '2 day standard SLA' }],
   },
   {
     id: 5, name: 'Large Exposure Committee Routing', category: 'Routing', module: 'LOS',
@@ -1476,28 +1543,27 @@ const rules = ref([
 
 // ─── Builder Form ───
 const builderForm = reactive({
-  name: 'SME Credit Eligibility — Basic',
-  category: 'Eligibility',
-  description: 'Basic eligibility screening for SME credit applications based on age, credit score, income, and loan amount thresholds.',
+  name: 'Retention Visit SLA Timer',
+  category: 'SLA Timer',
+  description: 'If an existing customer enters early warning or DPD retention handling, assign the RM a visit task with a 7-day SLA and notification reminders.',
   priority: 1,
-  module: 'LOS',
-  effectiveFrom: '2026-01-01',
+  module: 'Collections',
+  effectiveFrom: '2026-06-01',
   effectiveTo: '2026-12-31',
   conditionLogic: 'AND',
   conditions: [
-    { field: 'applicant_age', operator: '>=', value: '21' },
-    { field: 'credit_score', operator: '>=', value: '650' },
-    { field: 'monthly_income', operator: '>=', value: '15000000' },
-    { field: 'loan_amount', operator: '<=', value: '500000000' },
+    { field: 'dpd', operator: '>=', value: '30' },
+    { field: 'existing_customer', operator: '==', value: 'true' },
+    { field: 'sla_remaining_hours', operator: '<=', value: '24' },
   ],
   thenActions: [
-    { type: 'Auto Approve', params: 'standard' },
-    { type: 'Set Field', params: 'interest_rate = 12.5' },
-    { type: 'Add Tag', params: 'eligible-sme' },
+    { type: 'Assign To', params: 'relationship_manager' },
+    { type: 'Create Task', params: 'Customer retention visit' },
+    { type: 'Start SLA Timer', params: '7 days' },
+    { type: 'Send Notification', params: 'Task reminder due tomorrow' },
   ],
   elseActions: [
-    { type: 'Route To', params: 'manual_review' },
-    { type: 'Send Notification', params: 'Risk Team' },
+    { type: 'Send Notification', params: 'Watchlist digest only' },
   ],
 })
 
@@ -1740,6 +1806,10 @@ function categoryTheme(category) {
     'Routing': 'violet',
     'Rejection': 'red',
     'Exception': 'orange',
+    'Assignment': 'blue',
+    'SLA Timer': 'orange',
+    'Notification': 'blue',
+    'Template': 'green',
   }
   return themes[category] || 'gray'
 }

@@ -1,27 +1,21 @@
 <template>
   <div class="ed" :data-theme="theme" @click="handleGlobalClick">
-    <LayoutHeader>
-      <template #left-header>
-        <ViewBreadcrumbs routeName="Executive Dashboard" />
-      </template>
-      <template #right-header>
+    <Teleport v-if="headerTargetReady" to="#app-header">
+      <header class="ed-app-navbar" @click="handleGlobalClick">
         <div class="ed-header-right">
-          <!-- Search box (opens command palette) -->
           <div class="ed-search-box" @click.stop="openCmd">
             <FeatherIcon name="search" class="h-4 w-4 shrink-0 opacity-50" />
             <span class="ed-search-text">Cari...</span>
             <kbd class="ed-kbd">⌘K</kbd>
           </div>
-          <!-- Action buttons -->
           <button class="ed-action-btn" @click.stop="openWidgetModal">
             <FeatherIcon name="sliders" class="h-3.5 w-3.5" />
             Customize Widget
           </button>
-          <button class="ed-export-btn" @click="exportModalOpen = true; exportStatus = null">
+          <button class="ed-export-btn" @click.stop="exportModalOpen = true; exportStatus = null">
             <FeatherIcon name="download" class="h-3.5 w-3.5" />
             Export
           </button>
-          <!-- Notification -->
           <div class="ed-notif-wrap" ref="notifWrapRef">
             <span class="ed-icon-btn-wrap">
               <button class="ed-icon-btn" @click.stop="notifOpen = !notifOpen">
@@ -29,7 +23,7 @@
               </button>
               <span class="ed-notif-badge">22</span>
             </span>
-            <div v-if="notifOpen" class="ed-notif-drop">
+            <div v-if="notifOpen" class="ed-notif-drop" @click.stop>
               <div class="ed-notif-hdr">
                 Notifikasi
                 <span class="ed-notif-count">22 belum dibaca</span>
@@ -41,12 +35,47 @@
             </div>
           </div>
         </div>
-      </template>
-    </LayoutHeader>
+      </header>
+    </Teleport>
+
+    <header v-else class="ed-app-navbar ed-app-navbar-inline" @click="handleGlobalClick">
+      <div class="ed-header-right">
+        <div class="ed-search-box" @click.stop="openCmd">
+          <FeatherIcon name="search" class="h-4 w-4 shrink-0 opacity-50" />
+          <span class="ed-search-text">Cari...</span>
+          <kbd class="ed-kbd">⌘K</kbd>
+        </div>
+        <button class="ed-action-btn" @click.stop="openWidgetModal">
+          <FeatherIcon name="sliders" class="h-3.5 w-3.5" />
+          Customize Widget
+        </button>
+        <button class="ed-export-btn" @click.stop="exportModalOpen = true; exportStatus = null">
+          <FeatherIcon name="download" class="h-3.5 w-3.5" />
+          Export
+        </button>
+        <div class="ed-notif-wrap" ref="notifWrapRef">
+          <span class="ed-icon-btn-wrap">
+            <button class="ed-icon-btn" @click.stop="notifOpen = !notifOpen">
+              <FeatherIcon name="bell" class="h-4 w-4" />
+            </button>
+            <span class="ed-notif-badge">22</span>
+          </span>
+          <div v-if="notifOpen" class="ed-notif-drop" @click.stop>
+            <div class="ed-notif-hdr">
+              Notifikasi
+              <span class="ed-notif-count">22 belum dibaca</span>
+            </div>
+            <div v-for="(n, i) in NOTIFS" :key="i" class="ed-notif-item">
+              <span class="ed-notif-dot"></span>
+              <span>{{ n }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
     <!-- ═══ Page Content ═══ -->
     <div class="ed-content">
-
       <!-- ══════════════════ KPI GRID ══════════════════ -->
       <div v-show="widgets.kpi" class="ed-kpi-grid ed-mb">
         <div v-for="k in KPI_DATA" :key="k.label" class="ed-kpi-card">
@@ -427,8 +456,6 @@
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { usePageMeta, Dialog, FeatherIcon, call } from 'frappe-ui'
 import { Chart, registerables } from 'chart.js'
-import LayoutHeader from '@/components/LayoutHeader.vue'
-import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 
 Chart.register(...registerables)
 
@@ -451,7 +478,7 @@ const NOTIFS = [
 ]
 
 const KPI_DATA = [
-  { label: 'Pengajuan Kredit Hari Ini', value: '47 pengajuan', trend: '↑ 12% vs bulan lalu', trendClass: 'up', icon: 'file-text' },
+  { label: 'Pengajuan Kredit Hari Ini', value: '22 pengajuan', trend: 'New leads from WA, web, referral, walk in', trendClass: 'up', icon: 'file-text' },
   { label: 'Portfolio Aktif', value: 'Rp 1,84 T', trend: '↑ 3.2% vs bulan lalu', trendClass: 'up', icon: 'briefcase' },
   { label: 'NPL Ratio', value: '2,14%', trend: '↓ 0.3% vs bulan lalu (baik)', trendClass: 'down-good', icon: 'trending-down' },
   { label: 'Disbursement MTD', value: 'Rp 186 M', trend: '↑ 8.7% vs bulan lalu', trendClass: 'up', icon: 'dollar-sign' },
@@ -574,6 +601,7 @@ const AI_REPLIES = [
 // ══════════════════════════════════════════════════════
 // Dark mode is temporarily disabled/hidden — force light theme
 const theme = ref('light')
+const headerTargetReady = ref(false)
 const notifOpen = ref(false)
 const notifWrapRef = ref(null)
 
@@ -900,6 +928,7 @@ function handleKeydown(e) {
 // LIFECYCLE
 // ══════════════════════════════════════════════════════
 onMounted(() => {
+  headerTargetReady.value = Boolean(document.querySelector('#app-header'))
   document.addEventListener('keydown', handleKeydown)
   nextTick(initCharts)
 })
@@ -979,6 +1008,18 @@ onUnmounted(() => {
 @media (max-width: 1100px) { .ed-two-col { grid-template-columns: 1fr; } }
 
 /* ═══ TOPBAR / HEADER RIGHT ═════════════════════════════ */
+.ed-app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-height: 72px;
+  padding: 0 22px;
+  background: #ffffff;
+}
+.ed-app-navbar-inline {
+  border-bottom: 1px solid var(--ed-border);
+}
 .ed-header-right {
   display: flex;
   align-items: center;

@@ -347,6 +347,11 @@ const routes = [
         component: () => import('@/pages/APIIntegrationCenter.vue'),
       },
       {
+        path: 'administration',
+        name: 'Administration',
+        component: () => import('@/pages/AdminPlatform.vue'),
+      },
+      {
         path: 'rules-engine',
         name: 'Rules Engine',
         component: () => import('@/modules/admin/pages/RulesEngine.vue'),

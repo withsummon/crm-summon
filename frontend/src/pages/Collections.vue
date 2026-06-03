@@ -68,6 +68,32 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div
+          v-for="action in retentionActions"
+          :key="action.title"
+          class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-ink-gray-8">{{ __(action.title) }}</div>
+              <div class="mt-1 text-xs text-ink-gray-5">{{ __(action.detail) }}</div>
+            </div>
+            <Badge :label="action.badge" variant="subtle" :theme="action.theme" />
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <Button
+              v-for="button in action.buttons"
+              :key="button.label"
+              :label="__(button.label)"
+              size="sm"
+              :variant="button.variant || 'subtle'"
+              @click="button.handler"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Aging Bucket Chart -->
         <div class="lg:col-span-2 rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-4 flex items-center justify-between">
@@ -960,7 +986,7 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { Badge, Button, FeatherIcon, call, toast, usePageMeta } from 'frappe-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 // ── Page tabs ────────────────────────────────────────────────
 const pageTabs = computed(() => [
@@ -1046,6 +1072,39 @@ const aiPriorityList = [
   { id: 'p5', customer: 'Berkah Abadi', dpd: 91, outstanding: 'IDR 1.9B', score: 18 },
 ]
 
+const retentionActions = computed(() => [
+  {
+    title: 'PT Nusantara Jaya at risk',
+    detail: 'DPD 47, IDR 8.2B, 78% recovery. Recommended first action: confirm commitment and record PTP today.',
+    badge: 'PTP first',
+    theme: 'orange',
+    buttons: [
+      { label: 'Record PTP', variant: 'solid', handler: () => openPtpForm(accounts.value.find((a) => a.id === 'a1')) },
+      { label: 'WhatsApp Follow-up', handler: () => quickAction('wa', accounts.value.find((a) => a.id === 'a1')) },
+    ],
+  },
+  {
+    title: 'Sari Logistics needs retention visit',
+    detail: 'Covenant pressure and DPD 62. Workflow should assign Andi a field visit within 7 days.',
+    badge: '7d SLA',
+    theme: 'red',
+    buttons: [
+      { label: 'Schedule Visit', variant: 'solid', handler: () => openVisitForm(accounts.value.find((a) => a.id === 'a2')) },
+      { label: 'Add Note', handler: () => openNoteForm(accounts.value.find((a) => a.id === 'a2')) },
+    ],
+  },
+  {
+    title: 'CV Arjuna Perkasa commitment',
+    detail: 'DPD 33, 65% recovery. Use payment logging once promised transfer is received.',
+    badge: 'Early stage',
+    theme: 'green',
+    buttons: [
+      { label: 'Log Payment', variant: 'solid', handler: () => openPaymentForm(accounts.value.find((a) => a.id === 'a3')) },
+      { label: 'Record PTP', handler: () => openPtpForm(accounts.value.find((a) => a.id === 'a3')) },
+    ],
+  },
+])
+
 const topDefaulters = [
   { id: 'd1', customer: 'PT Global Makmur', outstanding: 'IDR 12.4B', dpd: 95, status: 'Legal' },
   { id: 'd2', customer: 'Sari Logistics', outstanding: 'IDR 5.1B', dpd: 62, status: 'PTP' },
@@ -1093,9 +1152,9 @@ const dunningStages = [
 ]
 
 const activeWorkflows = ref([
-  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'WA Message', nextAction: 'Auto-WA at 14:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: 'message-circle' },
-  { id: 'wf2', customer: 'Sari Logistics', stage: 'Phone Call', nextAction: 'Officer call tomorrow 09:00', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: 'phone' },
-  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'SMS Reminder', nextAction: 'SMS #2 at 10:00', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: 'smartphone' },
+  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'Notification', nextAction: 'PTP reminder today 15:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: 'bell' },
+  { id: 'wf2', customer: 'Sari Logistics', stage: 'Assignment + SLA Timer', nextAction: 'Assign Andi visit task due in 7 days', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: 'clock' },
+  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'Decision', nextAction: 'If PTP broken, escalate to call queue', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: 'git-branch' },
 ])
 
 const restructuringList = ref([
@@ -1316,6 +1375,18 @@ function openNoteForm(acct) {
   noteForm.value = { outcome: 'Contacted — Promised', body: '', followUp: '' }
   if (acct) selectedAccount.value = acct
   showNoteModal.value = true
+}
+
+function openVisitForm(acct) {
+  selectedAccount.value = acct || null
+  visitForm.value = {
+    date: '',
+    time: '',
+    officer: acct?.officer || officers[0],
+    address: acct ? `${acct.customer} primary business address` : '',
+    purpose: 'Restructuring Discussion',
+  }
+  showVisitModal.value = true
 }
 
 async function savePtp() {
