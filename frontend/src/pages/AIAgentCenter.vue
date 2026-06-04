@@ -3,7 +3,7 @@
     <aside class="w-72 shrink-0 border-r border-slate-200 bg-white">
       <div class="border-b border-slate-200 p-4">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-600 text-white">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white">
             <AIDeskIcon class="h-5 w-5" />
           </div>
           <div>
@@ -18,11 +18,11 @@
           v-for="agent in agents"
           :key="agent.key"
           class="mb-2 w-full rounded-lg border p-3 text-left transition-all"
-          :class="selectedAgent?.key === agent.key ? 'border-teal-200 bg-teal-50 shadow-sm' : 'border-slate-200 bg-white hover:border-teal-100 hover:bg-slate-50'"
+          :class="selectedAgent?.key === agent.key ? 'border-primary-200 bg-primary-50 shadow-sm' : 'border-slate-200 bg-white hover:border-primary-100 hover:bg-slate-50'"
           @click="selectAgent(agent)"
         >
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-teal-700">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-primary-700">
               <FeatherIcon :name="agent.icon || 'cpu'" class="h-4 w-4" />
             </div>
             <div class="min-w-0 flex-1">
@@ -51,7 +51,7 @@
         </template>
         <template #right-header>
           <div class="flex items-center gap-2">
-            <Badge :label="`${messages.length} messages`" theme="teal" variant="subtle" />
+            <Badge :label="`${messages.length} messages`" theme="primary" variant="subtle" />
             <Badge :label="__('Guardrails Active')" theme="emerald" variant="solid">
               <template #prefix><FeatherIcon name="shield" class="h-3.5 w-3.5 mr-1" /></template>
             </Badge>
@@ -72,8 +72,8 @@
         <section class="flex min-w-0 flex-1 flex-col">
           <div ref="chatContainer" class="min-h-0 flex-1 overflow-y-auto p-6">
             <div v-if="!messages.length" class="mx-auto max-w-3xl py-10">
-              <div class="mb-5 flex items-center gap-4 rounded-lg border border-teal-100 bg-white p-5 shadow-sm">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-600 text-white">
+              <div class="mb-5 flex items-center gap-4 rounded-lg border border-primary-100 bg-white p-5 shadow-sm">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-600 text-white">
                   <FeatherIcon name="cpu" class="h-5 w-5" />
                 </div>
                 <div>
@@ -85,7 +85,7 @@
                 <button
                   v-for="suggestion in quickSuggestions"
                   :key="suggestion"
-                  class="rounded-lg border border-slate-200 bg-white p-4 text-left text-sm font-medium text-slate-700 shadow-sm hover:border-teal-200 hover:bg-teal-50"
+                  class="rounded-lg border border-slate-200 bg-white p-4 text-left text-sm font-medium text-slate-700 shadow-sm hover:border-primary-200 hover:bg-primary-50"
                   @click="sendMessage(suggestion)"
                 >
                   {{ suggestion }}
@@ -100,15 +100,15 @@
                 class="flex gap-3"
                 :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
               >
-                <div v-if="message.role === 'assistant'" class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white">
+                <div v-if="message.role === 'assistant'" class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white">
                   <AIDeskIcon class="h-4 w-4" />
                 </div>
                 <div
                   class="max-w-[82%] rounded-lg border px-4 py-3 shadow-sm"
-                  :class="message.role === 'user' ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-200 bg-white text-slate-800'"
+                  :class="message.role === 'user' ? 'border-primary-700 bg-primary-700 text-white' : 'border-slate-200 bg-white text-slate-800'"
                 >
                   <div v-if="message.loading" class="flex items-center gap-2 text-sm text-slate-500">
-                    <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-teal-600" />
+                    <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-primary-600" />
                     {{ message.statusMessage || __('Memproses analisis terstruktur dengan Kimi K2.6 dan RAG...') }}
                   </div>
                   <div v-else-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-6">
@@ -117,7 +117,7 @@
                   <StructuredResponseCard v-else :response="message.structuredResponse" :fallback="message.content" />
 
                   <div v-if="message.sources?.length" class="mt-3 border-t border-slate-200 pt-3">
-                    <button class="text-xs font-semibold text-teal-700" @click="selectedSources = message.sources">
+                    <button class="text-xs font-semibold text-primary-700" @click="selectedSources = message.sources">
                       {{ message.sources.length }} {{ __('sources') }}
                     </button>
                   </div>
@@ -134,7 +134,7 @@
                           v-if="getRouteForAction(action)"
                           size="sm"
                           variant="solid"
-                          theme="teal"
+                          theme="primary"
                           :label="getActionDocLabel(action)"
                           @click="openActionRecord(action)"
                         >
@@ -147,7 +147,7 @@
                   </div>
 
                   <div v-if="message.role === 'assistant' && !message.loading" class="mt-3 flex items-center gap-2 border-t border-slate-200 pt-2">
-                    <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-teal-700" @click="submitFeedback(message, 'up')">
+                    <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-primary-700" @click="submitFeedback(message, 'up')">
                       <FeatherIcon name="thumbs-up" class="h-4 w-4" />
                     </button>
                     <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600" @click="submitFeedback(message, 'down')">
@@ -171,29 +171,29 @@
             </div>
 
             <!-- Customer & Product Selection for Proposal Generator / Relationship Manager -->
-            <div v-if="selectedAgent?.key === 'proposal_generator' || selectedAgent?.key === 'relationship_manager'" class="mx-auto max-w-4xl mb-3 flex flex-wrap sm:flex-nowrap gap-3 p-3 bg-teal-50/50 rounded-xl border border-teal-100/50">
+            <div v-if="selectedAgent?.key === 'proposal_generator' || selectedAgent?.key === 'relationship_manager'" class="mx-auto max-w-4xl mb-3 flex flex-wrap sm:flex-nowrap gap-3 p-3 bg-primary-50/50 rounded-xl border border-primary-100/50">
               <div class="flex-1 min-w-[200px]">
-                <label class="block text-[10px] font-bold text-teal-800 uppercase tracking-wide mb-1 flex items-center gap-1">
+                <label class="block text-[10px] font-bold text-primary-800 uppercase tracking-wide mb-1 flex items-center gap-1">
                   <FeatherIcon name="users" class="h-3 w-3" />
                   {{ __('Pilih Nasabah (Customer)') }}
                 </label>
-                <select v-model="selectedCustomer" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-100">
+                <select v-model="selectedCustomer" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-100">
                   <option value="">-- {{ __('Pilih Nasabah') }} --</option>
                   <option v-for="cust in customersList" :key="cust.name" :value="cust.name">{{ cust.customer_name }}</option>
                 </select>
               </div>
               <div class="flex-1 min-w-[200px]">
-                <label class="block text-[10px] font-bold text-teal-800 uppercase tracking-wide mb-1 flex items-center gap-1">
+                <label class="block text-[10px] font-bold text-primary-800 uppercase tracking-wide mb-1 flex items-center gap-1">
                   <FeatherIcon name="briefcase" class="h-3 w-3" />
                   {{ __('Pilih Produk (Product)') }}
                 </label>
-                <select v-model="selectedProduct" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-100">
+                <select v-model="selectedProduct" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-100">
                   <option value="">-- {{ __('Pilih Produk') }} --</option>
                   <option v-for="prod in productsList" :key="prod.name" :value="prod.name">{{ prod.product_name }}</option>
                 </select>
               </div>
               <div class="flex items-end shrink-0">
-                <Button variant="solid" theme="teal" size="sm" :disabled="!selectedCustomer || !selectedProduct || isLoading" @click="generateProposalDraft">
+                <Button variant="solid" theme="primary" size="sm" :disabled="!selectedCustomer || !selectedProduct || isLoading" @click="generateProposalDraft">
                   <template #prefix><FeatherIcon name="sparkles" class="h-3.5 w-3.5 mr-0.5" /></template>
                   {{ selectedAgent?.key === 'proposal_generator' ? __('Draft Proposal & Hadiah') : __('Next Best Action & Draf') }}
                 </Button>
@@ -201,20 +201,20 @@
             </div>
 
             <form class="mx-auto flex max-w-4xl items-end gap-3" @submit.prevent="sendMessage()">
-              <label class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-700">
+              <label class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-primary-200 hover:text-primary-700">
                 <FeatherIcon name="paperclip" class="h-4 w-4" />
                 <input class="hidden" type="file" multiple @change="onFilesSelected" />
               </label>
               <button
                 type="button"
-                class="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:text-teal-700"
+                class="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:border-primary-200 hover:text-primary-700"
                 @click="startVoice"
               >
                 <FeatherIcon name="mic" class="h-4 w-4" />
               </button>
               <textarea
                 v-model="inputMessage"
-                class="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+                class="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                 :placeholder="__('Ask the selected agent...')"
                 rows="1"
                 @keydown.enter.exact.prevent="sendMessage()"
@@ -232,7 +232,7 @@
               v-for="tab in sideTabs"
               :key="tab"
               class="border-b-2 px-3 pb-2 text-xs font-semibold"
-              :class="activeSideTab === tab ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500'"
+              :class="activeSideTab === tab ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500'"
               @click="activeSideTab = tab"
             >
               {{ tab }}
@@ -243,7 +243,7 @@
               <PanelBlock title="Production Scope">
                 <ul class="space-y-2 text-xs text-slate-600">
                   <li v-for="item in selectedAgent?.uat || []" :key="item" class="flex gap-2">
-                    <FeatherIcon name="check-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-600" />
+                    <FeatherIcon name="check-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-600" />
                     <span>{{ item }}</span>
                   </li>
                 </ul>
@@ -292,14 +292,14 @@
               </div>
 
               <!-- Add Rule Form -->
-              <div v-if="showAddRuleForm" class="rounded-lg border border-teal-100 bg-teal-50/30 p-3 space-y-3">
+              <div v-if="showAddRuleForm" class="rounded-lg border border-primary-100 bg-primary-50/30 p-3 space-y-3">
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ __('Rule Title') }}</label>
                   <input
                     v-model="newRule.title"
                     type="text"
                     placeholder="e.g. Auto-prioritize overdue accounts"
-                    class="w-full rounded-md border border-slate-200 bg-white p-2 text-xs outline-none focus:border-teal-500"
+                    class="w-full rounded-md border border-slate-200 bg-white p-2 text-xs outline-none focus:border-primary-500"
                   />
                 </div>
                 <div>
@@ -311,14 +311,14 @@
                     type="range"
                     min="50"
                     max="99"
-                    class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+                    class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
                   />
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{{ __('Action Event') }}</label>
                   <select
                     v-model="newRule.action_type"
-                    class="w-full rounded-md border border-slate-200 bg-white p-2 text-xs outline-none focus:border-teal-500"
+                    class="w-full rounded-md border border-slate-200 bg-white p-2 text-xs outline-none focus:border-primary-500"
                   >
                     <option value="create_task">Create CRM Task</option>
                     <option value="create_note">Create CRM Note</option>
@@ -334,7 +334,7 @@
                   <input
                     v-model="newRule.requires_approval"
                     type="checkbox"
-                    class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                   />
                 </div>
                 <Button
@@ -362,7 +362,7 @@
                         <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-600">
                           Threshold: {{ Math.round(rule.threshold * 100) }}%
                         </span>
-                        <span class="rounded bg-teal-50 px-1.5 py-0.5 text-[9px] font-semibold text-teal-700">
+                        <span class="rounded bg-primary-50 px-1.5 py-0.5 text-[9px] font-semibold text-primary-700">
                           {{ rule.action_type.replaceAll('_', ' ') }}
                         </span>
                         <span
@@ -380,7 +380,7 @@
                         @change="toggleRule(rule)"
                         class="sr-only peer"
                       />
-                      <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-600"></div>
+                      <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-600"></div>
                     </label>
                   </div>
                   <div class="mt-2.5 flex justify-end gap-1.5 border-t border-slate-100 pt-2 text-[10px]">
@@ -409,7 +409,7 @@
                 </div>
               </PanelBlock>
               <PanelBlock title="Sandbox">
-                <textarea v-model="sandboxPrompt" rows="5" class="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-teal-500" />
+                <textarea v-model="sandboxPrompt" rows="5" class="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-primary-500" />
                 <Button class="mt-2 w-full" size="sm" variant="solid" :label="__('Run Sandbox')" :loading="isSandboxing" @click="runSandbox" />
                 <StructuredResponseCard v-if="sandboxResult" class="mt-3" :response="sandboxResult" :fallback="sandboxFallback" compact />
               </PanelBlock>
@@ -425,7 +425,7 @@
                   </div>
                   <div class="flex justify-between gap-3">
                     <span>{{ __('RAGAnything') }}</span>
-                    <span class="font-semibold" :class="ragStatus.native_raganything_ready ? 'text-teal-700' : 'text-orange-700'">
+                    <span class="font-semibold" :class="ragStatus.native_raganything_ready ? 'text-primary-700' : 'text-orange-700'">
                       {{ ragStatus.native_raganything_ready ? __('Ready') : __('Parser missing') }}
                     </span>
                   </div>

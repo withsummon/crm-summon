@@ -961,8 +961,8 @@ onUnmounted(() => {
 
   /* Primary (#FF6600) */
   --ed-primary: #FF6600;
-  --ed-primary-dark: #CC5200;
-  --ed-primary-light: #FFF0E0;
+  --ed-secondary-dark: #CC5200;
+  --ed-secondary-light: #FFF0E0;
 
   /* Status */
   --ed-green: #12b76a;
@@ -1224,7 +1224,7 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--ed-primary-light);
+  background: var(--ed-secondary-light);
   color: var(--ed-primary);
   display: flex;
   align-items: center;
@@ -1368,7 +1368,7 @@ onUnmounted(() => {
 .ed-badge-red { background: var(--ed-red-soft); color: var(--ed-red); }
 .ed-badge-yellow { background: var(--ed-orange-soft); color: var(--ed-orange); }
 .ed-badge-green { background: var(--ed-green-soft); color: var(--ed-green); }
-.ed-badge-blue { background: var(--ed-primary-light); color: var(--ed-primary); }
+.ed-badge-blue { background: var(--ed-secondary-light); color: var(--ed-primary); }
 
 /* ═══ SCORE DOTS ═════════════════════════════════════════ */
 .ed-score-row { display: flex; align-items: center; gap: 6px; }
@@ -1621,7 +1621,7 @@ onUnmounted(() => {
   gap: 7px;
 }
 .ed-ai-msg { padding: 8px 10px; border-radius: 10px; font-size: 12px; max-width: 88%; line-height: 1.5; }
-.ed-ai-bot { background: var(--ed-primary-light); color: var(--ed-text); align-self: flex-start; }
+.ed-ai-bot { background: var(--ed-secondary-light); color: var(--ed-text); align-self: flex-start; }
 .ed-ai-user { background: var(--ed-primary); color: #fff; align-self: flex-end; }
 .ed-ai-inp {
   display: flex;
@@ -1654,7 +1654,7 @@ onUnmounted(() => {
   font-family: inherit;
   transition: background .15s;
 }
-.ed-ai-inp button:hover { background: var(--ed-primary-dark); }
+.ed-ai-inp button:hover { background: var(--ed-secondary-dark); }
 
 /* ═══ COMMAND PALETTE ════════════════════════════════════ */
 .ed-cmd-overlay {
@@ -1703,7 +1703,7 @@ onUnmounted(() => {
   font-size: 13px;
   transition: background .1s;
 }
-.ed-cmd-item:hover { background: var(--ed-primary-light); color: var(--ed-primary); }
+.ed-cmd-item:hover { background: var(--ed-secondary-light); color: var(--ed-primary); }
 .ed-cmd-type {
   margin-left: auto;
   font-size: 9px;

@@ -10,16 +10,16 @@
       <div class="flex flex-col items-center gap-8 py-10">
         <!-- Animated Icon Container with Ripples -->
         <div class="relative h-32 w-32 flex items-center justify-center">
-          <div class="absolute inset-0 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite] rounded-full bg-primary-400 opacity-20"></div>
-          <div class="absolute inset-2 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite_0.5s] rounded-full bg-primary-500 opacity-30"></div>
+          <div class="absolute inset-0 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite] rounded-full bg-secondary-400 opacity-20"></div>
+          <div class="absolute inset-2 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite_0.5s] rounded-full bg-secondary-500 opacity-30"></div>
           
-          <div class="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary-50 to-primary-100 shadow-xl shadow-primary-500/20 border border-primary-200 z-10 overflow-hidden">
+          <div class="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-secondary-50 to-secondary-100 shadow-xl shadow-secondary-500/20 border border-secondary-200 z-10 overflow-hidden">
             <!-- Shimmer effect across the circle -->
             <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white to-transparent opacity-50 animate-[shimmer_2s_infinite]"></div>
             
             <FeatherIcon 
               name="cpu" 
-              class="h-10 w-10 text-primary-600 animate-pulse relative z-20" 
+              class="h-10 w-10 text-secondary-600 animate-pulse relative z-20" 
             />
           </div>
         </div>
@@ -38,23 +38,23 @@
           <div class="relative pt-2">
             <div class="flex mb-3 items-center justify-between">
               <div class="flex items-center gap-2">
-                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100">
-                  <FeatherIcon name="zap" class="h-3 w-3 text-primary-600 animate-pulse" />
+                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-secondary-100">
+                  <FeatherIcon name="zap" class="h-3 w-3 text-secondary-600 animate-pulse" />
                 </div>
                 <span class="text-sm font-bold text-gray-800">
                   {{ Math.round(progress) }}%
                 </span>
               </div>
               <div class="text-right">
-                <span class="text-sm font-bold text-primary-600 bg-primary-50 px-3 py-1 rounded-full border border-primary-100">
-                  {{ processedCount }} <span class="text-primary-400 font-medium mx-0.5">/</span> {{ totalCount || '...' }} Leads
+                <span class="text-sm font-bold text-secondary-600 bg-secondary-50 px-3 py-1 rounded-full border border-secondary-100">
+                  {{ processedCount }} <span class="text-secondary-400 font-medium mx-0.5">/</span> {{ totalCount || '...' }} Leads
                 </span>
               </div>
             </div>
             <div class="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-gray-100 shadow-inner">
               <div
                 :style="`width: ${progress}%`"
-                class="flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-700 ease-out relative"
+                class="flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-secondary-500 to-secondary-600 transition-all duration-700 ease-out relative"
               >
                 <!-- Animated highlight inside progress bar -->
                 <div class="absolute top-0 left-0 bottom-0 w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_1.5s_infinite]"></div>
@@ -64,7 +64,7 @@
 
           <!-- Terminal-style Status Ticker -->
           <div class="flex items-center gap-3 py-3 px-5 rounded-xl bg-gray-900 border border-gray-800 shadow-lg relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-400 to-primary-600"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary-400 to-secondary-600"></div>
             <div class="h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)] animate-pulse"></div>
             <p class="text-xs font-mono text-green-400/90 truncate tracking-wide">
               {{ tickerMessage }}

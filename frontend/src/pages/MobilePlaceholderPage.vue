@@ -3,7 +3,7 @@
     <div
       class="flex size-16 items-center justify-center rounded-2xl bg-crm-surface mb-5"
     >
-      <FeatherIcon :name="icon" class="size-8 text-crm-teal" />
+      <FeatherIcon :name="icon" class="size-8 text-primary-600" />
     </div>
     <h1 class="text-xl font-semibold text-ink-gray-9 mb-2">
       {{ __(title) }}

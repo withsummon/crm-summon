@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-3 text-sm leading-6" :class="{ 'text-xs': compact }">
-    <section class="rounded-lg border border-teal-100 bg-teal-50/60 p-3">
+    <section class="rounded-lg border border-primary-100 bg-primary-50/60 p-3">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div class="text-sm font-bold text-slate-900">{{ resolved.title || __('Analisis AI') }}</div>
           <p class="mt-1 whitespace-pre-wrap text-slate-700">{{ resolved.executive_summary || '-' }}</p>
         </div>
-        <span class="inline-flex items-center rounded-md border border-teal-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-teal-700">
+        <span class="inline-flex items-center rounded-md border border-primary-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-primary-700">
           {{ confidence }}%
         </span>
       </div>
@@ -23,7 +23,7 @@
       </div>
       <ul v-if="section.items?.length" class="mt-3 space-y-1.5">
         <li v-for="item in section.items" :key="item" class="flex gap-2 text-slate-700">
-          <FeatherIcon name="check-circle" class="mt-1 h-3.5 w-3.5 shrink-0 text-teal-600" />
+          <FeatherIcon name="check-circle" class="mt-1 h-3.5 w-3.5 shrink-0 text-primary-600" />
           <span>{{ item }}</span>
         </li>
       </ul>
@@ -186,7 +186,7 @@ function priorityTheme(value) {
   if (['high', 'tinggi', 'urgent', 'kritis'].includes(normalized)) return 'bg-red-50 text-red-700 border-red-100'
   if (['medium', 'sedang'].includes(normalized)) return 'bg-amber-50 text-amber-700 border-amber-100'
   if (['low', 'rendah'].includes(normalized)) return 'bg-slate-50 text-slate-600 border-slate-100'
-  return 'bg-teal-50 text-teal-700 border-teal-100'
+  return 'bg-primary-50 text-primary-700 border-primary-100'
 }
 
 function actionLabel(action) {

@@ -1004,7 +1004,7 @@ const dashKpis = [
     value: '72%',
     delta: '48 active users',
     icon: 'external-link',
-    iconColor: 'text-teal-500',
+    iconColor: 'text-primary-500',
   },
 ]
 

@@ -29,7 +29,7 @@
           @click="activeTab = tab.key"
         >
           {{ __(tab.label) }}
-          <Badge v-if="tab.badge" :label="String(tab.badge)" variant="subtle" theme="teal" size="sm" class="ml-1" />
+          <Badge v-if="tab.badge" :label="String(tab.badge)" variant="subtle" theme="primary" size="sm" class="ml-1" />
         </button>
       </div>
     </div>
@@ -44,7 +44,7 @@
           @click="inboxTab = tab.key"
         >
           {{ __(tab.label) }}
-          <Badge v-if="tabBadge(tab) != null" :label="String(tabBadge(tab))" variant="subtle" theme="teal" size="sm" class="ml-1" />
+          <Badge v-if="tabBadge(tab) != null" :label="String(tabBadge(tab))" variant="subtle" theme="primary" size="sm" class="ml-1" />
         </button>
         <div class="flex-1"></div>
         <div class="relative">
@@ -81,7 +81,7 @@
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="font-medium text-ink-gray-9">{{ n.from_user.full_name }}</span>
-                  <Badge :label="labelize(n.type)" theme="teal" variant="subtle" size="sm" />
+                  <Badge :label="labelize(n.type)" theme="primary" variant="subtle" size="sm" />
                   <Badge v-if="n.snoozed_until" :label="`Snoozed · ${formatDate(n.snoozed_until)}`" theme="orange" variant="subtle" size="sm" />
                   <Badge v-if="n.delivery_status" :label="n.delivery_status" :theme="deliveryTheme(n.delivery_status)" variant="subtle" size="sm" />
                   <span v-if="!n.read" class="text-xs text-[#FF6600]">{{ __('Unread') }}</span>
@@ -139,7 +139,7 @@
                 <tr v-for="r in rules" :key="r.id" class="border-b border-outline-gray-1 last:border-b-0">
                   <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ r.name }}</td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ r.event }}</td>
-                  <td class="px-3 py-1.5"><Badge v-for="c in r.channels" :key="c" :label="c" theme="teal" variant="subtle" size="sm" class="mr-1" /></td>
+                  <td class="px-3 py-1.5"><Badge v-for="c in r.channels" :key="c" :label="c" theme="primary" variant="subtle" size="sm" class="mr-1" /></td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ r.template || '—' }}</td>
                   <td class="px-3 py-1.5"><input type="checkbox" v-model="r.enabled" class="rounded" /></td>
                   <td class="px-3 py-1.5 text-right">
@@ -178,7 +178,7 @@
               <tbody>
                 <tr v-for="t in templates" :key="t.id" class="border-b border-outline-gray-1 last:border-b-0">
                   <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ t.name }}</td>
-                  <td class="px-3 py-1.5"><Badge :label="t.channel" theme="teal" variant="subtle" size="sm" /></td>
+                  <td class="px-3 py-1.5"><Badge :label="t.channel" theme="primary" variant="subtle" size="sm" /></td>
                   <td class="px-3 py-1.5 text-ink-gray-7">{{ t.subject || '—' }}</td>
                   <td class="px-3 py-1.5 text-ink-gray-5 font-mono text-xs">{{ (t.variables || []).join(', ') || '—' }}</td>
                   <td class="px-3 py-1.5 text-right">

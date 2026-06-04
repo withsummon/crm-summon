@@ -55,7 +55,7 @@
           {{ __('Connect WhatsApp (QR)') }}
         </button>
         <button class="omni-side-action" style="margin-top: 4px;" @click="openBroadcastCampaigns">
-          <FeatherIcon name="send" class="h-4 w-4 text-teal-600" />
+          <FeatherIcon name="send" class="h-4 w-4 text-primary-600" />
           {{ __('Broadcast Campaigns') }}
         </button>
         <button class="omni-side-action" style="margin-top: 4px;" @click="openAutoResponderSettings">
@@ -103,10 +103,10 @@
           <div v-if="selectedChannel === 'In-App'" class="space-y-3 pt-3">
             <div class="relative">
               <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input v-model="userSearch" :placeholder="__('Search users...')" @keyup="searchUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+              <input v-model="userSearch" :placeholder="__('Search users...')" @keyup="searchUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-primary-500" />
             </div>
             <div v-if="userSearchLoading" class="flex justify-center py-4">
-              <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+              <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>
             <div v-else-if="!userResults.length && userSearch" class="text-center py-4 text-sm text-slate-400">
               {{ __('No users found') }}
@@ -114,7 +114,7 @@
             <div v-else class="space-y-1 max-h-60 overflow-y-auto">
               <button v-for="u in userResults" :key="u.name" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 text-left" @click="startChat(u)">
                 <div v-if="u.user_image" class="h-8 w-8 rounded-full bg-cover bg-center" :style="{ backgroundImage: `url(${u.user_image})` }" />
-                <div v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                <div v-else class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
                   {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
                 </div>
                 <div class="min-w-0 flex-1">
@@ -158,11 +158,11 @@
             <!-- Customer Search Input -->
             <div class="relative">
               <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input v-model="customerSearch" :placeholder="__('Search customers...')" @keyup="searchCustomers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+              <input v-model="customerSearch" :placeholder="__('Search customers...')" @keyup="searchCustomers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-primary-500" />
             </div>
             
             <div v-if="customerSearchLoading" class="flex justify-center py-4">
-              <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+              <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>
             
             <div v-else-if="!customerResults.length && customerSearch" class="text-center py-4 text-sm text-slate-400">
@@ -171,7 +171,7 @@
             
             <div v-else-if="customerResults.length && !selectedNewChatCustomer" class="space-y-1 max-h-40 overflow-y-auto border border-slate-100 rounded-lg p-1 bg-slate-50/50">
               <button v-for="c in customerResults" :key="c.name" class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-white text-left transition-colors border border-transparent hover:border-slate-100" @click="selectNewChatCustomer(c)">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700 shrink-0">
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700 shrink-0">
                   {{ (c.customer_name || c.name).charAt(0).toUpperCase() }}
                 </div>
                 <div class="min-w-0 flex-1">
@@ -188,10 +188,10 @@
             <div v-if="selectedNewChatCustomer" class="space-y-3 p-3 bg-slate-50/50 border border-slate-100 rounded-xl transition-all duration-200">
               <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div class="flex items-center gap-2">
-                  <div class="h-2 w-2 rounded-full bg-teal-500" />
+                  <div class="h-2 w-2 rounded-full bg-primary-500" />
                   <span class="text-xs font-semibold text-slate-700">{{ selectedNewChatCustomer.customer_name }}</span>
                 </div>
-                <button @click="selectedNewChatCustomer = null" class="text-xs text-slate-400 hover:text-teal-600 font-medium">
+                <button @click="selectedNewChatCustomer = null" class="text-xs text-slate-400 hover:text-primary-600 font-medium">
                   {{ __('Change') }}
                 </button>
               </div>
@@ -202,25 +202,25 @@
                   <span v-if="selectedChannel === 'Email'">{{ __('To Email') }}</span>
                   <span v-else>{{ __('To Number') }}</span>
                 </label>
-                <input v-model="newChatRecipient" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" :placeholder="selectedChannel === 'Email' ? 'email@example.com' : '+628...'" />
+                <input v-model="newChatRecipient" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500" :placeholder="selectedChannel === 'Email' ? 'email@example.com' : '+628...'" />
               </div>
 
               <!-- Subject for Email -->
               <div v-if="selectedChannel === 'Email'" class="space-y-1">
                 <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Subject') }}</label>
-                <input v-model="newChatSubject" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" :placeholder="__('Email subject...')" />
+                <input v-model="newChatSubject" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500" :placeholder="__('Email subject...')" />
               </div>
 
               <!-- First Message -->
               <div class="space-y-1">
                 <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('First Message') }}</label>
-                <textarea v-model="newChatFirstMessage" rows="3" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 resize-none" :placeholder="__('Type your first message...')" />
+                <textarea v-model="newChatFirstMessage" rows="3" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500 resize-none" :placeholder="__('Type your first message...')" />
               </div>
 
               <!-- Action button inside Dialog body or actions slot -->
               <div class="pt-2 flex justify-end">
                 <button
-                  class="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1"
+                  class="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                   :disabled="newChatLoading || !newChatRecipient || !newChatFirstMessage"
                   @click="startExternalChat"
                 >
@@ -238,8 +238,8 @@
             <div v-if="!selectedNewChatCustomer" class="border-t border-slate-100 pt-3 mt-3">
               <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('Or Enter Custom Recipient') }}</div>
               <div class="grid gap-2">
-                <input v-model="customName" :placeholder="__('Recipient Name (e.g. John Doe)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" />
-                <input v-model="customNumber" :placeholder="__('Phone Number (e.g. +628...)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" />
+                <input v-model="customName" :placeholder="__('Recipient Name (e.g. John Doe)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500" />
+                <input v-model="customNumber" :placeholder="__('Phone Number (e.g. +628...)')" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500" />
                 <Button
                   variant="solid"
                   class="w-full"
@@ -312,22 +312,22 @@
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Assign to User') }}</label>
               <div class="relative mt-1">
                 <FeatherIcon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input v-model="tagUserSearch" :placeholder="__('Search users...')" @keyup="searchTagUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500" />
+                <input v-model="tagUserSearch" :placeholder="__('Search users...')" @keyup="searchTagUsers" class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-primary-500" />
               </div>
               <div v-if="tagUserSearchLoading" class="flex justify-center py-3">
-                <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+                <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
               </div>
               <div v-else-if="tagUserResults.length" class="mt-2 space-y-1 max-h-48 overflow-y-auto border border-slate-100 rounded-lg">
                 <button v-for="u in tagUserResults" :key="u.name" class="flex w-full items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50 text-left border-b border-slate-50 last:border-0" @click="assignToUser(u)">
                   <div v-if="u.user_image" class="h-7 w-7 rounded-full bg-cover bg-center shrink-0" :style="{ backgroundImage: `url(${u.user_image})` }" />
-                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
                     {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="font-medium text-slate-800 truncate text-xs">{{ u.full_name || u.name }}</div>
                     <div class="text-xs text-slate-400 truncate">{{ u.email }}</div>
                   </div>
-                  <FeatherIcon name="user-check" class="h-4 w-4 text-teal-500 shrink-0" />
+                  <FeatherIcon name="user-check" class="h-4 w-4 text-primary-500 shrink-0" />
                 </button>
               </div>
               <div v-else-if="tagUserSearch && !tagUserSearchLoading" class="text-center py-3 text-sm text-slate-400">
@@ -337,7 +337,7 @@
             <div class="border-t border-slate-100 pt-3">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Add Text Tag') }}</label>
               <div class="flex gap-2 mt-1">
-                <input v-model="tagName" :placeholder="__('Tag name...')" class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500" @keydown.enter="confirmTag" />
+                <input v-model="tagName" :placeholder="__('Tag name...')" class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500" @keydown.enter="confirmTag" />
                 <Button variant="solid" :label="__('Add')" :disabled="!tagName.trim()" :loading="bulkLoading" @click="confirmTag" />
               </div>
             </div>
@@ -362,7 +362,7 @@
             >
               <div class="flex items-center justify-between">
                 <span class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <FeatherIcon :name="channel === 'Email' ? 'mail' : channel === 'SMS' ? 'smartphone' : 'message-circle'" class="h-4 w-4 text-teal-600" />
+                  <FeatherIcon :name="channel === 'Email' ? 'mail' : channel === 'SMS' ? 'smartphone' : 'message-circle'" class="h-4 w-4 text-primary-600" />
                   {{ channel }} Auto-Responder
                 </span>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -371,7 +371,7 @@
                     v-model="config.enabled"
                     class="sr-only peer"
                   />
-                  <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-600"></div>
+                  <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-600"></div>
                 </label>
               </div>
               <div v-if="config.enabled" class="space-y-1">
@@ -379,7 +379,7 @@
                 <textarea
                   v-model="config.message"
                   rows="3"
-                  class="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none focus:border-teal-500 resize-none"
+                  class="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none focus:border-primary-500 resize-none"
                   placeholder="Type auto reply..."
                 />
               </div>
@@ -387,7 +387,7 @@
             <div class="pt-2 flex justify-end">
               <Button
                 variant="solid"
-                theme="teal"
+                theme="primary"
                 :label="__('Save Auto-Responder Settings')"
                 :loading="savingAutoResponder"
                 @click="saveAutoResponderSettings"
@@ -412,22 +412,22 @@
                   v-model="transferUserSearch"
                   :placeholder="__('Search users...')"
                   @keyup="searchTransferUsers"
-                  class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-teal-500"
+                  class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-primary-500"
                 />
               </div>
               <div v-if="transferUserSearchLoading" class="flex justify-center py-3">
-                <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
+                <div class="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
               </div>
               <div v-else-if="transferUserResults.length" class="mt-2 space-y-1 max-h-40 overflow-y-auto border border-slate-100 rounded-lg p-1 bg-slate-50/50">
                 <button
                   v-for="u in transferUserResults"
                   :key="u.name"
                   class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-white text-left transition-colors border border-transparent hover:border-slate-100"
-                  :class="selectedTransferUser?.name === u.name ? 'border-teal-500 bg-teal-50/30' : ''"
+                  :class="selectedTransferUser?.name === u.name ? 'border-primary-500 bg-primary-50/30' : ''"
                   @click="selectedTransferUser = u"
                 >
                   <div v-if="u.user_image" class="h-7 w-7 rounded-full bg-cover bg-center shrink-0" :style="{ backgroundImage: `url(${u.user_image})` }" />
-                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">
+                  <div v-else class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
                     {{ (u.full_name || u.name).charAt(0).toUpperCase() }}
                   </div>
                   <div class="min-w-0 flex-1">
@@ -442,7 +442,7 @@
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">{{ __('Select Team (Optional)') }}</label>
               <select
                 v-model="selectedTransferTeam"
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 mt-1"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500 mt-1"
               >
                 <option value="">{{ __('No specific team') }}</option>
                 <option value="Relationship Manager Team">Relationship Manager Team</option>
@@ -457,7 +457,7 @@
               <textarea
                 v-model="transferNote"
                 rows="2"
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-teal-500 resize-none mt-1"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:border-primary-500 resize-none mt-1"
                 :placeholder="__('Enter transfer reason...')"
               />
             </div>
@@ -466,7 +466,7 @@
               <Button variant="outline" :label="__('Cancel')" @click="showTransferDialog = false" />
               <Button
                 variant="solid"
-                theme="teal"
+                theme="primary"
                 :label="__('Execute Transfer')"
                 :disabled="!selectedTransferUser && !selectedTransferTeam"
                 :loading="transferLoading"
@@ -494,7 +494,7 @@
                 <!-- Mobile Header -->
                 <div class="bg-white px-3 pb-2 pt-1 border-b border-slate-100 flex items-center justify-between shrink-0">
                   <span class="text-xs font-bold text-slate-800">9:41</span>
-                  <span class="text-xs font-bold text-teal-700 flex items-center gap-1">
+                  <span class="text-xs font-bold text-primary-700 flex items-center gap-1">
                     <FeatherIcon name="message-square" class="h-3 w-3" />
                     BNI SUMMON
                   </span>
@@ -512,7 +512,7 @@
                     class="rounded-xl bg-white p-2.5 border border-slate-100 shadow-sm"
                   >
                     <div class="flex items-start gap-2.5">
-                      <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-bold text-teal-700 uppercase">
+                      <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-bold text-primary-700 uppercase">
                         {{ (c.customer_name || c.subject || '?').substring(0, 2) }}
                       </div>
                       <div class="min-w-0 flex-1">
@@ -663,7 +663,7 @@
                   @click="applySuggestion(item)"
                 >
                   <span v-if="item.startsWith('Draf Disetujui: ')" class="omni-suggestion-badge">
-                    <FeatherIcon name="check-circle" class="h-3 w-3 inline mr-1 text-teal-600" />
+                    <FeatherIcon name="check-circle" class="h-3 w-3 inline mr-1 text-primary-600" />
                     {{ __('Draf AI Disetujui') }}:
                   </span>
                   {{ item.startsWith('Draf Disetujui: ') ? item.substring('Draf Disetujui: '.length) : item }}
@@ -724,7 +724,7 @@
 
             <section class="omni-context-section" style="border-color: #cbd5e1;">
               <h3 class="flex items-center gap-1.5 text-slate-800">
-                <FeatherIcon name="shield" class="h-4 w-4 text-teal-600" />
+                <FeatherIcon name="shield" class="h-4 w-4 text-primary-600" />
                 {{ __('Compliance Recording') }}
               </h3>
               <div class="space-y-2 mt-2">
@@ -746,7 +746,7 @@
                   </div>
                 </div>
                 <button
-                  class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50/50 hover:bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 transition-colors"
+                  class="w-full flex items-center justify-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50/50 hover:bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-700 transition-colors"
                   :disabled="verifyingIntegrity"
                   @click="verifyComplianceIntegrity"
                 >

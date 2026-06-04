@@ -11,7 +11,7 @@
     <!-- Quick tooltip or help banner -->
     <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-crm-border px-3 py-2 rounded-lg shadow-sm text-[10px] text-crm-muted pointer-events-none z-10 flex flex-col gap-1">
       <div class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 bg-teal-600 rounded-full animate-pulse" />
+        <span class="w-1.5 h-1.5 bg-primary-600 rounded-full animate-pulse" />
         <span class="font-bold text-gray-700">{{ __('Canvas Quick Actions') }}</span>
       </div>
       <div>• {{ __('Drag nodes from palette to add') }}</div>

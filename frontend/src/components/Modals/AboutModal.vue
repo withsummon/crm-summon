@@ -4,7 +4,7 @@
       <div class="p-4 pt-5">
         <div class="flex justify-center">
           <div class="flex flex-col items-center">
-            <CRMLogo class="mb-3 size-12 text-primary-500" />
+            <CRMLogo class="mb-3 size-12 text-secondary-500" />
             <h3 class="font-semibold text-xl text-ink-gray-9">BNI CRM</h3>
           </div>
         </div>

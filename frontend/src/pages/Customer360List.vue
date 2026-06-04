@@ -14,7 +14,7 @@
               v-model="query"
               type="text"
               :placeholder="__('Search name, NPWP, KTP, group, territory')"
-              class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-500"
+              class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-primary-500"
             />
             <FeatherIcon name="search" class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           </div>
@@ -52,12 +52,12 @@
               <tr
                 v-for="row in rows"
                 :key="row.name"
-                class="cursor-pointer border-b border-slate-100 transition hover:bg-teal-50/60"
+                class="cursor-pointer border-b border-slate-100 transition hover:bg-primary-50/60"
                 @click="openCustomer(row)"
               >
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-sm font-black text-teal-700">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-sm font-black text-primary-700">
                       {{ initials(row.customer_name || row.name) }}
                     </div>
                     <div class="min-w-0">
@@ -111,7 +111,7 @@
               <Badge :label="row.kyc_status || 'Pending'" :theme="row.kyc_status === 'Verified' ? 'green' : 'orange'" variant="subtle" size="sm" />
             </div>
             <div class="flex items-center gap-3 mb-2">
-              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-xs font-black text-teal-700">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-xs font-black text-primary-700">
                 {{ initials(row.customer_name || row.name) }}
               </div>
               <div class="min-w-0">
@@ -120,7 +120,7 @@
               </div>
             </div>
             <div class="flex justify-between items-center text-xs pt-2 mt-2 border-t border-slate-100">
-              <div class="font-mono font-bold text-teal-700 text-sm">{{ formatCurrency(row.total_outstanding) }}</div>
+              <div class="font-mono font-bold text-primary-700 text-sm">{{ formatCurrency(row.total_outstanding) }}</div>
               <div class="text-slate-400 font-semibold">{{ row.risk_grade || __('Unrated') }} ({{ __('Score') }} {{ row.score || 0 }})</div>
             </div>
           </div>
@@ -192,7 +192,7 @@ const SummaryCard = {
     return () => h('div', { class: 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm' }, [
       h('div', { class: 'flex items-center justify-between gap-3' }, [
         h('div', { class: 'text-xs font-bold uppercase tracking-wide text-slate-500' }, props.label),
-        h('div', { class: 'flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-600' }, [
+        h('div', { class: 'flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600' }, [
           h(FeatherIcon, { name: props.icon, class: 'h-4 w-4' }),
         ]),
       ]),

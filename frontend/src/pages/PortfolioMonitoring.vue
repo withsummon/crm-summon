@@ -3,13 +3,13 @@
     <!-- Header -->
     <header class="border-b border-slate-200 bg-white px-6 py-4 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-30 shadow-sm gap-4">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center">
-          <FeatherIcon name="pie-chart" class="w-5 h-5 text-teal-400" />
+        <div class="w-10 h-10 rounded-lg bg-primary-500/10 border border-primary-500/30 flex items-center justify-center">
+          <FeatherIcon name="pie-chart" class="w-5 h-5 text-primary-400" />
         </div>
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">Portfolio Monitoring</h1>
-            <span v-if="loading" class="w-4 h-4 rounded-full border-2 border-teal-400 border-t-transparent animate-spin"></span>
+            <span v-if="loading" class="w-4 h-4 rounded-full border-2 border-primary-400 border-t-transparent animate-spin"></span>
           </div>
           <p class="text-xs text-slate-500">Concentration Risk, Early Warning System & Stress Testing Engine</p>
         </div>
@@ -24,7 +24,7 @@
             :class="[
               'px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
               activePeriod === p 
-                ? 'bg-teal-500 text-slate-900 font-bold shadow-lg shadow-teal-500/10' 
+                ? 'bg-primary-500 text-slate-900 font-bold shadow-lg shadow-primary-500/10' 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             ]"
           >
@@ -32,14 +32,14 @@
           </button>
         </div>
         <div class="bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600 flex items-center space-x-2">
-          <FeatherIcon name="calendar" class="w-4 h-4 text-teal-400" />
+          <FeatherIcon name="calendar" class="w-4 h-4 text-primary-400" />
           <span>{{ currentDateLabel }}</span>
         </div>
         <button 
           @click="showReportBuilder = true"
           class="bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-2 transition-all"
         >
-          <FeatherIcon name="download" class="w-4 h-4 text-teal-400" />
+          <FeatherIcon name="download" class="w-4 h-4 text-primary-400" />
           <span>Export Report</span>
         </button>
       </div>
@@ -48,7 +48,7 @@
     <transition name="fade">
       <div v-if="toast.show" class="fixed right-6 top-[92px] z-40 w-[min(360px,calc(100vw-2rem))] rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur-sm">
         <div class="flex items-start gap-3">
-          <span :class="toast.type === 'danger' ? 'text-red-500' : toast.type === 'warning' ? 'text-amber-500' : 'text-teal-500'" class="mt-1">
+          <span :class="toast.type === 'danger' ? 'text-red-500' : toast.type === 'warning' ? 'text-amber-500' : 'text-primary-500'" class="mt-1">
             <FeatherIcon :name="toast.type === 'danger' ? 'alert-octagon' : toast.type === 'warning' ? 'alert-triangle' : 'check-circle'" class="w-5 h-5" />
           </span>
           <div>
@@ -78,7 +78,7 @@
                 :class="[
                   'inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap',
                   activeTab === item.id
-                    ? 'bg-teal-500/10 text-teal-700 border border-teal-200 shadow-sm'
+                    ? 'bg-primary-500/10 text-primary-700 border border-primary-200 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
                 ]"
               >
@@ -105,7 +105,7 @@
                 <h2 class="mt-2 text-xl font-semibold text-slate-900">Strategic guidance for Indonesian regional portfolio hubs</h2>
                 <p class="mt-2 text-sm text-slate-600 max-w-2xl">Real-time portfolio health monitoring based on live CRM credit facility data.</p>
               </div>
-              <div class="rounded-3xl bg-teal-50 border border-teal-200 px-5 py-4 text-teal-700 shadow-sm">
+              <div class="rounded-3xl bg-primary-50 border border-primary-200 px-5 py-4 text-primary-700 shadow-sm">
                 <div class="text-sm font-semibold">Portfolio NPL</div>
                 <div class="mt-2 text-3xl font-bold">{{ overviewData?.npl_rate ?? '--' }}%</div>
                 <div class="text-xs uppercase tracking-[0.2em]">Current Ratio</div>
@@ -118,15 +118,15 @@
             <div 
               v-for="kpi in kpiCards" 
               :key="kpi.title"
-              class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-teal-500/30 transition-all duration-300 hover:shadow-lg"
+              class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-primary-500/30 transition-all duration-300 hover:shadow-lg"
             >
               <div class="absolute -right-6 -bottom-6 opacity-5 group-hover:scale-125 transition-transform duration-300">
                 <FeatherIcon :name="kpi.icon" class="w-24 h-24 text-slate-900" />
               </div>
               <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ kpi.title }}</span>
-                <div class="w-7 h-7 rounded-lg bg-teal-500/10 flex items-center justify-center">
-                  <FeatherIcon :name="kpi.icon" class="w-4 h-4 text-teal-400" />
+                <div class="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center">
+                  <FeatherIcon :name="kpi.icon" class="w-4 h-4 text-primary-400" />
                 </div>
               </div>
               <div class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">{{ kpi.value }}</div>
@@ -151,7 +151,7 @@
                 </div>
                 <div class="flex items-center space-x-4 text-xs font-semibold">
                   <div class="flex items-center space-x-1.5">
-                    <span class="w-3 h-1.5 rounded-full bg-teal-400"></span>
+                    <span class="w-3 h-1.5 rounded-full bg-primary-400"></span>
                     <span class="text-slate-600">OS (in Trillion IDR)</span>
                   </div>
                   <div class="flex items-center space-x-1.5">
@@ -191,7 +191,7 @@
             <div class="bg-white rounded-xl p-5 border border-slate-200 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-900">Critical Watchlist</h3>
-                <span class="text-[10px] font-bold text-teal-400 cursor-pointer hover:underline" @click="activeTab = 'watchlist'">View All</span>
+                <span class="text-[10px] font-bold text-primary-400 cursor-pointer hover:underline" @click="activeTab = 'watchlist'">View All</span>
               </div>
               
               <div class="space-y-3 overflow-y-auto max-h-64 pr-1">
@@ -247,7 +247,7 @@
                       <span class="block text-[10px] text-slate-500 font-light">KBLI Code: {{ ind.kbli || 'N/A' }}</span>
                     </td>
                     <td class="py-4">{{ ind.os }}</td>
-                    <td class="py-4 font-semibold text-teal-400">{{ ind.pct }}</td>
+                    <td class="py-4 font-semibold text-primary-400">{{ ind.pct }}</td>
                     <td class="py-4 text-slate-500">{{ ind.limit }}</td>
                     <td class="py-4 w-1/4">
                       <div class="space-y-1">
@@ -258,7 +258,7 @@
                           <div 
                             :class="[
                               'h-full rounded transition-all duration-500', 
-                              ind.usage > 100 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : ind.usage > 80 ? 'bg-amber-500' : 'bg-teal-400'
+                              ind.usage > 100 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : ind.usage > 80 ? 'bg-amber-500' : 'bg-primary-400'
                             ]"
                             :style="{ width: Math.min(ind.usage, 100) + '%' }"
                           ></div>
@@ -269,7 +269,7 @@
                       <span 
                         :class="[
                           'px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border',
-                          ind.usage > 100 ? 'bg-red-500/10 text-red-400 border-red-500/30' : ind.usage > 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+                          ind.usage > 100 ? 'bg-red-500/10 text-red-400 border-red-500/30' : ind.usage > 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-primary-500/10 text-primary-400 border-primary-500/30'
                         ]"
                       >
                         {{ ind.usage > 100 ? 'Breach' : ind.usage > 80 ? 'Warning' : 'Normal' }}
@@ -301,7 +301,7 @@
                   :class="[
                     'p-3 rounded-lg border cursor-pointer transition-all duration-150 flex justify-between items-center',
                     selectedProvince === geo.province 
-                      ? 'bg-teal-500/10 border-teal-500 shadow-md text-teal-700' 
+                      ? 'bg-primary-500/10 border-primary-500 shadow-md text-primary-700' 
                       : 'bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600'
                   ]"
                 >
@@ -310,7 +310,7 @@
                     <span class="block text-[10px] text-slate-500 font-semibold">OS: {{ geo.os }}</span>
                   </div>
                   <div class="text-right">
-                    <span class="text-xs font-bold text-teal-400">{{ geo.pct }}</span>
+                    <span class="text-xs font-bold text-primary-400">{{ geo.pct }}</span>
                     <span class="block text-[10px] text-rose-400 font-extrabold">NPL: {{ geo.npl }}%</span>
                   </div>
                 </div>
@@ -357,7 +357,7 @@
               <div 
                 v-for="group in (sblData?.borrowers || [])" 
                 :key="group.name"
-                class="bg-slate-50 rounded-xl p-5 border border-slate-200 hover:border-teal-500/30 transition-all flex flex-col justify-between"
+                class="bg-slate-50 rounded-xl p-5 border border-slate-200 hover:border-primary-500/30 transition-all flex flex-col justify-between"
               >
                 <div class="space-y-2">
                   <div class="flex justify-between items-start">
@@ -368,7 +368,7 @@
                     <span 
                       :class="[
                         'px-2 py-0.5 rounded text-[10px] font-semibold border uppercase tracking-wider',
-                        group.usage >= 100 ? 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse' : group.usage >= 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+                        group.usage >= 100 ? 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse' : group.usage >= 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-primary-500/10 text-primary-400 border-primary-500/30'
                       ]"
                     >
                       {{ group.usage >= 100 ? 'Breach' : group.usage >= 80 ? 'Near Breach' : 'Compliant' }}
@@ -386,7 +386,7 @@
                     </div>
                     <div>
                       <span class="block text-[10px] text-slate-500 font-semibold uppercase">% of Capital</span>
-                      <strong class="text-teal-400">{{ group.pctCapital }}%</strong>
+                      <strong class="text-primary-400">{{ group.pctCapital }}%</strong>
                     </div>
                   </div>
                 </div>
@@ -400,7 +400,7 @@
                     <div 
                       :class="[
                         'h-full rounded transition-all duration-500', 
-                        group.usage >= 100 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : group.usage >= 80 ? 'bg-amber-500' : 'bg-teal-400'
+                        group.usage >= 100 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : group.usage >= 80 ? 'bg-amber-500' : 'bg-primary-400'
                       ]"
                       :style="{ width: Math.min(group.usage, 100) + '%' }"
                     ></div>
@@ -434,12 +434,12 @@
                 <tbody class="divide-y divide-slate-200">
                   <tr v-for="exp in (topExposuresData?.exposures || [])" :key="exp.name" class="hover:bg-slate-50 transition-all">
                     <td class="py-4 font-bold text-slate-900 flex items-center space-x-2">
-                      <div class="w-2.5 h-2.5 rounded-full" :class="exp.dpd > 0 ? 'bg-rose-400' : 'bg-teal-400'"></div>
+                      <div class="w-2.5 h-2.5 rounded-full" :class="exp.dpd > 0 ? 'bg-rose-400' : 'bg-primary-400'"></div>
                       <span>{{ exp.name }}</span>
                     </td>
                     <td class="py-4 font-semibold text-slate-700">{{ exp.os }}</td>
                     <td class="py-4">
-                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 border border-slate-200" :class="exp.grade === 'AAA' || exp.grade === 'AA' ? 'text-teal-400' : exp.grade === 'A' || exp.grade === 'BBB' ? 'text-amber-400' : 'text-rose-400'">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 border border-slate-200" :class="exp.grade === 'AAA' || exp.grade === 'AA' ? 'text-primary-400' : exp.grade === 'A' || exp.grade === 'BBB' ? 'text-amber-400' : 'text-rose-400'">
                         {{ exp.grade }}
                       </span>
                     </td>
@@ -447,14 +447,14 @@
                       {{ exp.dpd }} Days
                     </td>
                     <td class="py-4 font-semibold">
-                      <span :class="exp.trend === 'Growing' ? 'text-teal-400' : exp.trend === 'Decreasing' ? 'text-rose-400' : 'text-slate-500'">
+                      <span :class="exp.trend === 'Growing' ? 'text-primary-400' : exp.trend === 'Decreasing' ? 'text-rose-400' : 'text-slate-500'">
                         {{ exp.trend }}
                       </span>
                     </td>
                     <td class="py-4 text-right">
                       <a 
                         :href="`/crm/crm-core/customer-360/${encodeURIComponent(exp.name)}`"
-                        class="px-3 py-1 rounded bg-teal-500/10 hover:bg-teal-500 text-teal-600 hover:text-white border border-teal-500/20 text-[10px] font-bold transition-all"
+                        class="px-3 py-1 rounded bg-primary-500/10 hover:bg-primary-500 text-primary-600 hover:text-white border border-primary-500/20 text-[10px] font-bold transition-all"
                       >
                         Open Customer 360
                       </a>
@@ -478,7 +478,7 @@
                 class="bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-100 px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all"
                 @click="exportMatrix"
               >
-                <FeatherIcon name="file" class="w-4 h-4 text-teal-400" />
+                <FeatherIcon name="file" class="w-4 h-4 text-primary-400" />
                 <span>Export PDF Matrix</span>
               </button>
             </div>
@@ -503,7 +503,7 @@
                     @click="selectedMatrixCell = { industry: row.industry, region: cell.region, details: cell.details }"
                     :class="[
                       'rounded-lg p-4 cursor-pointer text-center transition-all hover:scale-105',
-                      cell.intensity === 'high' ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' : cell.intensity === 'medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30' : 'bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20'
+                      cell.intensity === 'high' ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' : cell.intensity === 'medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30' : 'bg-primary-500/10 text-primary-400 border border-primary-500/20 hover:bg-primary-500/20'
                     ]"
                   >
                     <strong class="text-sm block">{{ cell.os }}</strong>
@@ -513,10 +513,10 @@
               </div>
             </div>
 
-            <div v-if="selectedMatrixCell" class="bg-slate-50 rounded-xl p-5 border border-teal-500/30 mt-6 space-y-4">
+            <div v-if="selectedMatrixCell" class="bg-slate-50 rounded-xl p-5 border border-primary-500/30 mt-6 space-y-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <h4 class="text-xs font-bold text-teal-400 uppercase tracking-widest">Selected Cell Drilldown</h4>
+                  <h4 class="text-xs font-bold text-primary-400 uppercase tracking-widest">Selected Cell Drilldown</h4>
                   <strong class="text-sm text-slate-900">{{ selectedMatrixCell.industry }} x {{ selectedMatrixCell.region }}</strong>
                 </div>
                 <button @click="selectedMatrixCell = null" class="text-xs text-slate-500 hover:text-slate-700">Close</button>
@@ -531,7 +531,7 @@
                     <span class="font-bold block text-slate-700">{{ acc.name }}</span>
                     <span class="text-[10px] text-slate-500">Grade: {{ acc.grade }}</span>
                   </div>
-                  <strong class="text-teal-400">{{ acc.os }}</strong>
+                  <strong class="text-primary-400">{{ acc.os }}</strong>
                 </div>
               </div>
             </div>
@@ -578,13 +578,13 @@
                   <button 
                     v-if="!alert.acknowledged"
                     @click="acknowledgeAlert(alert)"
-                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                    class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
                   >
                     Acknowledge Signal
                   </button>
                   <span 
                     v-else 
-                    class="px-3 py-1 rounded bg-slate-50 border border-slate-200 text-teal-400 text-xs font-bold"
+                    class="px-3 py-1 rounded bg-slate-50 border border-slate-200 text-primary-400 text-xs font-bold"
                   >
                     Acknowledged
                   </span>
@@ -617,7 +617,7 @@
                     <span 
                       :class="[
                         'px-2 py-0.5 rounded text-[9px] font-bold uppercase border',
-                        cov.result === 'Breach' ? 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse' : 'bg-teal-500/10 text-teal-400 border-teal-500/30'
+                        cov.result === 'Breach' ? 'bg-red-500/10 text-red-400 border-red-500/30 animate-pulse' : 'bg-primary-500/10 text-primary-400 border-primary-500/30'
                       ]"
                     >
                       {{ cov.result }}
@@ -641,7 +641,7 @@
                   </button>
                   <span 
                     v-else 
-                    class="text-xs text-teal-400 font-extrabold flex items-center space-x-1.5"
+                    class="text-xs text-primary-400 font-extrabold flex items-center space-x-1.5"
                   >
                     <FeatherIcon name="check-circle" class="w-4 h-4" />
                     <span>Active Audit Passed</span>
@@ -672,7 +672,7 @@
                       class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 flex justify-between items-center transition-all"
                     >
                       <span>{{ sc.scenario_name }}</span>
-                      <span class="text-[10px] text-teal-400 font-bold">Apply</span>
+                      <span class="text-[10px] text-primary-400 font-bold">Apply</span>
                     </button>
                   </div>
                 </div>
@@ -683,13 +683,13 @@
                   <div class="space-y-2">
                     <div class="flex justify-between text-xs text-slate-600 font-semibold">
                       <span>Interest Rate Shock</span>
-                      <span class="text-teal-400">+{{ stressRates }} bps</span>
+                      <span class="text-primary-400">+{{ stressRates }} bps</span>
                     </div>
                     <input 
                       type="range" 
                       min="0" max="500" step="50" 
                       v-model.number="stressRates"
-                      class="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer accent-teal-500"
+                      class="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer accent-primary-500"
                       @input="runCustomStressTest"
                     />
                   </div>
@@ -697,13 +697,13 @@
                   <div class="space-y-2">
                     <div class="flex justify-between text-xs text-slate-600 font-semibold">
                       <span>NPL Shock Rate</span>
-                      <span class="text-teal-400">+{{ stressNPL }} %</span>
+                      <span class="text-primary-400">+{{ stressNPL }} %</span>
                     </div>
                     <input 
                     v-model.number="stressNPL"
                       type="range" 
                       min="0" max="10" step="0.5" 
-                      class="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer accent-teal-500"
+                      class="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer accent-primary-500"
                       @input="runCustomStressTest"
                     />
                   </div>
@@ -722,7 +722,7 @@
                     <span 
                       :class="[
                         'text-[10px] font-semibold',
-                        stressResult?.threshold_breached ? 'text-red-400' : 'text-teal-400'
+                        stressResult?.threshold_breached ? 'text-red-400' : 'text-primary-400'
                       ]"
                     >
                       Impact: -{{ stressResult?.car_impact ?? '0' }}%
@@ -749,9 +749,9 @@
                 </div>
                 <div 
                   v-else
-                  class="bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs p-4 rounded-lg flex items-center space-x-3"
+                  class="bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs p-4 rounded-lg flex items-center space-x-3"
                 >
-                  <FeatherIcon name="info" class="w-5 h-5 text-teal-400" />
+                  <FeatherIcon name="info" class="w-5 h-5 text-primary-400" />
                   <span>The simulated stress impact remains within the bank's internal approved risk limit profiles.</span>
                 </div>
               </div>
@@ -779,7 +779,7 @@
                     {{ stg.pd_range }} PD
                   </span>
                 </div>
-                <div class="text-2xl font-extrabold text-teal-400 tracking-tight">{{ stg.os }}</div>
+                <div class="text-2xl font-extrabold text-primary-400 tracking-tight">{{ stg.os }}</div>
                 <p class="text-[10px] text-slate-500 leading-normal">{{ stg.desc }}</p>
                 
                 <div class="border-t border-slate-200 pt-2 text-[10px] flex justify-between font-semibold text-slate-600">
@@ -800,7 +800,7 @@
                 <p class="text-xs text-slate-500">Add, track, or request removal of corporate accounts under special monitoring.</p>
               </div>
               <button 
-                class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5"
+                class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5"
                 @click="showAddWatchlist = true"
               >
                 <FeatherIcon name="plus" class="w-4 h-4" />
@@ -875,7 +875,7 @@
                         'px-2.5 py-1 rounded text-[10px] font-bold transition-all',
                         sim.active 
                           ? 'bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20' 
-                          : 'bg-teal-500 hover:bg-teal-600 text-white'
+                          : 'bg-primary-500 hover:bg-primary-600 text-white'
                       ]"
                       @click="toggleSimAccount(sim)"
                     >
@@ -895,7 +895,7 @@
                   </div>
                   <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
                     <span class="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-1">Portfolio NPL</span>
-                    <strong class="text-lg font-extrabold" :class="(simResult?.npl_rate || 0) > 2.5 ? 'text-rose-400' : 'text-teal-400'">
+                    <strong class="text-lg font-extrabold" :class="(simResult?.npl_rate || 0) > 2.5 ? 'text-rose-400' : 'text-primary-400'">
                       {{ simResult?.npl_rate?.toFixed(2) || '--' }}%
                     </strong>
                   </div>
@@ -911,7 +911,7 @@
                     <div class="space-y-1">
                       <div class="flex justify-between text-xs text-slate-600">
                         <span>Property / Real Estate Sector Limits</span>
-                        <span class="font-bold" :class="(simResult?.top_sector_concentration || 0) > 25.0 ? 'text-red-400' : 'text-teal-400'">
+                        <span class="font-bold" :class="(simResult?.top_sector_concentration || 0) > 25.0 ? 'text-red-400' : 'text-primary-400'">
                           {{ simResult?.top_sector_concentration?.toFixed(1) || '--' }}% / 25.0%
                         </span>
                       </div>
@@ -919,7 +919,7 @@
                         <div 
                           :class="[
                             'h-full rounded transition-all duration-300',
-                            (simResult?.top_sector_concentration || 0) > 25.0 ? 'bg-red-500' : 'bg-teal-400'
+                            (simResult?.top_sector_concentration || 0) > 25.0 ? 'bg-red-500' : 'bg-primary-400'
                           ]"
                           :style="{ width: Math.min(((simResult?.top_sector_concentration || 0) / 25.0) * 100, 100) + '%' }"
                         ></div>
@@ -945,7 +945,7 @@
           <div class="space-y-3">
             <div class="space-y-1">
               <label class="block font-bold text-slate-500 uppercase text-[10px]">Report Template</label>
-              <select v-model="selectedTemplate" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-teal-500">
+              <select v-model="selectedTemplate" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-primary-500">
                 <option>Committee Meeting Summary Package (PDF)</option>
                 <option>Risk Management SBL/BMPK Limit Audit (Excel)</option>
                 <option>Monthly EWS Trigger & Covenant Report (PDF)</option>
@@ -953,7 +953,7 @@
             </div>
 
             <div class="flex items-center space-x-2">
-              <input type="checkbox" id="sendEmail" v-model="sendEmailReport" class="rounded bg-slate-50 border-slate-200 accent-teal-400 cursor-pointer" />
+              <input type="checkbox" id="sendEmail" v-model="sendEmailReport" class="rounded bg-slate-50 border-slate-200 accent-primary-400 cursor-pointer" />
               <label for="sendEmail" class="text-slate-600 cursor-pointer">Auto-email to Risk Management Committee</label>
             </div>
           </div>
@@ -980,19 +980,19 @@
           </div>
           <div class="space-y-1">
             <label class="block font-bold text-slate-500 uppercase text-[10px]">Account Name</label>
-            <input v-model="newWatchlistName" type="text" placeholder="e.g. Graha Sentosa Tbk" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:border-teal-500" />
+            <input v-model="newWatchlistName" type="text" placeholder="e.g. Graha Sentosa Tbk" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:border-primary-500" />
           </div>
           <div class="space-y-1">
             <label class="block font-bold text-slate-500 uppercase text-[10px]">Outstanding (IDR)</label>
-            <input v-model.number="newWatchlistOS" type="number" placeholder="e.g. 150000000000" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-teal-500" />
+            <input v-model.number="newWatchlistOS" type="number" placeholder="e.g. 150000000000" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-primary-500" />
           </div>
           <div class="space-y-1">
             <label class="block font-bold text-slate-500 uppercase text-[10px]">Days Past Due (DPD)</label>
-            <input v-model.number="newWatchlistDPD" type="number" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-teal-500" />
+            <input v-model.number="newWatchlistDPD" type="number" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-primary-500" />
           </div>
           <div class="space-y-1">
             <label class="block font-bold text-slate-500 uppercase text-[10px]">Trigger Reason</label>
-            <select v-model="newWatchlistTrigger" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-teal-500">
+            <select v-model="newWatchlistTrigger" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 focus:outline-none focus:border-primary-500">
               <option>Payment Delay</option>
               <option>Ratio Drop</option>
               <option>Negative News</option>
@@ -1025,7 +1025,7 @@
             <p class="text-slate-600">Request removal of <strong class="text-slate-900">{{ selectedWatchlistToRemove?.borrower_name }}</strong>. Removal requires committee approval.</p>
             <div class="space-y-1">
               <label class="block font-bold text-slate-500 uppercase text-[10px]">Justification Reason</label>
-              <textarea v-model="removeReason" placeholder="Describe remediation actions (e.g. loan restructured, covenant amended)" class="w-full h-24 bg-white border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:border-teal-500"></textarea>
+              <textarea v-model="removeReason" placeholder="Describe remediation actions (e.g. loan restructured, covenant amended)" class="w-full h-24 bg-white border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:border-primary-500"></textarea>
             </div>
           </div>
         </div>

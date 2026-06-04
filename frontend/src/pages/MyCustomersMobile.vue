@@ -13,7 +13,7 @@
           v-model="searchQuery"
           type="text"
           :placeholder="__('Cari nasabah...')"
-          class="w-full rounded-xl border border-crm-border bg-crm-surface py-2.5 pl-9 pr-3 text-sm text-crm-text outline-none transition-colors placeholder:text-crm-muted focus:border-crm-teal"
+          class="w-full rounded-xl border border-crm-border bg-crm-surface py-2.5 pl-9 pr-3 text-sm text-crm-text outline-none transition-colors placeholder:text-crm-muted focus:border-primary-600"
         />
         <button
           v-if="searchQuery"
@@ -124,7 +124,7 @@ const searchQuery = ref('')
 const error = ref('')
 
 const orgColors = [
-  'bg-crm-surface text-crm-teal',
+  'bg-crm-surface text-primary-600',
   'bg-blue-50 text-blue-600',
   'bg-green-50 text-green-600',
   'bg-amber-50 text-amber-600',

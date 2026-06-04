@@ -592,7 +592,7 @@
                     <td class="px-4 py-3">
                       <span
                         class="text-[10px] font-semibold rounded px-1.5 py-0.5"
-                        :class="cov.currency === 'USD' ? 'bg-blue-50 text-blue-700' : cov.currency === 'EUR' ? 'bg-indigo-50 text-indigo-700' : cov.currency === 'SGD' ? 'bg-teal-50 text-teal-700' : cov.currency === 'JPY' ? 'bg-pink-50 text-pink-700' : 'bg-gray-100 text-gray-600'"
+                        :class="cov.currency === 'USD' ? 'bg-blue-50 text-blue-700' : cov.currency === 'EUR' ? 'bg-indigo-50 text-indigo-700' : cov.currency === 'SGD' ? 'bg-primary-50 text-primary-700' : cov.currency === 'JPY' ? 'bg-pink-50 text-pink-700' : 'bg-gray-100 text-gray-600'"
                       >{{ cov.currency }}</span>
                     </td>
                     <td class="px-4 py-3 font-semibold text-gray-700">

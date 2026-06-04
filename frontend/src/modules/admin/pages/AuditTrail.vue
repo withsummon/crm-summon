@@ -188,7 +188,7 @@
                         {{ row.actor }} · {{ formatDate(row.timestamp) }}
                       </p>
                     </div>
-                    <Badge :label="`${row.change_count} fields`" theme="teal" variant="subtle" />
+                    <Badge :label="`${row.change_count} fields`" theme="primary" variant="subtle" />
                   </div>
                   <div class="mt-3 grid gap-2 md:grid-cols-2">
                     <div

@@ -150,7 +150,7 @@
                       <div class="min-w-0">
                         <p class="truncate text-base font-medium leading-5 text-ink-gray-9">{{ f.customer }}</p>
                         <div class="mt-1 flex items-center gap-2">
-                          <Badge :label="f.facility_type" theme="teal" variant="subtle" />
+                          <Badge :label="f.facility_type" theme="primary" variant="subtle" />
                           <span class="truncate text-sm leading-5 text-ink-gray-5">{{ f.product_type }}</span>
                         </div>
                       </div>
@@ -429,7 +429,7 @@
               <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <div class="min-w-0">
                   <div class="flex items-center gap-2">
-                    <Badge :label="f.facility_type" theme="teal" variant="subtle" />
+                    <Badge :label="f.facility_type" theme="primary" variant="subtle" />
                     <Badge label="Active" theme="green" variant="subtle" />
                   </div>
                   <p class="mt-3 truncate text-base font-medium leading-5 text-ink-gray-9">{{ f.customer }}</p>

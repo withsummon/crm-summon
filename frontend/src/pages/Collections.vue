@@ -656,9 +656,9 @@
                 <Badge :label="s.status" variant="subtle" :theme="s.status === 'Active' ? 'green' : 'gray'" />
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded bg-primary-50 p-2 text-center">
-                  <div class="font-semibold text-primary-700">Test ({{ s.testPct }}%)</div>
-                  <div class="text-primary-600">{{ s.testRecovery }}% recovery</div>
+                <div class="rounded bg-secondary-50 p-2 text-center">
+                  <div class="font-semibold text-secondary-700">Test ({{ s.testPct }}%)</div>
+                  <div class="text-secondary-600">{{ s.testRecovery }}% recovery</div>
                 </div>
                 <div class="rounded bg-surface-gray-1 p-2 text-center">
                   <div class="font-semibold text-ink-gray-6">Control</div>

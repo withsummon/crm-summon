@@ -9,7 +9,7 @@
           class="flex size-8 items-center justify-center rounded-lg hover:bg-crm-surface"
           @click="showNewChat = true"
         >
-          <FeatherIcon name="plus" class="size-4 text-crm-teal" />
+          <FeatherIcon name="plus" class="size-4 text-primary-600" />
         </button>
       </div>
     </div>
@@ -20,8 +20,8 @@
         :key="ch.key"
         class="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors"
         :class="activeChannel === ch.key
-          ? 'bg-crm-teal text-white'
-          : 'bg-white text-crm-text-secondary border border-crm-border hover:border-crm-teal/50'"
+          ? 'bg-primary-600 text-white'
+          : 'bg-white text-crm-text-secondary border border-crm-border hover:border-primary-600/50'"
         @click="activeChannel = ch.key"
       >
         <FeatherIcon :name="ch.icon" class="size-3.5" />
@@ -39,7 +39,7 @@
       <div v-else-if="error" class="py-16 text-center">
         <FeatherIcon name="alert-circle" class="size-10 text-red-400 mx-auto mb-2" />
         <p class="text-sm font-medium text-crm-text">{{ error }}</p>
-        <button class="mt-3 text-xs text-crm-teal font-medium" @click="loadConversations">
+        <button class="mt-3 text-xs text-primary-600 font-medium" @click="loadConversations">
           {{ __('Coba lagi') }}
         </button>
       </div>
@@ -68,7 +68,7 @@
                 <span class="rounded-full px-1.5 py-0.5 text-[9px] font-medium" :class="channelBadge(chat.channel)">
                   {{ chat.channel }}
                 </span>
-                <span v-if="chat.unread" class="size-5 rounded-full bg-crm-teal text-[9px] font-semibold text-white flex items-center justify-center">
+                <span v-if="chat.unread" class="size-5 rounded-full bg-primary-600 text-[9px] font-semibold text-white flex items-center justify-center">
                   {{ chat.unread }}
                 </span>
               </div>
@@ -112,17 +112,17 @@
             <div class="space-y-3">
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Channel') }}</label>
-                <select v-model="newChat.channel" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal">
+                <select v-model="newChat.channel" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600">
                   <option v-for="ch in channels" :key="ch.key" :value="ch.key">{{ ch.label }}</option>
                 </select>
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Nasabah') }}</label>
-                <input v-model="newChat.contact" type="text" :placeholder="__('Nama atau nomor telepon')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal" />
+                <input v-model="newChat.contact" type="text" :placeholder="__('Nama atau nomor telepon')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600" />
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Pesan') }}</label>
-                <textarea v-model="newChat.message" rows="3" :placeholder="__('Tulis pesan...')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal resize-none" />
+                <textarea v-model="newChat.message" rows="3" :placeholder="__('Tulis pesan...')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600 resize-none" />
               </div>
               <Button variant="solid" class="w-full" :disabled="!newChat.contact || sending" @click="sendNewChat">
                 {{ __('Kirim') }}

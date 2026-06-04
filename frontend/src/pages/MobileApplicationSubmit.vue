@@ -23,7 +23,7 @@
             v-model="form.borrower_name"
             type="text"
             :placeholder="__('e.g. Budi Santoso / PT Maju Jaya')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           />
         </div>
 
@@ -37,8 +37,8 @@
               :key="t.value"
               class="rounded-xl border py-2.5 text-sm font-medium transition-colors"
               :class="form.borrower_type === t.value
-                ? 'border-crm-teal bg-crm-surface text-crm-teal'
-                : 'border-crm-border text-crm-text-secondary hover:border-crm-teal/50'"
+                ? 'border-primary-600 bg-crm-surface text-primary-600'
+                : 'border-crm-border text-crm-text-secondary hover:border-primary-600/50'"
               @click="form.borrower_type = t.value"
             >
               {{ t.label }}
@@ -55,7 +55,7 @@
               v-model="form.nik"
               type="text"
               :placeholder="__('16 digit')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             />
           </div>
           <div>
@@ -66,7 +66,7 @@
               v-model="form.npwp"
               type="text"
               placeholder="XX.XXX.XXX.X-XXX.XXX"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text font-mono outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text font-mono outline-none focus:border-primary-600"
             />
           </div>
         </div>
@@ -80,7 +80,7 @@
               v-model="form.email"
               type="email"
               :placeholder="__('email@example.com')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             />
           </div>
           <div>
@@ -91,7 +91,7 @@
               v-model="form.phone"
               type="tel"
               :placeholder="__('+62 xxx xxxx')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@
           </label>
           <select
             v-model="form.loan_type"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           >
             <option value="Kredit Modal Kerja">{{ __('Kredit Modal Kerja') }}</option>
             <option value="Kredit Investasi">{{ __('Kredit Investasi') }}</option>
@@ -132,7 +132,7 @@
               type="text"
               inputmode="numeric"
               :placeholder="__('0')"
-              class="w-full rounded-xl border border-crm-border pl-10 pr-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border pl-10 pr-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
               @input="formatAmount"
             />
           </div>
@@ -148,8 +148,8 @@
               :key="t.value"
               class="rounded-xl border py-2 text-xs font-medium transition-colors"
               :class="form.tenor === t.value
-                ? 'border-crm-teal bg-crm-surface text-crm-teal'
-                : 'border-crm-border text-crm-text-secondary hover:border-crm-teal/50'"
+                ? 'border-primary-600 bg-crm-surface text-primary-600'
+                : 'border-crm-border text-crm-text-secondary hover:border-primary-600/50'"
               @click="form.tenor = t.value"
             >
               {{ t.label }}
@@ -165,7 +165,7 @@
             v-model="form.purpose"
             rows="3"
             :placeholder="__('Deskripsikan tujuan penggunaan dana...')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal resize-none"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 resize-none"
           />
         </div>
       </div>

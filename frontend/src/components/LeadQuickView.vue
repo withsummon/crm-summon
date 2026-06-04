@@ -38,7 +38,7 @@
           v-if="lead.capture_channel"
           :label="lead.capture_channel"
           variant="subtle"
-          theme="teal"
+          theme="primary"
         />
         <Badge
           v-if="lead.sla_status"
@@ -90,7 +90,7 @@
           v-for="tag in summary.tags.slice(0, 5)"
           :key="tag.tag"
           :label="tag.tag"
-          theme="teal"
+          theme="primary"
           variant="subtle"
           size="sm"
         />

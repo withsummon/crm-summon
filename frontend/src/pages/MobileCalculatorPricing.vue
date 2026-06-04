@@ -17,7 +17,7 @@
           </label>
           <select
             v-model="form.loanType"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             @change="calculate"
           >
             <option value="fixed">{{ __('Kredit Tetap (Fixed Rate)') }}</option>
@@ -37,7 +37,7 @@
               type="text"
               inputmode="numeric"
               :placeholder="__('0')"
-              class="w-full rounded-xl border border-crm-border pl-10 pr-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border pl-10 pr-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
               @input="formatInput('amount'); calculate()"
             />
           </div>
@@ -55,7 +55,7 @@
               min="0"
               max="100"
               :placeholder="__('e.g. 9.5')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 pr-8 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 pr-8 text-sm text-crm-text outline-none focus:border-primary-600"
               @input="calculate"
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-crm-muted">%</span>
@@ -72,12 +72,12 @@
               type="number"
               min="1"
               :placeholder="__('e.g. 12')"
-              class="flex-1 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="flex-1 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
               @input="calculate"
             />
             <select
               v-model="form.tenorUnit"
-              class="w-28 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-28 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
               @change="calculate"
             >
               <option value="months">{{ __('Bulan') }}</option>
@@ -89,7 +89,7 @@
 
       <div
         v-if="result.monthlyPayment > 0"
-        class="rounded-xl bg-white p-4 shadow-sm border border-crm-teal space-y-3"
+        class="rounded-xl bg-white p-4 shadow-sm border border-primary-600 space-y-3"
       >
         <h2 class="text-sm font-semibold text-crm-text border-b border-crm-border pb-2">
           {{ __('Hasil Perhitungan') }}
@@ -99,7 +99,7 @@
             <p class="text-[10px] text-crm-text-secondary uppercase tracking-wider">
               {{ form.loanType === 'fixed' ? __('Angsuran/Bulan') : __('Angsuran/Bulan') }}
             </p>
-            <p class="text-lg font-bold text-crm-teal mt-1">
+            <p class="text-lg font-bold text-primary-600 mt-1">
               Rp {{ formatNumber(result.monthlyPayment) }}
             </p>
           </div>
@@ -159,12 +159,12 @@
           <button
             v-for="preset in presets"
             :key="preset.label"
-            class="rounded-xl border border-crm-border p-3 text-center hover:border-crm-teal/50 transition-colors"
+            class="rounded-xl border border-crm-border p-3 text-center hover:border-primary-600/50 transition-colors"
             @click="applyPreset(preset)"
           >
             <p class="text-xs font-semibold text-crm-text">Rp {{ preset.label }}</p>
             <p class="text-[10px] text-crm-text-secondary">{{ preset.tenor }} bln</p>
-            <p class="text-[10px] text-crm-teal font-medium">
+            <p class="text-[10px] text-primary-600 font-medium">
               Rp {{ formatNumber(preset.result) }}/bln
             </p>
           </button>

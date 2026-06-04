@@ -40,7 +40,7 @@
           <button
             v-for="suggestion in suggestions"
             :key="suggestion.text"
-            class="rounded-xl border border-crm-border bg-white px-4 py-2.5 text-sm text-crm-text shadow-sm hover:border-crm-teal hover:text-crm-teal transition-colors"
+            class="rounded-xl border border-crm-border bg-white px-4 py-2.5 text-sm text-crm-text shadow-sm hover:border-primary-600 hover:text-primary-600 transition-colors"
             @click="sendSuggestion(suggestion.text)"
           >
             <FeatherIcon :name="suggestion.icon" class="size-3.5 inline mr-1.5" />
@@ -59,7 +59,7 @@
           <div
             class="max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm"
             :class="msg.role === 'user'
-              ? 'bg-crm-teal text-white rounded-tr-sm'
+              ? 'bg-primary-600 text-white rounded-tr-sm'
               : 'bg-white border border-crm-border text-crm-text rounded-tl-sm'"
           >
             <!-- Collapsible Thinking Process -->
@@ -68,7 +68,7 @@
                 <summary class="flex items-center gap-2 font-semibold cursor-pointer select-none outline-none">
                   <FeatherIcon
                     name="cpu"
-                    class="size-3.5 text-crm-teal shrink-0"
+                    class="size-3.5 text-primary-600 shrink-0"
                     :class="msg.thinkingActive ? 'animate-pulse' : ''"
                   />
                   <span>{{ msg.thinkingActive ? (msg.statusMessage || __('Berpikir...')) : __('Proses Berpikir AI') }}</span>
@@ -77,7 +77,7 @@
                     class="size-3.5 ml-auto text-crm-muted transition-transform group-open:rotate-180"
                   />
                 </summary>
-                <div class="mt-2 pl-3 font-mono text-[10px] leading-5 whitespace-pre-wrap border-l border-crm-teal/30 text-crm-muted max-h-40 overflow-y-auto">
+                <div class="mt-2 pl-3 font-mono text-[10px] leading-5 whitespace-pre-wrap border-l border-primary-600/30 text-crm-muted max-h-40 overflow-y-auto">
                   {{ msg.thinking || __('Menganalisis...') }}
                 </div>
               </details>
@@ -89,7 +89,7 @@
               <p v-else class="text-sm whitespace-pre-wrap leading-6">{{ msg.text }}</p>
             </template>
             <div v-else-if="msg.thinkingActive" class="flex items-center gap-2 py-1.5 text-xs text-crm-muted animate-pulse">
-              <FeatherIcon name="loader" class="size-3.5 animate-spin text-crm-teal shrink-0" />
+              <FeatherIcon name="loader" class="size-3.5 animate-spin text-primary-600 shrink-0" />
               <span>{{ msg.statusMessage || __('Menyusun analisis terstruktur...') }}</span>
             </div>
 
@@ -111,12 +111,12 @@
           v-model="inputText"
           type="text"
           :placeholder="__('Ketik pesan...')"
-          class="flex-1 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+          class="flex-1 rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
           :disabled="aiThinking"
           @keydown.enter="sendMessage()"
         />
         <button
-          class="flex size-10 items-center justify-center rounded-xl bg-crm-teal text-white disabled:opacity-50"
+          class="flex size-10 items-center justify-center rounded-xl bg-primary-600 text-white disabled:opacity-50"
           :disabled="!inputText.trim() || aiThinking || !ragReady"
           @click="sendMessage()"
         >

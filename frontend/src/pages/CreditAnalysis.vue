@@ -8,7 +8,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="__('Search borrower or application')"
-            class="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:bg-white transition-all"
+            class="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-600 focus:bg-white transition-all"
           />
           <span class="absolute left-3 top-2.5 text-slate-400">
             <FeatherIcon name="search" class="h-4 w-4" />
@@ -21,7 +21,7 @@
           v-for="app in filteredApps"
           :key="app.name"
           class="w-full text-left flex flex-col gap-1 p-3 rounded-lg cursor-pointer transition-all hover:bg-slate-50 border"
-          :class="selectedApp?.name === app.name ? 'bg-teal-50 border-teal-200' : 'border-transparent'"
+          :class="selectedApp?.name === app.name ? 'bg-primary-50 border-primary-200' : 'border-transparent'"
           @click="selectApp(app)"
         >
           <div class="flex justify-between items-start gap-2">
@@ -57,13 +57,13 @@
       <div v-else class="flex-1 flex flex-col overflow-hidden">
         <div class="bg-white border-b border-slate-200 p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-5 shrink-0 shadow-sm">
           <div class="flex items-center gap-4 min-w-0">
-            <div class="w-14 h-14 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-600/10 shrink-0">
+            <div class="w-14 h-14 rounded-xl bg-primary-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-primary-600/10 shrink-0">
               {{ initials(selectedApp.borrower_name) }}
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="text-xl font-bold text-slate-800 truncate">{{ selectedApp.borrower_name }}</h1>
-                <Badge :label="selectedApp.borrower_type || __('Credit')" theme="teal" variant="subtle" />
+                <Badge :label="selectedApp.borrower_type || __('Credit')" theme="primary" variant="subtle" />
                 <Badge :label="selectedApp.status" :theme="statusTheme(selectedApp.status)" variant="solid" />
                 <Badge :label="riskGrade.grade ? `${riskGrade.grade} / ${riskGrade.score}` : (selectedApp.risk_grade ? selectedApp.risk_grade : __('Unscored'))" theme="blue" variant="subtle" />
               </div>
@@ -122,10 +122,10 @@
         </div>
 
         <!-- Visual Journey Progress Banner -->
-        <div v-if="currentFlowState.data?.ok && currentFlowState.data.execution_id" class="bg-teal-50/60 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between gap-4 shrink-0 text-xs">
+        <div v-if="currentFlowState.data?.ok && currentFlowState.data.execution_id" class="bg-primary-50/60 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between gap-4 shrink-0 text-xs">
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-700">{{ __('Visual Journey Stage:') }}</span>
-            <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold">
+            <span class="bg-primary-100 text-primary-800 px-2 py-0.5 rounded font-mono font-bold">
               {{ currentFlowState.data.current_node_label || currentFlowState.data.current_node }}
             </span>
             <span class="text-slate-400 font-medium">({{ currentFlowState.data.current_node_type }})</span>
@@ -143,7 +143,7 @@
               v-for="t in tabs"
               :key="t.key"
               class="pb-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap"
-              :class="activeTab === t.key ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+              :class="activeTab === t.key ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
               @click="activeTab = t.key"
             >
               {{ t.label }}
@@ -182,7 +182,7 @@
                   </template>
                 </FileUploader>
               </div>
-              <div v-if="importResult" class="mx-4 mt-4 rounded-lg border px-4 py-3 text-sm" :class="importResult.errors?.length ? 'border-red-200 bg-red-50 text-red-700' : 'border-teal-200 bg-teal-50 text-teal-700'">
+              <div v-if="importResult" class="mx-4 mt-4 rounded-lg border px-4 py-3 text-sm" :class="importResult.errors?.length ? 'border-red-200 bg-red-50 text-red-700' : 'border-primary-200 bg-primary-50 text-primary-700'">
                 <div class="font-semibold">
                   {{ importResult.errors?.length ? __('Import failed') : __('Import completed') }}
                   <span v-if="!importResult.errors?.length">- {{ importResult.row_count }} {{ __('rows') }}</span>
@@ -214,7 +214,7 @@
                         <RupiahInput
                           v-if="row.cells[year]"
                           v-model="row.cells[year].adjusted_amount"
-                          class="w-32 rounded border border-slate-200 bg-white px-2 py-1 text-right font-mono text-xs focus:border-teal-600 focus:outline-none"
+                          class="w-32 rounded border border-slate-200 bg-white px-2 py-1 text-right font-mono text-xs focus:border-primary-600 focus:outline-none"
                         />
                         <span v-else class="text-slate-300">-</span>
                       </td>
@@ -391,7 +391,7 @@
                   <h3 class="font-bold text-slate-800">{{ __('Industry Benchmarking') }}</h3>
                   <p class="text-sm text-slate-500 mt-1">{{ benchmark.industry || __('General Commercial') }} - KBLI {{ selectedApp.kbli || __('default') }}</p>
                 </div>
-                <Badge label="Median / Q1 / Q3" theme="teal" variant="subtle" />
+                <Badge label="Median / Q1 / Q3" theme="primary" variant="subtle" />
               </div>
               <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-4">
                 <MetricCard v-for="(value, key) in benchmark.median || {}" :key="key" :label="labelize(key)" :value="formatNumber(value)" icon="bar-chart" />
@@ -413,7 +413,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="peer in peers.peers || []" :key="peer.name" class="border-b border-slate-100">
-                    <td class="py-3 px-4 font-semibold text-slate-800">{{ peer.name }} <Badge v-if="peer.type === 'Borrower'" label="Borrower" theme="teal" variant="subtle" /></td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">{{ peer.name }} <Badge v-if="peer.type === 'Borrower'" label="Borrower" theme="primary" variant="subtle" /></td>
                     <td class="py-3 px-4 text-right font-mono">{{ formatNumber(peer.current_ratio) }}</td>
                     <td class="py-3 px-4 text-right font-mono">{{ formatNumber(peer.debt_to_equity) }}</td>
                     <td class="py-3 px-4 text-right font-mono">{{ formatPercent(peer.net_margin) }}</td>
@@ -442,7 +442,7 @@
                       <span class="font-mono text-slate-600">{{ value }}</span>
                     </div>
                     <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div class="h-full bg-teal-600 rounded-full" :style="{ width: `${Math.min(100, value / 4)}%` }"></div>
+                      <div class="h-full bg-primary-600 rounded-full" :style="{ width: `${Math.min(100, value / 4)}%` }"></div>
                     </div>
                   </div>
                 </div>
@@ -469,7 +469,7 @@
                 <Button variant="outline" size="sm" :loading="busy" :label="__('Run Scenario')" @click="runScenario" />
               </div>
               <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-                <div v-for="scenario in scenarios" :key="scenario.case" class="rounded-lg border border-slate-200 p-4" :class="scenario.case === 'Base' ? 'bg-teal-50 border-teal-200' : 'bg-white'">
+                <div v-for="scenario in scenarios" :key="scenario.case" class="rounded-lg border border-slate-200 p-4" :class="scenario.case === 'Base' ? 'bg-primary-50 border-primary-200' : 'bg-white'">
                   <div class="flex items-center justify-between">
                     <h4 class="font-bold text-slate-800">{{ scenario.case }}</h4>
                     <Badge :label="scenario.decision" :theme="scenario.dscr >= 1.2 ? 'green' : 'orange'" variant="subtle" />
@@ -495,7 +495,7 @@
                     <tr v-for="row in sensitivity.matrix || []" :key="row.revenue_delta">
                       <td class="w-28 p-2 text-right font-semibold text-slate-500">{{ formatPercent(row.revenue_delta) }}</td>
                       <td v-for="(cell, idx) in row.cells" :key="idx" class="p-1">
-                        <div class="w-24 rounded px-2 py-2 text-center font-mono" :class="cell.status === 'Alert' ? 'bg-orange-100 text-orange-800' : 'bg-teal-50 text-teal-800'">
+                        <div class="w-24 rounded px-2 py-2 text-center font-mono" :class="cell.status === 'Alert' ? 'bg-orange-100 text-orange-800' : 'bg-primary-50 text-primary-800'">
                           {{ formatNumber(cell.value) }}
                         </div>
                       </td>
@@ -534,7 +534,7 @@
                 <div class="mt-4 space-y-2">
                   <div v-for="source in newsSentiment.sources || []" :key="source.url || source.title" class="rounded border border-slate-100 bg-slate-50 p-3 text-sm">
                     <div class="font-semibold text-slate-800">{{ source.title }}</div>
-                    <a v-if="source.url" :href="source.url" target="_blank" rel="noreferrer" class="text-xs text-teal-700 hover:underline">{{ source.url }}</a>
+                    <a v-if="source.url" :href="source.url" target="_blank" rel="noreferrer" class="text-xs text-primary-700 hover:underline">{{ source.url }}</a>
                   </div>
                 </div>
               </div>
@@ -573,7 +573,7 @@
                 <StructuredResponseCard v-if="memoStructured" class="mb-3" :response="memoStructured" />
                 <textarea
                   v-model="memoContent"
-                  class="h-[360px] w-full rounded-lg border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 focus:outline-none focus:border-teal-600"
+                  class="h-[360px] w-full rounded-lg border border-slate-200 p-4 text-sm leading-relaxed text-slate-700 focus:outline-none focus:border-primary-600"
                   :placeholder="__('Generate or write the memorandum...')"
                 ></textarea>
               </div>
@@ -587,7 +587,7 @@
                   <h3 class="font-bold text-slate-800">{{ __('UAT Proof Pack') }}</h3>
                   <p class="text-sm text-slate-500 mt-1">{{ __('Evidence for 07_CreditAnalysis and AI Agent Center demo walkthrough.') }}</p>
                 </div>
-                <Badge :label="`${proofRows.length} Evidence Rows`" theme="teal" variant="subtle" />
+                <Badge :label="`${proofRows.length} Evidence Rows`" theme="primary" variant="subtle" />
               </div>
             </section>
             <section class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
@@ -640,14 +640,14 @@
                     v-if="['Data', 'Int', 'Float', 'Currency'].includes(getFieldType(field.fieldname))"
                     v-model="workflowFormData[field.fieldname]"
                     type="text"
-                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary-600 focus:outline-none"
                     :placeholder="field.label"
                     :readonly="field.readOnly"
                   />
                   <select
                     v-else-if="getFieldType(field.fieldname) === 'Select'"
                     v-model="workflowFormData[field.fieldname]"
-                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none bg-white"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary-600 focus:outline-none bg-white"
                     :disabled="field.readOnly"
                   >
                     <option value="">{{ __('Pilih...') }}</option>
@@ -655,7 +655,7 @@
                   <textarea
                     v-else-if="['Small Text', 'Text'].includes(getFieldType(field.fieldname))"
                     v-model="workflowFormData[field.fieldname]"
-                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary-600 focus:outline-none"
                     :placeholder="field.label"
                     :readonly="field.readOnly"
                   />
@@ -663,7 +663,7 @@
                     v-else
                     v-model="workflowFormData[field.fieldname]"
                     type="text"
-                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-teal-600 focus:outline-none"
+                    class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary-600 focus:outline-none"
                     :placeholder="field.label"
                     :readonly="field.readOnly"
                   />
@@ -693,7 +693,7 @@ const MetricCard = {
   setup(props) {
     return () => h('div', { class: 'rounded-lg border border-slate-100 bg-white p-4 shadow-sm' }, [
       h('div', { class: 'flex items-center gap-2 text-xs font-semibold uppercase text-slate-400' }, [
-        h(FeatherIcon, { name: props.icon, class: 'h-4 w-4 text-teal-600' }),
+        h(FeatherIcon, { name: props.icon, class: 'h-4 w-4 text-primary-600' }),
         props.label,
       ]),
       h('div', { class: 'mt-2 text-lg font-bold text-slate-800 truncate' }, props.value),
