@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import frappe
+from frappe.utils import add_to_date, now
 from frappe.tests.utils import FrappeTestCase
 
 from crm.api.omnichannel import (
@@ -106,6 +107,56 @@ class TestOmnichannelUAT(FrappeTestCase):
 				{"conversation": inbound["conversation"], "direction": "Outbound", "status": "Provider Not Configured"},
 			)
 		)
+
+	def test_whatsapp_expired_window_requires_approved_template(self):
+		customer = self.make_customer()
+		inbound = upsert_inbound_message(
+			channel="WhatsApp",
+			content="Halo",
+			provider_message_id=f"wa-expired-{frappe.generate_hash(length=6)}",
+			sender="+6281222223333",
+			recipient="+6221555000",
+			customer=customer.name,
+			reference_doctype="Customer",
+			reference_name=customer.name,
+		)
+		conversation = frappe.get_doc(CONVERSATION, inbound["conversation"])
+		conversation.reply_window_ends_on = add_to_date(now(), hours=-1, as_string=True)
+		conversation.save(ignore_permissions=True)
+
+		with patch("crm.api.omnichannel._provider_status", return_value={"status": "Active"}):
+			failed = send_message(conversation.name, content="Free text di luar window")
+
+		self.assertEqual(failed["status"], "Failed")
+		self.assertIn("reply window has expired", failed["failed_reason"])
+
+		template = save_template(
+			{
+				"template_code": f"wa-approved-{frappe.generate_hash(length=6)}",
+				"template_name": "WA Approved Follow Up",
+				"channel": "WhatsApp",
+				"status": "Approved",
+				"whatsapp_approved": 1,
+				"body": "Halo {{ customer_name }}, kami siap membantu kembali.",
+				"is_active": 1,
+			}
+		)["template"]
+
+		with (
+			patch("crm.api.omnichannel._provider_status", return_value={"status": "Active"}),
+			patch("crm.api.omnichannel._send_to_provider", return_value={"status": "Queued", "provider_message_id": "wa-template-1", "to_party": "+6281222223333"}) as send_provider,
+		):
+			queued = send_message(conversation.name, template=template)
+
+		self.assertEqual(queued["status"], "Queued")
+		self.assertIn(customer.customer_name, send_provider.call_args.args[1])
+
+	def test_whatsapp_approved_templates_are_seeded_for_expired_window(self):
+		templates = get_templates(channel="WhatsApp", approved_only=True)
+
+		self.assertTrue(templates)
+		self.assertTrue(all(row["status"] == "Approved" for row in templates))
+		self.assertTrue(all(row["whatsapp_approved"] for row in templates))
 
 	def test_template_routing_sla_bulk_archive_and_analytics(self):
 		customer = self.make_customer()
