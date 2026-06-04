@@ -605,7 +605,12 @@
             <div class="omni-sla-bar">
               <span>{{ __('SLA') }}: {{ detail?.sla?.status || '-' }}</span>
               <span>{{ __('Due') }}: {{ formatDate(detail?.sla?.first_response_due_on) }}</span>
-              <span v-if="detail?.conversation?.reply_window_ends_on">{{ __('Reply window') }}: {{ formatDate(detail.conversation.reply_window_ends_on) }}</span>
+              <span
+                v-if="detail?.conversation?.reply_window_ends_on"
+                :class="{ 'omni-window-expired-text': whatsappReplyWindowExpired }"
+              >
+                {{ __('Reply window') }}: {{ formatDate(detail.conversation.reply_window_ends_on) }}
+              </span>
             </div>
 
             <div class="omni-messages">
@@ -638,9 +643,15 @@
               <div v-if="!providerReady" class="omni-provider-warning">
                 {{ __('Provider Not Configured. Sending is disabled for real outbound delivery; API will store the blocked attempt with provider status.') }}
               </div>
+              <div v-else-if="whatsappReplyWindowExpired && !showInternalNote" class="omni-provider-warning danger">
+                {{ __('WhatsApp 24h free-text window has expired. Select an approved template to restart the conversation, or wait for the customer to message again.') }}
+              </div>
+              <div v-if="whatsappReplyWindowExpired && !templates.length && !showInternalNote" class="omni-provider-warning danger">
+                {{ __('No approved WhatsApp template is available. Open Omnichannel Templates and mark at least one WhatsApp template as Approved and WhatsApp Approved.') }}
+              </div>
               <div class="omni-template-row">
                 <select v-model="selectedTemplate">
-                  <option value="">{{ __('No template') }}</option>
+                  <option value="">{{ whatsappReplyWindowExpired ? __('Select approved template') : __('No template') }}</option>
                   <option v-for="template in templates" :key="template.name" :value="template.name">
                     {{ template.template_name || template.name }}
                   </option>
@@ -683,7 +694,7 @@
                     </button>
                   </template>
                 </FileUploader>
-                <button class="omni-primary" :disabled="sending || (!composer && !selectedTemplate)" @click="sendReply">
+                <button class="omni-primary" :disabled="sendDisabled" @click="sendReply">
                   <FeatherIcon name="send" class="h-4 w-4" />
                   {{ sending ? __('Sending...') : __('Send') }}
                 </button>
@@ -889,6 +900,17 @@ const dialogTitle = computed(() => {
 
 const activeTabLabel = computed(() => channelTabs.find((item) => item.key === selectedChannel.value)?.label || __('All'))
 const providerReady = computed(() => detail.value?.provider_status?.status === 'Active')
+const whatsappReplyWindowExpired = computed(() => {
+  const conversation = detail.value?.conversation
+  if (!conversation || conversation.channel !== 'WhatsApp' || !conversation.reply_window_ends_on) return false
+  return Date.now() > new Date(conversation.reply_window_ends_on).getTime()
+})
+const sendDisabled = computed(() => {
+  if (sending.value) return true
+  if (showInternalNote.value) return !composer.value.trim()
+  if (whatsappReplyWindowExpired.value && !selectedTemplate.value) return true
+  return !composer.value.trim() && !selectedTemplate.value
+})
 const contextSummary = computed(() => detail.value?.customer_context?.summary || detail.value?.customer_context || {})
 const customerName = computed(() => {
   return (
@@ -955,6 +977,7 @@ async function loadConversation(name) {
   detail.value = await call('crm.api.omnichannel.get_conversation', { conversation_id: name })
   templates.value = await call('crm.api.omnichannel.get_templates', {
     channel: detail.value?.conversation?.channel,
+    approved_only: detail.value?.conversation?.channel === 'WhatsApp',
   })
 
   // Compliance integrity reset and load
@@ -983,6 +1006,11 @@ function openConversation(name) {
 
 async function sendReply() {
   if (!selectedConversationId.value) return
+  if (!showInternalNote.value && whatsappReplyWindowExpired.value && !selectedTemplate.value) {
+    toast.error(__('WhatsApp free-text window has expired. Select an approved template to restart the conversation.'))
+    return
+  }
+  if (sendDisabled.value) return
   sending.value = true
   try {
     const response = await call('crm.api.omnichannel.send_message', {
@@ -1855,6 +1883,10 @@ async function verifyComplianceIntegrity() {
   font-weight: 700;
 }
 
+.omni-window-expired-text {
+  color: #b91c1c;
+}
+
 .omni-messages {
   flex: 1;
   min-height: 0;
@@ -1923,6 +1955,13 @@ async function verifyComplianceIntegrity() {
   background: #fef2f2;
   color: #991b1b;
   font-size: 12px;
+}
+
+.omni-provider-warning.danger {
+  border-color: #fca5a5;
+  background: #fff1f2;
+  color: #9f1239;
+  font-weight: 700;
 }
 
 .omni-template-row {

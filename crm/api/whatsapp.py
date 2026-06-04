@@ -440,17 +440,18 @@ def create_whatsapp_message(
 
 
 @frappe.whitelist()
-def send_whatsapp_template(reference_doctype: str, reference_name: str, template: str, to: str):
+def send_whatsapp_template(reference_doctype: str, reference_name: str, template: str, to: str, content: str | None = None):
 	validate_access(reference_doctype, reference_name)
 	to = _normalize_whatsapp_number(to)
+	message = cstr(content).strip() or f"Template message: {template}"
 	
 	payload = {
 		"to": to,
 		"phone": to,
 		"number": to,
 		"template": template,
-		"message": f"Template message: {template}",
-		"text": f"Template message: {template}",
+		"message": message,
+		"text": message,
 		"reference_doctype": reference_doctype,
 		"reference_name": reference_name,
 	}
@@ -591,4 +592,3 @@ def disconnect_whatsapp():
 		frappe.db.commit()
 
 	return {"message": "Success"}
-

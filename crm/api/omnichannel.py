@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, get_datetime, now, today
+from frappe.utils import add_to_date, cstr, get_datetime, now, today
 
 
 CONVERSATION = "CRM Omnichannel Conversation"
@@ -32,10 +32,48 @@ COUNT_KEYS = {
 	"In-App": "in_app",
 	"Voice": "voice",
 }
+DEFAULT_WHATSAPP_TEMPLATES = [
+	{
+		"template_code": "wa_reengagement_follow_up_id",
+		"template_name": "WhatsApp Re-engagement Follow Up",
+		"body": "Halo {{ customer_name }}, kami ingin menindaklanjuti percakapan sebelumnya. Silakan balas pesan ini agar kami dapat membantu kembali.",
+	},
+	{
+		"template_code": "wa_service_update_id",
+		"template_name": "WhatsApp Service Update",
+		"body": "Halo {{ customer_name }}, ada update layanan dari tim kami terkait {{ subject }}. Mohon balas pesan ini untuk melanjutkan percakapan.",
+	},
+]
 
 
 def _ready() -> bool:
 	return frappe.db.exists("DocType", CONVERSATION) and frappe.db.exists("DocType", MESSAGE)
+
+
+def _ensure_default_whatsapp_templates():
+	if not frappe.db.exists("DocType", TEMPLATE):
+		return
+	created = False
+	for row in DEFAULT_WHATSAPP_TEMPLATES:
+		name = frappe.db.get_value(TEMPLATE, {"template_code": row["template_code"]}, "name")
+		doc = frappe.get_doc(TEMPLATE, name) if name else frappe.new_doc(TEMPLATE)
+		doc.template_code = row["template_code"]
+		doc.template_name = row["template_name"]
+		doc.channel = "WhatsApp"
+		doc.language = doc.language or "id"
+		doc.version = doc.version or 1
+		doc.status = "Approved"
+		doc.whatsapp_approved = 1
+		doc.body = row["body"]
+		doc.merge_fields = "customer_name,subject"
+		doc.is_active = 1
+		if doc.is_new():
+			doc.insert(ignore_permissions=True)
+			created = True
+		else:
+			doc.save(ignore_permissions=True)
+	if created:
+		frappe.db.commit()
 
 
 def _as_json(value) -> str:
@@ -622,7 +660,7 @@ def _send_to_provider(conversation, content=None, template=None, attachment=None
 			return {"status": "Failed", "failed_reason": _("WhatsApp reference and recipient are required")}
 		if template:
 			name = frappe.get_attr("crm.api.whatsapp.send_whatsapp_template")(
-				conversation.reference_doctype, conversation.reference_name, template, to_party
+				conversation.reference_doctype, conversation.reference_name, template, to_party, content=content
 			)
 		else:
 			name = frappe.get_attr("crm.api.whatsapp.create_whatsapp_message")(
@@ -669,6 +707,39 @@ def _send_to_provider(conversation, content=None, template=None, attachment=None
 		if not to_party:
 			to_party = frappe.db.get_value("Customer", conversation.customer, "mobile_no") or conversation.customer
 	return {"status": "Sent", "provider_message_id": None, "to_party": to_party}
+
+
+def _validate_whatsapp_template(template):
+	if not template:
+		return None
+	if not frappe.db.exists(TEMPLATE, template):
+		return None
+	doc = frappe.get_doc(TEMPLATE, template)
+	if doc.channel == "WhatsApp" and (doc.status != "Approved" or not doc.whatsapp_approved):
+		return None
+	return doc
+
+
+def _render_omnichannel_template(template_doc, conversation):
+	if not template_doc:
+		return ""
+	context = {
+		"customer": conversation.customer,
+		"customer_name": frappe.db.get_value("Customer", conversation.customer, "customer_name") if conversation.customer else "",
+		"subject": conversation.subject,
+		"reference_doctype": conversation.reference_doctype,
+		"reference_name": conversation.reference_name,
+	}
+	if conversation.customer:
+		try:
+			context["customer_doc"] = frappe.get_doc("Customer", conversation.customer)
+		except Exception:
+			pass
+	try:
+		rendered = frappe.render_template(template_doc.body or "", context)
+	except Exception:
+		rendered = template_doc.body or ""
+	return frappe.utils.strip_html(rendered).strip()
 
 
 @frappe.whitelist(allow_guest=True)
@@ -766,6 +837,13 @@ def send_message(
 	failed_reason = None
 	provider_result = {}
 	attachment = (attachments or [None])[0] if isinstance(attachments, list) else attachments
+	if conversation.channel == "WhatsApp" and template:
+		template_doc = _validate_whatsapp_template(template)
+		if not template_doc:
+			status = "Failed"
+			failed_reason = _("WhatsApp template must be active, approved, and marked as WhatsApp Approved.")
+		elif not content:
+			content = _render_omnichannel_template(template_doc, conversation)
 	if provider["status"] != "Active":
 		status = "Provider Not Configured"
 		failed_reason = _("Provider Not Configured")
@@ -875,14 +953,19 @@ def evaluate_routing(conversation_id: str):
 
 
 @frappe.whitelist()
-def get_templates(channel: str | None = None, language: str | None = None):
+def get_templates(channel: str | None = None, language: str | None = None, approved_only: bool = False):
 	if not frappe.db.exists("DocType", TEMPLATE):
 		return []
 	filters = {"is_active": 1}
 	if channel:
-		filters["channel"] = _normalize_channel(channel)
+		channel = _normalize_channel(channel)
+		filters["channel"] = channel
 	if language:
 		filters["language"] = language
+	if channel == "WhatsApp" and cstr(approved_only).lower() in {"1", "true", "yes"}:
+		_ensure_default_whatsapp_templates()
+		filters["status"] = "Approved"
+		filters["whatsapp_approved"] = 1
 	return frappe.get_all(TEMPLATE, filters=filters, fields=["*"], order_by="modified desc")
 
 
