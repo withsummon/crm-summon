@@ -52,7 +52,7 @@
         class="px-4 py-2.5 text-sm font-medium transition-colors"
         :class="
           activePage === page.key
-            ? 'border-b-2 border-secondary-500 text-secondary-600'
+            ? 'border-b-2 border-primary-500 text-primary-600'
             : 'text-ink-gray-5 hover:text-ink-gray-8'
         "
         @click="activePage = page.key"
@@ -60,7 +60,7 @@
         {{ __(page.label) }}
         <span
           v-if="page.key === 'inbox' && totalUnread > 0"
-          class="ml-1.5 rounded-full bg-secondary-500 px-1.5 text-[10px] text-white"
+          class="ml-1.5 rounded-full bg-primary-500 px-1.5 text-[10px] text-white"
         >
           {{ totalUnread }}
         </span>
@@ -87,7 +87,7 @@
               class="rounded-full border px-3 py-1 text-xs"
               :class="
                 activeTab === tab
-                  ? 'border-secondary-500 bg-secondary-50 text-secondary-700'
+                  ? 'border-primary-500 bg-primary-50 text-primary-700'
                   : 'border-outline-gray-2 text-ink-gray-6 hover:border-ink-gray-4'
               "
               @click="activeTab = tab"
@@ -95,7 +95,7 @@
               {{ channelIcon(tab) }} {{ __(tab) }}
               <span
                 v-if="tabCounts[tab] > 0"
-                class="ml-1 rounded-full bg-secondary-500 px-1.5 text-[10px] text-white font-semibold"
+                class="ml-1 rounded-full bg-primary-500 px-1.5 text-[10px] text-white font-semibold"
               >
                 {{ tabCounts[tab] }}
               </span>
@@ -145,7 +145,7 @@
               v-for="conv in filteredConversations"
               :key="conv.id"
               class="flex w-full flex-col gap-1 border-b border-outline-gray-1 px-4 py-3 text-left transition-colors"
-              :class="selectedId === conv.id ? 'bg-secondary-50' : 'hover:bg-surface-gray-1'"
+              :class="selectedId === conv.id ? 'bg-primary-50' : 'hover:bg-surface-gray-1'"
               @click="selectConversation(conv.id)"
             >
               <div class="flex items-start justify-between gap-2">
@@ -171,7 +171,7 @@
                   <span class="text-[10px] text-ink-gray-4">{{ conv.lastTime }}</span>
                   <span
                     v-if="conv.unread"
-                    class="rounded-full bg-secondary-500 px-1.5 text-[10px] text-white"
+                    class="rounded-full bg-primary-500 px-1.5 text-[10px] text-white"
                   >
                     {{ conv.unread }}
                   </span>
@@ -300,7 +300,7 @@
                   class="rounded-2xl px-3 py-2 text-sm"
                   :class="
                     msg.direction === 'out'
-                      ? 'bg-secondary-500 text-white rounded-br-sm'
+                      ? 'bg-primary-500 text-white rounded-br-sm'
                       : 'bg-surface-gray-2 text-ink-gray-8 rounded-bl-sm'
                   "
                 >
@@ -347,7 +347,7 @@
               @click="applySuggestion(item)"
             >
               <div class="flex items-center gap-1.5 min-w-0">
-                <FeatherIcon :name="item.startsWith('Draf Disetujui: ') ? 'check-circle' : 'zap'" class="h-3.5 w-3.5 shrink-0" :class="item.startsWith('Draf Disetujui: ') ? 'text-primary-600' : 'text-secondary-500'" />
+                <FeatherIcon :name="item.startsWith('Draf Disetujui: ') ? 'check-circle' : 'zap'" class="h-3.5 w-3.5 shrink-0" :class="item.startsWith('Draf Disetujui: ') ? 'text-primary-600' : 'text-primary-500'" />
                 <span class="truncate">
                   <span v-if="item.startsWith('Draf Disetujui: ')" class="font-bold text-primary-700 mr-1">[{{ __('Draf AI Disetujui') }}]</span>
                   {{ item.startsWith('Draf Disetujui: ') ? item.substring('Draf Disetujui: '.length) : item }}
@@ -366,7 +366,7 @@
               <div class="flex rounded-md border border-outline-gray-2 overflow-hidden text-xs">
                 <button
                   class="px-2.5 py-1 transition-colors"
-                  :class="!isInternal ? 'bg-secondary-500 text-white' : 'text-ink-gray-5 hover:bg-surface-gray-1'"
+                  :class="!isInternal ? 'bg-primary-500 text-white' : 'text-ink-gray-5 hover:bg-surface-gray-1'"
                   @click="isInternal = false"
                 >
                   {{ __('Reply') }}
@@ -469,7 +469,7 @@
         <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="flex items-center justify-between mb-3">
             <div class="text-sm font-semibold text-ink-gray-8">{{ __('Customer Context') }}</div>
-            <button class="text-xs text-secondary-500 hover:underline" @click="() => {}">360 →</button>
+            <button class="text-xs text-primary-500 hover:underline" @click="() => {}">360 →</button>
           </div>
           <div class="space-y-3 text-xs">
             <div>
@@ -620,7 +620,7 @@
               <div class="text-ink-gray-4">{{ __('Delivered') }}</div>
             </div>
             <div class="text-center">
-              <div class="font-semibold text-secondary-600">{{ camp.opened }}</div>
+              <div class="font-semibold text-primary-600">{{ camp.opened }}</div>
               <div class="text-ink-gray-4">{{ __('Opened') }}</div>
             </div>
           </div>
@@ -656,7 +656,7 @@
             <span
               v-for="field in t.mergeFields"
               :key="field"
-              class="rounded bg-secondary-50 px-1.5 py-0.5 text-[10px] text-secondary-700"
+              class="rounded bg-primary-50 px-1.5 py-0.5 text-[10px] text-primary-700"
             >
               {{ mergeFieldDisplay(field) }}
             </span>
@@ -703,7 +703,7 @@
             <div v-for="rm in rmResponse" :key="rm.name" class="flex items-center gap-2 text-xs">
               <span class="w-20 truncate text-ink-gray-6">{{ rm.name }}</span>
               <div class="flex-1 h-4 rounded-full bg-surface-gray-2 overflow-hidden">
-                <div class="h-4 rounded-full bg-secondary-400" :style="{ width: rm.pct + '%' }" />
+                <div class="h-4 rounded-full bg-primary-400" :style="{ width: rm.pct + '%' }" />
               </div>
               <span class="w-10 text-right text-ink-gray-5">{{ rm.time }}</span>
             </div>
@@ -848,7 +848,7 @@
           v-for="tag in availableTags"
           :key="tag"
           class="rounded-full border px-3 py-1 text-xs transition-colors"
-          :class="activeConv.tags.includes(tag) ? 'border-secondary-500 bg-secondary-50 text-secondary-700' : 'border-outline-gray-2 text-ink-gray-5'"
+          :class="activeConv.tags.includes(tag) ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-outline-gray-2 text-ink-gray-5'"
           @click="toggleTag(tag)"
         >
           {{ tag }}
