@@ -408,25 +408,31 @@ export function copyToClipboard(text) {
 
 export const colors = [
   'gray',
+  'primary',
+  'secondary',
   'blue',
-  'green',
   'red',
   'pink',
   'orange',
   'amber',
   'yellow',
-  'cyan',
-  'teal',
   'violet',
   'purple',
   'black',
 ]
 
 export function parseColor(color) {
+  if (color == 'green' || color == 'primary') {
+    return '!text-primary-600'
+  }
+  if (color == 'teal' || color == 'cyan' || color == 'secondary') {
+    return '!text-secondary-600'
+  }
+
   let textColor = `!text-${color}-600`
   if (color == 'black') {
     textColor = '!text-ink-gray-9'
-  } else if (['gray', 'green'].includes(color)) {
+  } else if (color == 'gray') {
     textColor = `!text-${color}-700`
   }
 

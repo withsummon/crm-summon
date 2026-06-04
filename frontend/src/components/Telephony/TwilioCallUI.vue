@@ -84,9 +84,9 @@
           <Button
             size="md"
             variant="solid"
-            theme="green"
+            theme="gray"
             :label="__('Accept')"
-            class="rounded-lg text-ink-white"
+            class="rounded-lg text-ink-white btn-brand-primary"
             :iconLeft="PhoneIcon"
             @click="acceptIncomingCall"
           />
@@ -150,8 +150,8 @@
     <div v-else class="flex items-center gap-2">
       <Button
         variant="solid"
-        theme="green"
-        class="pulse relative !h-6 !w-6 rounded-full animate-pulse text-ink-white"
+        theme="gray"
+        class="pulse relative !h-6 !w-6 rounded-full animate-pulse text-ink-white btn-brand-primary"
         :tooltip="__('Accept Call')"
         :icon="PhoneIcon"
         @click.stop="acceptIncomingCall"
@@ -486,7 +486,7 @@ defineExpose({ makeOutgoingCall, setup: startupClient })
 .pulse::before {
   content: '';
   position: absolute;
-  border: 1px solid green;
+  border: 1px solid #ff6600;
   width: calc(100% + 20px);
   height: calc(100% + 20px);
   border-radius: 50%;
@@ -496,7 +496,7 @@ defineExpose({ makeOutgoingCall, setup: startupClient })
 .pulse::after {
   content: '';
   position: absolute;
-  border: 1px solid green;
+  border: 1px solid #ff6600;
   width: calc(100% + 20px);
   height: calc(100% + 20px);
   border-radius: 50%;

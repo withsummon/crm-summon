@@ -158,7 +158,7 @@
                   v-if="_event.attending"
                   class="flex items-center justify-center absolute -bottom-[2px] -right-[2px] ring-1 ring-outline-white size-2.5 rounded-full"
                   :class="{
-                    'bg-green-600': _event.attending === 'Yes',
+                    'bg-primary-600': _event.attending === 'Yes',
                     'bg-gray-500': _event.attending === 'Maybe',
                     'bg-red-500': _event.attending === 'No',
                   }"
@@ -200,7 +200,7 @@
                   v-if="att.attending"
                   class="flex items-center justify-center absolute -bottom-[2px] -right-[2px] ring-1 ring-outline-white size-2.5 rounded-full"
                   :class="{
-                    'bg-green-600': att.attending === 'Yes',
+                    'bg-primary-600': att.attending === 'Yes',
                     'bg-gray-500': att.attending === 'Maybe',
                     'bg-red-500': att.attending === 'No',
                   }"

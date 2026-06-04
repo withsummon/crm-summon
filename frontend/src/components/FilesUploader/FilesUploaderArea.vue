@@ -99,10 +99,10 @@
           <CircularProgressBar
             v-if="file.uploading || file.uploaded == file.total"
             :class="{
-              'text-ink-green-2': file.uploaded == file.total,
+              'text-primary-600': file.uploaded == file.total,
             }"
             :theme="{
-              primary: '#22C55E',
+              primary: '#FF6600',
               secondary: 'lightgray',
             }"
             :step="file.uploaded || 1"

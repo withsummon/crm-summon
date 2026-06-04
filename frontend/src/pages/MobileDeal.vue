@@ -148,10 +148,10 @@
                               </div>
                               <Badge
                                 v-if="contact.is_primary"
-                                class="ml-2"
+                                class="ml-2 badge-brand-primary"
                                 variant="outline"
                                 :label="__('Primary')"
-                                theme="green"
+                                theme="orange"
                               />
                             </div>
                             <div class="flex items-center">
