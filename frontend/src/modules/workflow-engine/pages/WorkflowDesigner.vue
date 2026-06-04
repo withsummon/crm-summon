@@ -749,21 +749,54 @@ function handleDeleteNode(nodeId) {
   toast.success(__('Node deleted'))
 }
 
+function cloneJson(value, fallback) {
+  const source = value === undefined || value === null ? fallback : value
+  if (source === undefined || source === null) return source
+  return JSON.parse(JSON.stringify(source))
+}
+
+function getSyncedWorkflowNodes() {
+  return workflowNodes.value.map((node) => {
+    const savedConfig = elementConfigs.value[node.id]
+    if (!savedConfig) return cloneJson(node, node)
+
+    return {
+      ...cloneJson(node, node),
+      data: {
+        ...node.data,
+        nodeType: savedConfig.nodeType || node.data?.nodeType,
+        label: savedConfig.label || node.data?.label,
+        description: savedConfig.description ?? node.data?.description ?? '',
+        config: cloneJson(savedConfig.config, node.data?.config || {}),
+        actions: cloneJson(savedConfig.actions, node.data?.actions || []),
+      }
+    }
+  })
+}
+
+function buildFlowJson() {
+  return {
+    xml: flowXml.value,
+    elementConfigs: cloneJson(elementConfigs.value, {}),
+    nodes: getSyncedWorkflowNodes(),
+    edges: cloneJson(workflowEdges.value, [])
+  }
+}
+
+function getFlowPayload() {
+  return {
+    title: flowTitle.value,
+    description: flowDescription.value,
+    productType: flowProductType.value,
+    applicantPersona: flowApplicantPersona.value,
+    isPreApproved: flowIsPreApproved.value,
+    flowJson: buildFlowJson(),
+  }
+}
+
 async function saveDraft() {
   try {
-    const res = await saveFlowDraft(isNew ? 'new' : flowId, {
-      title: flowTitle.value,
-      description: flowDescription.value,
-      productType: flowProductType.value,
-      applicantPersona: flowApplicantPersona.value,
-      isPreApproved: flowIsPreApproved.value,
-      flowJson: {
-        xml: flowXml.value,
-        elementConfigs: elementConfigs.value,
-        nodes: workflowNodes.value,
-        edges: workflowEdges.value
-      },
-    })
+    const res = await saveFlowDraft(isNew ? 'new' : flowId, getFlowPayload())
     flowChanged.value = false
     toast.success(__('Draft saved successfully'))
     
@@ -777,7 +810,8 @@ async function saveDraft() {
 }
 
 function runLocalValidation() {
-  const result = validateFlow(workflowNodes.value, workflowEdges.value)
+  const flowJson = buildFlowJson()
+  const result = validateFlow(flowJson.nodes, flowJson.edges)
   validationResults.value = result
   
   if (result.valid) {
@@ -794,7 +828,8 @@ function showPublishDialog() {
   }
   
   // Pre-validate locally
-  const result = validateFlow(workflowNodes.value, workflowEdges.value)
+  const flowJson = buildFlowJson()
+  const result = validateFlow(flowJson.nodes, flowJson.edges)
   if (!result.valid) {
     validationResults.value = result
     toast.error(__('Cannot publish: Flow has validation errors.'))
@@ -807,6 +842,7 @@ function showPublishDialog() {
 
 async function confirmPublish() {
   try {
+    await saveFlowDraft(flowId, getFlowPayload())
     await doPublish(flowId, changeNote.value)
     showPublishModal.value = false
     flowChanged.value = false

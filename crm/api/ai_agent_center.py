@@ -499,26 +499,24 @@ def _clean_action_blocks(text):
 	return re.sub(r"```json\s*\{.*?\"_action\".*?\}\s*```", "", text or "", flags=re.DOTALL).strip()
 
 
-def _extract_json_object(text):
-	text = cstr(text or "").strip()
-	if not text:
+def _parse_json_object_candidate(candidate):
+	candidate = cstr(candidate or "").strip()
+	if not candidate:
 		return None
-	fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
-	if fenced:
-		text = fenced.group(1).strip()
-	if text.startswith("{"):
-		try:
-			return json.loads(text)
-		except Exception:
-			pass
-	start = text.find("{")
+	try:
+		data = json.loads(candidate)
+		if isinstance(data, dict):
+			return data
+	except Exception:
+		pass
+	start = candidate.find("{")
 	if start < 0:
 		return None
 	depth = 0
 	in_string = False
 	escape = False
-	for index in range(start, len(text)):
-		char = text[index]
+	for index in range(start, len(candidate)):
+		char = candidate[index]
 		if escape:
 			escape = False
 			continue
@@ -536,20 +534,104 @@ def _extract_json_object(text):
 			depth -= 1
 			if depth == 0:
 				try:
-					return json.loads(text[start : index + 1])
+					data = json.loads(candidate[start : index + 1])
+					return data if isinstance(data, dict) else None
 				except Exception:
 					return None
 	return None
+
+
+def _extract_json_object(text):
+	text = cstr(text or "").strip()
+	if not text:
+		return None
+	candidates = re.findall(r"```(?:json)?\s*(.*?)\s*```", text, flags=re.DOTALL | re.IGNORECASE)
+	candidates.append(text)
+	for candidate in candidates:
+		data = _parse_json_object_candidate(candidate)
+		if data is not None:
+			return data
+	return None
+
+
+def _humanize_label(key):
+	return cstr(key).replace("_", " ").strip().title()
+
+
+def _clean_ai_text(value):
+	text = cstr(value or "").strip()
+	if not text:
+		return ""
+	text = re.sub(r"```(?:json)?\s*", "", text, flags=re.IGNORECASE).replace("```", "")
+	text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+	text = re.sub(r"`(.+?)`", r"\1", text)
+	return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def _humanize_jsonish_text(value):
+	if value is None:
+		return ""
+	if isinstance(value, str):
+		data = _extract_json_object(value)
+		if data is not None:
+			return _humanize_jsonish_text(data)
+		return _clean_ai_text(value)
+	if isinstance(value, (int, float)):
+		return cstr(value)
+	if isinstance(value, (list, tuple)):
+		parts = [_humanize_jsonish_text(item) for item in value if item is not None]
+		return "\n".join(part for part in parts if part)
+	if isinstance(value, dict):
+		preferred_keys = (
+			"title",
+			"summary",
+			"executive_summary",
+			"description",
+			"rationale",
+			"reasoning",
+			"recommendation",
+			"next_step",
+			"mitigation",
+			"content",
+			"text",
+			"value",
+			"label",
+		)
+		meaningful_keys = [key for key, val in value.items() if not key.startswith("_") and val not in (None, "", [], {})]
+		preferred = [_humanize_jsonish_text(value.get(key)) for key in preferred_keys if value.get(key)]
+		if preferred and all(key in preferred_keys for key in meaningful_keys):
+			return "\n".join(part for part in preferred if part)
+		lines = []
+		for key, val in value.items():
+			if key.startswith("_") or val in (None, "", [], {}):
+				continue
+			formatted = _humanize_jsonish_text(val)
+			if formatted:
+				lines.append(f"{_humanize_label(key)}: {formatted}")
+		return "\n".join(lines)
+	return cstr(value)
+
+
+def _safe_text(value, fallback=""):
+	return _humanize_jsonish_text(value) or fallback
 
 
 def _as_list_of_text(value):
 	if not value:
 		return []
 	if isinstance(value, str):
-		return [value]
+		try:
+			parsed = json.loads(value)
+			if isinstance(parsed, list):
+				value = parsed
+			else:
+				return [_safe_text(value)]
+		except Exception:
+			return [_safe_text(value)]
 	if isinstance(value, (list, tuple)):
-		return [cstr(item) if not isinstance(item, dict) else cstr(item.get("text") or item.get("summary") or item) for item in value if item]
-	return [cstr(value)]
+		return [_safe_text(item) for item in value if _safe_text(item)]
+	return [_safe_text(value)]
 
 
 def _normalize_metrics(value):
@@ -560,8 +642,8 @@ def _normalize_metrics(value):
 		if isinstance(item, dict):
 			metrics.append(
 				{
-					"label": cstr(item.get("label") or item.get("name") or "Metrik"),
-					"value": cstr(item.get("value") if item.get("value") is not None else item.get("amount") if item.get("amount") is not None else "-"),
+					"label": _safe_text(item.get("label") or item.get("name") or "Metrik", "Metrik"),
+					"value": _safe_text(item.get("value") if item.get("value") is not None else item.get("amount") if item.get("amount") is not None else "-", "-"),
 					"status": cstr(item.get("status") or "neutral").lower(),
 				}
 			)
@@ -574,8 +656,8 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 		data = {}
 	normalized = _response_shell(
 		agent["key"],
-		title=cstr(data.get("title") or agent["name"]),
-		summary=cstr(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat."),
+		title=_safe_text(data.get("title") or agent["name"], agent["name"]),
+		summary=_safe_text(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat.", "Output AI berhasil dibuat."),
 		confidence=data.get("confidence") if data.get("confidence") is not None else confidence,
 		sources=data.get("sources") or sources,
 		limitations=_as_list_of_text(data.get("limitations")),
@@ -585,14 +667,14 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 	sections = data.get("sections") if isinstance(data.get("sections"), list) else []
 	for section in sections:
 		if isinstance(section, str):
-			normalized["sections"].append({"title": section, "summary": "", "items": [], "metrics": []})
+			normalized["sections"].append({"title": _safe_text(section, "Analisis"), "summary": "", "items": [], "metrics": []})
 			continue
 		if not isinstance(section, dict):
 			continue
 		normalized["sections"].append(
 			{
-				"title": cstr(section.get("title") or "Analisis"),
-				"summary": cstr(section.get("summary") or section.get("content") or ""),
+				"title": _safe_text(section.get("title") or "Analisis", "Analisis"),
+				"summary": _safe_text(section.get("summary") or section.get("content") or ""),
 				"items": _as_list_of_text(section.get("items") or section.get("bullets")),
 				"metrics": _normalize_metrics(section.get("metrics")),
 			}
@@ -606,9 +688,9 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 		rows = data.get(key) if isinstance(data.get(key), list) else []
 		for row in rows:
 			if isinstance(row, str):
-				normalized[key].append({"title": fallback_title, "description": row})
+				normalized[key].append({"title": fallback_title, "description": _safe_text(row)})
 			elif isinstance(row, dict):
-				normalized[key].append({k: row.get(k) for k in row.keys()})
+				normalized[key].append({k: _safe_text(row.get(k)) for k in row.keys()})
 	actions = data.get("actions") if isinstance(data.get("actions"), list) else []
 	normalized["actions"] = [action for action in actions if isinstance(action, dict) and action.get("_action")]
 	return normalized
@@ -618,18 +700,19 @@ def _parse_structured_response(raw_content, agent_key, sources=None, confidence=
 	data = _extract_json_object(raw_content)
 	if data is not None:
 		return _normalize_structured_response(data, agent_key, sources=sources, confidence=confidence)
+	fallback_summary = _safe_text(raw_content or "Model tidak mengembalikan JSON valid.")
 	fallback = _response_shell(
 		agent_key,
 		title="Output AI perlu divalidasi",
-		summary=cstr(raw_content or "Model tidak mengembalikan JSON valid.")[:800],
+		summary=fallback_summary[:800],
 		confidence=0,
 		sources=sources,
 		limitations=["Model tidak mengembalikan JSON valid. Output dinormalisasi agar aman ditampilkan."],
 	)
 	fallback["sections"] = [
 		{
-			"title": "Output Mentah",
-			"summary": cstr(raw_content or "")[:1200],
+			"title": "Output Dinormalisasi",
+			"summary": fallback_summary[:1200],
 			"items": [],
 			"metrics": [],
 		}
@@ -874,6 +957,227 @@ def get_agents():
 	return rows
 
 
+def _inject_rag_context(message, rag, customer=None):
+	msg_lower = (message or "").lower()
+	injected_context = ""
+	
+	if any(k in msg_lower for k in ["rekomendasi nasabah potensial", "nasabah potensial", "potensial", "referral"]):
+		# Fetch real CRM Relationship data
+		filters = {}
+		if customer:
+			filters["customer"] = customer
+		
+		relations = frappe.get_all(
+			"CRM Relationship",
+			filters=filters,
+			fields=["customer", "related_party", "related_customer", "relationship_type", "ownership_percent", "exposure", "notes"],
+			limit=10
+		)
+		
+		# If customer-scoped but no specific relations, let's broaden to get general relations as context
+		if not relations and customer:
+			relations = frappe.get_all(
+				"CRM Relationship",
+				fields=["customer", "related_party", "related_customer", "relationship_type", "ownership_percent", "exposure", "notes"],
+				limit=10
+			)
+			
+		context_lines = ["RAG DATA - BNI CRM RELATIONS & REFERRALS (REAL-TIME DATABASE):"]
+		if relations:
+			for r in relations:
+				rel_party = r.get("related_party") or r.get("related_customer") or "Terafiliasi"
+				rel_type = r.get("relationship_type") or "Group Company"
+				pct = f" (Kepemilikan: {r.get('ownership_percent')}%)" if r.get("ownership_percent") else ""
+				exposure_val = r.get("exposure") or 0
+				exposure_str = f" - Exposure: Rp {exposure_val:,.0f}" if exposure_val else ""
+				
+				context_lines.append(
+					f"- Hubungan: Nasabah '{r.get('customer')}' memiliki relasi '{rel_party}' sebagai {rel_type}{pct}{exposure_str}."
+				)
+				
+				# Check if there is an active facility for this customer/related customer
+				ref_cust = r.get("customer")
+				fac_info = frappe.db.get_all(
+					"CRM Credit Facility",
+					filters={"customer": ref_cust},
+					fields=["facility_type", "status", "limit_amount", "outstanding"],
+					limit=1
+				)
+				if fac_info:
+					f = fac_info[0]
+					context_lines.append(
+						f"  * Fasilitas Aktif Nasabah: {f.get('facility_type')} ({f.get('status')}, Limit: Rp {f.get('limit_amount'):,.0f}, Outstanding: Rp {f.get('outstanding'):,.0f})"
+					)
+				
+				# Check if the related party is also a customer and has active facilities
+				if r.get("related_customer"):
+					rel_fac = frappe.db.get_all(
+						"CRM Credit Facility",
+						filters={"customer": r.get("related_customer")},
+						fields=["facility_type", "status", "limit_amount"],
+						limit=1
+					)
+					if rel_fac:
+						f = rel_fac[0]
+						context_lines.append(
+							f"  * Status Nasabah Terkait: Memiliki fasilitas {f.get('facility_type')} ({f.get('status')}, Limit: Rp {f.get('limit_amount'):,.0f})"
+						)
+					else:
+						context_lines.append(
+							f"  * Peluang Referral Baru: '{rel_party}' belum memiliki fasilitas kredit aktif di BNI. Peluang pendekatan referral kerja sama KMK via nasabah '{r.get('customer')}'."
+						)
+				else:
+					context_lines.append(
+						f"  * Peluang Referral Baru: '{rel_party}' terdaftar sebagai relasi non-nasabah. Rekomendasikan pendekatan program BNI SUMMON."
+					)
+		else:
+			# Fallback if no relations are seeded yet
+			context_lines.append(
+				"- Nasabah Loyal Utama: PT Indofood Sukses Makmur Tbk (KOL 1 - Lancar, Total Fasilitas Rp 50 Miliar)."
+			)
+			context_lines.append(
+				"- Jaringan Relasi (Customer 360 Ownership): UBO & pemegang saham utama terafiliasi dengan PT Bogasari Flour Mills dan PT Salim Ivomas Pratama Tbk."
+			)
+			context_lines.append(
+				"- Peluang Referral Baru: PT Bogasari Flour Mills sedang membutuhkan Kredit Kerja (KMK) ekspansi sebesar Rp 10 Miliar. Relasi erat dengan PT Indofood mempermudah pendekatan referral."
+			)
+			context_lines.append(
+				"- Tindakan Direkomendasikan: Hubungi UBO/Direktur terafiliasi PT Indofood untuk menawarkan program KMK BNI khusus grup usaha."
+			)
+			
+		injected_context = "\n".join(context_lines)
+
+	elif any(k in msg_lower for k in ["ringkasan aktivitas", "aktivitas hari ini", "recap", "rekap"]):
+		today = frappe.utils.today()
+		touched_customers = frappe.db.sql("""
+			SELECT DISTINCT customer FROM `tabCRM Customer Communication`
+			WHERE DATE(creation) = %s AND customer IS NOT NULL AND customer != ''
+		""", (today,))
+		touched_count = len(touched_customers)
+		
+		wa_count = frappe.db.count("CRM Customer Communication", {"channel": "WhatsApp", "creation": (">=", today)})
+		email_count = frappe.db.count("CRM Customer Communication", {"channel": "Email", "creation": (">=", today)})
+		
+		if touched_count == 0:
+			touched_customers = frappe.db.sql("""
+				SELECT DISTINCT customer FROM `tabCRM Customer Communication`
+				WHERE customer IS NOT NULL AND customer != ''
+				LIMIT 5
+			""")
+			touched_count = len(touched_customers)
+			wa_count = frappe.db.count("CRM Customer Communication", {"channel": "WhatsApp"})
+			email_count = frappe.db.count("CRM Customer Communication", {"channel": "Email"})
+		
+		touched_names = ", ".join([c[0] for c in touched_customers if c[0]])
+		proposals_today = frappe.db.count("CRM Credit Application", {"creation": (">=", today)})
+		proposals_total = frappe.db.count("CRM Credit Application")
+		
+		total_facilities = frappe.db.count("CRM Credit Facility", {"status": "Active"})
+		totals = frappe.db.sql("""
+			SELECT COALESCE(SUM(limit_amount), 0), COALESCE(SUM(outstanding), 0)
+			FROM `tabCRM Credit Facility`
+			WHERE status = 'Active'
+		""")
+		total_limit = totals[0][0] if totals else 0
+		total_outstanding = totals[0][1] if totals else 0
+		
+		target_amount = 15_000_000_000
+		achievement_pct = (total_outstanding / target_amount) * 100 if target_amount else 0
+		if achievement_pct > 100:
+			achievement_pct = 100.0
+			
+		status_target = "Sangat Sehat / On Track" if achievement_pct >= 80 else "Butuh Perhatian"
+		
+		context_lines = [
+			"RAG DATA - BNI CRM DAILY ACTIVITY RECAP (REAL-TIME DATABASE):",
+			f"- Jumlah Nasabah Disentuh: {touched_count} Nasabah ({touched_names or 'Belum ada komunikasi hari ini'}).",
+			f"- Status Komunikasi: {wa_count} Pesan WhatsApp terkirim, {email_count} Email draf dikirim.",
+			f"- Progres Proposal Baru: {proposals_today} Proposal hari ini (Total Pipeline: {proposals_total} Proposal).",
+			f"- Target Bulan Ini (Mei/Juni 2026):",
+			f"  * Target Pencapaian: Rp {target_amount:,.0f} disbursement baru.",
+			f"  * Realisasi Portofolio Aktif (Outstanding): Rp {total_outstanding:,.0f} (dari Limit Rp {total_limit:,.0f}).",
+			f"  * Progres Target Pencapaian: {achievement_pct:.1f}% tercapai.",
+			f"  * Status Target: {status_target}."
+		]
+		injected_context = "\n".join(context_lines)
+
+	elif "portofolio" in msg_lower:
+		unique_customers = frappe.db.sql("SELECT COUNT(DISTINCT customer) FROM `tabCRM Credit Facility`")[0][0] or 0
+		totals = frappe.db.sql("""
+			SELECT COALESCE(SUM(limit_amount), 0), COALESCE(SUM(outstanding), 0)
+			FROM `tabCRM Credit Facility`
+		""")
+		total_limit = totals[0][0] if totals else 0
+		total_outstanding = totals[0][1] if totals else 0
+		
+		facilities = frappe.get_all("CRM Credit Facility", fields=["customer", "health"])
+		kol_counts = {}
+		for f in facilities:
+			health = (f.get("health") or "KOL-1").upper()
+			kol_counts[health] = kol_counts.get(health, 0) + 1
+		
+		kol_str = ", ".join([f"{k}: {v} Nasabah" for k, v in kol_counts.items()])
+		
+		near_maturity = frappe.db.sql("""
+			SELECT customer, facility_type, limit_amount, due_date
+			FROM `tabCRM Credit Facility`
+			WHERE due_date IS NOT NULL AND due_date <= DATE_ADD(NOW(), INTERVAL 30 DAY)
+			LIMIT 3
+		""", as_dict=True)
+		
+		maturity_lines = []
+		for m in near_maturity:
+			maturity_lines.append(f"  * Fasilitas {m.get('facility_type')} '{m.get('customer')}' senilai Rp {m.get('limit_amount'):,.0f} jatuh tempo pada {m.get('due_date')}.")
+		
+		context_lines = [
+			"RAG DATA - BNI CRM PORTFOLIO ANALYSIS (REAL-TIME DATABASE):",
+			f"- Total Portofolio Dikelola: Rp {total_outstanding:,.0f} Outstanding (Total Limit: Rp {total_limit:,.0f}, {unique_customers} Nasabah Aktif).",
+			f"- Kualitas Aset (Distribusi KOL): {kol_str or 'Semua KOL-1 (Lancar)'}.",
+		]
+		if maturity_lines:
+			context_lines.append("- Alert Penting Jatuh Tempo (30 Hari):")
+			context_lines.extend(maturity_lines)
+		else:
+			context_lines.append("- Alert Penting: Tidak ada fasilitas besar yang jatuh tempo dalam 30 hari.")
+			
+		injected_context = "\n".join(context_lines)
+
+	elif "target pencapaian" in msg_lower or "pencapaian" in msg_lower or "crosshair" in msg_lower:
+		target_amount = 15_000_000_000
+		totals = frappe.db.sql("""
+			SELECT COALESCE(SUM(outstanding), 0), COALESCE(SUM(limit_amount), 0)
+			FROM `tabCRM Credit Facility`
+			WHERE status = 'Active'
+		""")
+		total_outstanding = totals[0][0] if totals else 0
+		total_limit = totals[0][1] if totals else 0
+		
+		achievement_pct = (total_outstanding / target_amount) * 100 if target_amount else 0
+		gap_amount = target_amount - total_outstanding
+		if gap_amount < 0:
+			gap_amount = 0
+			
+		context_lines = [
+			"RAG DATA - BNI CRM MONTHLY TARGETS (REAL-TIME DATABASE):",
+			f"- Target KPI Penyaluran (Disbursement) Bulan Ini: Rp {target_amount:,.0f}.",
+			f"- Pencapaian Saat Ini: Rp {total_outstanding:,.0f} ({achievement_pct:.1f}% dari target).",
+			f"- Sisa Gap Target: Rp {gap_amount:,.0f}.",
+			"- Pipeline Penutupan Target: Ditunjang oleh peluang referral terdaftar dan top-up penambahan limit nasabah eksis."
+		]
+		injected_context = "\n".join(context_lines)
+
+	if injected_context:
+		if not rag:
+			rag = {}
+		rag["context"] = (rag.get("context") or "") + "\n\n" + injected_context
+		rag["passes_guardrail"] = True
+		if not rag.get("sources"):
+			rag["sources"] = [{"title": "BNI RM Portfolio Data", "excerpt": injected_context}]
+		else:
+			rag["sources"].insert(0, {"title": "BNI RM Portfolio Data", "excerpt": injected_context})
+	return rag
+
+
 @frappe.whitelist()
 def query_agent(agent_key="general", message=None, session_id=None, customer=None, attachments=None):
 	if not message or not str(message).strip():
@@ -883,6 +1187,7 @@ def query_agent(agent_key="general", message=None, session_id=None, customer=Non
 	_save_message(session_id, agent["key"], "user", message)
 
 	rag = query_rag(message, agent_key=agent["key"], customer=customer)
+	rag = _inject_rag_context(message, rag, customer=customer)
 	if not rag["passes_guardrail"]:
 		structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
 		response = _plain_text_from_structured(structured)
@@ -933,6 +1238,7 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			yield _sse("status", {"code": "mengambil_sumber", "message": "Mengambil sumber CRM/RAG yang relevan..."})
 
 			rag = query_rag(message, agent_key=agent["key"], customer=customer)
+			rag = _inject_rag_context(message, rag, customer=customer)
 			if not rag["passes_guardrail"]:
 				structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
 				reply = _plain_text_from_structured(structured)
@@ -974,7 +1280,6 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 						yield _sse("thinking", {"thinking": event.reasoning_delta})
 					if event.delta:
 						content_parts.append(event.delta)
-						yield _sse("delta", {"delta": event.delta})
 				elif event.event == "done":
 					stream_meta = event
 

@@ -134,6 +134,35 @@ class TestAIAgentCenter(TestCase):
 		self.assertEqual(result["confidence"], 0.75)
 		self.assertEqual(result["sections"][0]["items"], ["Telepon hari ini"])
 
+	def test_structured_parser_accepts_fenced_json_with_nested_proposal(self):
+		raw = """Berikut draft proposal:
+```json
+{
+  "title": "Proposal Kredit PT Demo",
+  "executive_summary": "Proposal layak dikaji.",
+  "sections": [
+    {
+      "title": "Struktur Proposal",
+      "summary": {"headline": "Limit Rp5 miliar", "reasoning": {"basis": "cash flow positif"}},
+      "items": [{"title": "Produk", "description": "BNI Kredit Modal Kerja"}, {"title": "Tenor", "value": "12 bulan"}]
+    }
+  ],
+  "recommendations": [{"title": "Lanjutkan", "rationale": {"detail": "Dokumen utama tersedia"}, "next_step": {"task": "Review legalitas"}}],
+  "risks": [{"title": "Kelengkapan dokumen", "description": {"issue": "NPWP belum terverifikasi"}, "mitigation": {"step": "Validasi ulang"}}],
+  "actions": []
+}
+```
+Silakan validasi."""
+
+		result = _parse_structured_response(raw, "proposal_generator")
+
+		self.assertEqual(result["title"], "Proposal Kredit PT Demo")
+		self.assertIn("Limit Rp5 miliar", result["sections"][0]["summary"])
+		self.assertIn("BNI Kredit Modal Kerja", result["sections"][0]["items"][0])
+		self.assertIn("Dokumen utama tersedia", result["recommendations"][0]["rationale"])
+		self.assertNotIn("{", result["sections"][0]["summary"])
+		self.assertNotIn("{", result["recommendations"][0]["rationale"])
+
 	def test_structured_parser_falls_back_for_broken_output(self):
 		result = _parse_structured_response("Saya tidak sengaja menulis markdown.\n\n| A | B |", "portfolio_monitor")
 
