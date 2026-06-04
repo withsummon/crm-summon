@@ -12,7 +12,8 @@
         <div class="mx-2 my-1.5" />
         <CollapsibleSection
           :label="group.name"
-          :opened="group.opened"
+          :opened="groupStates[group.name] ?? group.opened"
+          @update:opened="val => groupStates[group.name] = val"
         >
           <template #header="{ opened, hide, toggle }">
             <div
@@ -67,7 +68,8 @@
         <div class="mx-2 my-1.5" />
         <CollapsibleSection
           :label="view.name"
-          :opened="view.opened"
+          :opened="groupStates[view.name] ?? view.opened"
+          @update:opened="val => groupStates[view.name] = val"
         >
           <template #header="{ opened, hide, toggle }">
             <div
@@ -215,6 +217,15 @@ const { capture } = useTelemetry()
 const { clearDemoData, isDemoDataCreated } = useDemoData()
 
 const isSidebarCollapsed = useStorage('isSidebarCollapsed', false)
+const groupStates = useStorage('sidebar_groups_opened', {
+  'CRM Core': true,
+  'Lending & Risk': false,
+  'Operations': false,
+  'Admin & Platform': false,
+  'Channels & Portal': false,
+  'Public Views': true,
+  'Pinned Views': true,
+})
 const showPwaInstallModal = ref(false)
 
 const isFCSite = ref(window.is_fc_site)

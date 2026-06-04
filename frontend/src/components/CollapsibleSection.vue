@@ -52,7 +52,7 @@
 </template>
 <script setup>
 import { Badge } from 'frappe-ui'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   label: { type: String, default: '' },
@@ -70,16 +70,27 @@ const props = defineProps({
 const hide = ref(props.hideLabel)
 const opened = ref(props.opened)
 
+watch(() => props.opened, (newVal) => {
+  if (opened.value !== newVal) {
+    opened.value = newVal
+  }
+})
+
+const emit = defineEmits(['update:opened'])
+
 function toggle() {
   opened.value = !opened.value
+  emit('update:opened', opened.value)
 }
 
 function open() {
   opened.value = true
+  emit('update:opened', true)
 }
 
 function close() {
   opened.value = false
+  emit('update:opened', false)
 }
 </script>
 <script>
