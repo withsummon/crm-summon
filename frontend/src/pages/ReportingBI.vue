@@ -88,6 +88,37 @@
             </div>
           </div>
 
+          <!-- Pipeline Conversion Funnel -->
+          <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-gray-800">{{ __('Pipeline Conversion Funnel') }}</h3>
+                <p class="text-[10px] text-gray-400">{{ __('Prospek → Disbursement conversion tracking') }}</p>
+              </div>
+              <span class="text-[10px] text-gray-400">{{ __('Overall') }}: 29.0%</span>
+            </div>
+            <div class="space-y-1.5">
+              <div v-for="(stage, i) in funnelStages" :key="stage.label" class="flex items-center gap-3">
+                <div class="w-28 shrink-0 text-right">
+                  <p class="text-[10px] font-semibold text-gray-700">{{ stage.label }}</p>
+                  <p class="text-[9px] text-gray-400">{{ stage.count }} apps</p>
+                </div>
+                <div class="flex-1">
+                  <div class="h-7 rounded-lg relative overflow-hidden" :class="stage.bg">
+                    <div class="absolute inset-0 flex items-center px-3" :style="{ width: stage.width + '%' }">
+                      <div class="h-full rounded-lg" :class="stage.bar" :style="{ width: '100%' }" />
+                    </div>
+                    <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-800">{{ stage.pct }}%</span>
+                  </div>
+                </div>
+                <div v-if="i < funnelStages.length - 1" class="w-14 text-center shrink-0">
+                  <span class="text-[10px] font-bold text-red-500">↓ {{ stage.drop }}%</span>
+                  <p class="text-[8px] text-gray-400">drop-off</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Charts Row -->
           <div class="grid grid-cols-3 gap-4">
             <!-- Disbursement Trend -->
@@ -391,6 +422,70 @@
           </div>
         </div>
 
+        <!-- RM PRODUCTIVITY LEADERBOARD -->
+        <div v-else-if="activeNav==='leaderboard'" class="flex-1 flex flex-col overflow-hidden">
+          <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
+            <h3 class="text-sm font-semibold text-gray-800">{{ __('RM Productivity Leaderboard') }}</h3>
+            <span class="text-[11px] text-gray-400">{{ filteredLeaderboard.length }} {{ __('RMs') }}</span>
+            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 ml-auto">
+              <button v-for="b in ['All','Jakarta','Surabaya','Bandung','Medan','Bali']" :key="b" @click="leaderboardFilter = b"
+                class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+                :class="leaderboardFilter===b ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500'">
+                {{ b }}
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-y-auto p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-gray-100 bg-gray-50">
+                    <th class="px-4 py-3 text-center font-semibold text-gray-500 w-12">#</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('RM Name') }}</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-500">{{ __('Branch') }}</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-500">{{ __('Applications') }}</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-500">{{ __('Approval Rate') }}</th>
+                    <th class="px-4 py-3 text-right font-semibold text-gray-500">{{ __('Disbursement Value') }}</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-500">{{ __('Score') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(rm, idx) in filteredLeaderboard" :key="rm.id"
+                    class="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    :class="idx === 0 ? 'bg-[#FFF8F2]' : ''">
+                    <td class="px-4 py-3 text-center">
+                      <span v-if="idx === 0" class="text-lg">🥇</span>
+                      <span v-else-if="idx === 1" class="text-lg">🥈</span>
+                      <span v-else-if="idx === 2" class="text-lg">🥉</span>
+                      <span v-else class="font-bold text-gray-500">{{ idx + 1 }}</span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ rm.name[0] }}</div>
+                        <span class="font-semibold text-gray-800">{{ rm.name }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500">{{ rm.branch }}</td>
+                    <td class="px-4 py-3 text-center font-semibold text-gray-800">{{ rm.applications }}</td>
+                    <td class="px-4 py-3 text-center">
+                      <span class="font-bold" :class="rm.approvalRate >= 85 ? 'text-green-600' : rm.approvalRate >= 70 ? 'text-amber-600' : 'text-red-500'">{{ rm.approvalRate }}%</span>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-gray-800">{{ rm.disbursement }}</td>
+                    <td class="px-4 py-3 text-center">
+                      <div class="inline-flex items-center gap-1.5">
+                        <div class="w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div class="h-full rounded-full" :class="rm.score >= 90 ? 'bg-green-500' : rm.score >= 75 ? 'bg-[#FF6600]' : 'bg-amber-400'" :style="{ width: rm.score + '%' }" />
+                        </div>
+                        <span class="text-[10px] font-bold" :class="rm.score >= 90 ? 'text-green-600' : rm.score >= 75 ? 'text-[#CC5200]' : 'text-amber-600'">{{ rm.score }}</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- CREDIT & APPROVAL REPORTS -->
         <div v-else-if="activeNav==='credit'" class="flex-1 overflow-y-auto p-5 space-y-5">
           <!-- Approval KPI Cards -->
@@ -522,6 +617,174 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- PORTFOLIO MONITORING -->
+        <div v-else-if="activeNav==='portfolio'" class="flex-1 overflow-y-auto p-5 space-y-5">
+          <!-- Sub-tabs -->
+          <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 w-fit">
+            <button v-for="pt in ['Overview','Industry Exposure','Geographic','ECL PSAK 71','Concentration','Stress Test']" :key="pt"
+              @click="portfolioTab = pt"
+              class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap"
+              :class="portfolioTab===pt ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+              {{ __(pt) }}
+            </button>
+          </div>
+
+          <!-- Overview -->
+          <div v-if="portfolioTab==='Overview'" class="grid grid-cols-4 gap-4">
+            <div v-for="s in portfolioSummary" :key="s.label" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
+              <p class="text-2xl font-black" :class="s.color">{{ s.value }}</p>
+              <p class="text-[10px] text-gray-500 mt-1">{{ s.label }}</p>
+            </div>
+          </div>
+
+          <!-- Industry Exposure -->
+          <div v-if="portfolioTab==='Industry Exposure'" class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-800 mb-3">{{ __('Industry Exposure') }}</h3>
+              <div class="space-y-3">
+                <div v-for="ind in industryExposure" :key="ind.name">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="font-medium text-gray-700">{{ ind.name }}</span>
+                    <span class="font-semibold" :class="ind.pct > 20 ? 'text-red-600' : ind.pct > 10 ? 'text-amber-600' : 'text-green-600'">{{ ind.value }} ({{ ind.pct }}%)</span>
+                  </div>
+                  <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" :class="ind.pct > 20 ? 'bg-red-400' : ind.pct > 10 ? 'bg-amber-400' : 'bg-green-400'" :style="{ width: ind.pct * 2 + '%' }" />
+                  </div>
+                </div>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-100">
+                <p class="text-[10px] text-gray-400">
+                  <span class="font-semibold text-amber-600">⚠ {{ __('Concentration limit') }}:</span>
+                  {{ __('Maximum 25% single industry exposure per BI regulation') }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Geographic Exposure -->
+          <div v-if="portfolioTab==='Geographic'" class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-800 mb-3">{{ __('Geographic Exposure') }}</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div v-for="geo in geoExposure" :key="geo.region"
+                  class="rounded-xl border p-3"
+                  :class="geo.pct > 30 ? 'border-red-200 bg-red-50' : geo.pct > 15 ? 'border-amber-200 bg-amber-50' : 'border-gray-200'">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-gray-800">{{ geo.region }}</span>
+                    <span class="text-[10px] font-bold" :class="geo.pct > 30 ? 'text-red-600' : geo.pct > 15 ? 'text-amber-600' : 'text-green-600'">{{ geo.pct }}%</span>
+                  </div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full" :class="geo.pct > 30 ? 'bg-red-400' : geo.pct > 15 ? 'bg-amber-400' : 'bg-green-400'" :style="{ width: geo.pct * 2 + '%' }" />
+                    </div>
+                  </div>
+                  <p class="text-[10px] text-gray-500">{{ geo.value }} · {{ geo.borrowers }} {{ __('borrowers') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ECL PSAK 71 -->
+          <div v-if="portfolioTab==='ECL PSAK 71'" class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-800 mb-1">{{ __('ECL Staging — PSAK 71') }}</h3>
+              <p class="text-[10px] text-gray-400 mb-4">{{ __('Expected Credit Loss breakdown by stage') }}</p>
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div v-for="stage in eclStages" :key="stage.label"
+                  class="rounded-xl border p-4 text-center"
+                  :class="stage.label==='Stage 3' ? 'border-red-200 bg-red-50' : stage.label==='Stage 2' ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'">
+                  <p class="text-[10px] text-gray-500 mb-1">{{ stage.label }}</p>
+                  <p class="text-xl font-black" :class="stage.color">{{ stage.value }}</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">{{ stage.count }} {{ __('facilities') }}</p>
+                  <div class="mt-2 h-1.5 bg-white rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" :class="stage.barColor" :style="{ width: stage.pct + '%' }" />
+                  </div>
+                  <p class="text-[9px] text-gray-400 mt-1">Provision: {{ stage.provision }}</p>
+                </div>
+              </div>
+              <div class="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-semibold text-gray-700">{{ __('Total ECL Provision') }}</span>
+                  <span class="font-black text-red-600">Rp 48.2B</span>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-gray-500 mt-1">
+                  <span>{{ __('Coverage Ratio') }}</span>
+                  <span class="font-semibold">{{ __('2.01% of total portfolio') }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Concentration Matrix -->
+          <div v-if="portfolioTab==='Concentration'" class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-gray-800">{{ __('Single Borrower Limit & Top 20 Exposures') }}</h3>
+                <span class="text-[10px] text-gray-400">{{ __('BI Regulation: Max 25% of capital') }}</span>
+              </div>
+              <div class="space-y-2">
+                <div v-for="(borrower, i) in top20Exposures.slice(0, 10)" :key="borrower.name"
+                  class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                  :class="borrower.pct > 20 ? 'bg-red-50 border border-red-200' : 'border border-transparent'">
+                  <span class="w-5 text-[10px] font-bold text-gray-400 text-center">{{ i + 1 }}</span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-[11px] font-semibold text-gray-800 truncate">{{ borrower.name }}</p>
+                    <p class="text-[9px] text-gray-400">{{ borrower.sector }} · {{ borrower.facility }}</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-xs font-bold text-gray-800">{{ borrower.exposure }}</p>
+                    <p class="text-[9px]" :class="borrower.pct > 20 ? 'text-red-500 font-semibold' : 'text-gray-400'">{{ borrower.pct }}% {{ __('of capital') }}</p>
+                  </div>
+                </div>
+              </div>
+              <button @click="showToast('Full Top 20 loaded')" class="mt-2 w-full text-[10px] text-[#FF6600] hover:underline font-semibold py-1">
+                {{ __('View all 20 →') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Stress Testing -->
+          <div v-if="portfolioTab==='Stress Test'" class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <h3 class="text-sm font-bold text-gray-800 mb-1">{{ __('What-if Simulator & Stress Testing') }}</h3>
+              <p class="text-[10px] text-gray-400 mb-4">{{ __('Simulate portfolio impact under adverse scenarios') }}</p>
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div v-for="scenario in stressScenarios" :key="scenario.name"
+                  @click="selectedScenario = scenario"
+                  class="rounded-xl border-2 p-4 cursor-pointer transition-all text-center"
+                  :class="selectedScenario?.name === scenario.name ? 'border-[#FF6600] bg-[#FFF8F2]' : 'border-gray-200 hover:border-[#FFB380]'">
+                  <p class="text-xs font-bold text-gray-800 mb-1">{{ scenario.name }}</p>
+                  <p class="text-[10px] text-gray-400 mb-2">{{ scenario.desc }}</p>
+                  <p class="text-lg font-black" :class="scenario.impact.includes('-') ? 'text-red-600' : 'text-green-600'">{{ scenario.impact }}</p>
+                  <p class="text-[9px] text-gray-400 mt-0.5">{{ scenario.npl }} NPL</p>
+                </div>
+              </div>
+              <div v-if="selectedScenario" class="rounded-lg p-4 border" :class="selectedScenario.impact.includes('-') ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'">
+                <div class="flex items-center gap-2 mb-2">
+                  <FeatherIcon :name="selectedScenario.impact.includes('-') ? 'alert-triangle' : 'check-circle'"
+                    class="h-4 w-4" :class="selectedScenario.impact.includes('-') ? 'text-red-500' : 'text-green-500'" />
+                  <span class="text-xs font-bold" :class="selectedScenario.impact.includes('-') ? 'text-red-700' : 'text-green-700'">{{ selectedScenario.name }} — {{ __('Simulation Result') }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-center text-xs">
+                  <div>
+                    <p class="text-[10px] text-gray-500">{{ __('Portfolio Impact') }}</p>
+                    <p class="font-black" :class="selectedScenario.impact.includes('-') ? 'text-red-600' : 'text-green-600'">{{ selectedScenario.impact }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-gray-500">{{ __('NPL Projection') }}</p>
+                    <p class="font-black text-red-600">{{ selectedScenario.npl }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-gray-500">{{ __('Capital Adequacy') }}</p>
+                    <p class="font-black" :class="selectedScenario.car >= 14 ? 'text-green-600' : 'text-red-600'">{{ selectedScenario.car }}%</p>
+                  </div>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-3 italic">{{ selectedScenario.detail }}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -934,6 +1197,8 @@ const navItems = [
   { id: 'regulatory', label: 'Regulatory Reports', icon: 'shield', badge: '3' },
   { id: 'executive', label: 'Executive Reports', icon: 'briefcase' },
   { id: 'adhoc', label: 'Ad-Hoc Query', icon: 'terminal' },
+  { id: 'leaderboard', label: 'RM Leaderboard', icon: 'award' },
+  { id: 'portfolio', label: 'Portfolio Monitoring', icon: 'pie-chart' },
   { id: 'auditlog', label: 'Audit Log', icon: 'activity' },
 ]
 
@@ -1293,6 +1558,87 @@ function auditActionClass(action) {
   const map = { Download: 'bg-[#FFF0E6] text-[#CC5200]', Share: 'bg-[#E6F4FA] text-[#006699]', View: 'bg-gray-100 text-gray-600', Generate: 'bg-green-100 text-green-700', 'Copy Link': 'bg-purple-100 text-purple-700', 'View Share': 'bg-[#E6F4FA] text-[#006699]' }
   return map[action] || 'bg-gray-100 text-gray-600'
 }
+
+// ── Pipeline Conversion Funnel ──
+const funnelStages = [
+  { label: 'Prospek', count: 248, pct: 100, drop: 25, bg: 'bg-gray-100', bar: 'bg-[#006699]', width: 100 },
+  { label: 'Pengajuan', count: 186, pct: 75, drop: 24, bg: 'bg-gray-100', bar: 'bg-[#3399CC]', width: 75 },
+  { label: 'Analisis', count: 142, pct: 57, drop: 31, bg: 'bg-gray-100', bar: 'bg-[#FFB380]', width: 57 },
+  { label: 'Approval', count: 98, pct: 40, drop: 27, bg: 'bg-gray-100', bar: 'bg-[#FF8533]', width: 40 },
+  { label: 'Disbursement', count: 72, pct: 29, drop: 0, bg: 'bg-gray-100', bar: 'bg-[#FF6600]', width: 29 },
+]
+
+// ── RM Productivity Leaderboard ──
+const leaderboardFilter = ref('All')
+const leaderboard = ref([
+  { id: 1, name: 'Reza Mahendra', branch: 'Jakarta', applications: 38, approvalRate: 92, disbursement: 'Rp 84.2B', score: 94 },
+  { id: 2, name: 'Sari Dewi', branch: 'Surabaya', applications: 32, approvalRate: 88, disbursement: 'Rp 62.8B', score: 88 },
+  { id: 3, name: 'Ahmad Fauzi', branch: 'Jakarta', applications: 29, approvalRate: 84, disbursement: 'Rp 51.4B', score: 82 },
+  { id: 4, name: 'Dewi Kusuma', branch: 'Bandung', applications: 26, approvalRate: 90, disbursement: 'Rp 48.1B', score: 85 },
+  { id: 5, name: 'Bimo Prakoso', branch: 'Surabaya', applications: 24, approvalRate: 78, disbursement: 'Rp 38.6B', score: 74 },
+  { id: 6, name: 'Rina Putri', branch: 'Medan', applications: 21, approvalRate: 86, disbursement: 'Rp 35.2B', score: 79 },
+  { id: 7, name: 'Hendra Gunawan', branch: 'Jakarta', applications: 19, approvalRate: 82, disbursement: 'Rp 32.9B', score: 76 },
+  { id: 8, name: 'Fajar Santoso', branch: 'Bali', applications: 17, approvalRate: 94, disbursement: 'Rp 29.7B', score: 84 },
+  { id: 9, name: 'Lina Marlina', branch: 'Bandung', applications: 15, approvalRate: 76, disbursement: 'Rp 24.3B', score: 68 },
+  { id: 10, name: 'Dian Purnama', branch: 'Medan', applications: 14, approvalRate: 80, disbursement: 'Rp 21.8B', score: 71 },
+  { id: 11, name: 'Agus Wijaya', branch: 'Jakarta', applications: 12, approvalRate: 72, disbursement: 'Rp 18.5B', score: 62 },
+  { id: 12, name: 'Siti Rahma', branch: 'Bali', applications: 10, approvalRate: 85, disbursement: 'Rp 15.2B', score: 70 },
+])
+const filteredLeaderboard = computed(() => {
+  if (leaderboardFilter.value === 'All') return leaderboard.value
+  return leaderboard.value.filter(r => r.branch === leaderboardFilter.value)
+})
+
+// ── Portfolio Monitoring ──
+const portfolioTab = ref('Overview')
+const portfolioSummary = [
+  { label: 'Total Portfolio', value: 'Rp 2.4T', color: 'text-[#FF6600]' },
+  { label: 'Active Borrowers', value: '342', color: 'text-gray-800' },
+  { label: 'Avg Exposure', value: 'Rp 7.0B', color: 'text-[#006699]' },
+  { label: 'NPL Ratio', value: '2.14%', color: 'text-green-600' },
+]
+const industryExposure = [
+  { name: 'Manufacturing', value: 'Rp 528B', pct: 22 },
+  { name: 'Trade & Retail', value: 'Rp 432B', pct: 18 },
+  { name: 'Construction', value: 'Rp 360B', pct: 15 },
+  { name: 'Agriculture', value: 'Rp 288B', pct: 12 },
+  { name: 'Transportation', value: 'Rp 216B', pct: 9 },
+  { name: 'Financial Services', value: 'Rp 192B', pct: 8 },
+  { name: 'Real Estate', value: 'Rp 168B', pct: 7 },
+  { name: 'Technology', value: 'Rp 120B', pct: 5 },
+  { name: 'Healthcare', value: 'Rp 96B', pct: 4 },
+]
+const geoExposure = [
+  { region: 'DKI Jakarta', pct: 38, value: 'Rp 912B', borrowers: 142 },
+  { region: 'Jawa Timur', pct: 22, value: 'Rp 528B', borrowers: 78 },
+  { region: 'Jawa Barat', pct: 18, value: 'Rp 432B', borrowers: 62 },
+  { region: 'Sumatera Utara', pct: 10, value: 'Rp 240B', borrowers: 32 },
+  { region: 'Bali & Nusa Tenggara', pct: 7, value: 'Rp 168B', borrowers: 18 },
+  { region: 'Other Regions', pct: 5, value: 'Rp 120B', borrowers: 10 },
+]
+const eclStages = [
+  { label: 'Stage 1', value: 'Rp 2.1T', count: 288, pct: 88, color: 'text-green-600', barColor: 'bg-green-500', provision: 'Rp 12.6B (0.6%)' },
+  { label: 'Stage 2', value: 'Rp 204B', count: 35, pct: 8.5, color: 'text-amber-600', barColor: 'bg-amber-400', provision: 'Rp 15.3B (7.5%)' },
+  { label: 'Stage 3', value: 'Rp 96B', count: 19, pct: 4, color: 'text-red-600', barColor: 'bg-red-400', provision: 'Rp 20.3B (21.1%)' },
+]
+const top20Exposures = [
+  { name: 'PT Maju Bersama Tbk', sector: 'Manufacturing', facility: 'Working Capital', exposure: 'Rp 85.0B', pct: 18 },
+  { name: 'PT Surya Abadi', sector: 'Construction', facility: 'Investment Loan', exposure: 'Rp 72.4B', pct: 15 },
+  { name: 'CV Teknik Jaya Mandiri', sector: 'Manufacturing', facility: 'Working Capital', exposure: 'Rp 58.2B', pct: 12 },
+  { name: 'PT Nusantara Logistik', sector: 'Transportation', facility: 'Investment Loan', exposure: 'Rp 45.6B', pct: 9.5 },
+  { name: 'PT Agro Lestari', sector: 'Agriculture', facility: 'Working Capital', exposure: 'Rp 38.4B', pct: 8 },
+  { name: 'PT Bumi Resources', sector: 'Mining', facility: 'Investment Loan', exposure: 'Rp 32.1B', pct: 6.7 },
+  { name: 'Budi Santoso Group', sector: 'Retail', facility: 'KPR + KKB', exposure: 'Rp 28.8B', pct: 6 },
+  { name: 'PT Digital Nusantara', sector: 'Technology', facility: 'Working Capital', exposure: 'Rp 24.5B', pct: 5.1 },
+  { name: 'PT Citra Medika', sector: 'Healthcare', facility: 'Investment Loan', exposure: 'Rp 19.2B', pct: 4 },
+  { name: 'PT Graha Properti', sector: 'Real Estate', facility: 'Investment Loan', exposure: 'Rp 16.8B', pct: 3.5 },
+]
+const stressScenarios = [
+  { name: 'Baseline', desc: 'GDP growth 5.0%, inflation 3.0%', impact: '+1.2%', npl: '2.1%', car: 18.4, detail: 'Portfolio grows in line with GDP. NPL remains stable at current levels with adequate provision coverage.' },
+  { name: 'Moderate Stress', desc: 'GDP +3.5%, BI rate +100bps', impact: '-4.8%', npl: '4.2%', car: 15.8, detail: 'Moderate increase in NPL from rate-sensitive sectors. Capital buffer still above regulatory minimum.' },
+  { name: 'Severe Stress', desc: 'GDP +1.5%, BI rate +300bps', impact: '-12.3%', npl: '8.7%', car: 12.1, detail: 'Significant deterioration in construction & retail. 3 facilities breach single-borrower limit. Capital injection may be required.' },
+]
+const selectedScenario = ref(null)
 
 // ── Actions ──
 function openReport(r) {

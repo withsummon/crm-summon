@@ -343,13 +343,13 @@
               v-for="item in suggestions"
               :key="item"
               class="w-full rounded-lg border p-2.5 text-left text-xs transition-all duration-200 outline-none flex items-center justify-between cursor-pointer"
-              :class="item.startsWith('Draf Disetujui: ') ? 'border-teal-200 bg-teal-50 text-teal-900 font-medium hover:bg-teal-100 hover:border-teal-300' : 'border-crm-border bg-surface-gray-1 text-ink-gray-7 hover:bg-surface-gray-2'"
+              :class="item.startsWith('Draf Disetujui: ') ? 'border-primary-200 bg-primary-50 text-primary-900 font-medium hover:bg-primary-100 hover:border-primary-300' : 'border-crm-border bg-surface-gray-1 text-ink-gray-7 hover:bg-surface-gray-2'"
               @click="applySuggestion(item)"
             >
               <div class="flex items-center gap-1.5 min-w-0">
-                <FeatherIcon :name="item.startsWith('Draf Disetujui: ') ? 'check-circle' : 'zap'" class="h-3.5 w-3.5 shrink-0" :class="item.startsWith('Draf Disetujui: ') ? 'text-teal-600' : 'text-primary-500'" />
+                <FeatherIcon :name="item.startsWith('Draf Disetujui: ') ? 'check-circle' : 'zap'" class="h-3.5 w-3.5 shrink-0" :class="item.startsWith('Draf Disetujui: ') ? 'text-primary-600' : 'text-primary-500'" />
                 <span class="truncate">
-                  <span v-if="item.startsWith('Draf Disetujui: ')" class="font-bold text-teal-700 mr-1">[{{ __('Draf AI Disetujui') }}]</span>
+                  <span v-if="item.startsWith('Draf Disetujui: ')" class="font-bold text-primary-700 mr-1">[{{ __('Draf AI Disetujui') }}]</span>
                   {{ item.startsWith('Draf Disetujui: ') ? item.substring('Draf Disetujui: '.length) : item }}
                 </span>
               </div>

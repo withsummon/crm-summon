@@ -73,7 +73,7 @@ export const statusLabelMap = {
 }
 
 export const statusColorMap = {
-  Completed: 'green',
+  Completed: 'orange',
   Busy: 'orange',
   Failed: 'red',
   Initiated: 'gray',

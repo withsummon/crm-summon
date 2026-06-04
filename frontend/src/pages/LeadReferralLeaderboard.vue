@@ -88,7 +88,7 @@
             <tr v-for="r in board.data?.rows || []" :key="r.referrer + r.referrer_type" class="border-t border-outline-gray-1">
               <td class="px-3 py-1.5 text-ink-gray-6">{{ r.rank }}</td>
               <td class="px-3 py-1.5 font-medium text-ink-gray-9">{{ r.referrer || '—' }}</td>
-              <td class="px-3 py-1.5"><Badge :label="r.referrer_type" theme="teal" variant="subtle" size="sm" /></td>
+              <td class="px-3 py-1.5"><Badge :label="r.referrer_type" theme="primary" variant="subtle" size="sm" /></td>
               <td class="px-3 py-1.5 text-right">{{ r.leads_count }}</td>
               <td class="px-3 py-1.5 text-right">{{ r.converted_count }}</td>
               <td class="px-3 py-1.5 text-right">{{ r.conversion_pct }}%</td>

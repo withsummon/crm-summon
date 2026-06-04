@@ -667,6 +667,74 @@
         </div>
       </div>
 
+      <!-- Master Data -->
+      <div v-if="configSubTab === 'Master Data'">
+        <div class="mb-3 flex justify-between">
+          <div class="text-xs text-ink-gray-5">{{ __('Reference data used by scoped POC flows') }}</div>
+          <Button :label="__('Add Master Data')" variant="solid" size="sm" @click="() => {}" />
+        </div>
+        <div class="rounded-[14px] border border-crm-border bg-white shadow-sm overflow-hidden">
+          <table class="w-full text-xs">
+            <thead class="bg-surface-gray-1">
+              <tr class="border-b border-outline-gray-1 text-ink-gray-4">
+                <th class="px-4 py-2.5 text-left font-medium">{{ __('Dataset') }}</th>
+                <th class="px-4 py-2.5 text-left font-medium">{{ __('Used By') }}</th>
+                <th class="px-4 py-2.5 text-right font-medium">{{ __('Records') }}</th>
+                <th class="px-4 py-2.5 text-left font-medium">{{ __('Owner') }}</th>
+                <th class="px-4 py-2.5 text-left font-medium">{{ __('Status') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in masterDataSets" :key="row.name" class="border-b border-outline-gray-1 last:border-0">
+                <td class="px-4 py-2.5 font-medium text-ink-gray-8">{{ row.name }}</td>
+                <td class="px-4 py-2.5 text-ink-gray-5">{{ row.usedBy }}</td>
+                <td class="px-4 py-2.5 text-right font-semibold text-ink-gray-7">{{ row.records }}</td>
+                <td class="px-4 py-2.5 text-ink-gray-5">{{ row.owner }}</td>
+                <td class="px-4 py-2.5"><Badge :label="row.status" variant="subtle" :theme="row.status === 'Active' ? 'green' : 'orange'" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Vendor Setup -->
+      <div v-if="configSubTab === 'Vendor Setup'">
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+            <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Vendor Type Setup') }}</div>
+            <div class="space-y-2 text-xs">
+              <div
+                v-for="vendor in vendorAdminSetup"
+                :key="vendor.type"
+                class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2"
+              >
+                <div>
+                  <div class="font-semibold text-ink-gray-8">{{ vendor.type }}</div>
+                  <div class="text-[10px] text-ink-gray-4">{{ vendor.purpose }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-semibold text-ink-gray-7">{{ vendor.sla }}</div>
+                  <div class="text-[10px] text-ink-gray-4">{{ vendor.owner }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
+            <div class="mb-3 text-sm font-semibold text-ink-gray-8">{{ __('Rule Configuration Links') }}</div>
+            <div class="space-y-2 text-xs">
+              <a href="/crm/admin-platform/rules-engine" class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2 hover:bg-surface-gray-1">
+                <span class="font-medium text-ink-gray-8">{{ __('Rules Engine') }}</span>
+                <span class="text-[#FF6600]">{{ __('Open') }}</span>
+              </a>
+              <a href="/crm/operations/partner-vendor-management" class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2 hover:bg-surface-gray-1">
+                <span class="font-medium text-ink-gray-8">{{ __('Partner & Vendor Management') }}</span>
+                <span class="text-[#FF6600]">{{ __('Open') }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Holiday Calendar -->
       <div v-if="configSubTab === 'Holidays'">
         <div class="mb-3 flex justify-between">
@@ -1284,7 +1352,7 @@ const activeTab = ref('overview')
 // ── Sub-tabs ─────────────────────────────────────────────────
 const userSubTabs = ['Users', 'Branches', 'Sessions']
 const userSubTab = ref('Users')
-const configSubTabs = ['SLA', 'Notifications', 'Holidays', 'Custom Fields', 'Localization']
+const configSubTabs = ['SLA', 'Notifications', 'Master Data', 'Vendor Setup', 'Holidays', 'Custom Fields', 'Localization']
 const configSubTab = ref('SLA')
 
 // ── Modal state ──────────────────────────────────────────────
@@ -1472,7 +1540,24 @@ const notifTemplates = ref([
   { id: 'nt4', name: 'Collection PTP Reminder', trigger: 'Collection.PTPDue', channels: ['WhatsApp', 'SMS'], active: true, body: 'Reminder: PTP from {{customer}} of {{amount}} is due today.' },
   { id: 'nt5', name: 'Password Expiry', trigger: 'User.PasswordExpiringSoon', channels: ['Email'], active: true, body: 'Your password will expire in {{days}} days. Please update it at {{reset_url}}' },
   { id: 'nt6', name: 'Daily Digest', trigger: 'Schedule.Daily.08:00', channels: ['Email'], active: false, body: 'Good morning {{name}}, here is your daily summary: {{summary}}.' },
+  { id: 'nt7', name: 'Birthday Greeting Reminder', trigger: 'Customer.Moment.Birthday', channels: ['Push', 'In-App'], active: true, body: 'Reminder for {{rm_name}}: {{customer}} birthday today. Use template {{template_name}} and preferred channel {{preferred_channel}}.' },
+  { id: 'nt8', name: 'Credit Anniversary Greeting', trigger: 'Customer.Moment.CreditAnniversary', channels: ['Push', 'WhatsApp'], active: true, body: 'Prepare anniversary message for {{customer}} facility {{facility_id}} and confirm gift request if priority customer.' },
 ])
+
+const masterDataSets = [
+  { name: 'DPD Buckets', usedBy: 'Collections, Rules Engine', records: 6, owner: 'Collections Admin', status: 'Active' },
+  { name: 'Moment Types', usedBy: 'Notification Center, Partner/Vendor', records: 4, owner: 'CRM Admin', status: 'Active' },
+  { name: 'Preferred Channels', usedBy: 'Omnichannel, Rules Engine', records: 5, owner: 'Channel Admin', status: 'Active' },
+  { name: 'Vendor Categories', usedBy: 'Partner/Vendor, Administration', records: 5, owner: 'Operations Admin', status: 'Active' },
+  { name: 'SLA Calendars', usedBy: 'Rules Engine, Collections, Vendor SLA', records: 3, owner: 'IT Admin', status: 'Review' },
+]
+
+const vendorAdminSetup = [
+  { type: 'Referral Partner', purpose: 'Lead referral and gift/hampers fulfillment', sla: '24h high priority', owner: 'Ops Growth' },
+  { type: 'Appraiser', purpose: 'Collateral valuation and site inspection', sla: '48h resolution', owner: 'Ops Lending' },
+  { type: 'Legal Counsel', purpose: 'Legal notice and agreement review', sla: '72h resolution', owner: 'Ops Legal' },
+  { type: 'Technology Vendor', purpose: 'Workflow and API operational support', sla: '12h resolution', owner: 'IT Ops' },
+]
 
 // ── Holidays ─────────────────────────────────────────────────
 const holidays = ref([

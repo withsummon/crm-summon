@@ -1,0 +1,74 @@
+2026-05-25 03:18:32,325 WARNING database DDL Query made to DB:
+create table `tabFCRM Workflow Edge` (
+			name varchar(140) primary key,
+			creation datetime(6),
+			modified datetime(6),
+			modified_by varchar(140),
+			owner varchar(140),
+			docstatus int(1) not null default '0',
+			idx int(8) not null default '0',
+			`workflow` varchar(140),
+`edge_id` varchar(140),
+`source_node` varchar(140),
+`target_node` varchar(140),
+`source_handle` varchar(140),
+`target_handle` varchar(140),
+`_user_tags` text,
+`_comments` text,
+`_assign` text,
+`_liked_by` text,
+index modified(modified))
+			ENGINE=InnoDB
+			ROW_FORMAT=DYNAMIC
+			CHARACTER SET=utf8mb4
+			COLLATE=utf8mb4_unicode_ci
+2026-05-25 03:18:32,512 WARNING database DDL Query made to DB:
+create table `tabFCRM Workflow Execution` (
+			name varchar(140) primary key,
+			creation datetime(6),
+			modified datetime(6),
+			modified_by varchar(140),
+			owner varchar(140),
+			docstatus int(1) not null default '0',
+			idx int(8) not null default '0',
+			`naming_series` varchar(140),
+`workflow` varchar(140),
+`status` varchar(140) default 'Pending',
+`trigger_data` longtext,
+`start_time` datetime(6),
+`end_time` datetime(6),
+`_user_tags` text,
+`_comments` text,
+`_assign` text,
+`_liked_by` text,
+index modified(modified))
+			ENGINE=InnoDB
+			ROW_FORMAT=DYNAMIC
+			CHARACTER SET=utf8mb4
+			COLLATE=utf8mb4_unicode_ci
+2026-05-25 03:18:32,703 WARNING database DDL Query made to DB:
+create table `tabFCRM Workflow Execution Log` (
+			name varchar(140) primary key,
+			creation datetime(6),
+			modified datetime(6),
+			modified_by varchar(140),
+			owner varchar(140),
+			docstatus int(1) not null default '0',
+			idx int(8) not null default '0',
+			`execution` varchar(140),
+`node_id` varchar(140),
+`status` varchar(140),
+`input_data` longtext,
+`output_data` longtext,
+`error_message` text,
+`start_time` datetime(6),
+`end_time` datetime(6),
+`_user_tags` text,
+`_comments` text,
+`_assign` text,
+`_liked_by` text,
+index modified(modified))
+			ENGINE=InnoDB
+			ROW_FORMAT=DYNAMIC
+			CHARACTER SET=utf8mb4
+			COLLATE=utf8mb4_unicode_ci

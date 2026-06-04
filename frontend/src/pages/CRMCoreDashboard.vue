@@ -255,7 +255,7 @@
       <template #body-content>
         <div class="space-y-1 pt-3">
           <button v-for="opt in importOptions" :key="opt.label" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-slate-50 text-left transition-colors" @click="runImport(opt)">
-            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-teal-600 shrink-0" />
+            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-primary-600 shrink-0" />
             <span>{{ opt.label }}</span>
             <FeatherIcon name="external-link" class="h-3.5 w-3.5 text-slate-300 ml-auto" />
           </button>
@@ -268,7 +268,7 @@
       <template #body-content>
         <div class="space-y-1 pt-3">
           <button v-for="opt in exportOptions" :key="opt.label" class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-slate-50 text-left transition-colors" @click="runExport(opt)">
-            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-teal-600 shrink-0" />
+            <FeatherIcon :name="opt.icon" class="h-4 w-4 text-primary-600 shrink-0" />
             <span>{{ opt.label }}</span>
             <FeatherIcon name="external-link" class="h-3.5 w-3.5 text-slate-300 ml-auto" />
           </button>
@@ -860,9 +860,9 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   --text-2: #667085;
   --text-3: #98a2b3;
   --teal: #008c95;
-  --teal-dark: #00747c;
-  --teal-soft: #dff7f7;
-  --teal-chart: #0e9298;
+  --primary-dark: #00747c;
+  --primary-soft: #dff7f7;
+  --primary-chart: #0e9298;
   --cyan-light: #d9f3f4;
   --green: #12b76a;
   --green-soft: #ecfdf3;
@@ -911,7 +911,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: var(--teal-soft);
+  background: var(--primary-soft);
   color: var(--teal);
   display: flex;
   align-items: center;
@@ -1042,7 +1042,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   transition: background .15s;
 }
 .bni-export-btn:hover {
-  background: var(--teal-dark);
+  background: var(--primary-dark);
 }
 
 /* ═══ METRIC CARDS ═══════════════════════════════════════ */
@@ -1077,7 +1077,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--teal-soft);
+  background: var(--primary-soft);
   color: var(--teal);
   display: flex;
   align-items: center;
@@ -1157,7 +1157,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   padding: 4px;
   border-radius: 6px;
 }
-.bni-dots:hover { background: var(--teal-soft); color: var(--teal); }
+.bni-dots:hover { background: var(--primary-soft); color: var(--teal); }
 
 /* ═══ WIDGETS CONTAINER (draggable) ════════════════════ */
 .bni-widgets-container {
@@ -1204,7 +1204,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   padding: 10px 16px;
   margin-bottom: 16px;
   border-radius: var(--radius-sm);
-  background: var(--teal-soft);
+  background: var(--primary-soft);
   color: var(--teal);
   font-size: 13px;
   font-weight: 500;
@@ -1381,7 +1381,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   cursor: pointer;
 }
 .bar.hl {
-  fill: var(--teal-chart);
+  fill: var(--primary-chart);
 }
 .dash-ln {
   stroke: var(--teal);
@@ -1486,7 +1486,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   transition: background .15s;
 }
 .bni-cal-dates span:hover:not(.active) {
-  background: var(--teal-soft);
+  background: var(--primary-soft);
 }
 .bni-cal-dates span.active {
   background: var(--teal);
@@ -1773,7 +1773,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   transition: background .15s, border-color .15s;
 }
 .bni-see-all:hover {
-  background: var(--teal-soft);
+  background: var(--primary-soft);
   border-color: var(--teal);
 }
 

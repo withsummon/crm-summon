@@ -19,13 +19,13 @@
               v-model="form.first_name"
               type="text"
               :placeholder="__('Nama Depan')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
             />
             <input
               v-model="form.last_name"
               type="text"
               :placeholder="__('Nama Belakang')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
             />
           </div>
         </div>
@@ -38,7 +38,7 @@
             v-model="form.mobile_no"
             type="tel"
             :placeholder="__('+62 xxx xxxx xxxx')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
           />
         </div>
 
@@ -50,7 +50,7 @@
             v-model="form.email"
             type="email"
             :placeholder="__('email@example.com')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
           />
         </div>
 
@@ -62,7 +62,7 @@
             v-model="form.company"
             type="text"
             :placeholder="__('Nama perusahaan')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
           />
         </div>
 
@@ -72,7 +72,7 @@
           </label>
           <select
             v-model="form.source"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           >
             <option value="">{{ __('Pilih source') }}</option>
             <option v-for="s in leadSources" :key="s" :value="s">{{ s }}</option>
@@ -87,7 +87,7 @@
             v-model="form.notes"
             rows="3"
             :placeholder="__('Catatan tambahan...')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted resize-none"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted resize-none"
           />
         </div>
       </div>

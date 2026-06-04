@@ -1,27 +1,21 @@
 <template>
   <div class="ed" :data-theme="theme" @click="handleGlobalClick">
-    <LayoutHeader>
-      <template #left-header>
-        <ViewBreadcrumbs routeName="Executive Dashboard" />
-      </template>
-      <template #right-header>
+    <Teleport v-if="headerTargetReady" to="#app-header">
+      <header class="ed-app-navbar" @click="handleGlobalClick">
         <div class="ed-header-right">
-          <!-- Search box (opens command palette) -->
           <div class="ed-search-box" @click.stop="openCmd">
             <FeatherIcon name="search" class="h-4 w-4 shrink-0 opacity-50" />
             <span class="ed-search-text">Cari...</span>
             <kbd class="ed-kbd">⌘K</kbd>
           </div>
-          <!-- Action buttons -->
           <button class="ed-action-btn" @click.stop="openWidgetModal">
             <FeatherIcon name="sliders" class="h-3.5 w-3.5" />
             Customize Widget
           </button>
-          <button class="ed-export-btn" @click="exportModalOpen = true; exportStatus = null">
+          <button class="ed-export-btn" @click.stop="exportModalOpen = true; exportStatus = null">
             <FeatherIcon name="download" class="h-3.5 w-3.5" />
             Export
           </button>
-          <!-- Notification -->
           <div class="ed-notif-wrap" ref="notifWrapRef">
             <span class="ed-icon-btn-wrap">
               <button class="ed-icon-btn" @click.stop="notifOpen = !notifOpen">
@@ -29,7 +23,7 @@
               </button>
               <span class="ed-notif-badge">22</span>
             </span>
-            <div v-if="notifOpen" class="ed-notif-drop">
+            <div v-if="notifOpen" class="ed-notif-drop" @click.stop>
               <div class="ed-notif-hdr">
                 Notifikasi
                 <span class="ed-notif-count">22 belum dibaca</span>
@@ -41,12 +35,47 @@
             </div>
           </div>
         </div>
-      </template>
-    </LayoutHeader>
+      </header>
+    </Teleport>
+
+    <header v-else class="ed-app-navbar ed-app-navbar-inline" @click="handleGlobalClick">
+      <div class="ed-header-right">
+        <div class="ed-search-box" @click.stop="openCmd">
+          <FeatherIcon name="search" class="h-4 w-4 shrink-0 opacity-50" />
+          <span class="ed-search-text">Cari...</span>
+          <kbd class="ed-kbd">⌘K</kbd>
+        </div>
+        <button class="ed-action-btn" @click.stop="openWidgetModal">
+          <FeatherIcon name="sliders" class="h-3.5 w-3.5" />
+          Customize Widget
+        </button>
+        <button class="ed-export-btn" @click.stop="exportModalOpen = true; exportStatus = null">
+          <FeatherIcon name="download" class="h-3.5 w-3.5" />
+          Export
+        </button>
+        <div class="ed-notif-wrap" ref="notifWrapRef">
+          <span class="ed-icon-btn-wrap">
+            <button class="ed-icon-btn" @click.stop="notifOpen = !notifOpen">
+              <FeatherIcon name="bell" class="h-4 w-4" />
+            </button>
+            <span class="ed-notif-badge">22</span>
+          </span>
+          <div v-if="notifOpen" class="ed-notif-drop" @click.stop>
+            <div class="ed-notif-hdr">
+              Notifikasi
+              <span class="ed-notif-count">22 belum dibaca</span>
+            </div>
+            <div v-for="(n, i) in NOTIFS" :key="i" class="ed-notif-item">
+              <span class="ed-notif-dot"></span>
+              <span>{{ n }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
     <!-- ═══ Page Content ═══ -->
     <div class="ed-content">
-
       <!-- ══════════════════ KPI GRID ══════════════════ -->
       <div v-show="widgets.kpi" class="ed-kpi-grid ed-mb">
         <div v-for="k in KPI_DATA" :key="k.label" class="ed-kpi-card">
@@ -425,10 +454,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { usePageMeta, Dialog, FeatherIcon } from 'frappe-ui'
+import { usePageMeta, Dialog, FeatherIcon, call } from 'frappe-ui'
 import { Chart, registerables } from 'chart.js'
-import LayoutHeader from '@/components/LayoutHeader.vue'
-import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 
 Chart.register(...registerables)
 
@@ -451,7 +478,7 @@ const NOTIFS = [
 ]
 
 const KPI_DATA = [
-  { label: 'Pengajuan Kredit Hari Ini', value: '47 pengajuan', trend: '↑ 12% vs bulan lalu', trendClass: 'up', icon: 'file-text' },
+  { label: 'Pengajuan Kredit Hari Ini', value: '22 pengajuan', trend: 'New leads from WA, web, referral, walk in', trendClass: 'up', icon: 'file-text' },
   { label: 'Portfolio Aktif', value: 'Rp 1,84 T', trend: '↑ 3.2% vs bulan lalu', trendClass: 'up', icon: 'briefcase' },
   { label: 'NPL Ratio', value: '2,14%', trend: '↓ 0.3% vs bulan lalu (baik)', trendClass: 'down-good', icon: 'trending-down' },
   { label: 'Disbursement MTD', value: 'Rp 186 M', trend: '↑ 8.7% vs bulan lalu', trendClass: 'up', icon: 'dollar-sign' },
@@ -574,6 +601,7 @@ const AI_REPLIES = [
 // ══════════════════════════════════════════════════════
 // Dark mode is temporarily disabled/hidden — force light theme
 const theme = ref('light')
+const headerTargetReady = ref(false)
 const notifOpen = ref(false)
 const notifWrapRef = ref(null)
 
@@ -604,6 +632,7 @@ const aiMessages = ref([
   { from: 'bot', text: 'Halo! Saya SUMMON AI. Ada yang bisa saya bantu mengenai portofolio atau analisis kredit hari ini?' }
 ])
 const aiBodyRef = ref(null)
+const aiSessionId = ref(null)
 
 const cmdOpen = ref(false)
 const cmdQuery = ref('')
@@ -853,17 +882,28 @@ function runCmd(item) {
 // ══════════════════════════════════════════════════════
 // AI CHAT
 // ══════════════════════════════════════════════════════
-function sendAI() {
+async function sendAI() {
   const msg = aiInput.value.trim()
-  if (!msg) return
+  if (!msg || aiLoading.value) return
   aiMessages.value.push({ from: 'user', text: msg })
   aiInput.value = ''
   aiMessages.value.push({ from: 'bot', text: '...' })
+  aiLoading.value = true
   nextTick(() => { if (aiBodyRef.value) aiBodyRef.value.scrollTop = aiBodyRef.value.scrollHeight })
-  setTimeout(() => {
-    aiMessages.value[aiMessages.value.length - 1].text = AI_REPLIES[Math.floor(Math.random() * AI_REPLIES.length)]
+  try {
+    const result = await call('crm.api.ai_agent_center.query_agent', {
+      agent_key: 'general',
+      message: msg,
+      session_id: aiSessionId.value || null,
+    })
+    if (result.session_id) aiSessionId.value = result.session_id
+    aiMessages.value[aiMessages.value.length - 1].text = result.response || '(No response)'
+  } catch (e) {
+    aiMessages.value[aiMessages.value.length - 1].text = 'Maaf, terjadi kesalahan. Silakan coba lagi.'
+  } finally {
+    aiLoading.value = false
     nextTick(() => { if (aiBodyRef.value) aiBodyRef.value.scrollTop = aiBodyRef.value.scrollHeight })
-  }, 1200)
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -888,6 +928,7 @@ function handleKeydown(e) {
 // LIFECYCLE
 // ══════════════════════════════════════════════════════
 onMounted(() => {
+  headerTargetReady.value = Boolean(document.querySelector('#app-header'))
   document.addEventListener('keydown', handleKeydown)
   nextTick(initCharts)
 })
@@ -920,8 +961,8 @@ onUnmounted(() => {
 
   /* Primary (#FF6600) */
   --ed-primary: #FF6600;
-  --ed-primary-dark: #CC5200;
-  --ed-primary-light: #FFF0E0;
+  --ed-secondary-dark: #CC5200;
+  --ed-secondary-light: #FFF0E0;
 
   /* Status */
   --ed-green: #12b76a;
@@ -967,6 +1008,18 @@ onUnmounted(() => {
 @media (max-width: 1100px) { .ed-two-col { grid-template-columns: 1fr; } }
 
 /* ═══ TOPBAR / HEADER RIGHT ═════════════════════════════ */
+.ed-app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-height: 72px;
+  padding: 0 22px;
+  background: #ffffff;
+}
+.ed-app-navbar-inline {
+  border-bottom: 1px solid var(--ed-border);
+}
 .ed-header-right {
   display: flex;
   align-items: center;
@@ -1171,7 +1224,7 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--ed-primary-light);
+  background: var(--ed-secondary-light);
   color: var(--ed-primary);
   display: flex;
   align-items: center;
@@ -1315,7 +1368,7 @@ onUnmounted(() => {
 .ed-badge-red { background: var(--ed-red-soft); color: var(--ed-red); }
 .ed-badge-yellow { background: var(--ed-orange-soft); color: var(--ed-orange); }
 .ed-badge-green { background: var(--ed-green-soft); color: var(--ed-green); }
-.ed-badge-blue { background: var(--ed-primary-light); color: var(--ed-primary); }
+.ed-badge-blue { background: var(--ed-secondary-light); color: var(--ed-primary); }
 
 /* ═══ SCORE DOTS ═════════════════════════════════════════ */
 .ed-score-row { display: flex; align-items: center; gap: 6px; }
@@ -1568,7 +1621,7 @@ onUnmounted(() => {
   gap: 7px;
 }
 .ed-ai-msg { padding: 8px 10px; border-radius: 10px; font-size: 12px; max-width: 88%; line-height: 1.5; }
-.ed-ai-bot { background: var(--ed-primary-light); color: var(--ed-text); align-self: flex-start; }
+.ed-ai-bot { background: var(--ed-secondary-light); color: var(--ed-text); align-self: flex-start; }
 .ed-ai-user { background: var(--ed-primary); color: #fff; align-self: flex-end; }
 .ed-ai-inp {
   display: flex;
@@ -1601,7 +1654,7 @@ onUnmounted(() => {
   font-family: inherit;
   transition: background .15s;
 }
-.ed-ai-inp button:hover { background: var(--ed-primary-dark); }
+.ed-ai-inp button:hover { background: var(--ed-secondary-dark); }
 
 /* ═══ COMMAND PALETTE ════════════════════════════════════ */
 .ed-cmd-overlay {
@@ -1650,7 +1703,7 @@ onUnmounted(() => {
   font-size: 13px;
   transition: background .1s;
 }
-.ed-cmd-item:hover { background: var(--ed-primary-light); color: var(--ed-primary); }
+.ed-cmd-item:hover { background: var(--ed-secondary-light); color: var(--ed-primary); }
 .ed-cmd-type {
   margin-left: auto;
   font-size: 9px;

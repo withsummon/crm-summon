@@ -7,7 +7,7 @@
         </h1>
         <button
           v-if="notifications.data?.length"
-          class="text-xs font-medium text-crm-teal"
+          class="text-xs font-medium text-primary-600"
           @click="markAllRead"
         >
           {{ __('Mark all read') }}
@@ -45,7 +45,7 @@
             v-for="n in group"
             :key="n.comment || n.name"
             class="rounded-xl bg-white p-4 border border-crm-border mb-1 transition-colors cursor-pointer"
-            :class="n.read ? '' : 'border-l-[3px] border-l-crm-teal'"
+            :class="n.read ? '' : 'border-l-[3px] border-l-primary-600'"
             @click="openNotification(n)"
           >
             <div class="flex items-start gap-3">
@@ -75,7 +75,7 @@
                   {{ timeAgo(n.creation) }}
                 </p>
               </div>
-              <div v-if="!n.read" class="mt-1.5 size-2 shrink-0 rounded-full bg-crm-teal" />
+              <div v-if="!n.read" class="mt-1.5 size-2 shrink-0 rounded-full bg-primary-600" />
             </div>
           </div>
         </div>
@@ -169,7 +169,7 @@ function getNotifBg(n) {
 
 function getNotifColor(n) {
   if (n.type === 'WhatsApp') return 'text-green-600'
-  if (n.notification_type?.includes('lead')) return 'text-crm-teal'
+  if (n.notification_type?.includes('lead')) return 'text-primary-600'
   if (n.notification_type?.includes('deal')) return 'text-amber-600'
   if (n.notification_type?.includes('comment') || n.comment) return 'text-blue-600'
   return 'text-gray-600'

@@ -23,12 +23,12 @@
       <div class="mb-6 flex gap-3">
         <button v-for="tab in tabs" :key="tab.value"
           class="rounded-full px-4 py-2 text-sm font-medium transition-all"
-          :class="activeTab === tab.value ? 'bg-crm-teal text-white shadow-sm' : 'bg-white text-crm-muted hover:bg-teal-50 hover:text-crm-text'"
+          :class="activeTab === tab.value ? 'bg-primary-600 text-white shadow-sm' : 'bg-white text-crm-muted hover:bg-primary-50 hover:text-crm-text'"
           @click="activeTab = tab.value">{{ __(tab.label) }}</button>
       </div>
 
       <div v-if="loading" class="flex items-center justify-center py-16">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
       </div>
 
       <div v-else-if="filteredRequests.length" class="grid gap-4 sm:grid-cols-2">

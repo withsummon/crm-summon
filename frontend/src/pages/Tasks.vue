@@ -475,7 +475,7 @@
           </div>
           <template v-else>
             <div class="mb-3 grid gap-3 md:grid-cols-4">
-              <KpiCard label="SLA Compliance" :value="`${analytics.data?.compliance_pct ?? 0}%`" icon="check-circle" theme="teal" />
+              <KpiCard label="SLA Compliance" :value="`${analytics.data?.compliance_pct ?? 0}%`" icon="check-circle" theme="primary" />
               <KpiCard label="Avg Resolve" :value="formatMinutes(analytics.data?.avg_resolve_minutes ?? 0)" icon="clock" />
               <KpiCard label="Breaches" :value="String(analytics.data?.breached ?? 0)" icon="alert-circle" theme="red" />
               <KpiCard label="Escalations" :value="String(analytics.data?.escalation_count ?? 0)" icon="trending-up" theme="orange" />
@@ -545,7 +545,7 @@
                     <div class="flex items-center gap-2">
                       <h4 class="text-base font-medium text-ink-gray-9">{{ tpl.template_name }}</h4>
                       <Badge :label="`v${tpl.version}`" theme="gray" variant="subtle" />
-                      <Badge v-if="tpl.default_type" :label="tpl.default_type" theme="teal" variant="subtle" />
+                      <Badge v-if="tpl.default_type" :label="tpl.default_type" theme="primary" variant="subtle" />
                       <Badge :label="tpl.default_priority" :theme="priorityTheme(tpl.default_priority)" variant="subtle" />
                     </div>
                     <p v-if="tpl.description" class="mt-1 text-sm text-ink-gray-5">{{ tpl.description }}</p>

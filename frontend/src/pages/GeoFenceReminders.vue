@@ -106,8 +106,8 @@
                 {{ getDistanceText(reminder) }}
               </span>
             </div>
-            <div class="flex items-center gap-3">
-              <button class="text-xs text-crm-teal font-bold hover:underline" @click="toggleReminder(reminder)">
+            <div class="flex items-center gap-2">
+              <button class="text-xs text-primary-600 font-medium" @click="toggleReminder(reminder)">
                 {{ reminder.is_active ? __('Nonaktifkan') : __('Aktifkan') }}
               </button>
               <button class="text-xs text-red-500 font-bold hover:underline" @click="deleteReminder(reminder)">
@@ -119,8 +119,7 @@
       </div>
     </div>
 
-    <!-- Floating Action Button -->
-    <button class="fixed bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-crm-teal text-white shadow-lg active:scale-95 transition-transform" @click="showForm = true">
+    <button class="fixed bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg active:scale-95 transition-transform" @click="showForm = true">
       <FeatherIcon name="plus" class="size-6" />
     </button>
 
@@ -215,12 +214,23 @@
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Nama Lokasi') }}</label>
-                <input v-model="newReminder.location_name" type="text" :placeholder="__('Nama lokasi, misal: Kantor Pusat Indofood')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal" />
+                <input v-model="newReminder.location_name" type="text" :placeholder="__('Nama lokasi')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600" />
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Alamat') }}</label>
+                <input v-model="newReminder.address" type="text" :placeholder="__('Alamat lokasi')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600" />
                 <input v-model="newReminder.address" type="text" :placeholder="__('Alamat lengkap')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal" />
               </div>
+              <div>
+                <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Radius') }}</label>
+                <select v-model="newReminder.radius_meters" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600">
+                  <option :value="100">100m</option>
+                  <option :value="200">200m</option>
+                  <option :value="500">500m</option>
+                  <option :value="1000">1km</option>
+                  <option :value="2000">2km</option>
+                  <option :value="5000">5km</option>
+                </select>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Radius') }}</label>
@@ -244,7 +254,7 @@
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Catatan') }}</label>
-                <textarea v-model="newReminder.note" rows="2" :placeholder="__('Catatan penting untuk pengingat lokasi...')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal resize-none" />
+                <textarea v-model="newReminder.note" rows="2" :placeholder="__('Catatan...')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600 resize-none" />
               </div>
             </div>
             <div class="flex gap-2 mt-5">

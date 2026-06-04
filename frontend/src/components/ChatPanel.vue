@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-full flex-col">
     <div v-if="loading" class="flex flex-1 items-center justify-center">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
     </div>
 
     <template v-else-if="error">
@@ -34,11 +34,11 @@
 
       <div ref="messagesContainer" class="flex-1 overflow-y-auto px-4 py-3" @scroll="onScroll">
         <div v-if="messagesLoading" class="flex items-center justify-center py-8">
-          <div class="h-6 w-6 animate-spin rounded-full border-3 border-crm-teal border-t-transparent" />
+          <div class="h-6 w-6 animate-spin rounded-full border-3 border-primary-600 border-t-transparent" />
         </div>
 
         <div v-for="msg in messages" :key="msg.name" class="mb-3 flex flex-col" :class="isMine(msg) ? 'items-end' : 'items-start'">
-          <div class="max-w-[80%] rounded-xl px-3 py-2 text-sm" :class="isMine(msg) ? 'bg-crm-teal text-white rounded-br-sm' : 'bg-gray-100 text-crm-text rounded-bl-sm'">
+          <div class="max-w-[80%] rounded-xl px-3 py-2 text-sm" :class="isMine(msg) ? 'bg-primary-600 text-white rounded-br-sm' : 'bg-gray-100 text-crm-text rounded-bl-sm'">
             <div v-if="msg.channel" class="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide" :class="isMine(msg) ? 'text-white/60' : 'text-crm-muted'">
               <component :is="channelIcon(msg.channel)" class="h-3 w-3" />
               <span>{{ msg.channel }}</span>
@@ -70,7 +70,7 @@
             v-for="ch in channels"
             :key="ch.key"
             class="flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors"
-            :class="selectedChannel === ch.key ? 'bg-crm-teal text-white' : 'text-crm-muted hover:bg-gray-50 hover:text-crm-text'"
+            :class="selectedChannel === ch.key ? 'bg-primary-600 text-white' : 'text-crm-muted hover:bg-gray-50 hover:text-crm-text'"
             @click="selectedChannel = ch.key"
           >
             <component :is="ch.icon" class="h-3.5 w-3.5" />
@@ -87,7 +87,7 @@
               v-model="newMessage"
               type="text"
               :placeholder="sendPlaceholder"
-              class="min-w-0 flex-1 rounded-lg border border-crm-border bg-white px-3 py-2 text-sm outline-none transition-colors placeholder:text-crm-muted focus:border-crm-teal"
+              class="min-w-0 flex-1 rounded-lg border border-crm-border bg-white px-3 py-2 text-sm outline-none transition-colors placeholder:text-crm-muted focus:border-primary-600"
               @keydown.enter="send"
             />
             <Button :label="__('Send')" variant="solid" :loading="sending" :disabled="!canSend" @click="send" />
@@ -96,7 +96,7 @@
             {{ channelWarning }}
           </div>
           <div v-if="uploadingFile" class="mt-2 flex items-center gap-2 text-xs text-crm-muted">
-            <div class="h-4 w-4 animate-spin rounded-full border-2 border-crm-teal border-t-transparent" />
+            <div class="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
             <span>{{ __('Uploading...') }}</span>
           </div>
           <div v-if="attachedFile" class="mt-2 flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-crm-text">

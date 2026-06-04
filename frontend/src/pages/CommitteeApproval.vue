@@ -28,7 +28,7 @@
           @click="activeTab = tab.id"
         >
           {{ __(tab.label) }}
-          <Badge v-if="tab.badge" :label="String(tab.badge)" theme="teal" variant="subtle" size="sm" class="ml-1" />
+          <Badge v-if="tab.badge" :label="String(tab.badge)" theme="primary" variant="subtle" size="sm" class="ml-1" />
         </button>
       </div>
     </div>
@@ -294,7 +294,7 @@
                 v-for="(cas, idx) in activeSession.cases"
                 :key="cas.id"
                 @click="activeSessionCaseIdx = idx; if(isMobile) mobileShowDetails = true"
-                :class="['p-4 cursor-pointer', activeSessionCaseIdx === idx ? 'bg-teal-50' : 'hover:bg-surface-gray-1']"
+                :class="['p-4 cursor-pointer', activeSessionCaseIdx === idx ? 'bg-primary-50' : 'hover:bg-surface-gray-1']"
               >
                 <div class="flex justify-between items-start">
                   <div>
@@ -320,7 +320,7 @@
                 <button 
                   v-if="isMobile" 
                   @click="mobileShowDetails = false"
-                  class="inline-flex items-center gap-1.5 text-xs font-extrabold text-crm-teal hover:underline mb-3"
+                  class="inline-flex items-center gap-1.5 text-xs font-extrabold text-primary-600 hover:underline mb-3"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                   <span>{{ __('Back to Agenda Cases') }}</span>

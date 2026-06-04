@@ -23,7 +23,7 @@
             <FeatherIcon name="x" class="size-3" />
           </button>
           <button class="flex flex-col items-center gap-1.5 w-full" @click="navigate(action)">
-            <FeatherIcon :name="action.icon" class="size-6 text-crm-teal" />
+            <FeatherIcon :name="action.icon" class="size-6 text-primary-600" />
             <span class="text-[10px] font-medium text-crm-text">{{ __(action.label) }}</span>
           </button>
         </div>
@@ -52,7 +52,7 @@
             </div>
             <button
               class="text-xs font-medium shrink-0 ml-2"
-              :class="isFavorite(action) ? 'text-crm-muted' : 'text-crm-teal'"
+              :class="isFavorite(action) ? 'text-crm-muted' : 'text-primary-600'"
               :disabled="isFavorite(action)"
               @click="addFavorite(action)"
             >

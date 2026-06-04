@@ -4,7 +4,7 @@
       <div class="p-5">
         <div class="flex flex-col items-center text-center mb-5">
           <div class="flex size-14 items-center justify-center rounded-2xl bg-crm-surface mb-4">
-            <FeatherIcon name="smartphone" class="size-7 text-crm-teal" />
+            <FeatherIcon name="smartphone" class="size-7 text-primary-600" />
           </div>
           <h3 class="text-lg font-semibold text-ink-gray-9 mb-1">{{ __('Mobile RM Workspace') }}</h3>
           <p class="text-sm text-ink-gray-6 max-w-xs">
@@ -36,7 +36,7 @@
           >
             <div class="flex items-start gap-3">
               <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-crm-surface">
-                <FeatherIcon name="globe" class="size-5 text-crm-teal" />
+                <FeatherIcon name="globe" class="size-5 text-primary-600" />
               </div>
               <div class="text-left">
                 <p class="text-sm font-semibold text-crm-text">{{ __('Akses via Web') }}</p>
@@ -55,15 +55,15 @@
           </div>
           <div v-else class="space-y-2 text-xs text-ink-gray-6">
             <div class="flex items-start gap-2">
-              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-crm-teal mt-0.5">1</span>
+              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-primary-600 mt-0.5">1</span>
               <span>{{ __('Buka halaman ini di Chrome, Edge, atau Samsung Internet') }}</span>
             </div>
             <div class="flex items-start gap-2">
-              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-crm-teal mt-0.5">2</span>
+              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-primary-600 mt-0.5">2</span>
               <span>{{ __('Tap menu browser (⋮) dan pilih "Add to Home Screen" atau "Install App"') }}</span>
             </div>
             <div class="flex items-start gap-2">
-              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-crm-teal mt-0.5">3</span>
+              <span class="flex size-5 shrink-0 items-center justify-center rounded-full bg-crm-surface text-xs font-bold text-primary-600 mt-0.5">3</span>
               <span>{{ __('Ikuti langkah di layar untuk menyelesaikan instalasi') }}</span>
             </div>
           </div>

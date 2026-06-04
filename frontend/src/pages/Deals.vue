@@ -92,6 +92,7 @@
             v-if="getRow(itemName, titleField).value"
             :variant="'subtle'"
             :theme="getRow(itemName, titleField).color"
+            :class="{ 'badge-brand-primary': getRow(itemName, titleField).brand }"
             size="md"
             :label="getRow(itemName, titleField).value"
           />
@@ -153,6 +154,7 @@
             v-if="getRow(itemName, fieldName).value"
             :variant="'subtle'"
             :theme="getRow(itemName, fieldName).color"
+            :class="{ 'badge-brand-primary': getRow(itemName, fieldName).brand }"
             size="md"
             :label="getRow(itemName, fieldName).value"
           />
@@ -432,7 +434,7 @@ function parseRows(rows, columns = []) {
           deal.sla_status == 'Failed'
             ? 'red'
             : deal.sla_status == 'Fulfilled'
-              ? 'green'
+              ? 'orange'
               : 'orange'
         if (value == 'First Response Due' || value == 'Rolling Response Due') {
           value = __(timeAgo(deal.response_by))
@@ -445,6 +447,7 @@ function parseRows(rows, columns = []) {
           label: tooltipText,
           value: value,
           color: color,
+          brand: deal.sla_status == 'Fulfilled',
         }
       } else if (row == 'deal_owner') {
         _rows[row] = {

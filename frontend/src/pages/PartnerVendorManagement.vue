@@ -66,6 +66,26 @@
         </div>
       </div>
 
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div
+          v-for="item in relationshipFulfillment"
+          :key="item.title"
+          class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-ink-gray-8">{{ __(item.title) }}</div>
+              <div class="mt-1 text-xs leading-relaxed text-ink-gray-5">{{ __(item.detail) }}</div>
+            </div>
+            <Badge :label="item.badge" variant="subtle" :theme="item.theme" />
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <Button :label="__('Create Request')" variant="solid" size="sm" @click="openRelationshipRequest(item)" />
+            <Button :label="__('View Vendor')" variant="subtle" size="sm" @click="openVendorProfile(vendors.find((v) => v.name === item.vendor))" />
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-3 gap-4">
         <div class="col-span-2 rounded-[14px] border border-crm-border bg-white p-4 shadow-sm">
           <div class="mb-3 flex items-center justify-between">
@@ -706,7 +726,7 @@
         <Button :label="__('Send SLA Review')" variant="outline" size="sm" />
         <Button :label="__('Renew Contract')" variant="outline" size="sm" />
         <Button :label="__('Log Engagement')" variant="outline" size="sm" />
-        <Button :label="__('Open Request')" variant="solid" size="sm" />
+        <Button :label="__('Create Request')" variant="solid" size="sm" @click="openRequestFromVendor(selectedVendor)" />
       </div>
     </div>
   </div>
@@ -898,6 +918,39 @@ const requestForm = ref({
   slaBreached: false,
 })
 
+const relationshipFulfillment = [
+  {
+    title: 'Priority birthday hampers',
+    detail: 'For PT Bukit Asam director birthday. Use approved gift vendor, 24h SLA, and WhatsApp confirmation once delivered.',
+    badge: 'Gift',
+    theme: 'orange',
+    vendor: 'Nusa Gift Concierge',
+    type: 'Birthday Hampers',
+    priority: 'High',
+    owner: 'Aulia (Growth)',
+  },
+  {
+    title: 'Referral partner warm intro',
+    detail: 'Use BNI Referral Network to validate a referral opportunity from a loyal customer group.',
+    badge: 'Referral',
+    theme: 'green',
+    vendor: 'BNI Referral Network',
+    type: 'Referral Lead Validation',
+    priority: 'Normal',
+    owner: 'Aulia (Growth)',
+  },
+  {
+    title: 'Credit anniversary gesture',
+    detail: 'Prepare appreciation note and modest corporate gift for the facility anniversary.',
+    badge: 'Anniversary',
+    theme: 'blue',
+    vendor: 'Nusa Gift Concierge',
+    type: 'Credit Anniversary Gift',
+    priority: 'Normal',
+    owner: 'Ops Growth',
+  },
+]
+
 const pageTabs = computed(() => [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'directory', label: 'Vendor Directory', badge: vendors.value.length },
@@ -951,7 +1004,7 @@ const dashKpis = [
     value: '72%',
     delta: '48 active users',
     icon: 'external-link',
-    iconColor: 'text-teal-500',
+    iconColor: 'text-primary-500',
   },
 ]
 
@@ -1190,6 +1243,532 @@ const vendors = ref([
     portalStatus: 'Active',
     portalLastLogin: '3 days ago',
   },
+  {
+    id: 'V-007',
+    name: 'Nusa Gift Concierge',
+    category: 'Referral Partner',
+    tier: 'Gold',
+    status: 'Active',
+    owner: 'Ops Growth',
+    region: 'Jakarta',
+    risk: 'Low',
+    score: 91,
+    slaCompliance: 98,
+    lastBreach: '—',
+    contractType: 'Corporate Gift Fulfillment',
+    contractStart: 'Jan 01, 2026',
+    contractEnd: 'Dec 31, 2026',
+    lastReview: 'May 2026',
+    contact: { name: 'Laras Putri', email: 'laras@nusagift.id', phone: '+62 812 6677 1002' },
+    services: ['Birthday Hampers', 'Anniversary Gifts', 'Delivery Confirmation'],
+    coverage: 'Jakarta · Java',
+    invoiceOutstanding: 'Rp 0 outstanding',
+    invoiceNote: 'Monthly billing current',
+    complianceStatus: 'Compliant',
+    nextAudit: 'Sep 2026',
+    portalStatus: 'Active',
+    portalLastLogin: 'Today',
+  },
+  // ── Appraisers ──
+  {
+    id: 'V-008', name: 'Jasa Penilai Independen', category: 'Appraiser', tier: 'Gold', status: 'Active',
+    owner: 'Ops Lending', region: 'Bandung', risk: 'Low', score: 86, slaCompliance: 95,
+    lastBreach: 'Feb 05, 2026', contractType: 'Master Appraisal Agreement', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Budi Santoso', email: 'budi@jpi.co.id', phone: '+62 811 5544 3300' },
+    services: ['Collateral Valuation', 'Land Survey'], coverage: 'Java · Bali',
+    invoiceOutstanding: 'Rp 45,000,000 outstanding', invoiceNote: '1 invoice pending',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-009', name: 'PT Wahana Appraisal', category: 'Appraiser', tier: 'Platinum', status: 'Active',
+    owner: 'Ops Lending', region: 'Jakarta', risk: 'Low', score: 91, slaCompliance: 97,
+    lastBreach: 'Jan 20, 2026', contractType: 'Platinum Appraisal Framework', contractStart: 'Mar 01, 2025', contractEnd: 'Feb 28, 2027', lastReview: 'Apr 2026',
+    contact: { name: 'Sari Kusumaningrum', email: 'sari@wahana.co.id', phone: '+62 812 7744 0011' },
+    services: ['Collateral Valuation', 'Asset Appraisal', 'Market Analysis'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All invoices paid',
+    complianceStatus: 'Compliant', nextAudit: 'Sep 2026', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-010', name: 'Indo Appraisal Group', category: 'Appraiser', tier: 'Gold', status: 'Active',
+    owner: 'Ops Lending', region: 'Surabaya', risk: 'Low', score: 83, slaCompliance: 93,
+    lastBreach: 'Mar 22, 2026', contractType: 'Regional Appraisal Agreement', contractStart: 'Sep 01, 2024', contractEnd: 'Aug 31, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Hendro Wijaya', email: 'hendro@indoappraisal.co.id', phone: '+62 813 4433 2211' },
+    services: ['Collateral Valuation', 'Industrial Property'], coverage: 'Java · Kalimantan',
+    invoiceOutstanding: 'Rp 60,000,000 outstanding', invoiceNote: 'Payment in process',
+    complianceStatus: 'Compliant', nextAudit: 'Jun 2026', portalStatus: 'Active', portalLastLogin: '5 days ago',
+  },
+  {
+    id: 'V-011', name: 'Konsultan Penilaian Nusantara', category: 'Appraiser', tier: 'Silver', status: 'Active',
+    owner: 'Ops Lending', region: 'Medan', risk: 'Medium', score: 76, slaCompliance: 91,
+    lastBreach: 'Apr 15, 2026', contractType: 'Annual Appraisal Contract', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Fitri Harahap', email: 'fitri@kpn.co.id', phone: '+62 812 6655 1100' },
+    services: ['Land Appraisal', 'Building Valuation'], coverage: 'Sumatra',
+    invoiceOutstanding: 'Rp 30,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Oct 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-012', name: 'Prima Nilai Properti', category: 'Appraiser', tier: 'Silver', status: 'Active',
+    owner: 'Ops Lending', region: 'Makassar', risk: 'Low', score: 78, slaCompliance: 90,
+    lastBreach: 'Feb 28, 2026', contractType: 'Regional Appraisal Agreement', contractStart: 'Apr 01, 2025', contractEnd: 'Mar 31, 2027', lastReview: 'Feb 2026',
+    contact: { name: 'Nur Aisyah', email: 'nur@primanilai.co.id', phone: '+62 813 5566 7788' },
+    services: ['Property Valuation', 'Field Survey'], coverage: 'Sulawesi · Maluku',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All paid',
+    complianceStatus: 'Compliant', nextAudit: 'Nov 2026', portalStatus: 'Active', portalLastLogin: '2 weeks ago',
+  },
+  {
+    id: 'V-013', name: 'Karya Penilaian Mandiri', category: 'Appraiser', tier: 'Gold', status: 'Active',
+    owner: 'Ops Lending', region: 'Jakarta', risk: 'Low', score: 87, slaCompliance: 94,
+    lastBreach: 'Jan 10, 2026', contractType: 'Master Appraisal Agreement', contractStart: 'Feb 01, 2025', contractEnd: 'Jan 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Anton Kurniawan', email: 'anton@kpm.co.id', phone: '+62 812 3344 5566' },
+    services: ['Collateral Appraisal', 'KJPP Certified'], coverage: 'Java · Sumatra',
+    invoiceOutstanding: 'Rp 75,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Aug 2026', portalStatus: 'Active', portalLastLogin: 'Yesterday',
+  },
+  {
+    id: 'V-014', name: 'Archipelago Appraisers', category: 'Appraiser', tier: 'Gold', status: 'Active',
+    owner: 'Ops Lending', region: 'Bali', risk: 'Low', score: 84, slaCompliance: 95,
+    lastBreach: 'Dec 15, 2025', contractType: 'Island Region Agreement', contractStart: 'Jan 15, 2025', contractEnd: 'Jan 14, 2027', lastReview: 'Jan 2026',
+    contact: { name: 'Made Sukarsa', email: 'made@archipelago.co.id', phone: '+62 812 9988 7766' },
+    services: ['Tourist Property Valuation', 'Collateral Assessment'], coverage: 'Bali · NTB · NTT',
+    invoiceOutstanding: 'Rp 40,000,000 outstanding', invoiceNote: '1 pending',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-015', name: 'Delta Surveys Indonesia', category: 'Appraiser', tier: 'Silver', status: 'Active',
+    owner: 'Ops Lending', region: 'Palembang', risk: 'Medium', score: 75, slaCompliance: 89,
+    lastBreach: 'Apr 08, 2026', contractType: 'Survey Service Agreement', contractStart: 'Jul 01, 2025', contractEnd: 'Jun 30, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Reza Firdaus', email: 'reza@deltasurvey.id', phone: '+62 813 7788 9900' },
+    services: ['Field Survey', 'Boundary Mapping'], coverage: 'Sumatra · Kalimantan',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-016', name: 'Bhakti Nilai Utama', category: 'Appraiser', tier: 'Gold', status: 'Active',
+    owner: 'Ops Lending', region: 'Semarang', risk: 'Low', score: 86, slaCompliance: 93,
+    lastBreach: 'Mar 01, 2026', contractType: 'Appraisal Framework', contractStart: 'Oct 01, 2024', contractEnd: 'Sep 30, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Yuli Setyawati', email: 'yuli@bnu.co.id', phone: '+62 812 4455 6677' },
+    services: ['Property Appraisal', 'Cost Approach Valuation'], coverage: 'Jawa Tengah · DIY',
+    invoiceOutstanding: 'Rp 55,000,000 outstanding', invoiceNote: '2 invoices pending',
+    complianceStatus: 'Compliant', nextAudit: 'Oct 2026', portalStatus: 'Active', portalLastLogin: '4 days ago',
+  },
+  {
+    id: 'V-017', name: 'Pacific Appraisal Partners', category: 'Appraiser', tier: 'Silver', status: 'Onboarding',
+    owner: 'Ops Lending', region: 'Manado', risk: 'Medium', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Samuel Rumintjap', email: 'samuel@pacific.co.id', phone: '+62 812 1122 3344' },
+    services: ['Property Assessment', 'Land Survey'], coverage: 'Sulawesi Utara',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-018', name: 'Nusantara Property Valuers', category: 'Appraiser', tier: 'Silver', status: 'Active',
+    owner: 'Ops Lending', region: 'Banjarmasin', risk: 'Low', score: 77, slaCompliance: 91,
+    lastBreach: 'Feb 10, 2026', contractType: 'Annual Appraisal Contract', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Hendra Wijaksana', email: 'hendra@npv.co.id', phone: '+62 813 6677 8899' },
+    services: ['Plantation Land Valuation', 'Collateral Appraisal'], coverage: 'Kalimantan',
+    invoiceOutstanding: 'Rp 35,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-019', name: 'Sumatra Appraisal Consortium', category: 'Appraiser', tier: 'Silver', status: 'Onboarding',
+    owner: 'Ops Lending', region: 'Pekanbaru', risk: 'High', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Zulkarnain', email: 'zulkarnain@sac.co.id', phone: '+62 812 2233 4455' },
+    services: ['Property Valuation', 'Site Assessment'], coverage: 'Riau · Jambi',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  // ── Insurance Providers ──
+  {
+    id: 'V-020', name: 'PT Tugu Pratama Indonesia', category: 'Insurance Provider', tier: 'Platinum', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 89, slaCompliance: 94,
+    lastBreach: 'Mar 18, 2026', contractType: 'Commercial Insurance Framework', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Irwan Halim', email: 'irwan@tugu.co.id', phone: '+62 811 8877 6655' },
+    services: ['Property Insurance', 'Business Interruption', 'Marine Cargo'], coverage: 'National',
+    invoiceOutstanding: 'Rp 180,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Jun 2026', portalStatus: 'Active', portalLastLogin: '2 days ago',
+  },
+  {
+    id: 'V-021', name: 'Asuransi Jiwa Central Asia', category: 'Insurance Provider', tier: 'Gold', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 88, slaCompliance: 93,
+    lastBreach: 'Feb 22, 2026', contractType: 'Life Insurance MoU', contractStart: 'Apr 01, 2025', contractEnd: 'Mar 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Dewi Ariyanti', email: 'dewi@ajca.co.id', phone: '+62 812 5544 3322' },
+    services: ['Credit Life Insurance', 'Personal Accident'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Sep 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-022', name: 'PT Asuransi Sinar Mas', category: 'Insurance Provider', tier: 'Gold', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 85, slaCompliance: 91,
+    lastBreach: 'Mar 05, 2026', contractType: 'General Insurance Framework', contractStart: 'Jul 01, 2024', contractEnd: 'Jun 30, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Budi Pratama', email: 'budi@sinarmasins.co.id', phone: '+62 813 6655 4433' },
+    services: ['Fire Insurance', 'Flood Coverage', 'Credit Insurance'], coverage: 'National',
+    invoiceOutstanding: 'Rp 120,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2026', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-023', name: 'Allianz Life Indonesia', category: 'Insurance Provider', tier: 'Platinum', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 93, slaCompliance: 96,
+    lastBreach: 'Jan 12, 2026', contractType: 'Strategic Insurance Partnership', contractStart: 'Jan 01, 2024', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Christine Hartono', email: 'christine@allianz.id', phone: '+62 812 7766 5544' },
+    services: ['Bancassurance', 'Credit Life', 'Group Insurance'], coverage: 'National',
+    invoiceOutstanding: 'Rp 240,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Nov 2026', portalStatus: 'Active', portalLastLogin: 'Today',
+  },
+  {
+    id: 'V-024', name: 'Manulife Indonesia', category: 'Insurance Provider', tier: 'Gold', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 90, slaCompliance: 95,
+    lastBreach: 'Dec 20, 2025', contractType: 'Bancassurance Partnership', contractStart: 'Oct 01, 2024', contractEnd: 'Sep 30, 2026', lastReview: 'Jan 2026',
+    contact: { name: 'Robert Lim', email: 'robert@manulife.co.id', phone: '+62 811 4455 6677' },
+    services: ['Bancassurance', 'Wealth Protection', 'Critical Illness'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share settled',
+    complianceStatus: 'Compliant', nextAudit: 'Oct 2026', portalStatus: 'Active', portalLastLogin: '5 days ago',
+  },
+  {
+    id: 'V-025', name: 'Bringin Life Insurance', category: 'Insurance Provider', tier: 'Silver', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Medium', score: 80, slaCompliance: 88,
+    lastBreach: 'Apr 12, 2026', contractType: 'Annual Insurance Agreement', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Sri Wahyuni', email: 'sri@bringinlife.co.id', phone: '+62 812 3322 1100' },
+    services: ['Credit Life Insurance', 'Mortgage Insurance'], coverage: 'Java · Bali',
+    invoiceOutstanding: 'Rp 90,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-026', name: 'Zurich Insurance Indonesia', category: 'Insurance Provider', tier: 'Gold', status: 'Active',
+    owner: 'Ops Risk', region: 'Jakarta', risk: 'Low', score: 87, slaCompliance: 92,
+    lastBreach: 'Feb 14, 2026', contractType: 'Corporate Insurance Framework', contractStart: 'Mar 01, 2025', contractEnd: 'Feb 28, 2027', lastReview: 'Feb 2026',
+    contact: { name: 'Michael Santoso', email: 'michael@zurich.co.id', phone: '+62 812 1100 9988' },
+    services: ['Asset Insurance', 'Liability Coverage', 'Cyber Risk'], coverage: 'National',
+    invoiceOutstanding: 'Rp 60,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Aug 2026', portalStatus: 'Active', portalLastLogin: '2 weeks ago',
+  },
+  {
+    id: 'V-027', name: 'PT Asuransi Bumida', category: 'Insurance Provider', tier: 'Silver', status: 'Onboarding',
+    owner: 'Ops Risk', region: 'Surabaya', risk: 'Medium', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Agus Wijaya', email: 'agus@bumida.co.id', phone: '+62 813 9988 7766' },
+    services: ['General Insurance', 'Property Coverage'], coverage: 'Jawa Timur',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  // ── Legal Counsel ──
+  {
+    id: 'V-028', name: 'Hadiputranto Hadinoto & Partners', category: 'Legal Counsel', tier: 'Platinum', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Low', score: 92, slaCompliance: 95,
+    lastBreach: 'Jan 08, 2026', contractType: 'Legal Services Framework', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Pradana Hadinoto', email: 'pradana@hhp.co.id', phone: '+62 811 2233 4455' },
+    services: ['Banking Law', 'M&A Advisory', 'Regulatory Compliance'], coverage: 'National',
+    invoiceOutstanding: 'Rp 420,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Jun 2026', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-029', name: 'Lubis Ganie Surowidjojo', category: 'Legal Counsel', tier: 'Gold', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Low', score: 89, slaCompliance: 94,
+    lastBreach: 'Feb 05, 2026', contractType: 'Legal Retainer', contractStart: 'Mar 01, 2024', contractEnd: 'Feb 28, 2027', lastReview: 'Feb 2026',
+    contact: { name: 'Adhitya Lubis', email: 'adhitya@lgs.co.id', phone: '+62 812 8877 6655' },
+    services: ['Banking Litigation', 'Credit Documentation', 'Security Agreements'], coverage: 'National',
+    invoiceOutstanding: 'Rp 280,000,000 outstanding', invoiceNote: '3 invoices pending',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2026', portalStatus: 'Active', portalLastLogin: 'Yesterday',
+  },
+  {
+    id: 'V-030', name: 'Soewito Suhardiman Eddymurthy', category: 'Legal Counsel', tier: 'Gold', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Low', score: 86, slaCompliance: 93,
+    lastBreach: 'Mar 10, 2026', contractType: 'Legal Advisory Agreement', contractStart: 'Jul 01, 2024', contractEnd: 'Jun 30, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Edy Suhardiman', email: 'edy@sse.co.id', phone: '+62 811 7766 5544' },
+    services: ['Corporate Law', 'Collateral Documentation', 'Dispute Resolution'], coverage: 'Java',
+    invoiceOutstanding: 'Rp 200,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Aug 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-031', name: 'Kartini Law Office', category: 'Legal Counsel', tier: 'Silver', status: 'Active',
+    owner: 'Ops Legal', region: 'Surabaya', risk: 'Medium', score: 79, slaCompliance: 90,
+    lastBreach: 'Apr 01, 2026', contractType: 'Legal Retainer', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Intan Kartini', email: 'intan@kartinilaw.co.id', phone: '+62 813 5544 3322' },
+    services: ['Credit Documentation', 'Property Rights'], coverage: 'Jawa Timur',
+    invoiceOutstanding: 'Rp 60,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-032', name: 'Soemadipradja & Taher', category: 'Legal Counsel', tier: 'Gold', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Low', score: 88, slaCompliance: 96,
+    lastBreach: 'Dec 12, 2025', contractType: 'Legal Advisory Agreement', contractStart: 'Aug 01, 2024', contractEnd: 'Jul 31, 2026', lastReview: 'Jan 2026',
+    contact: { name: 'Farrukh Taher', email: 'farrukh@st.co.id', phone: '+62 812 6655 7788' },
+    services: ['Banking Law', 'Securities', 'Restructuring'], coverage: 'National',
+    invoiceOutstanding: 'Rp 340,000,000 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2026', portalStatus: 'Active', portalLastLogin: '4 days ago',
+  },
+  {
+    id: 'V-033', name: 'Ginting & Reksodiputro', category: 'Legal Counsel', tier: 'Silver', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Low', score: 82, slaCompliance: 91,
+    lastBreach: 'Mar 25, 2026', contractType: 'Legal Retainer', contractStart: 'May 01, 2025', contractEnd: 'Apr 30, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Hendra Ginting', email: 'hendra@gr.co.id', phone: '+62 811 4433 5522' },
+    services: ['Credit Agreement Review', 'Regulatory Filing'], coverage: 'Java',
+    invoiceOutstanding: 'Rp 120,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Nov 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-034', name: 'Ali Budiardjo Nugroho', category: 'Legal Counsel', tier: 'Silver', status: 'Active',
+    owner: 'Ops Legal', region: 'Jakarta', risk: 'Medium', score: 78, slaCompliance: 88,
+    lastBreach: 'Apr 18, 2026', contractType: 'Legal Service Agreement', contractStart: 'Oct 01, 2025', contractEnd: 'Sep 30, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Wisnu Nugroho', email: 'wisnu@abn.co.id', phone: '+62 813 3322 1100' },
+    services: ['Collateral Registration', 'APHT Filing'], coverage: 'Java · Sumatra',
+    invoiceOutstanding: 'Rp 80,000,000 outstanding', invoiceNote: '1 pending',
+    complianceStatus: 'Compliant', nextAudit: 'Sep 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-035', name: 'Sumatra Legal Advisory', category: 'Legal Counsel', tier: 'Silver', status: 'Onboarding',
+    owner: 'Ops Legal', region: 'Medan', risk: 'Medium', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Putri Hasibuan', email: 'putri@sla.co.id', phone: '+62 812 5566 7788' },
+    services: ['Regional Legal Services', 'Collateral Documentation'], coverage: 'Sumatra',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  // ── Technology Vendors ──
+  {
+    id: 'V-036', name: 'Nimbus Cloud Solutions', category: 'Technology Vendor', tier: 'Strategic', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 88, slaCompliance: 91,
+    lastBreach: 'Mar 20, 2026', contractType: 'Cloud Services Agreement', contractStart: 'Jun 01, 2025', contractEnd: 'May 31, 2027', lastReview: 'Apr 2026',
+    contact: { name: 'Rian Santoso', email: 'rian@nimbus.io', phone: '+62 812 4455 3311' },
+    services: ['Cloud Hosting', 'Data Backup', 'Disaster Recovery'], coverage: 'National',
+    invoiceOutstanding: 'Rp 140,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'May 2027', portalStatus: 'Active', portalLastLogin: 'Today',
+  },
+  {
+    id: 'V-037', name: 'DataSight Analytics', category: 'Technology Vendor', tier: 'Gold', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 85, slaCompliance: 90,
+    lastBreach: 'Feb 27, 2026', contractType: 'Analytics Platform Agreement', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Citra Devianti', email: 'citra@datasight.id', phone: '+62 811 3344 5566' },
+    services: ['Business Intelligence', 'Data Analytics', 'Reporting'], coverage: 'National',
+    invoiceOutstanding: 'Rp 75,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-038', name: 'PT Infomedia Nusantara', category: 'Technology Vendor', tier: 'Gold', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 83, slaCompliance: 88,
+    lastBreach: 'Apr 05, 2026', contractType: 'IT Services Agreement', contractStart: 'Feb 01, 2025', contractEnd: 'Jan 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Hadi Kurniawan', email: 'hadi@infomedia.co.id', phone: '+62 813 7788 6655' },
+    services: ['Contact Center', 'CRM Support', 'Data Processing'], coverage: 'National',
+    invoiceOutstanding: 'Rp 95,000,000 outstanding', invoiceNote: '2 pending',
+    complianceStatus: 'Compliant', nextAudit: 'Jan 2027', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-039', name: 'Biznet Networks', category: 'Technology Vendor', tier: 'Silver', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 80, slaCompliance: 87,
+    lastBreach: 'Mar 30, 2026', contractType: 'Network Services Agreement', contractStart: 'Aug 01, 2025', contractEnd: 'Jul 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Agung Prasetyo', email: 'agung@biznet.id', phone: '+62 812 9900 8877' },
+    services: ['Internet Connectivity', 'VPN', 'Network Management'], coverage: 'National',
+    invoiceOutstanding: 'Rp 60,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-040', name: 'PT Sigma Cipta Caraka', category: 'Technology Vendor', tier: 'Gold', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 86, slaCompliance: 92,
+    lastBreach: 'Jan 25, 2026', contractType: 'IT Infrastructure Agreement', contractStart: 'Apr 01, 2024', contractEnd: 'Mar 31, 2026', lastReview: 'Jan 2026',
+    contact: { name: 'Bayu Pramudita', email: 'bayu@sigma.co.id', phone: '+62 811 1122 3344' },
+    services: ['IT Infrastructure', 'System Integration', 'Helpdesk'], coverage: 'National',
+    invoiceOutstanding: 'Rp 200,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Mar 2026', portalStatus: 'Active', portalLastLogin: '2 days ago',
+  },
+  {
+    id: 'V-041', name: 'Telkomsigma', category: 'Technology Vendor', tier: 'Strategic', status: 'Active',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Low', score: 91, slaCompliance: 93,
+    lastBreach: 'Feb 08, 2026', contractType: 'Cloud & IT Services MoU', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Tono Sucipto', email: 'tono@telkomsigma.co.id', phone: '+62 812 6677 8899' },
+    services: ['Cloud Computing', 'Cybersecurity', 'IT Operations'], coverage: 'National',
+    invoiceOutstanding: 'Rp 350,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: 'Yesterday',
+  },
+  {
+    id: 'V-042', name: 'Softcell Technology', category: 'Technology Vendor', tier: 'Silver', status: 'Active',
+    owner: 'IT Ops', region: 'Bandung', risk: 'Medium', score: 76, slaCompliance: 85,
+    lastBreach: 'Apr 20, 2026', contractType: 'Software License Agreement', contractStart: 'Jul 01, 2025', contractEnd: 'Jun 30, 2027', lastReview: 'Apr 2026',
+    contact: { name: 'Eko Firmansyah', email: 'eko@softcell.id', phone: '+62 813 2233 4455' },
+    services: ['Software Development', 'QA Testing', 'Maintenance'], coverage: 'Java',
+    invoiceOutstanding: 'Rp 45,000,000 outstanding', invoiceNote: 'Processing',
+    complianceStatus: 'Compliant', nextAudit: 'Jun 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-043', name: 'PT Multipolar Technology', category: 'Technology Vendor', tier: 'Silver', status: 'Onboarding',
+    owner: 'IT Ops', region: 'Jakarta', risk: 'Medium', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Desi Wulandari', email: 'desi@multipolar.co.id', phone: '+62 812 4422 3311' },
+    services: ['ERP System', 'IT Consulting'], coverage: 'National',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-044', name: 'Matrix Nusantara', category: 'Technology Vendor', tier: 'Silver', status: 'Active',
+    owner: 'IT Ops', region: 'Yogyakarta', risk: 'Low', score: 79, slaCompliance: 87,
+    lastBreach: 'Mar 12, 2026', contractType: 'Software Services Agreement', contractStart: 'Sep 01, 2025', contractEnd: 'Aug 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Wahyu Purnama', email: 'wahyu@matrix.co.id', phone: '+62 811 5566 7788' },
+    services: ['Database Management', 'Application Support'], coverage: 'Java',
+    invoiceOutstanding: 'Rp 30,000,000 outstanding', invoiceNote: 'On track',
+    complianceStatus: 'Compliant', nextAudit: 'Aug 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  // ── Referral Partners & Gift Vendors ──
+  {
+    id: 'V-045', name: 'Mandiri Sekuritas Partners', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 86, slaCompliance: 97,
+    lastBreach: 'Jan 15, 2026', contractType: 'Referral Partnership', contractStart: 'Oct 01, 2024', contractEnd: 'Sep 30, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Rizal Permana', email: 'rizal@mandiri.co.id', phone: '+62 812 3344 5566' },
+    services: ['Securities Referrals', 'Corporate Client Leads'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share settled',
+    complianceStatus: 'Compliant', nextAudit: 'Sep 2026', portalStatus: 'Active', portalLastLogin: '2 days ago',
+  },
+  {
+    id: 'V-046', name: 'BRI Finance Partners', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 84, slaCompliance: 96,
+    lastBreach: 'Feb 18, 2026', contractType: 'Referral Partnership', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Yuni Rahayu', email: 'yuni@bri.co.id', phone: '+62 813 4455 6677' },
+    services: ['SME Lead Referrals', 'Joint Marketing'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-047', name: 'Permata Network Partners', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 80, slaCompliance: 95,
+    lastBreach: 'Mar 08, 2026', contractType: 'Referral Partnership', contractStart: 'Apr 01, 2025', contractEnd: 'Mar 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Sandra Wijaya', email: 'sandra@permata.co.id', phone: '+62 812 5566 7788' },
+    services: ['Retail Referrals', 'Customer Loyalty Program'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share current',
+    complianceStatus: 'Compliant', nextAudit: 'Mar 2027', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-048', name: 'Danamon Business Referral', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 83, slaCompliance: 96,
+    lastBreach: 'Jan 28, 2026', contractType: 'Referral Partnership', contractStart: 'Jul 01, 2024', contractEnd: 'Jun 30, 2026', lastReview: 'Jan 2026',
+    contact: { name: 'Andri Kurniawan', email: 'andri@danamon.co.id', phone: '+62 811 6677 8899' },
+    services: ['Business Banking Referrals', 'Corporate Introductions'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Settled',
+    complianceStatus: 'Compliant', nextAudit: 'Jun 2026', portalStatus: 'Active', portalLastLogin: 'Today',
+  },
+  {
+    id: 'V-049', name: 'CIMB Niaga Partners', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 85, slaCompliance: 97,
+    lastBreach: 'Dec 18, 2025', contractType: 'Strategic Referral Partnership', contractStart: 'Oct 01, 2024', contractEnd: 'Sep 30, 2026', lastReview: 'Jan 2026',
+    contact: { name: 'Linggawati Setiawan', email: 'linggawati@cimb.co.id', phone: '+62 812 7788 9900' },
+    services: ['High Net Worth Referrals', 'Treasury Introductions'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share settled',
+    complianceStatus: 'Compliant', nextAudit: 'Sep 2026', portalStatus: 'Active', portalLastLogin: '5 days ago',
+  },
+  {
+    id: 'V-050', name: 'Koperasi Nusantara Network', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Yogyakarta', risk: 'Low', score: 77, slaCompliance: 93,
+    lastBreach: 'Feb 05, 2026', contractType: 'Referral Partnership', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Bambang Widodo', email: 'bambang@kopnusantara.co.id', phone: '+62 813 9988 7766' },
+    services: ['SME Referrals', 'Community Banking Leads'], coverage: 'Jawa Tengah · DIY',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All paid',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-051', name: 'Astra International Partners', category: 'Referral Partner', tier: 'Platinum', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 91, slaCompliance: 98,
+    lastBreach: 'Nov 20, 2025', contractType: 'Strategic Partnership MoU', contractStart: 'Jan 01, 2025', contractEnd: 'Dec 31, 2026', lastReview: 'Apr 2026',
+    contact: { name: 'Bambang Triyono', email: 'bambang.t@astra.co.id', phone: '+62 811 8899 1100' },
+    services: ['Automotive Financing Leads', 'Corporate Referrals', 'Co-marketing'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share current',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: 'Yesterday',
+  },
+  {
+    id: 'V-052', name: 'Salim Group Business Network', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 88, slaCompliance: 97,
+    lastBreach: 'Jan 05, 2026', contractType: 'Business Network Referral', contractStart: 'Mar 01, 2025', contractEnd: 'Feb 28, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Steven Halim', email: 'steven.h@salimgroup.co.id', phone: '+62 812 1100 9988' },
+    services: ['Conglomerate Lead Referrals', 'Premium Client Introductions'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Feb 2027', portalStatus: 'Active', portalLastLogin: '2 days ago',
+  },
+  {
+    id: 'V-053', name: 'PT Sido Muncul Partners', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Semarang', risk: 'Low', score: 79, slaCompliance: 94,
+    lastBreach: 'Mar 15, 2026', contractType: 'Referral Partnership', contractStart: 'Jun 01, 2025', contractEnd: 'May 31, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Tina Ningsih', email: 'tina@sidomuncul.co.id', phone: '+62 813 2211 0099' },
+    services: ['Regional Business Leads', 'SME Referrals'], coverage: 'Jawa Tengah',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share settled',
+    complianceStatus: 'Compliant', nextAudit: 'May 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-054', name: 'Bank Jabar Referral Network', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Bandung', risk: 'Low', score: 82, slaCompliance: 95,
+    lastBreach: 'Feb 20, 2026', contractType: 'Referral Partnership', contractStart: 'Aug 01, 2024', contractEnd: 'Jul 31, 2026', lastReview: 'Feb 2026',
+    contact: { name: 'Dian Purnama', email: 'dian@bankjabar.co.id', phone: '+62 812 3300 4411' },
+    services: ['Regional Banking Referrals', 'Government Client Leads'], coverage: 'Jawa Barat',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All paid',
+    complianceStatus: 'Compliant', nextAudit: 'Jul 2026', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-055', name: 'Sinar Mas Group Referral', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 87, slaCompliance: 96,
+    lastBreach: 'Jan 22, 2026', contractType: 'Group Referral Partnership', contractStart: 'May 01, 2025', contractEnd: 'Apr 30, 2027', lastReview: 'Mar 2026',
+    contact: { name: 'Hartono Wijaya', email: 'hartono@sinarmas.co.id', phone: '+62 811 4455 6677' },
+    services: ['Conglomerate Client Referrals', 'Property-linked Leads'], coverage: 'National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share current',
+    complianceStatus: 'Compliant', nextAudit: 'Apr 2027', portalStatus: 'Active', portalLastLogin: '3 days ago',
+  },
+  {
+    id: 'V-056', name: 'Duta Wacana Partners', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Yogyakarta', risk: 'Low', score: 76, slaCompliance: 92,
+    lastBreach: 'Mar 20, 2026', contractType: 'Referral Partnership', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'Mar 2026',
+    contact: { name: 'Yohanes Santoso', email: 'yohanes@dutawacana.ac.id', phone: '+62 813 7766 5544' },
+    services: ['Academic Sector Referrals', 'Alumni Network Leads'], coverage: 'DIY · Jawa Tengah',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All settled',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-057', name: 'Agro Bank Network', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 78, slaCompliance: 93,
+    lastBreach: 'Feb 12, 2026', contractType: 'Agricultural Sector Referral', contractStart: 'Sep 01, 2025', contractEnd: 'Aug 31, 2027', lastReview: 'Feb 2026',
+    contact: { name: 'Asep Rukmana', email: 'asep@agrobank.co.id', phone: '+62 812 5533 4422' },
+    services: ['Agricultural Financing Referrals', 'Plantation Sector Leads'], coverage: 'Sumatra · Kalimantan',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Revenue share settled',
+    complianceStatus: 'Compliant', nextAudit: 'Aug 2027', portalStatus: 'Invited', portalLastLogin: '—',
+  },
+  {
+    id: 'V-058', name: 'Hampers Premium Indonesia', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 89, slaCompliance: 99,
+    lastBreach: '—', contractType: 'Corporate Gift Fulfillment', contractStart: 'Jan 01, 2026', contractEnd: 'Dec 31, 2026', lastReview: 'May 2026',
+    contact: { name: 'Mega Indah', email: 'mega@hamperspremium.id', phone: '+62 812 9900 1122' },
+    services: ['Premium Hampers', 'Corporate Gifts', 'Event Packages'], coverage: 'Jakarta · Jabodetabek',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Monthly billing current',
+    complianceStatus: 'Compliant', nextAudit: 'Dec 2026', portalStatus: 'Active', portalLastLogin: 'Yesterday',
+  },
+  {
+    id: 'V-059', name: 'PT Eksklusif Gift', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Surabaya', risk: 'Low', score: 82, slaCompliance: 96,
+    lastBreach: '—', contractType: 'Corporate Gift Agreement', contractStart: 'Mar 01, 2026', contractEnd: 'Feb 28, 2027', lastReview: 'Apr 2026',
+    contact: { name: 'Susi Wulan', email: 'susi@eksklusifgift.id', phone: '+62 813 1100 2233' },
+    services: ['Corporate Gifts', 'Birthday Hampers', 'Anniversary Packages'], coverage: 'Jawa Timur · Bali',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'All paid',
+    complianceStatus: 'Compliant', nextAudit: 'Feb 2027', portalStatus: 'Active', portalLastLogin: '2 days ago',
+  },
+  {
+    id: 'V-060', name: 'Anugrah Gift Indonesia', category: 'Referral Partner', tier: 'Silver', status: 'Active',
+    owner: 'Ops Growth', region: 'Bandung', risk: 'Low', score: 80, slaCompliance: 95,
+    lastBreach: '—', contractType: 'Gift Vendor Agreement', contractStart: 'Feb 01, 2026', contractEnd: 'Jan 31, 2027', lastReview: 'Apr 2026',
+    contact: { name: 'Rina Mulyati', email: 'rina@anugrahgift.id', phone: '+62 812 2233 4455' },
+    services: ['Gift Baskets', 'Hampers Delivery', 'Custom Corporate Gifts'], coverage: 'Jawa Barat · Jakarta',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Billing current',
+    complianceStatus: 'Compliant', nextAudit: 'Jan 2027', portalStatus: 'Active', portalLastLogin: '1 week ago',
+  },
+  {
+    id: 'V-061', name: 'Corporate Gifting Pro', category: 'Referral Partner', tier: 'Gold', status: 'Active',
+    owner: 'Ops Growth', region: 'Jakarta', risk: 'Low', score: 86, slaCompliance: 98,
+    lastBreach: '—', contractType: 'Corporate Gift Framework', contractStart: 'Jan 15, 2026', contractEnd: 'Jan 14, 2027', lastReview: 'May 2026',
+    contact: { name: 'Bintang Pratiwi', email: 'bintang@cgpro.id', phone: '+62 812 8877 9900' },
+    services: ['Premium Corporate Gifts', 'Hampers', 'Luxury Event Packages'], coverage: 'Jakarta · National',
+    invoiceOutstanding: 'Rp 0 outstanding', invoiceNote: 'Monthly billing settled',
+    complianceStatus: 'Compliant', nextAudit: 'Jan 2027', portalStatus: 'Active', portalLastLogin: 'Today',
+  },
+  {
+    id: 'V-062', name: 'Prima Referral Solutions', category: 'Referral Partner', tier: 'Silver', status: 'Onboarding',
+    owner: 'Ops Growth', region: 'Semarang', risk: 'Low', score: 0, slaCompliance: 0,
+    lastBreach: '—', contractType: 'Draft Agreement', contractStart: '—', contractEnd: '—', lastReview: '—',
+    contact: { name: 'Lestari Ayu', email: 'lestari@prima-referral.id', phone: '+62 813 3344 5566' },
+    services: ['Regional Business Referrals'], coverage: 'Jawa Tengah',
+    invoiceOutstanding: '—', invoiceNote: 'Awaiting onboarding',
+    complianceStatus: 'KYC in progress', nextAudit: '—', portalStatus: 'Invited', portalLastLogin: '—',
+  },
 ])
 
 const vendorSearch = ref('')
@@ -1367,6 +1946,37 @@ function openVendorForm() {
 
 function openRequestForm() {
   resetRequestForm()
+  showRequestForm.value = true
+}
+
+function openRequestFromVendor(vendor) {
+  requestForm.value = {
+    type: '',
+    vendor: vendor.name,
+    requester: 'Ops Lending',
+    owner: 'Ops Team',
+    priority: 'Normal',
+    status: 'Pending',
+    slaDue: '8h',
+    slaBreached: false,
+  }
+  requestFormError.value = ''
+  selectedVendor.value = null
+  showRequestForm.value = true
+}
+
+function openRelationshipRequest(item) {
+  requestForm.value = {
+    type: item.type,
+    vendor: item.vendor,
+    requester: 'Andi - RM Commercial',
+    owner: item.owner,
+    priority: item.priority,
+    status: 'Assigned',
+    slaDue: item.priority === 'High' ? '24h' : '2 days',
+    slaBreached: false,
+  }
+  activeTab.value = 'requests'
   showRequestForm.value = true
 }
 

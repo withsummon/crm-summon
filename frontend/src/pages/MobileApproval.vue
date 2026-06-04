@@ -155,7 +155,7 @@
               v-model="rejectReason"
               rows="3"
               :placeholder="__('Jelaskan alasan reject...')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal resize-none mb-4"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 resize-none mb-4"
             />
             <div class="flex gap-2">
               <Button variant="ghost" class="flex-1" @click="showRejectDialog = false">

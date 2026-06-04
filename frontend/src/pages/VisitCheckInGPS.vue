@@ -20,7 +20,7 @@
           v-if="plannedVisits.length > 0"
           v-model="selectedVisit"
           :disabled="checkedIn"
-          class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal disabled:opacity-50"
+          class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 disabled:opacity-50"
         >
           <option :value="null">{{ __('Pilih kunjungan untuk check-in') }}</option>
           <option v-for="v in plannedVisits" :key="v.name" :value="v">
@@ -43,7 +43,7 @@
             <input
               v-model="newVisitCustomer"
               type="text"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
               :placeholder="__('Masukkan nama nasabah')"
             />
           </div>
@@ -57,7 +57,7 @@
           </div>
         </div>
         <div v-else class="text-center py-4">
-          <FeatherIcon name="loader" class="size-6 animate-spin text-crm-teal mx-auto" />
+          <FeatherIcon name="loader" class="size-6 animate-spin text-primary-600 mx-auto" />
         </div>
       </div>
 
@@ -76,7 +76,7 @@
 
       <div v-if="gpsLoading && !gpsDenied" class="rounded-xl bg-white p-6 shadow-sm border border-crm-border text-center">
         <div class="flex justify-center mb-3">
-          <FeatherIcon name="loader" class="size-8 animate-spin text-crm-teal" />
+          <FeatherIcon name="loader" class="size-8 animate-spin text-primary-600" />
         </div>
         <p class="text-sm text-crm-text-secondary">{{ __('Mendapatkan lokasi...') }}</p>
       </div>

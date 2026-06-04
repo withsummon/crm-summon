@@ -659,7 +659,7 @@ export const workflowTemplates = [
     title: 'Persetujuan Manajer Multilevel',
     description: 'Alur kerja persetujuan dengan input data oleh RM dan approval bertingkat.',
     icon: 'LucideShieldCheck',
-    color: 'from-emerald-500 to-teal-500',
+    color: 'from-emerald-500 to-primary-500',
     marketplaceCategory: 'Approval',
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 

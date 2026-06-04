@@ -24,7 +24,7 @@
               v-model="searchQuery"
               type="text"
               :placeholder="__('Search roles...')"
-              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
+              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20"
             />
           </div>
           <Button
@@ -77,7 +77,7 @@
             >
               <LucideShieldCheck
                 class="h-4 w-4"
-                :class="role.is_custom ? 'text-crm-teal' : 'text-indigo-500'"
+                :class="role.is_custom ? 'text-primary-600' : 'text-indigo-500'"
               />
             </div>
             <div>
@@ -108,7 +108,7 @@
       >
         <template #body-content>
           <div v-if="rolePermsLoading" class="flex items-center justify-center py-8">
-            <div class="h-6 w-6 animate-spin rounded-full border-2 border-crm-teal border-t-transparent" />
+            <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
           </div>
           <div v-else-if="rolePerms.length" class="overflow-x-auto">
             <table class="w-full text-sm">

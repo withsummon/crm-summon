@@ -23,7 +23,7 @@
         <div class="flex items-center gap-2">
           <Button :label="__('Record PTP')" variant="solid" @click="openPtpForm(null)" />
           <Button :label="__('Log Payment')" variant="outline" @click="openPaymentForm(null)" />
-          <Button :label="__('Legal Escalation')" variant="outline" theme="red" @click="showLegalModal = true" />
+          <Button :label="__('Legal Escalation')" variant="outline" theme="red" @click="openLegalForm(null)" />
         </div>
       </template>
     </LayoutHeader>
@@ -63,6 +63,32 @@
           </div>
           <div class="mt-0.5 text-[11px]" :class="kpi.deltaColor || 'text-ink-gray-4'">
             {{ kpi.delta }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div
+          v-for="action in retentionActions"
+          :key="action.title"
+          class="rounded-[14px] border border-crm-border bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-ink-gray-8">{{ __(action.title) }}</div>
+              <div class="mt-1 text-xs text-ink-gray-5">{{ __(action.detail) }}</div>
+            </div>
+            <Badge :label="action.badge" variant="subtle" :theme="action.theme" />
+          </div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <Button
+              v-for="button in action.buttons"
+              :key="button.label"
+              :label="__(button.label)"
+              size="sm"
+              :variant="button.variant || 'subtle'"
+              @click="button.handler"
+            />
           </div>
         </div>
       </div>
@@ -630,9 +656,9 @@
                 <Badge :label="s.status" variant="subtle" :theme="s.status === 'Active' ? 'green' : 'gray'" />
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs">
-                <div class="rounded bg-primary-50 p-2 text-center">
-                  <div class="font-semibold text-primary-700">Test ({{ s.testPct }}%)</div>
-                  <div class="text-primary-600">{{ s.testRecovery }}% recovery</div>
+                <div class="rounded bg-secondary-50 p-2 text-center">
+                  <div class="font-semibold text-secondary-700">Test ({{ s.testPct }}%)</div>
+                  <div class="text-secondary-600">{{ s.testRecovery }}% recovery</div>
                 </div>
                 <div class="rounded bg-surface-gray-1 p-2 text-center">
                   <div class="font-semibold text-ink-gray-6">Control</div>
@@ -689,7 +715,7 @@
         <Button :label="__('Log Payment')" variant="outline" size="sm" @click="openPaymentForm(selectedAccount)" />
         <Button :label="__('Add Note')" variant="outline" size="sm" @click="openNoteForm(selectedAccount)" />
         <Button :label="__('Schedule Visit')" variant="outline" size="sm" @click="showVisitModal = true" />
-        <Button :label="__('Legal Escalation')" variant="outline" size="sm" @click="showLegalModal = true" />
+        <Button :label="__('Legal Escalation')" variant="outline" size="sm" @click="openLegalForm(selectedAccount)" />
       </div>
     </div>
   </div>
@@ -959,8 +985,8 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
-import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { Badge, Button, FeatherIcon, call, toast, usePageMeta } from 'frappe-ui'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 // ── Page tabs ────────────────────────────────────────────────
 const pageTabs = computed(() => [
@@ -1007,10 +1033,10 @@ const showRestructureModal = ref(false)
 const showWriteOffModal = ref(false)
 
 // ── Form state ───────────────────────────────────────────────
-const ptpForm = ref({ customer: '', amount: '', date: '', channel: 'Phone Call', notes: '' })
-const paymentForm = ref({ customer: '', amount: '', date: '', mode: 'Transfer Bank', principal: '', interest: '', charges: '' })
+const ptpForm = ref({ account: '', customer: '', amount: '', date: '', channel: 'Phone Call', notes: '' })
+const paymentForm = ref({ account: '', customer: '', amount: '', date: '', mode: 'Transfer Bank', principal: '', interest: '', charges: '' })
 const noteForm = ref({ outcome: 'Contacted — Promised', body: '', followUp: '' })
-const legalForm = ref({ customer: '', trigger: 'DPD > 90', officer: 'Hendra Wijaya', letterType: 'Surat Peringatan 1 (SP1)', notes: '' })
+const legalForm = ref({ account: '', customer: '', trigger: 'DPD > 90', officer: 'Hendra Wijaya', letterType: 'Surat Peringatan 1 (SP1)', notes: '' })
 const visitForm = ref({ date: '', time: '', officer: '', address: '', purpose: 'Collection Visit' })
 const restructureForm = ref({ customer: '', terms: '', rationale: '' })
 const writeOffForm = ref({ customer: '', amount: '', reason: 'Bankruptcy' })
@@ -1045,6 +1071,39 @@ const aiPriorityList = [
   { id: 'p4', customer: 'Mega Teknik Group', dpd: 29, outstanding: 'IDR 2.8B', score: 81 },
   { id: 'p5', customer: 'Berkah Abadi', dpd: 91, outstanding: 'IDR 1.9B', score: 18 },
 ]
+
+const retentionActions = computed(() => [
+  {
+    title: 'PT Nusantara Jaya at risk',
+    detail: 'DPD 47, IDR 8.2B, 78% recovery. Recommended first action: confirm commitment and record PTP today.',
+    badge: 'PTP first',
+    theme: 'orange',
+    buttons: [
+      { label: 'Record PTP', variant: 'solid', handler: () => openPtpForm(accounts.value.find((a) => a.id === 'a1')) },
+      { label: 'WhatsApp Follow-up', handler: () => quickAction('wa', accounts.value.find((a) => a.id === 'a1')) },
+    ],
+  },
+  {
+    title: 'Sari Logistics needs retention visit',
+    detail: 'Covenant pressure and DPD 62. Workflow should assign Andi a field visit within 7 days.',
+    badge: '7d SLA',
+    theme: 'red',
+    buttons: [
+      { label: 'Schedule Visit', variant: 'solid', handler: () => openVisitForm(accounts.value.find((a) => a.id === 'a2')) },
+      { label: 'Add Note', handler: () => openNoteForm(accounts.value.find((a) => a.id === 'a2')) },
+    ],
+  },
+  {
+    title: 'CV Arjuna Perkasa commitment',
+    detail: 'DPD 33, 65% recovery. Use payment logging once promised transfer is received.',
+    badge: 'Early stage',
+    theme: 'green',
+    buttons: [
+      { label: 'Log Payment', variant: 'solid', handler: () => openPaymentForm(accounts.value.find((a) => a.id === 'a3')) },
+      { label: 'Record PTP', handler: () => openPtpForm(accounts.value.find((a) => a.id === 'a3')) },
+    ],
+  },
+])
 
 const topDefaulters = [
   { id: 'd1', customer: 'PT Global Makmur', outstanding: 'IDR 12.4B', dpd: 95, status: 'Legal' },
@@ -1093,9 +1152,9 @@ const dunningStages = [
 ]
 
 const activeWorkflows = ref([
-  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'WA Message', nextAction: 'Auto-WA at 14:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: 'message-circle' },
-  { id: 'wf2', customer: 'Sari Logistics', stage: 'Phone Call', nextAction: 'Officer call tomorrow 09:00', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: 'phone' },
-  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'SMS Reminder', nextAction: 'SMS #2 at 10:00', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: 'smartphone' },
+  { id: 'wf1', customer: 'PT Nusantara Jaya', stage: 'Notification', nextAction: 'PTP reminder today 15:00', dpd: 47, stageColor: 'bg-yellow-100 text-yellow-700', stageIcon: 'bell' },
+  { id: 'wf2', customer: 'Sari Logistics', stage: 'Assignment + SLA Timer', nextAction: 'Assign Andi visit task due in 7 days', dpd: 62, stageColor: 'bg-orange-100 text-orange-700', stageIcon: 'clock' },
+  { id: 'wf3', customer: 'CV Arjuna Perkasa', stage: 'Decision', nextAction: 'If PTP broken, escalate to call queue', dpd: 33, stageColor: 'bg-green-100 text-green-700', stageIcon: 'git-branch' },
 ])
 
 const restructuringList = ref([
@@ -1176,7 +1235,7 @@ const filteredAccounts = computed(() => {
   if (filterProduct.value) list = list.filter((a) => a.product === filterProduct.value)
   if (filterOfficer.value) list = list.filter((a) => a.officer === filterOfficer.value)
   return [...list].sort((a, b) => {
-    if (sortField.value === 'outstanding') return b.outstanding.localeCompare(a.outstanding)
+    if (sortField.value === 'outstanding') return (b.outstandingRaw || parseIdr(b.outstanding)) - (a.outstandingRaw || parseIdr(a.outstanding))
     if (sortField.value === 'aiScore') return b.aiScore - a.aiScore
     if (sortField.value === 'lastAction') return b.lastAction.localeCompare(a.lastAction)
     return b.dpd - a.dpd
@@ -1188,6 +1247,78 @@ const filteredPtps = computed(() => {
   if (ptpFilter.value === 'Today') return ptps.value.filter((p) => p.date === new Date().toISOString().slice(0, 10))
   return ptps.value.filter((p) => p.status === ptpFilter.value)
 })
+
+// ── API sync ─────────────────────────────────────────────────
+function normalizeBucket(bucket, dpd = 0) {
+  const normalized = String(bucket || '').replace(/-/g, '–')
+  if (normalized) return normalized
+  if (dpd <= 0) return 'Current (0d)'
+  if (dpd <= 30) return 'DPD 1–30'
+  if (dpd <= 60) return 'DPD 31–60'
+  if (dpd <= 90) return 'DPD 61–90'
+  if (dpd <= 180) return 'DPD 91–180'
+  return 'DPD 180+'
+}
+
+function applyCollectionState(data) {
+  const payload = data?.message || data
+  if (!payload) return
+  if (Array.isArray(payload.accounts)) {
+    accounts.value = payload.accounts.map((account) => ({
+      ...account,
+      bucket: normalizeBucket(account.bucket, account.dpd),
+      notes: account.notes || [],
+    }))
+  }
+  if (Array.isArray(payload.ptps)) {
+    ptps.value = payload.ptps
+  }
+  if (selectedAccount.value) {
+    selectedAccount.value = accounts.value.find((account) => account.id === selectedAccount.value.id) || null
+  }
+}
+
+async function refreshCollections() {
+  try {
+    applyCollectionState(await call('crm.api.collections.get_collection_state'))
+  } catch (error) {
+    console.warn('[collections] Backend state unavailable, using local demo data.', error)
+  }
+}
+
+async function submitCollectionAction(method, payload, fallback, successMessage) {
+  try {
+    applyCollectionState(await call(`crm.api.collections.${method}`, payload))
+    toast.success(__(successMessage))
+  } catch (error) {
+    console.warn(`[collections] ${method} failed, applying local update.`, error)
+    fallback?.()
+    toast.error(error?.messages?.[0] || error?.message || __('Collection action saved locally only'))
+  }
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function parseIdr(value) {
+  if (typeof value === 'number') return value
+  const text = String(value || '').trim().toUpperCase().replace('IDR', '').replace('RP', '').trim()
+  const multiplier = text.endsWith('T') ? 1_000_000_000_000 : text.endsWith('B') ? 1_000_000_000 : text.endsWith('M') ? 1_000_000 : 1
+  const cleaned = text.replace(/[TBM]/g, '').replace(/[^0-9.]/g, '')
+  return cleaned ? Number(cleaned) * multiplier : 0
+}
+
+function formatIdr(value) {
+  if (value >= 1_000_000_000_000) return `IDR ${(value / 1_000_000_000_000).toFixed(1)}T`
+  if (value >= 1_000_000_000) return `IDR ${(value / 1_000_000_000).toFixed(1)}B`
+  if (value >= 1_000_000) return `IDR ${Math.round(value / 1_000_000)}M`
+  return `IDR ${Math.round(value).toLocaleString()}`
+}
+
+function findAccount(form) {
+  return accounts.value.find((account) => account.id === form.account || account.customer === form.customer)
+}
 
 // ── Helpers ──────────────────────────────────────────────────
 function dpdClass(dpd) {
@@ -1216,14 +1347,27 @@ function openAccountDetail(acct) {
 }
 
 function openPtpForm(acct) {
-  ptpForm.value = { customer: acct?.customer || '', amount: '', date: '', channel: 'Phone Call', notes: '' }
+  ptpForm.value = { account: acct?.id || '', customer: acct?.customer || '', amount: '', date: '', channel: 'Phone Call', notes: '' }
   showPtpModal.value = true
   selectedAccount.value = null
 }
 
 function openPaymentForm(acct) {
-  paymentForm.value = { customer: acct?.customer || '', amount: '', date: '', mode: 'Transfer Bank', principal: '', interest: '', charges: '' }
+  paymentForm.value = { account: acct?.id || '', customer: acct?.customer || '', amount: '', date: '', mode: 'Transfer Bank', principal: '', interest: '', charges: '' }
   showPaymentModal.value = true
+  selectedAccount.value = null
+}
+
+function openLegalForm(acct) {
+  legalForm.value = {
+    account: acct?.id || '',
+    customer: acct?.customer || '',
+    trigger: acct?.dpd > 90 ? 'DPD > 90' : 'Manual escalation',
+    officer: 'Hendra Wijaya',
+    letterType: 'Surat Peringatan 1 (SP1)',
+    notes: '',
+  }
+  showLegalModal.value = true
   selectedAccount.value = null
 }
 
@@ -1233,35 +1377,131 @@ function openNoteForm(acct) {
   showNoteModal.value = true
 }
 
-function savePtp() {
+function openVisitForm(acct) {
+  selectedAccount.value = acct || null
+  visitForm.value = {
+    date: '',
+    time: '',
+    officer: acct?.officer || officers[0],
+    address: acct ? `${acct.customer} primary business address` : '',
+    purpose: 'Restructuring Discussion',
+  }
+  showVisitModal.value = true
+}
+
+async function savePtp() {
   if (!ptpForm.value.customer || !ptpForm.value.date) return
-  ptps.value.unshift({ id: `ptp-${Date.now()}`, ...ptpForm.value, status: 'Pending' })
+  const form = { ...ptpForm.value }
+  const fallback = () => {
+    const account = findAccount(form)
+    const amountRaw = parseIdr(form.amount)
+    ptps.value.unshift({ id: `ptp-${Date.now()}`, ...form, amount: formatIdr(amountRaw), amountRaw, status: 'Pending', officer: account?.officer || '' })
+    if (account) {
+      account.ptpDate = form.date
+      account.lastAction = todayIso()
+      account.status = 'PTP'
+      account.notes = account.notes || []
+      account.notes.unshift({ id: `n-${Date.now()}`, date: todayIso(), body: form.notes || `Promise to pay ${formatIdr(amountRaw)} on ${form.date}.`, outcome: 'PTP Recorded' })
+    }
+  }
+  await submitCollectionAction('record_ptp', form, fallback, 'PTP recorded')
   showPtpModal.value = false
 }
 
-function updatePtp(ptp, status) {
-  ptp.status = status
+async function updatePtp(ptp, status) {
+  const fallback = () => {
+    ptp.status = status
+    const account = accounts.value.find((item) => item.id === ptp.account || item.customer === ptp.customer)
+    if (account) {
+      account.lastAction = todayIso()
+      account.ptpDate = ptps.value.find((item) => item.customer === account.customer && item.status === 'Pending')?.date || ''
+      if (!account.ptpDate && !['Closed', 'Legal'].includes(account.status)) account.status = 'Active'
+      account.notes = account.notes || []
+      account.notes.unshift({ id: `n-${Date.now()}`, date: todayIso(), body: ptp.notes || `PTP marked ${status}.`, outcome: `PTP ${status}` })
+    }
+  }
+  await submitCollectionAction('update_ptp', { ptp: ptp.id, status }, fallback, `PTP marked ${status}`)
 }
 
-function savePayment() {
+async function savePayment() {
+  if (!paymentForm.value.customer || !paymentForm.value.amount) return
+  const form = { ...paymentForm.value }
+  const fallback = () => {
+    const account = findAccount(form)
+    if (!account) return
+    const amountRaw = parseIdr(form.amount)
+    const currentOutstanding = account.outstandingRaw ?? parseIdr(account.outstanding)
+    const nextOutstanding = Math.max(currentOutstanding - amountRaw, 0)
+    account.outstandingRaw = nextOutstanding
+    account.outstanding = formatIdr(nextOutstanding)
+    account.lastAction = form.date || todayIso()
+    if (nextOutstanding <= 0) {
+      account.status = 'Closed'
+      account.dpd = 0
+      account.ptpDate = ''
+      account.bucket = 'Current (0d)'
+    } else if (account.status !== 'Legal') {
+      account.status = 'Active'
+    }
+    const pendingPtp = ptps.value.find((item) => item.customer === account.customer && item.status === 'Pending')
+    if (pendingPtp) pendingPtp.status = 'Kept'
+    account.notes = account.notes || []
+    account.notes.unshift({ id: `n-${Date.now()}`, date: account.lastAction, body: `Payment received via ${form.mode}: ${formatIdr(amountRaw)}.`, outcome: 'Payment Logged' })
+  }
+  await submitCollectionAction('record_payment', form, fallback, 'Payment logged')
   showPaymentModal.value = false
 }
 
-function saveNote() {
+async function saveNote() {
   if (selectedAccount.value && noteForm.value.body) {
-    selectedAccount.value.notes = selectedAccount.value.notes || []
-    selectedAccount.value.notes.push({
-      id: `n-${Date.now()}`,
-      date: new Date().toISOString().slice(0, 10),
-      body: noteForm.value.body,
-      outcome: noteForm.value.outcome,
-    })
-    selectedAccount.value.lastAction = new Date().toISOString().slice(0, 10)
+    const account = selectedAccount.value
+    const form = { ...noteForm.value, account: account.id, customer: account.customer }
+    const fallback = () => {
+      account.notes = account.notes || []
+      account.notes.unshift({
+        id: `n-${Date.now()}`,
+        date: todayIso(),
+        body: form.body,
+        outcome: form.outcome,
+      })
+      account.lastAction = todayIso()
+    }
+    await submitCollectionAction(
+      'add_collection_note',
+      { account: form.account, customer: form.customer, outcome: form.outcome, notes: form.body, follow_up: form.followUp },
+      fallback,
+      'Collection note saved',
+    )
+  } else {
+    showNoteModal.value = false
+    return
   }
   showNoteModal.value = false
 }
 
-function saveLegal() {
+async function saveLegal() {
+  if (!legalForm.value.customer) return
+  const form = { ...legalForm.value }
+  const fallback = () => {
+    const account = findAccount(form)
+    if (!account) return
+    account.status = 'Legal'
+    account.ptpDate = ''
+    account.lastAction = todayIso()
+    account.notes = account.notes || []
+    account.notes.unshift({
+      id: `n-${Date.now()}`,
+      date: todayIso(),
+      body: form.notes || `${form.letterType} generated and assigned to ${form.officer}.`,
+      outcome: 'Legal Notice Sent',
+    })
+  }
+  await submitCollectionAction(
+    'escalate_legal',
+    { account: form.account, customer: form.customer, trigger: form.trigger, officer: form.officer, letter_type: form.letterType, notes: form.notes },
+    fallback,
+    'Legal escalation generated',
+  )
   showLegalModal.value = false
 }
 
@@ -1302,6 +1542,10 @@ function launchStrategy() {
     controlRecovery: 0,
   })
 }
+
+onMounted(() => {
+  refreshCollections()
+})
 
 usePageMeta(() => ({ title: __('Collections') }))
 </script>

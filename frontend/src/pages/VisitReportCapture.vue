@@ -19,7 +19,7 @@
           </label>
           <select
             v-model="selectedVisit"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           >
             <option :value="null">{{ __('Pilih kunjungan') }}</option>
             <option
@@ -38,7 +38,7 @@
           </label>
           <select
             v-model="report.purpose"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           >
             <option value="">{{ __('Pilih tujuan kunjungan') }}</option>
             <option v-for="p in purposes" :key="p" :value="p">{{ p }}</option>
@@ -51,7 +51,7 @@
           </label>
           <select
             v-model="report.result"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
           >
             <option value="">{{ __('Pilih hasil kunjungan') }}</option>
             <option v-for="r in results" :key="r" :value="r">{{ r }}</option>
@@ -66,7 +66,7 @@
             v-model="report.notes"
             rows="4"
             :placeholder="__('Catatan hasil kunjungan...')"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted resize-none"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted resize-none"
           />
         </div>
       </div>
@@ -77,8 +77,8 @@
           <div
             v-for="(slot, idx) in photoSlots"
             :key="idx"
-            class="relative aspect-square rounded-xl border-2 border-dashed border-crm-border flex items-center justify-center overflow-hidden cursor-pointer transition-colors hover:border-crm-teal"
-            :class="{ 'border-solid border-crm-teal': slot }"
+            class="relative aspect-square rounded-xl border-2 border-dashed border-crm-border flex items-center justify-center overflow-hidden cursor-pointer transition-colors hover:border-primary-600"
+            :class="{ 'border-solid border-primary-600': slot }"
             @click="triggerPhotoSlot(idx)"
           >
             <img v-if="slot" :src="slot.url" class="absolute inset-0 w-full h-full object-cover" />
@@ -111,7 +111,7 @@
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-sm font-semibold text-crm-text">{{ __('Action Items') }}</h2>
           <button
-            class="flex items-center gap-1 text-xs font-medium text-crm-teal"
+            class="flex items-center gap-1 text-xs font-medium text-primary-600"
             @click="addActionItem"
           >
             <FeatherIcon name="plus" class="size-3.5" />
@@ -144,7 +144,7 @@
             <div class="flex gap-2">
               <select
                 v-model="item.dueDate"
-                class="flex-1 rounded-xl border border-crm-border px-2.5 py-1.5 text-xs text-crm-text outline-none focus:border-crm-teal"
+                class="flex-1 rounded-xl border border-crm-border px-2.5 py-1.5 text-xs text-crm-text outline-none focus:border-primary-600"
               >
                 <option value="H+1">H+1</option>
                 <option value="H+3">H+3</option>
@@ -156,7 +156,7 @@
                 v-model="item.assignee"
                 type="text"
                 :placeholder="__('Penanggung jawab')"
-                class="flex-1 rounded-xl border border-crm-border px-2.5 py-1.5 text-xs text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                class="flex-1 rounded-xl border border-crm-border px-2.5 py-1.5 text-xs text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
               />
             </div>
           </div>

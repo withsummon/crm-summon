@@ -60,7 +60,7 @@
               </span>
               <button
                 v-if="ds.status === 'pending' || ds.status === 'error'"
-                class="text-xs text-crm-teal font-medium"
+                class="text-xs text-primary-600 font-medium"
                 :disabled="!isOnline"
                 @click="syncSource(ds)"
               >
@@ -80,7 +80,7 @@
               <p class="text-sm text-crm-text truncate">{{ item.title }}</p>
               <p class="text-xs text-crm-muted">{{ item.subtitle }}</p>
             </div>
-            <button class="text-xs text-crm-teal font-medium" :disabled="!isOnline" @click="retryItem(item)">
+            <button class="text-xs text-primary-600 font-medium" :disabled="!isOnline" @click="retryItem(item)">
               {{ __('Retry') }}
             </button>
           </div>
@@ -99,7 +99,7 @@
           </div>
           <button
             class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-            :class="autoSync ? 'bg-crm-teal' : 'bg-gray-200'"
+            :class="autoSync ? 'bg-primary-600' : 'bg-gray-200'"
             @click="toggleAutoSync"
           >
             <span

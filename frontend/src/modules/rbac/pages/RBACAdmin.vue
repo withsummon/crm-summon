@@ -168,7 +168,7 @@ const managementCards = [
   { title: 'Branches', description: 'Manage branch hierarchy and assignments', route: { name: 'RBAC Branches' }, icon: LucideGitBranch, bgClass: 'bg-emerald-50', iconClass: 'text-emerald-500' },
   { title: 'Approval Matrix', description: 'Configure Delegation of Authority rules', route: { name: 'RBAC Approval Matrix' }, icon: LucideFileSignature, bgClass: 'bg-rose-50', iconClass: 'text-rose-500' },
   { title: 'Field Permissions', description: 'Field-level visibility per role', route: { name: 'RBAC Field Permissions' }, icon: LucideUserCog, bgClass: 'bg-cyan-50', iconClass: 'text-cyan-500' },
-  { title: 'Delegations', description: 'Temporary authority delegation', route: { name: 'RBAC Delegations' }, icon: LucideUserPlus, bgClass: 'bg-teal-50', iconClass: 'text-teal-500' },
+  { title: 'Delegations', description: 'Temporary authority delegation', route: { name: 'RBAC Delegations' }, icon: LucideUserPlus, bgClass: 'bg-primary-50', iconClass: 'text-primary-500' },
   { title: 'SoD Rules', description: 'Segregation of Duties conflict matrix', route: { name: 'RBAC SoD' }, icon: LucideScale, bgClass: 'bg-orange-50', iconClass: 'text-orange-500' },
   { title: 'JIT Access', description: 'Just-in-Time elevated access requests', route: { name: 'RBAC JIT' }, icon: LucideClock, bgClass: 'bg-yellow-50', iconClass: 'text-yellow-600' },
   { title: 'Audit Trail', description: 'Permission change audit log', route: { name: 'Audit Trail' }, icon: LucideFileSearch, bgClass: 'bg-slate-50', iconClass: 'text-slate-500' },

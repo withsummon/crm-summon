@@ -222,6 +222,7 @@
             v-if="getRow(itemName, titleField).value"
             :variant="'subtle'"
             :theme="getRow(itemName, titleField).color"
+            :class="{ 'badge-brand-primary': getRow(itemName, titleField).brand }"
             size="md"
             :label="getRow(itemName, titleField).value"
           />
@@ -294,6 +295,7 @@
             v-if="getRow(itemName, fieldName).value"
             :variant="'subtle'"
             :theme="getRow(itemName, fieldName).color"
+            :class="{ 'badge-brand-primary': getRow(itemName, fieldName).brand }"
             size="md"
             :label="getRow(itemName, fieldName).value"
           />
@@ -413,7 +415,7 @@
               v-if="rowLabel(row, 'capture_channel')"
               :label="rowLabel(row, 'capture_channel')"
               variant="subtle"
-              theme="teal"
+              theme="primary"
             />
             <Badge
               v-if="rowLabel(row, 'lead_score_band')"
@@ -545,7 +547,7 @@
           v-model="promptText"
           rows="3"
           :placeholder="__('E.g. Carikan saya 10 software engineer di jakarta...')"
-          class="w-full resize-none rounded-md border border-gray-300 p-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          class="w-full resize-none rounded-md border border-gray-300 p-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-1 focus:ring-secondary-500"
         ></textarea>
         <p class="mt-2 text-xs text-gray-500">
           {{ __('AI will use this prompt to find matching leads in the global database.') }}
@@ -660,7 +662,7 @@
             v-for="name in mergeDialog.candidates"
             :key="name"
             class="flex cursor-pointer items-center gap-3 rounded-md border border-outline-gray-2 px-3 py-2"
-            :class="mergeDialog.primary === name ? 'border-crm-teal bg-crm-teal/5' : ''"
+            :class="mergeDialog.primary === name ? 'border-primary-600 bg-primary-600/5' : ''"
           >
             <input v-model="mergeDialog.primary" type="radio" :value="name" />
             <span class="text-sm font-medium text-ink-gray-9">{{ name }}</span>
@@ -1359,7 +1361,7 @@ function parseRows(rows, columns = []) {
           lead.sla_status == 'Failed'
             ? 'red'
             : lead.sla_status == 'Fulfilled'
-              ? 'green'
+              ? 'orange'
               : 'orange'
         if (value == 'First Response Due' || value == 'Rolling Response Due') {
           value = __(timeAgo(lead.response_by))
@@ -1372,6 +1374,7 @@ function parseRows(rows, columns = []) {
           label: tooltipText,
           value: value,
           color: color,
+          brand: lead.sla_status == 'Fulfilled',
         }
       } else if (row == 'lead_owner') {
         _rows[row] = {

@@ -45,7 +45,7 @@
             class="text-sm text-ink-gray-5"
             :class="
               confirmPasswordMessage === __('Passwords match')
-                ? 'text-ink-green-3'
+                ? 'text-primary-700'
                 : 'text-ink-red-3'
             "
           >

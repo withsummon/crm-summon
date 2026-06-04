@@ -1,0 +1,8 @@
+frappe
+insights
+crm
+lending
+telephony
+erpnext
+drive
+helpdesk
