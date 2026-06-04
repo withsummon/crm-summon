@@ -14,7 +14,7 @@
         :key="tab.key"
         class="flex-1 rounded-lg py-2 text-sm font-medium transition-colors"
         :class="activeTab === tab.key
-          ? 'bg-crm-teal text-white'
+          ? 'bg-primary-600 text-white'
           : 'bg-crm-surface text-crm-text-secondary hover:text-crm-text'"
         @click="activeTab = tab.key"
       >
@@ -77,11 +77,11 @@
         <div class="rounded-xl bg-white p-4 shadow-sm border border-crm-border">
           <div class="grid grid-cols-2 gap-4">
             <div class="text-center">
-              <p class="text-2xl font-bold text-crm-teal">{{ totalDistance }} km</p>
+              <p class="text-2xl font-bold text-primary-600">{{ totalDistance }} km</p>
               <p class="text-xs text-crm-text-secondary">{{ __('Total Jarak') }}</p>
             </div>
             <div class="text-center">
-              <p class="text-2xl font-bold text-crm-teal">Rp {{ formatAmount(totalCost) }}</p>
+              <p class="text-2xl font-bold text-primary-600">Rp {{ formatAmount(totalCost) }}</p>
               <p class="text-xs text-crm-text-secondary">{{ __('Total Biaya') }}</p>
             </div>
           </div>
@@ -105,7 +105,7 @@
           >
             <div class="flex items-start gap-3">
               <div class="mt-0.5 rounded-lg bg-crm-surface p-2 shrink-0">
-                <FeatherIcon name="navigation" class="size-4 text-crm-teal" />
+                <FeatherIcon name="navigation" class="size-4 text-primary-600" />
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1 text-sm">
@@ -128,7 +128,7 @@
 
     <div class="sticky bottom-6 flex justify-center px-4">
       <button
-        class="flex items-center gap-2 rounded-full bg-crm-teal px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-crm-teal/90 transition-colors"
+        class="flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-primary-600/90 transition-colors"
         @click="showAddForm = true"
       >
         <FeatherIcon name="plus" class="size-4" />
@@ -160,7 +160,7 @@
                 </label>
                 <select
                   v-model="expenseForm.category"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
                 >
                   <option value="Bensin">{{ __('Bensin') }}</option>
                   <option value="Makan">{{ __('Makan') }}</option>
@@ -177,7 +177,7 @@
                   v-model="expenseForm.description"
                   type="text"
                   :placeholder="__('Contoh: Bensin Pertalite')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
                 />
               </div>
               <div>
@@ -189,7 +189,7 @@
                   type="number"
                   min="0"
                   :placeholder="__('50000')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
                 />
               </div>
               <div>
@@ -199,7 +199,7 @@
                 <input
                   v-model="expenseForm.date"
                   type="date"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
                 />
               </div>
               <div>
@@ -210,7 +210,7 @@
                   v-model="expenseForm.notes"
                   rows="2"
                   :placeholder="__('Catatan tambahan...')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted resize-none"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted resize-none"
                 />
               </div>
             </div>
@@ -235,7 +235,7 @@
                   v-model="mileageForm.start"
                   type="text"
                   :placeholder="__('Contoh: Kantor Cabang Sudirman')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
                 />
               </div>
               <div>
@@ -246,7 +246,7 @@
                   v-model="mileageForm.end"
                   type="text"
                   :placeholder="__('Contoh: Nasabah PT Maju Jaya')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
                 />
               </div>
               <div>
@@ -259,7 +259,7 @@
                   min="0"
                   step="0.1"
                   :placeholder="__('12.5')"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
                 />
               </div>
               <div>
@@ -269,7 +269,7 @@
                 <input
                   v-model="mileageForm.date"
                   type="date"
-                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+                  class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
                 />
               </div>
             </div>

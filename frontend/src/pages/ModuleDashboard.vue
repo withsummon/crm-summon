@@ -55,7 +55,7 @@
               v-for="mod in groupModules"
               :key="mod.sheet"
               :href="mod.href"
-              class="flex items-center gap-4 rounded-[14px] border border-outline-gray-1 p-4 transition-all duration-200 hover:border-primary-300 hover:shadow-md"
+              class="flex items-center gap-4 rounded-[14px] border border-outline-gray-1 p-4 transition-all duration-200 hover:border-secondary-300 hover:shadow-md"
             >
               <div
                 class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-surface-gray-2"

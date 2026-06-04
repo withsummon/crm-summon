@@ -16,7 +16,7 @@
           :class="isListening ? 'bg-red-50 scale-110 shadow-lg animate-pulse' : 'bg-crm-surface'"
           @click="toggleListening"
         >
-          <div class="flex size-14 items-center justify-center rounded-full" :class="isListening ? 'bg-red-500' : 'bg-crm-teal'">
+          <div class="flex size-14 items-center justify-center rounded-full" :class="isListening ? 'bg-red-500' : 'bg-primary-600'">
             <FeatherIcon name="mic" class="size-6 text-white" />
           </div>
         </button>
@@ -61,7 +61,7 @@
             @click="navigateCommand(cmd.route)"
           >
             <div class="flex items-center gap-3 min-w-0">
-              <FeatherIcon :name="cmd.icon" class="size-4 text-crm-teal shrink-0" />
+              <FeatherIcon :name="cmd.icon" class="size-4 text-primary-600 shrink-0" />
               <div>
                 <code class="text-sm font-mono text-crm-text">{{ cmd.phrase }}</code>
                 <p class="text-xs text-crm-text-secondary">{{ cmd.action }}</p>

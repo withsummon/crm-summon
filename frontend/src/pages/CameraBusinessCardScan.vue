@@ -42,7 +42,7 @@
             class="flex size-16 items-center justify-center rounded-full bg-white/80 shadow-lg"
             @click="captureImage"
           >
-            <div class="size-12 rounded-full border-2 border-crm-teal" />
+            <div class="size-12 rounded-full border-2 border-primary-600" />
           </button>
         </div>
         <button class="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-black/50 text-white" @click="stopCamera">
@@ -51,7 +51,7 @@
       </div>
 
       <div v-if="processing" class="rounded-xl bg-white p-6 shadow-sm border border-crm-border text-center">
-        <FeatherIcon name="loader" class="size-10 text-crm-teal mx-auto mb-3 animate-spin" />
+        <FeatherIcon name="loader" class="size-10 text-primary-600 mx-auto mb-3 animate-spin" />
         <p class="text-sm font-medium text-crm-text">{{ __('Memproses kartu nama...') }}</p>
       </div>
 
@@ -66,23 +66,23 @@
           </h2>
           <div>
             <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Nama') }}</label>
-            <input v-model="extracted.name" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal" />
+            <input v-model="extracted.name" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600" />
           </div>
           <div>
             <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('No. Telepon') }}</label>
-            <input v-model="extracted.phone" type="tel" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal" />
+            <input v-model="extracted.phone" type="tel" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600" />
           </div>
           <div>
             <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Email') }}</label>
-            <input v-model="extracted.email" type="email" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal" />
+            <input v-model="extracted.email" type="email" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600" />
           </div>
           <div>
             <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Perusahaan') }}</label>
-            <input v-model="extracted.company" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal" />
+            <input v-model="extracted.company" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600" />
           </div>
           <div>
             <label class="text-xs font-medium text-crm-text-secondary mb-1 block">{{ __('Jabatan') }}</label>
-            <input v-model="extracted.position" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal" />
+            <input v-model="extracted.position" type="text" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600" />
           </div>
         </div>
 

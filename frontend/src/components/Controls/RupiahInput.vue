@@ -3,7 +3,7 @@
     :value="displayValue"
     inputmode="numeric"
     autocomplete="off"
-    class="form-input w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+    class="form-input w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
     :placeholder="placeholder || '0'"
     @input="updateValue"
     @blur="emitFormattedValue"

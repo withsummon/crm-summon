@@ -11,7 +11,7 @@
             v-model="searchQuery"
             type="text"
             :placeholder="__('Search Customer (Global)')"
-            class="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:bg-white transition-all"
+            class="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-600 focus:bg-white transition-all"
           />
           <span class="absolute left-3 top-2.5 text-slate-400">
             <FeatherIcon name="search" class="h-4 w-4" />
@@ -21,7 +21,7 @@
           <button
             v-for="item in recentSearches"
             :key="item"
-            class="px-2 py-1 rounded-md bg-slate-100 text-[11px] font-semibold text-slate-500 hover:bg-teal-50 hover:text-teal-700"
+            class="px-2 py-1 rounded-md bg-slate-100 text-[11px] font-semibold text-slate-500 hover:bg-primary-50 hover:text-primary-700"
             @click="searchQuery = item"
           >
             {{ item }}
@@ -33,11 +33,11 @@
         <div
           v-for="cust in directoryCustomers"
           :key="cust.name"
-          :class="selectedCustomerName === cust.name ? 'bg-teal-50 border border-teal-100' : ''"
+          :class="selectedCustomerName === cust.name ? 'bg-primary-50 border border-primary-100' : ''"
           class="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-slate-50"
           @click="selectCustomer(cust)"
         >
-          <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
+          <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm shrink-0">
             {{ initials(cust.customer_name || cust.name) }}
           </div>
           <div class="min-w-0 flex-1">
@@ -74,13 +74,13 @@
       <div v-else class="flex-1 flex flex-col overflow-y-auto">
         <div class="bg-white border-b border-slate-200 p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6 shrink-0 shadow-sm">
           <div class="flex items-center gap-4 min-w-0">
-            <div class="w-16 h-16 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-teal-600/10 shrink-0">
+            <div class="w-16 h-16 rounded-xl bg-primary-600 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-primary-600/10 shrink-0">
               {{ initials(selectedCustomer.customer_name || selectedCustomer.name) }}
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-3 flex-wrap">
                 <h1 class="text-2xl font-bold text-slate-800 truncate">{{ selectedCustomer.customer_name || selectedCustomer.name }}</h1>
-                <Badge :label="selectedCustomer.customer_type || 'Customer'" theme="teal" variant="subtle" />
+                <Badge :label="selectedCustomer.customer_type || 'Customer'" theme="primary" variant="subtle" />
                 <Badge v-if="summary.watchlist" label="Watchlist" theme="red" variant="subtle" />
                 <Badge v-for="tag in tags.slice(0, 3)" :key="tag.name" :label="tag.tag" theme="gray" variant="subtle" />
               </div>
@@ -134,7 +134,7 @@
               v-for="tab in tabs"
               :key="tab.key"
               class="pb-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap"
-              :class="activeTab === tab.key ? 'border-teal-600 text-teal-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
+              :class="activeTab === tab.key ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
               @click="activeTab = tab.key"
             >
               {{ tab.label }}
@@ -150,7 +150,7 @@
               <Panel class="xl:col-span-2" :title="__('AI Customer Summary')" icon="cpu">
                 <div class="relative">
                   <div v-if="!editingSummary"
-                    class="min-h-[150px] w-full p-4 bg-teal-50/30 border border-teal-100 rounded-lg text-sm text-slate-700 cursor-pointer hover:border-teal-300 overflow-auto"
+                    class="min-h-[150px] w-full p-4 bg-primary-50/30 border border-primary-100 rounded-lg text-sm text-slate-700 cursor-pointer hover:border-primary-300 overflow-auto"
                     style="min-height: 144px"
                     @click="editingSummary = true"
                   >
@@ -160,13 +160,13 @@
                     v-else
                     v-model="summaryText"
                     rows="9"
-                    class="w-full p-4 bg-white border border-teal-400 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-teal-500 font-mono"
+                    class="w-full p-4 bg-white border border-primary-400 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-primary-500 font-mono"
                     @input="summaryStructured = null; summaryStructuredCustomer = null"
                     @blur="editingSummary = false"
                     ref="summaryTextareaRef"
                   />
                   <button
-                    class="absolute top-2 right-2 rounded-md bg-white border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:border-teal-400 hover:text-teal-700"
+                    class="absolute top-2 right-2 rounded-md bg-white border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:border-primary-400 hover:text-primary-700"
                     @click="editingSummary = !editingSummary"
                   >
                     {{ editingSummary ? __('Preview') : __('Edit') }}
@@ -175,7 +175,7 @@
                 <div class="mt-3 flex flex-wrap justify-between items-center gap-2 text-xs text-slate-400">
                   <span>{{ summaryMetaText }}</span>
                   <div class="flex gap-2">
-                    <select v-model="summaryLength" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 focus:outline-none focus:border-teal-500">
+                    <select v-model="summaryLength" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 focus:outline-none focus:border-primary-500">
                       <option>TL;DR</option>
                       <option>Standard</option>
                       <option>Detailed</option>
@@ -186,7 +186,7 @@
                   </div>
                 </div>
                 <div v-if="summarySources.length" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div v-for="source in summarySources" :key="source.id" class="rounded-lg border border-teal-100 bg-white p-3">
+                  <div v-for="source in summarySources" :key="source.id" class="rounded-lg border border-primary-100 bg-white p-3">
                     <div class="text-xs font-bold text-slate-800 truncate">{{ source.title }}</div>
                     <div class="mt-1 text-[11px] text-slate-500">{{ source.doctype }} · {{ source.docname }}</div>
                     <p class="mt-2 line-clamp-3 text-xs leading-5 text-slate-600">{{ source.excerpt }}</p>
@@ -196,8 +196,8 @@
 
               <Panel :title="__('Credit Score Display')" icon="shield">
                 <div class="flex items-center gap-4 mb-4">
-                  <div class="w-16 h-16 rounded-full border-4 border-teal-500 flex flex-col items-center justify-center bg-teal-50/50">
-                    <span class="text-lg font-extrabold text-teal-700">{{ summary.score || '-' }}</span>
+                  <div class="w-16 h-16 rounded-full border-4 border-primary-500 flex flex-col items-center justify-center bg-primary-50/50">
+                    <span class="text-lg font-extrabold text-primary-700">{{ summary.score || '-' }}</span>
                     <span class="text-[9px] uppercase font-bold text-slate-400">{{ latestBureau?.source || 'Score' }}</span>
                   </div>
                   <div>
@@ -2060,7 +2060,7 @@ const StatCard = {
   setup(props) {
     const toneClass = {
       orange: 'bg-orange-50 text-orange-600',
-      teal: 'bg-teal-50 text-teal-600',
+      teal: 'bg-primary-50 text-primary-600',
       blue: 'bg-blue-50 text-blue-600',
       purple: 'bg-purple-50 text-purple-600',
       slate: 'bg-slate-100 text-slate-600',
@@ -2083,7 +2083,7 @@ const Panel = {
     return () => h('div', { ...attrs, class: ['bg-white border border-slate-200 rounded-lg p-5 shadow-sm', attrs.class] }, [
       h('div', { class: 'flex items-center justify-between gap-3 mb-4' }, [
         h('div', { class: 'flex items-center gap-2 min-w-0' }, [
-          props.icon ? h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-teal-600 shrink-0' }) : null,
+          props.icon ? h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-primary-600 shrink-0' }) : null,
           h('h3', { class: 'font-bold text-slate-800 truncate' }, props.title),
         ]),
         slots.actions?.(),
@@ -2146,7 +2146,7 @@ const ActivityList = {
       const children = []
       if (showTasks) {
         children.push(...props.tasks.slice(0, 4).map((task) => h('div', { class: 'flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3' }, [
-          h('input', { type: 'checkbox', checked: task.status === 'Done', class: 'mt-1 accent-teal-600', onChange: () => emit('toggleTask', task) }),
+          h('input', { type: 'checkbox', checked: task.status === 'Done', class: 'mt-1 accent-primary-600', onChange: () => emit('toggleTask', task) }),
           h('div', { class: 'min-w-0' }, [h('div', { class: 'text-sm font-semibold text-slate-800 truncate' }, task.title), h('div', { class: 'text-xs text-slate-500' }, `${task.priority || 'Medium'} - ${task.due_date || 'No due date'}`)]),
         ])))
       }
@@ -2167,7 +2167,7 @@ const ActivityList = {
 const TimelineList = {
   props: ['items'],
   setup(props) {
-    const colorClass = { blue: 'text-blue-600 bg-blue-50', teal: 'text-teal-600 bg-teal-50', emerald: 'text-emerald-600 bg-emerald-50', amber: 'text-amber-600 bg-amber-50', purple: 'text-purple-600 bg-purple-50', cyan: 'text-cyan-600 bg-cyan-50', orange: 'text-orange-600 bg-orange-50', red: 'text-red-600 bg-red-50', slate: 'text-slate-600 bg-slate-100' }
+    const colorClass = { blue: 'text-blue-600 bg-blue-50', teal: 'text-primary-600 bg-primary-50', emerald: 'text-emerald-600 bg-emerald-50', amber: 'text-amber-600 bg-amber-50', purple: 'text-purple-600 bg-purple-50', cyan: 'text-cyan-600 bg-cyan-50', orange: 'text-orange-600 bg-orange-50', red: 'text-red-600 bg-red-50', slate: 'text-slate-600 bg-slate-100' }
     return () => h('div', { class: 'space-y-3' }, [
       ...props.items.map((item) => h('div', { class: 'flex gap-3' }, [
         h('div', { class: `w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClass[item.color] || colorClass.slate}` }, [h(FeatherIcon, { name: item.icon || 'file', class: 'h-4 w-4' })]),
@@ -2196,15 +2196,15 @@ const RelationshipGraph = {
     return () => h('div', { class: 'relative h-72 rounded-lg border border-slate-100 bg-slate-50 overflow-hidden' }, [
       h('div', { class: 'absolute inset-0 flex items-center justify-center', style: { transform: `scale(${props.zoom || 1})` } }, [
         h('div', { class: 'relative w-64 h-64' }, [
-          h('div', { class: 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-black text-center p-2 shadow-lg' }, props.customer?.customer_name || props.customer?.name || 'Customer'),
+          h('div', { class: 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs font-black text-center p-2 shadow-lg' }, props.customer?.customer_name || props.customer?.name || 'Customer'),
           ...positionedNodes.value.map((node) => h('button', {
-            class: 'absolute w-16 h-16 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm p-1 hover:border-teal-400',
+            class: 'absolute w-16 h-16 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-600 shadow-sm p-1 hover:border-primary-400',
             style: { left: `${node.left}px`, top: `${node.top}px` },
             title: `${node.type}${node.exposure ? ` · ${formatCurrency(node.exposure)}` : ''}`,
             onClick: () => emit('openNode', node),
           }, [
             h('span', { class: 'line-clamp-2' }, node.label || node.type),
-            h('span', { class: 'block text-[8px] font-semibold text-teal-600' }, node.type),
+            h('span', { class: 'block text-[8px] font-semibold text-primary-600' }, node.type),
           ])),
           !positionedNodes.value.length ? h('div', { class: 'absolute bottom-4 left-0 right-0 text-center text-xs text-slate-400' }, __('No relationship graph nodes yet')) : null,
         ]),
@@ -2229,7 +2229,7 @@ const ScoreTrend = {
     return () => {
       const points = [...(props.reports || []).map((row) => Number(row.score || 0)), ...(props.risks || []).map((row) => Number(row.internal_score || 0))].slice(0, 6).reverse()
       return h('div', { class: 'flex items-end gap-1 h-16 border-b border-slate-100' }, [
-        ...points.map((score) => h('div', { class: 'flex-1 rounded-t bg-teal-500 min-w-4', style: { height: `${Math.max(8, Math.min(100, score / 10))}%` }, title: String(score) })),
+        ...points.map((score) => h('div', { class: 'flex-1 rounded-t bg-primary-500 min-w-4', style: { height: `${Math.max(8, Math.min(100, score / 10))}%` }, title: String(score) })),
         !points.length ? h('div', { class: 'text-xs text-slate-400' }, __('No score trend yet')) : null,
       ])
     }
@@ -2250,7 +2250,7 @@ const FormInput = {
           'w-full px-3.5 py-2 border rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:ring-4 transition-all duration-200',
           props.error 
             ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
-            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+            : 'border-slate-200 hover:border-slate-300 focus:border-primary-500 focus:ring-primary-500/10'
         ],
         onInput: (event) => emit('update:modelValue', event.target.value) 
       }),
@@ -2273,7 +2273,7 @@ const FormTextarea = {
           'w-full px-3.5 py-2 border rounded-lg text-sm bg-slate-50/20 focus:outline-none focus:ring-4 transition-all duration-200',
           props.error 
             ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
-            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+            : 'border-slate-200 hover:border-slate-300 focus:border-primary-500 focus:ring-primary-500/10'
         ],
         onInput: (event) => emit('update:modelValue', event.target.value) 
       }),
@@ -2295,7 +2295,7 @@ const FormSelect = {
           'w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-4 transition-all duration-200 bg-white',
           props.error 
             ? 'border-red-500 hover:border-red-600 focus:border-red-500 focus:ring-red-500/10' 
-            : 'border-slate-200 hover:border-slate-300 focus:border-teal-500 focus:ring-teal-500/10'
+            : 'border-slate-200 hover:border-slate-300 focus:border-primary-500 focus:ring-primary-500/10'
         ],
         onChange: (event) => emit('update:modelValue', event.target.value) 
       }, (props.options || []).map((option) => h('option', { value: option }, option))),
@@ -2312,7 +2312,7 @@ const FormCheckbox = {
       h('input', { 
         type: 'checkbox', 
         checked: Boolean(props.modelValue), 
-        class: 'w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 accent-teal-600 transition duration-150', 
+        class: 'w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 accent-primary-600 transition duration-150', 
         onChange: (event) => emit('update:modelValue', event.target.checked ? 1 : 0) 
       }),
       h('span', { class: 'text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors duration-150' }, props.label),

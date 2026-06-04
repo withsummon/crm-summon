@@ -92,11 +92,11 @@
         </div>
 
         <!-- Model info card -->
-        <div class="rounded-lg border border-teal-100 bg-teal-50 px-4 py-3 text-xs text-teal-800 max-w-sm">
+        <div class="rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-xs text-primary-800 max-w-sm">
           <div class="font-semibold mb-1">{{ __('Currently active') }}</div>
           <div>{{ __('Provider') }}: <span class="font-mono">{{ localProvider }}</span></div>
           <div>{{ __('Model') }}: <span class="font-mono">{{ effectiveModel }}</span></div>
-          <div v-if="modelInfo" class="mt-1.5 border-t border-teal-200 pt-1.5">
+          <div v-if="modelInfo" class="mt-1.5 border-t border-primary-200 pt-1.5">
             <div class="flex gap-2">{{ __('Context') }}: <span class="font-mono">{{ modelInfo.context }}</span></div>
           </div>
         </div>

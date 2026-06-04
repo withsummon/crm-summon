@@ -24,7 +24,7 @@
               v-model="searchQuery"
               type="text"
               :placeholder="__('Search users...')"
-              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-crm-teal focus:ring-2 focus:ring-crm-teal/20"
+              class="h-9 w-64 rounded-[10px] border border-crm-border bg-white pl-9 pr-4 text-sm outline-none transition-all focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20"
             />
           </div>
           <Button
@@ -49,7 +49,7 @@
           class="rounded-full px-4 py-2 text-sm font-medium transition-all"
           :class="
             activeTab === tab.value
-              ? 'bg-crm-teal text-white shadow-sm'
+              ? 'bg-primary-600 text-white shadow-sm'
               : 'bg-white text-crm-muted hover:bg-crm-surface hover:text-crm-text'
           "
           @click="activeTab = tab.value"

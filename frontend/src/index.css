@@ -23,11 +23,11 @@
   }
 
   .sidebar-brand {
-    @apply bg-primary-500 text-white;
+    @apply bg-secondary-500 text-white;
   }
 
   .sidebar-brand:hover {
-    @apply bg-primary-600;
+    @apply bg-secondary-600;
   }
 
   .btn-brand-primary {
@@ -110,9 +110,9 @@
   --crm-shadow-floating: 0 8px 24px rgba(15, 23, 42, 0.08);
   --crm-shadow-shell: 0 8px 24px rgba(15, 23, 42, 0.08);
 
-  --crm-teal: #008C95;
-  --crm-teal-dark: #006B73;
-  --crm-teal-light: #D9F3F4;
+  --primary-600: #008C95;
+  --crm-primary-dark: #006B73;
+  --crm-primary-light: #D9F3F4;
   --crm-bni-orange: #F37021;
   --crm-surface: #F3F4F6;
   --crm-surface-light: #F8FAFC;
@@ -248,7 +248,7 @@
 }
 
 .crm-meeting-item:hover {
-  border-color: var(--crm-teal-light);
+  border-color: var(--crm-primary-light);
 }
 
 /* Lead items */
@@ -264,7 +264,7 @@
 }
 
 .crm-lead-item:hover {
-  border-color: var(--crm-teal-light);
+  border-color: var(--crm-primary-light);
 }
 
 /* Channel items */
@@ -280,7 +280,7 @@
 }
 
 .crm-channel-item:hover {
-  border-color: var(--crm-teal-light);
+  border-color: var(--crm-primary-light);
 }
 
 /* Animations */
@@ -297,7 +297,7 @@
 
 /* Primary buttons */
 .btn-primary,
-[class*="bg-primary-"] {
+[class*="bg-secondary-"] {
   --tw-bg-opacity: 1;
 }
 

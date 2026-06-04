@@ -14,7 +14,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="flex size-10 items-center justify-center rounded-xl bg-crm-surface">
-              <FeatherIcon name="fingerprint" class="size-5 text-crm-teal" />
+              <FeatherIcon name="fingerprint" class="size-5 text-primary-600" />
             </div>
             <div>
               <p class="text-sm font-medium text-crm-text">
@@ -27,7 +27,7 @@
           </div>
           <button
             class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-            :class="biometricEnabled ? 'bg-crm-teal' : 'bg-gray-200'"
+            :class="biometricEnabled ? 'bg-primary-600' : 'bg-gray-200'"
             :disabled="!biometricSupported || enrolling"
             @click="toggleBiometric"
           >
@@ -55,7 +55,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="flex size-10 items-center justify-center rounded-xl bg-crm-surface">
-              <FeatherIcon name="lock" class="size-5 text-crm-teal" />
+              <FeatherIcon name="lock" class="size-5 text-primary-600" />
             </div>
             <div>
               <p class="text-sm font-medium text-crm-text">
@@ -68,7 +68,7 @@
           </div>
           <button
             class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-            :class="pinEnabled ? 'bg-crm-teal' : 'bg-gray-200'"
+            :class="pinEnabled ? 'bg-primary-600' : 'bg-gray-200'"
             @click="togglePin"
           >
             <span
@@ -92,7 +92,7 @@
                 type="tel"
                 maxlength="1"
                 class="size-11 rounded-xl border text-center text-lg font-semibold text-crm-text outline-none transition-colors"
-                :class="pinError ? 'border-red-400 bg-red-50' : 'border-crm-border focus:border-crm-teal'"
+                :class="pinError ? 'border-red-400 bg-red-50' : 'border-crm-border focus:border-primary-600'"
                 @input="onPinInput(i - 1)"
                 @keydown="onPinKeydown($event, i - 1)"
               />
@@ -116,7 +116,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="flex size-10 items-center justify-center rounded-xl bg-crm-surface">
-              <FeatherIcon name="clock" class="size-5 text-crm-teal" />
+              <FeatherIcon name="clock" class="size-5 text-primary-600" />
             </div>
             <div>
               <p class="text-sm font-medium text-crm-text">
@@ -131,7 +131,7 @@
         <div class="mt-3">
           <select
             v-model="autoLockMinutes"
-            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+            class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             @change="saveAutoLock"
           >
             <option :value="0">{{ __('Jangan kunci otomatis') }}</option>

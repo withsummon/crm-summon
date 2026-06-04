@@ -14,7 +14,7 @@
               v-model="query"
               type="text"
               :placeholder="__('Search borrower, app ID, facility, ticker')"
-              class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-teal-500"
+              class="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-primary-500"
             />
             <FeatherIcon name="search" class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           </div>
@@ -57,7 +57,7 @@
               <tr
                 v-for="row in rows"
                 :key="row.name"
-                class="cursor-pointer border-b border-slate-100 transition hover:bg-teal-50/60"
+                class="cursor-pointer border-b border-slate-100 transition hover:bg-primary-50/60"
                 @click="openApplication(row)"
               >
                 <td class="px-4 py-4">
@@ -66,7 +66,7 @@
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-sm font-black text-teal-700">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-sm font-black text-primary-700">
                       {{ initials(row.borrower_name) }}
                     </div>
                     <div class="min-w-0">
@@ -82,7 +82,7 @@
                 </td>
                 <td class="px-4 py-4">
                   <div class="font-semibold text-slate-700">{{ row.employer_name || '-' }}</div>
-                  <Badge v-if="row.public_company_ticker" :label="row.public_company_ticker" theme="teal" variant="subtle" />
+                  <Badge v-if="row.public_company_ticker" :label="row.public_company_ticker" theme="primary" variant="subtle" />
                 </td>
                 <td class="px-4 py-4 font-bold text-slate-800">{{ row.risk_grade || __('Unrated') }}</td>
               </tr>
@@ -109,7 +109,7 @@
               <Badge :label="row.status || 'Pending Review'" :theme="statusTheme(row.status)" variant="subtle" size="sm" />
             </div>
             <div class="flex items-center gap-3 mb-2">
-              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-xs font-black text-teal-700">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-xs font-black text-primary-700">
                 {{ initials(row.borrower_name) }}
               </div>
               <div class="min-w-0">
@@ -118,7 +118,7 @@
               </div>
             </div>
             <div class="flex justify-between items-center text-xs pt-2 mt-2 border-t border-slate-100">
-              <div class="font-mono font-bold text-teal-700 text-sm">{{ formatCurrency(row.requested_amount) }}</div>
+              <div class="font-mono font-bold text-primary-700 text-sm">{{ formatCurrency(row.requested_amount) }}</div>
               <div class="text-slate-400 font-semibold">{{ row.risk_grade || __('Unrated') }}</div>
             </div>
           </div>
@@ -161,7 +161,7 @@
               v-for="tab in createTabs"
               :key="tab.key"
               class="shrink-0 px-4 pb-2 text-sm font-semibold border-b-2 transition-all"
-              :class="activeCreateTab === tab.key ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
+              :class="activeCreateTab === tab.key ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500 hover:text-slate-700'"
               @click="activeCreateTab = tab.key"
             >
               {{ tab.label }}
@@ -171,7 +171,7 @@
           <!-- Static hardcoded tabs (no workflow selected) -->
           <template v-if="!activeWorkflowSteps.length">
             <div v-if="activeCreateTab === 'borrower'" class="space-y-4">
-              <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
+              <div class="rounded-lg bg-primary-50 border border-primary-100 px-4 py-3 text-xs text-primary-700">
                 {{ __('Basic borrower identification. Required fields: Borrower Name, Borrower Type, Facility Type, Requested Amount.') }}
               </div>
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -204,12 +204,12 @@
                 </FieldGroup>
               </div>
               <!-- File Upload for Financial Spread -->
-              <div class="mt-6 rounded-lg border border-dashed border-teal-200 bg-teal-50/40 p-4">
+              <div class="mt-6 rounded-lg border border-dashed border-primary-200 bg-primary-50/40 p-4">
                 <div class="flex items-center justify-between gap-4">
                   <div>
-                    <h4 class="font-semibold text-sm text-teal-800">{{ __('Upload Financial Statements (Optional)') }}</h4>
-                    <p class="mt-1 text-xs text-teal-600">{{ __('Upload PDF / Excel to auto-fill the financial spread. Data will be imported when the application is created.') }}</p>
-                    <div v-if="newApp.spread_file_url" class="mt-2 flex items-center gap-2 text-xs text-teal-700">
+                    <h4 class="font-semibold text-sm text-primary-800">{{ __('Upload Financial Statements (Optional)') }}</h4>
+                    <p class="mt-1 text-xs text-primary-600">{{ __('Upload PDF / Excel to auto-fill the financial spread. Data will be imported when the application is created.') }}</p>
+                    <div v-if="newApp.spread_file_url" class="mt-2 flex items-center gap-2 text-xs text-primary-700">
                       <FeatherIcon name="check-circle" class="h-4 w-4" />
                       <span>{{ __('File uploaded:') }} {{ newApp.spread_file_name || newApp.spread_file_url }}</span>
                     </div>
@@ -231,7 +231,7 @@
             </div>
 
             <div v-else-if="activeCreateTab === 'facility'" class="space-y-4">
-              <div class="rounded-lg bg-teal-50 border border-teal-100 px-4 py-3 text-xs text-teal-700">
+              <div class="rounded-lg bg-primary-50 border border-primary-100 px-4 py-3 text-xs text-primary-700">
                 {{ __('Credit facility structure, limit, tenor, and pricing. This data will be pre-filled in the Financial Spreading worksheet.') }}
               </div>
               <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -251,7 +251,7 @@
                 </FieldGroup>
                 <FieldGroup :label="__('Requested Amount (IDR)')" required>
                   <RupiahInput v-model="newApp.requested_amount" :placeholder="__('e.g. 5.000.000.000')" />
-                  <div v-if="newApp.requested_amount" class="mt-1 text-xs text-teal-700 font-semibold">{{ formatCurrency(newApp.requested_amount) }}</div>
+                  <div v-if="newApp.requested_amount" class="mt-1 text-xs text-primary-700 font-semibold">{{ formatCurrency(newApp.requested_amount) }}</div>
                 </FieldGroup>
                 <FieldGroup :label="__('Credit Limit (IDR)')">
                   <RupiahInput v-model="newApp.credit_limit" />
@@ -484,7 +484,7 @@
               v-for="tab in createTabs"
               :key="tab.key"
               class="h-2 w-2 rounded-full transition-all"
-              :class="activeCreateTab === tab.key ? 'bg-teal-600 w-4' : 'bg-slate-300'"
+              :class="activeCreateTab === tab.key ? 'bg-primary-600 w-4' : 'bg-slate-300'"
               @click="activeCreateTab = tab.key"
             />
           </div>
@@ -810,7 +810,7 @@ const SummaryCard = {
     return () => h('div', { class: 'rounded-lg border border-slate-200 bg-white p-4 shadow-sm' }, [
       h('div', { class: 'flex items-center justify-between gap-3' }, [
         h('div', { class: 'text-xs font-bold uppercase tracking-wide text-slate-500' }, props.label),
-        h('div', { class: 'flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-600' }, [
+        h('div', { class: 'flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-600' }, [
           h(FeatherIcon, { name: props.icon, class: 'h-4 w-4' }),
         ]),
       ]),

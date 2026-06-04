@@ -83,7 +83,7 @@
           <!-- KPI strip -->
           <div class="mb-3 grid gap-3 md:grid-cols-6">
             <KpiCard :label="__('All Products')" :value="catalog?.counts?.total ?? 0" icon="package" />
-            <KpiCard :label="__('Active')" :value="catalog?.counts?.active ?? 0" icon="check-circle" theme="teal" />
+            <KpiCard :label="__('Active')" :value="catalog?.counts?.active ?? 0" icon="check-circle" theme="primary" />
             <KpiCard :label="__('Draft')" :value="catalog?.counts?.draft ?? 0" icon="edit-3" />
             <KpiCard :label="__('Pending')" :value="catalog?.counts?.pending ?? 0" icon="clock" theme="orange" />
             <KpiCard :label="__('Retired')" :value="catalog?.counts?.retired ?? 0" icon="archive" />
@@ -511,7 +511,7 @@
           <div v-else-if="analytics" class="space-y-3">
             <div class="grid gap-3 md:grid-cols-5">
               <KpiCard :label="__('Total Products')" :value="analytics.totals.products" icon="package" />
-              <KpiCard :label="__('Active')" :value="analytics.totals.active" icon="check-circle" theme="teal" />
+              <KpiCard :label="__('Active')" :value="analytics.totals.active" icon="check-circle" theme="primary" />
               <KpiCard :label="__('Pending')" :value="analytics.totals.pending" icon="clock" theme="orange" />
               <KpiCard :label="__('Retired')" :value="analytics.totals.retired" icon="archive" />
               <KpiCard :label="__('Applications')" :value="analytics.totals.applications" icon="file-text" theme="blue" />

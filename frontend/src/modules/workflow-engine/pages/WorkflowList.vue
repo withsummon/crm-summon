@@ -155,7 +155,7 @@
               <!-- Run History -->
               <button
                 :title="__('Run History')"
-                class="p-1.5 rounded-lg text-crm-muted hover:text-teal-600 hover:bg-teal-50 transition-all border border-transparent hover:border-teal-200"
+                class="p-1.5 rounded-lg text-crm-muted hover:text-primary-600 hover:bg-primary-50 transition-all border border-transparent hover:border-primary-200"
                 @click="openRunHistory(flow.name)"
               >
                 <LucideHistory class="h-3.5 w-3.5" />

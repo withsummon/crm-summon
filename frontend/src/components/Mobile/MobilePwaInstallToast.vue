@@ -15,7 +15,7 @@
         <div
           class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-crm-surface"
         >
-          <FeatherIcon name="smartphone" class="size-5 text-crm-teal" />
+          <FeatherIcon name="smartphone" class="size-5 text-primary-600" />
         </div>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold text-ink-gray-9">

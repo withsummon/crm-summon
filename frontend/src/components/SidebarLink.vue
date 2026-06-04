@@ -1,6 +1,6 @@
 <template>
   <button
-    class="flex h-7.5 cursor-pointer items-center rounded-[10px] duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-crm-teal/40"
+    class="flex h-7.5 cursor-pointer items-center rounded-[10px] duration-300 ease-in-out focus:outline-none focus:transition-none focus-visible:rounded-[10px] focus-visible:ring-2 focus-visible:ring-primary-600/40"
     :class="buttonClasses"
     @click="handleClick"
   >
@@ -77,7 +77,7 @@ const iconClasses = computed(() => {
   if (props.theme === 'light') {
     return isActive.value ? 'text-ink-gray-9' : 'text-ink-gray-5'
   }
-  return isActive.value ? 'text-crm-teal' : 'text-crm-muted'
+  return isActive.value ? 'text-primary-600' : 'text-crm-muted'
 })
 
 function handleClick() {

@@ -11,7 +11,7 @@
           </h1>
         </div>
         <div
-          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-crm-teal text-sm font-semibold text-white"
+          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white"
         >
           {{ initials }}
         </div>
@@ -63,7 +63,7 @@
           </h2>
           <button
             v-if="notifications.data?.length"
-            class="text-xs font-medium text-crm-teal"
+            class="text-xs font-medium text-primary-600"
             @click="viewAllNotifications"
           >
             {{ __('Lihat Semua') }}
@@ -220,7 +220,7 @@ const kpis = computed(() => [
     value: todayLeads.data?.length ?? 0,
     icon: 'target',
     bg: 'bg-crm-surface',
-    color: 'text-crm-teal',
+    color: 'text-primary-600',
     loading: todayLeads.loading,
   },
   {
@@ -275,13 +275,13 @@ function getActivityIcon(item) {
 }
 
 function getActivityColor(item) {
-  if (!item) return 'text-crm-teal'
+  if (!item) return 'text-primary-600'
   const type = item.notification_type || ''
-  if (type.includes('lead') || type.includes('Lead')) return 'text-crm-teal'
+  if (type.includes('lead') || type.includes('Lead')) return 'text-primary-600'
   if (type.includes('deal') || type.includes('Deal')) return 'text-amber-600'
   if (type.includes('comment')) return 'text-blue-600'
   if (type.includes('assign')) return 'text-purple-600'
-  return 'text-crm-teal'
+  return 'text-primary-600'
 }
 
 function viewAllNotifications() {
@@ -293,7 +293,7 @@ const quickActions = [
     label: 'New Lead',
     icon: 'user-plus',
     bg: 'bg-crm-surface',
-    color: 'text-crm-teal',
+    color: 'text-primary-600',
     onClick: () => router.push({ name: 'Mobile Lead Capture' }),
   },
   {

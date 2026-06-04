@@ -33,7 +33,7 @@
               v-model="searchQuery"
               type="text"
               :placeholder="__('Search executions...')"
-              class="w-full bg-white border border-crm-border rounded-lg pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-crm-teal text-crm-text"
+              class="w-full bg-white border border-crm-border rounded-lg pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-primary-600 text-crm-text"
             />
           </div>
           
@@ -43,7 +43,7 @@
               :key="status"
               class="px-3 py-1 rounded-full text-[10px] font-semibold border transition-all shrink-0"
               :class="filterStatus === status
-                ? 'bg-crm-teal text-white border-crm-teal shadow-xs'
+                ? 'bg-primary-600 text-white border-primary-600 shadow-xs'
                 : 'bg-white text-crm-muted border-crm-border hover:bg-gray-50'"
               @click="filterStatus = status"
             >
@@ -64,7 +64,7 @@
               :key="exec.name"
               class="p-4 hover:bg-gray-50/70 transition-all cursor-pointer relative border-l-4"
               :class="[
-                selectedExecution?.name === exec.name ? 'bg-crm-teal/5 border-crm-teal' : 'border-transparent',
+                selectedExecution?.name === exec.name ? 'bg-primary-600/5 border-primary-600' : 'border-transparent',
               ]"
               @click="selectExecution(exec)"
             >
@@ -116,7 +116,7 @@
               <button 
                 v-if="isMobile" 
                 @click="selectedExecution = null" 
-                class="inline-flex items-center gap-1 text-xs font-extrabold text-crm-teal hover:underline mb-2"
+                class="inline-flex items-center gap-1 text-xs font-extrabold text-primary-600 hover:underline mb-2"
               >
                 <LucideArrowLeft class="h-4 w-4" />
                 <span>{{ __('Back to Executions') }}</span>
@@ -130,7 +130,7 @@
                 <span>{{ __('Application:') }}</span>
                 <a
                   :href="`/crm/lending-risk/credit-application/${selectedExecution.application}`"
-                  class="text-crm-teal hover:underline font-extrabold flex items-center gap-1"
+                  class="text-primary-600 hover:underline font-extrabold flex items-center gap-1"
                 >
                   {{ selectedExecution.application }}
                 </a>
@@ -141,7 +141,7 @@
               <div v-if="selectedExecution.status === 'Running' && activeNodeState?.sla_deadline" class="text-right">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-crm-muted">{{ __('SLA Time Remaining') }}</div>
                 <div class="text-xs font-semibold text-crm-text flex items-center gap-1 justify-end mt-0.5">
-                  <LucideClock class="h-3.5 w-3.5" :class="activeNodeState.sla_status === 'breached' ? 'text-red-500 animate-pulse' : 'text-crm-teal'" />
+                  <LucideClock class="h-3.5 w-3.5" :class="activeNodeState.sla_status === 'breached' ? 'text-red-500 animate-pulse' : 'text-primary-600'" />
                   <span :class="activeNodeState.sla_status === 'breached' ? 'text-red-600 font-bold' : 'text-crm-text'">
                     {{ getSlaTimeRemaining(activeNodeState.sla_deadline) }}
                   </span>
@@ -168,7 +168,7 @@
               :key="tab.id"
               class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
               :class="activeSidebar === tab.id
-                ? 'bg-crm-teal text-white shadow-xs'
+                ? 'bg-primary-600 text-white shadow-xs'
                 : 'text-crm-muted hover:text-crm-text'"
               @click="activeSidebar = tab.id"
             >
@@ -186,7 +186,7 @@
             >
               <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 shrink-0">
                 <div class="flex items-center gap-2">
-                  <LucideGitBranch class="h-4 w-4 text-crm-teal" />
+                  <LucideGitBranch class="h-4 w-4 text-primary-600" />
                   <h3 class="text-xs font-bold text-crm-text">{{ __('Visual Execution Path') }}</h3>
                 </div>
                 <!-- Legend badges -->
@@ -263,7 +263,7 @@
 
                       <div class="space-y-1">
                         <div class="flex items-center justify-between gap-2">
-                          <span class="text-xs font-bold text-crm-text group-hover:text-crm-teal transition-all">
+                          <span class="text-xs font-bold text-crm-text group-hover:text-primary-600 transition-all">
                             {{ getEventTitle(log) }}
                           </span>
                           <span class="text-[10px] text-crm-muted whitespace-nowrap">
@@ -295,7 +295,7 @@
                     <div class="bg-gray-50 rounded-xl p-4 border border-crm-border/60 space-y-3">
                       <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold uppercase tracking-wider text-crm-muted">{{ __('Current Active Stage') }}</span>
-                        <span class="text-xs font-bold text-crm-teal bg-crm-teal/10 px-2 py-0.5 rounded-full">
+                        <span class="text-xs font-bold text-primary-600 bg-primary-600/10 px-2 py-0.5 rounded-full">
                           {{ selectedExecution.current_node_type }}
                         </span>
                       </div>
@@ -382,7 +382,7 @@
         <!-- No Execution Selected State -->
         <div v-else class="flex-1 flex flex-col items-center justify-center p-12 text-center bg-gray-50/30">
           <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm border border-crm-border/50 text-crm-muted">
-            <LucideActivity class="h-8 w-8 text-crm-teal" />
+            <LucideActivity class="h-8 w-8 text-primary-600" />
           </div>
           <h3 class="mt-4 text-sm font-extrabold text-crm-text">{{ __('Select an execution') }}</h3>
           <p class="mt-1 text-xs text-crm-muted max-w-xs leading-relaxed">

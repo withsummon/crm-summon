@@ -59,7 +59,7 @@
     </div>
 
     <button
-      class="fixed bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-crm-teal text-white shadow-lg active:scale-95 transition-transform"
+      class="fixed bottom-6 right-6 z-20 flex size-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg active:scale-95 transition-transform"
       @click="showForm = true"
     >
       <FeatherIcon name="plus" class="size-6" />
@@ -87,7 +87,7 @@
               v-model="newVisit.customer_name"
               type="text"
               :placeholder="__('Masukkan nama nasabah')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted"
               @input="onCustomerInput"
               @focus="onCustomerFocus"
               @blur="onCustomerBlur"
@@ -115,7 +115,7 @@
             <input
               v-model="newVisit.visit_date"
               type="date"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             />
           </div>
 
@@ -125,7 +125,7 @@
             </label>
             <select
               v-model="newVisit.purpose"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             >
               <option value="">{{ __('Pilih tujuan') }}</option>
               <option value="Survey">{{ __('Survey') }}</option>
@@ -145,7 +145,7 @@
               v-model="newVisit.notes"
               rows="3"
               :placeholder="__('Catatan tambahan...')"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal placeholder:text-crm-muted resize-none"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600 placeholder:text-crm-muted resize-none"
             />
           </div>
         </div>

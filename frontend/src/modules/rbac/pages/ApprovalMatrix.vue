@@ -21,7 +21,7 @@
 
     <div class="flex-1 overflow-y-auto p-6">
       <div v-if="loading" class="flex items-center justify-center py-16">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
       </div>
 
       <div v-else-if="rules.length" class="rounded-[18px] bg-white shadow-sm border border-crm-border overflow-hidden">

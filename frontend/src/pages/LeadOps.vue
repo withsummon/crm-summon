@@ -19,7 +19,7 @@
           @click="activeTab = tab.key"
         >
           {{ __(tab.label) }}
-          <Badge v-if="tab.badge" :label="String(tab.badge)" variant="subtle" theme="teal" size="sm" class="ml-1" />
+          <Badge v-if="tab.badge" :label="String(tab.badge)" variant="subtle" theme="primary" size="sm" class="ml-1" />
         </button>
       </div>
     </div>
@@ -175,7 +175,7 @@
                   <h3 class="text-sm font-semibold text-ink-gray-9">Lead Capture Form — Live Web Embed Preview</h3>
                   <p class="text-xs text-ink-gray-5">This is how the external form renders dynamically on your website.</p>
                 </div>
-                <Badge label="Live Preview" theme="teal" variant="subtle" size="sm" />
+                <Badge label="Live Preview" theme="primary" variant="subtle" size="sm" />
               </div>
 
               <!-- Interactive Web Embed Form -->
@@ -192,7 +192,7 @@
                     v-model="mockWidgetLead[f.key]"
                     :type="f.key === 'email' ? 'email' : f.key === 'amount' ? 'number' : 'text'"
                     :required="f.required"
-                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs bg-white shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none"
+                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs bg-white shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none"
                     :placeholder="f.label"
                   />
                   <textarea
@@ -200,13 +200,13 @@
                     v-model="mockWidgetLead[f.key]"
                     rows="3"
                     :required="f.required"
-                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs bg-white shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none"
+                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs bg-white shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none resize-none"
                     placeholder="Enter your message..."
                   ></textarea>
                 </div>
 
                 <!-- Hidden UTM parameters mock to show Campaign Association -->
-                <div class="bg-teal-50/50 p-2.5 rounded-lg border border-teal-100 text-[11px] text-teal-700 font-mono space-y-1">
+                <div class="bg-primary-50/50 p-2.5 rounded-lg border border-primary-100 text-[11px] text-primary-700 font-mono space-y-1">
                   <div class="font-bold border-b pb-1 mb-1">Generated Marketing Meta (UTM Campaign Tracker):</div>
                   <div class="grid grid-cols-3 gap-1">
                     <div>Source: <span class="font-bold">{{ mockWidgetUtm.source }}</span></div>
@@ -217,7 +217,7 @@
                 </div>
 
                 <div class="pt-2">
-                  <button type="submit" class="w-full rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 text-xs shadow-sm transition-all flex items-center justify-center gap-1.5">
+                  <button type="submit" class="w-full rounded-lg bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 text-xs shadow-sm transition-all flex items-center justify-center gap-1.5">
                     Submit Capture Request
                   </button>
                 </div>
@@ -333,7 +333,7 @@
               <div v-for="cStats in campaignStats" :key="cStats.source" class="rounded-lg bg-surface-gray-1 p-3 border border-outline-gray-1">
                 <div class="flex justify-between items-center text-xs font-semibold text-ink-gray-7 mb-2">
                   <span>{{ cStats.source }}</span>
-                  <span class="text-[10px] bg-white border px-1.5 py-0.5 rounded text-teal-700 font-mono">{{ cStats.medium }}</span>
+                  <span class="text-[10px] bg-white border px-1.5 py-0.5 rounded text-primary-700 font-mono">{{ cStats.medium }}</span>
                 </div>
                 <div class="flex justify-between items-baseline">
                   <span class="text-xl font-bold text-ink-gray-9">{{ cStats.leads }} leads</span>
@@ -357,7 +357,7 @@
                 <tbody>
                   <tr v-for="lead in filteredUtmLeads" :key="lead.id" class="border-b border-outline-gray-1 last:border-b-0 hover:bg-surface-gray-1/30">
                     <td class="px-3 py-2 font-medium text-ink-gray-9">{{ lead.name }}</td>
-                    <td class="px-3 py-2"><span class="font-mono text-xs bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-semibold">{{ lead.campaign }}</span></td>
+                    <td class="px-3 py-2"><span class="font-mono text-xs bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded font-semibold">{{ lead.campaign }}</span></td>
                     <td class="px-3 py-2 text-ink-gray-7 text-xs">{{ lead.source }}</td>
                     <td class="px-3 py-2 text-ink-gray-7 text-xs"><span class="text-[10px] border px-1 rounded bg-white text-ink-gray-6">{{ lead.medium }}</span></td>
                     <td class="px-3 py-2 text-ink-gray-5 text-xs font-mono">{{ lead.term }} · {{ lead.content }}</td>
@@ -425,7 +425,7 @@
               <div class="space-y-3">
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-ink-gray-6">Model Framework:</span>
-                  <span class="font-mono bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">XGBoost-k2.6-ML</span>
+                  <span class="font-mono bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">XGBoost-k2.6-ML</span>
                 </div>
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-ink-gray-6">Model Accuracy (ROC-AUC):</span>
@@ -442,29 +442,29 @@
 
                 <hr class="my-2 border-outline-gray-1" />
 
-                <div class="bg-teal-50/50 rounded-lg p-3 border border-teal-100">
-                  <h4 class="text-xs font-bold text-teal-900 mb-2">Top ML Feature Importances</h4>
+                <div class="bg-primary-50/50 rounded-lg p-3 border border-primary-100">
+                  <h4 class="text-xs font-bold text-primary-900 mb-2">Top ML Feature Importances</h4>
                   <div class="space-y-2">
                     <div>
-                      <div class="flex justify-between text-[10px] text-teal-700 font-semibold mb-0.5">
+                      <div class="flex justify-between text-[10px] text-primary-700 font-semibold mb-0.5">
                         <span>DSCR Coverage</span>
                         <span>42% Weight</span>
                       </div>
-                      <div class="h-1.5 w-full bg-teal-100 rounded-full"><div class="bg-teal-600 h-1.5 rounded-full" style="width: 42%"></div></div>
+                      <div class="h-1.5 w-full bg-primary-100 rounded-full"><div class="bg-primary-600 h-1.5 rounded-full" style="width: 42%"></div></div>
                     </div>
                     <div>
-                      <div class="flex justify-between text-[10px] text-teal-700 font-semibold mb-0.5">
+                      <div class="flex justify-between text-[10px] text-primary-700 font-semibold mb-0.5">
                         <span>LTV Collateral Ratio</span>
                         <span>28% Weight</span>
                       </div>
-                      <div class="h-1.5 w-full bg-teal-100 rounded-full"><div class="bg-teal-600 h-1.5 rounded-full" style="width: 28%"></div></div>
+                      <div class="h-1.5 w-full bg-primary-100 rounded-full"><div class="bg-primary-600 h-1.5 rounded-full" style="width: 28%"></div></div>
                     </div>
                     <div>
-                      <div class="flex justify-between text-[10px] text-teal-700 font-semibold mb-0.5">
+                      <div class="flex justify-between text-[10px] text-primary-700 font-semibold mb-0.5">
                         <span>Company Financial Age</span>
                         <span>18% Weight</span>
                       </div>
-                      <div class="h-1.5 w-full bg-teal-100 rounded-full"><div class="bg-teal-600 h-1.5 rounded-full" style="width: 18%"></div></div>
+                      <div class="h-1.5 w-full bg-primary-100 rounded-full"><div class="bg-primary-600 h-1.5 rounded-full" style="width: 18%"></div></div>
                     </div>
                   </div>
                 </div>
@@ -495,11 +495,11 @@
                     <td class="px-3 py-2 text-ink-gray-6 text-xs font-mono">DSCR: {{ pred.dscr }}x | LTV: {{ pred.ltv }}%</td>
                     <td class="px-3 py-2">
                       <div class="flex items-center gap-2">
-                        <span class="font-bold font-mono text-sm" :class="pred.score >= 80 ? 'text-green-600' : pred.score >= 60 ? 'text-teal-600' : 'text-red-600'">
+                        <span class="font-bold font-mono text-sm" :class="pred.score >= 80 ? 'text-green-600' : pred.score >= 60 ? 'text-primary-600' : 'text-red-600'">
                           {{ pred.score }}%
                         </span>
                         <div class="h-2 w-16 bg-slate-100 rounded-full overflow-hidden">
-                          <div class="h-full" :class="pred.score >= 80 ? 'bg-green-500' : pred.score >= 60 ? 'bg-teal-500' : 'bg-red-500'" :style="{ width: pred.score + '%' }"></div>
+                          <div class="h-full" :class="pred.score >= 80 ? 'bg-green-500' : pred.score >= 60 ? 'bg-primary-500' : 'bg-red-500'" :style="{ width: pred.score + '%' }"></div>
                         </div>
                       </div>
                     </td>
@@ -524,7 +524,7 @@
               <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-surface-gray-1 p-3 rounded-lg border border-outline-gray-2">
                 <div>
                   <div class="text-xs text-ink-gray-5">AI Predict Quality</div>
-                  <div class="text-lg font-black text-teal-700">{{ selectedPrediction.score }}%</div>
+                  <div class="text-lg font-black text-primary-700">{{ selectedPrediction.score }}%</div>
                 </div>
                 <div>
                   <div class="text-xs text-ink-gray-5">Outcome Recommendation</div>
@@ -542,7 +542,7 @@
 
               <div>
                 <h4 class="font-bold text-ink-gray-9 mb-2">Prediction Reasoning Detail</h4>
-                <p class="leading-relaxed whitespace-pre-wrap bg-teal-50/20 border border-teal-100/50 rounded-lg p-3">{{ selectedPrediction.reasonDetail }}</p>
+                <p class="leading-relaxed whitespace-pre-wrap bg-primary-50/20 border border-primary-100/50 rounded-lg p-3">{{ selectedPrediction.reasonDetail }}</p>
               </div>
 
               <div>
@@ -565,7 +565,7 @@
               <div>
                 <div class="flex items-center justify-between mb-3">
                   <h4 class="font-bold text-ink-gray-9 flex items-center gap-1.5">
-                    <FeatherIcon name="cpu" class="size-4 text-teal-600 shrink-0" />
+                    <FeatherIcon name="cpu" class="size-4 text-primary-600 shrink-0" />
                     <span>SUMMON LLM Live Quality Assessment</span>
                   </h4>
                   <Button
@@ -576,7 +576,7 @@
                     @click="runLlmPrediction(selectedPrediction)"
                   />
                 </div>
-                <div v-if="llmResult" class="rounded-xl bg-teal-50/30 border border-teal-100 p-4 font-sans text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                <div v-if="llmResult" class="rounded-xl bg-primary-50/30 border border-primary-100 p-4 font-sans text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {{ llmResult }}
                 </div>
                 <p v-else class="text-xs text-ink-gray-5 italic">Click the button above to run a live quality assessment using BNI's enterprise LLM orchestrator.</p>
@@ -639,7 +639,7 @@
               <div v-if="selectedTagFilter" class="rounded-lg bg-surface-gray-1 p-3 border border-outline-gray-2 text-xs">
                 <div class="flex justify-between items-center mb-2 text-ink-gray-6 font-bold">
                   <span>Leads Tagged: {{ selectedTagFilter }}</span>
-                  <button class="text-teal-600 hover:underline" @click="selectedTagFilter = ''">Clear Filter</button>
+                  <button class="text-primary-600 hover:underline" @click="selectedTagFilter = ''">Clear Filter</button>
                 </div>
                 <ul class="space-y-1">
                   <li v-for="l in taggedLeads" :key="l.id" class="flex justify-between py-1 border-b border-outline-gray-1 last:border-b-0 font-medium">
@@ -694,7 +694,7 @@
             <div class="space-y-3 text-sm text-ink-gray-7">
               <div>
                 <label class="block text-xs font-medium text-ink-gray-5 mb-1">{{ __('Tag Name') }}</label>
-                <input v-model="newTagName" type="text" class="w-full rounded border border-outline-gray-2 px-2.5 py-1.5 text-xs outline-none focus:border-teal-500 text-ink-gray-7 bg-white" placeholder="e.g. High Exposure" />
+                <input v-model="newTagName" type="text" class="w-full rounded border border-outline-gray-2 px-2.5 py-1.5 text-xs outline-none focus:border-primary-500 text-ink-gray-7 bg-white" placeholder="e.g. High Exposure" />
               </div>
               <div>
                 <label class="block text-xs font-medium text-ink-gray-5 mb-1">{{ __('Color') }}</label>
@@ -732,7 +732,7 @@
                     <p class="font-semibold text-sm text-ink-gray-9">{{ l.name }}</p>
                     <p class="text-xs text-ink-gray-5">{{ l.company }} · {{ l.phone }}</p>
                   </div>
-                  <Badge :label="l.status" theme="teal" variant="subtle" size="sm" />
+                  <Badge :label="l.status" theme="primary" variant="subtle" size="sm" />
                 </div>
                 <div class="mt-2 flex gap-2">
                   <Button size="sm" variant="outline" label="Call" />
@@ -1201,7 +1201,7 @@ async function runLlmPrediction(pred) {
 // ── Reports & Tags State ──────────────────────────────────────────
 const agingBuckets = ref([
   { label: '0 - 3 Days', count: 12, pct: 25, color: 'text-green-600' },
-  { label: '4 - 7 Days', count: 18, pct: 37.5, color: 'text-teal-600' },
+  { label: '4 - 7 Days', count: 18, pct: 37.5, color: 'text-primary-600' },
   { label: '>14 Days (Alert)', count: 8, pct: 16.7, color: 'text-red-600 bg-red-50' },
 ])
 
@@ -1242,7 +1242,7 @@ const tagColors = ['teal', 'rose', 'amber', 'indigo', 'yellow']
 
 function tagColorClasses(color) {
   const map = {
-    teal: 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100',
+    teal: 'bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100',
     rose: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100',
     amber: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',
     indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
@@ -1253,7 +1253,7 @@ function tagColorClasses(color) {
 
 function tagColorDot(color) {
   const map = {
-    teal: 'bg-teal-500',
+    teal: 'bg-primary-500',
     rose: 'bg-rose-500',
     amber: 'bg-amber-500',
     indigo: 'bg-indigo-500',

@@ -36,7 +36,7 @@
 
       <!-- Permissions Table -->
       <div v-if="loading" class="flex items-center justify-center py-16">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-crm-teal border-t-transparent" />
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
       </div>
 
       <div v-else-if="!selectedRole" class="flex flex-col items-center justify-center py-20">
@@ -73,7 +73,7 @@
                       type="checkbox"
                       :checked="row[perm.field]"
                       @change="updatePerm(row, perm.field, $event)"
-                      class="h-4 w-4 rounded border-gray-300 text-crm-teal focus:ring-crm-teal/30 cursor-pointer"
+                      class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600/30 cursor-pointer"
                     />
                   </label>
                 </td>

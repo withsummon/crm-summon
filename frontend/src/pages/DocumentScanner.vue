@@ -16,7 +16,7 @@
         <div class="rounded-xl bg-white p-6 shadow-sm border border-crm-border text-center">
           <div class="flex justify-center mb-4">
             <div class="flex size-16 items-center justify-center rounded-2xl bg-crm-surface">
-              <FeatherIcon name="camera" class="size-8 text-crm-teal" />
+              <FeatherIcon name="camera" class="size-8 text-primary-600" />
             </div>
           </div>
           <p class="text-sm font-medium text-crm-text mb-1">
@@ -48,7 +48,7 @@
             </label>
             <select
               v-model="docType"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             >
               <option value="">{{ __('Pilih jenis dokumen') }}</option>
               <option v-for="t in docTypes" :key="t" :value="t">{{ t }}</option>
@@ -59,7 +59,7 @@
 
       <div v-if="loading" class="rounded-xl bg-white p-6 shadow-sm border border-crm-border text-center">
         <div class="flex justify-center mb-3">
-          <FeatherIcon name="loader" class="size-8 animate-spin text-crm-teal" />
+          <FeatherIcon name="loader" class="size-8 animate-spin text-primary-600" />
         </div>
         <p class="text-sm text-crm-text-secondary">{{ __('Memproses dokumen...') }}</p>
       </div>
@@ -108,7 +108,7 @@
             </label>
             <select
               v-model="docType"
-              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-crm-teal"
+              class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm text-crm-text outline-none focus:border-primary-600"
             >
               <option value="">{{ __('Pilih jenis dokumen') }}</option>
               <option v-for="t in docTypes" :key="t" :value="t">{{ t }}</option>
