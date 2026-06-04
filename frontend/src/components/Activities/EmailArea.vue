@@ -14,7 +14,8 @@
           v-if="activity.communication_type == 'Automated Message'"
           :label="__('Notification')"
           variant="subtle"
-          theme="green"
+          theme="orange"
+          class="badge-brand-primary"
         />
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -23,6 +24,7 @@
           :label="__(status.label)"
           variant="subtle"
           :theme="status.color"
+          :class="{ 'badge-brand-primary': status.color === 'orange' }"
         />
         <Tooltip :text="formatDate(activity.communication_date)">
           <div class="text-sm text-ink-gray-5">
@@ -144,7 +146,7 @@ const status = computed(() => {
   let _status = props.activity?.data?.delivery_status
   let indicator_color = 'red'
   if (['Sent', 'Clicked'].includes(_status)) {
-    indicator_color = 'green'
+    indicator_color = 'orange'
   } else if (['Sending', 'Scheduled'].includes(_status)) {
     indicator_color = 'orange'
   } else if (['Opened', 'Read'].includes(_status)) {

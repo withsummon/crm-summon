@@ -13,7 +13,7 @@
           <div class="flex justify-between items-center gap-1 p-3">
             <div class="flex items-stretch space-x-2">
               <div>
-                <CalendarIcon class="size-4 text-cyan-500" />
+                <CalendarIcon class="size-4 text-secondary-500" />
               </div>
               <div class="flex flex-col text-base">
                 <div

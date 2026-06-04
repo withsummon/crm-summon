@@ -25,7 +25,7 @@
           class="mb-1 cursor-pointer rounded border-0 border-l-4 bg-surface-gray-3 p-2 text-ink-gray-5"
           :class="
             whatsapp.reply_to_type == 'Incoming'
-              ? 'border-green-500'
+              ? 'border-primary-500'
               : 'border-blue-400'
           "
           @click="() => scrollToMessage(whatsapp.reply_to)"
@@ -34,7 +34,7 @@
             class="mb-1 text-sm font-bold"
             :class="
               whatsapp.reply_to_type == 'Incoming'
-                ? 'text-ink-green-2'
+                ? 'text-primary-600'
                 : 'text-ink-blue-link'
             "
           >

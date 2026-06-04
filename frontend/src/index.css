@@ -29,6 +29,57 @@
   .sidebar-brand:hover {
     @apply bg-primary-600;
   }
+
+  .btn-brand-primary {
+    color: #fff !important;
+    background-color: #ff6600 !important;
+  }
+
+  .btn-brand-primary:hover {
+    background-color: #e65c00 !important;
+  }
+
+  .btn-brand-primary:active {
+    background-color: #bf4c00 !important;
+  }
+
+  .btn-brand-primary:focus-visible {
+    --tw-ring-color: #ffa06f !important;
+  }
+
+  .brand-focus {
+    @apply focus:border-secondary-500 focus:ring-1 focus:ring-secondary-500/30;
+  }
+
+  .brand-link {
+    @apply text-secondary-600 hover:text-secondary-700;
+  }
+
+  .brand-tab-active {
+    @apply border-primary-500 text-primary-700;
+  }
+
+  .brand-checkbox {
+    @apply text-primary-600 focus:ring-primary-500;
+  }
+
+  .badge-brand-primary {
+    color: #7a3100 !important;
+    background-color: #ffe5d4 !important;
+    border-color: #ffc7a8 !important;
+  }
+
+  .indicator-brand-primary {
+    @apply !text-primary-600;
+  }
+
+  .indicator-brand-secondary {
+    @apply !text-secondary-600;
+  }
+
+  .card-icon-brand-primary {
+    @apply bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600;
+  }
 }
 
 /* CRM Dashboard Design System (DESIGN.md — BNI Teal Theme) */

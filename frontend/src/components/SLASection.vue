@@ -17,6 +17,7 @@
               :label="s.value"
               variant="subtle"
               :theme="s.color"
+              :class="{ 'badge-brand-primary': s.brand }"
             />
             <div v-else>{{ s.value }}</div>
           </div>
@@ -55,7 +56,7 @@ let slaSection = computed(() => {
     data.value.sla_status == 'Failed'
       ? 'red'
       : data.value.sla_status == 'Fulfilled'
-        ? 'green'
+        ? 'orange'
         : 'orange'
   let respondedOn =
     data.value.last_responded_on || data.value.first_responded_on
@@ -98,6 +99,7 @@ let slaSection = computed(() => {
         value: __(status),
         tooltipText: tooltipText,
         color: color,
+        brand: data.value.sla_status == 'Fulfilled',
       },
       {
         label: 'Status',
