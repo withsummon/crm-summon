@@ -109,53 +109,179 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
 })
 
-function cleanDisplayText(text) {
-  if (!text) return text
-  // If it looks like JSON, format as readable text
-  if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-    try {
-      const obj = JSON.parse(text)
-      return formatJsonAsText(obj)
-    } catch {
-      // not valid JSON, continue
-    }
-  }
-  // Strip markdown syntax
-  return text
+const PREFERRED_TEXT_KEYS = [
+  'title',
+  'summary',
+  'executive_summary',
+  'description',
+  'rationale',
+  'reasoning',
+  'recommendation',
+  'next_step',
+  'mitigation',
+  'content',
+  'text',
+  'value',
+  'label',
+]
+
+function cleanDisplayText(value) {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object') return formatJsonAsText(value)
+
+  const text = String(value).trim()
+  if (!text) return ''
+
+  const parsed = parseEmbeddedJson(text)
+  if (parsed) return formatJsonAsText(parsed)
+
+  return stripMarkdown(text)
+}
+
+function stripMarkdown(text) {
+  return String(text || '')
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
     .replace(/^#{1,6}\s+/gm, '')
     .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/\*(.+?)\*/g, '$1')
-    .replace(/^-\s+/gm, '')
-    .replace(/^\d+\.\s+/gm, '')
     .replace(/^>\s+/gm, '')
     .replace(/`(.+?)`/g, '$1')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
-function formatJsonAsText(obj) {
-  if (typeof obj === 'string') return obj
-  if (typeof obj !== 'object' || obj === null) return String(obj)
-  const parts = []
-  for (const [key, value] of Object.entries(obj)) {
-    const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    if (Array.isArray(value)) {
-      parts.push(`${label}: ${value.join(', ')}`)
-    } else if (typeof value === 'object' && value !== null) {
-      // skip nested objects for brevity; include reasoning directly
-      if (key === 'reasoning') parts.push(`${label}: ${value}`)
-    } else {
-      parts.push(`${label}: ${value}`)
+function parseEmbeddedJson(text) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) return null
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fenced) {
+    const parsed = parseJsonCandidate(fenced[1])
+    if (parsed) return parsed
+  }
+
+  return parseJsonCandidate(trimmed)
+}
+
+function parseJsonCandidate(candidate) {
+  const text = String(candidate || '').trim()
+  if (!text) return null
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object') return parsed
+  } catch {
+    // continue with embedded object extraction
+  }
+
+  const objectStart = text.indexOf('{')
+  const arrayStart = text.indexOf('[')
+  const starts = [objectStart, arrayStart].filter((index) => index >= 0)
+  if (!starts.length) return null
+
+  const start = Math.min(...starts)
+  const opener = text[start]
+  const closer = opener === '{' ? '}' : ']'
+  let depth = 0
+  let inString = false
+  let escape = false
+
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index]
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (char === '\\') {
+      escape = true
+      continue
+    }
+    if (char === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (char === opener) depth += 1
+    if (char === closer) depth -= 1
+    if (depth === 0) {
+      try {
+        const parsed = JSON.parse(text.slice(start, index + 1))
+        return parsed && typeof parsed === 'object' ? parsed : null
+      } catch {
+        return null
+      }
     }
   }
+  return null
+}
+
+function formatJsonAsText(value) {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return stripMarkdown(value)
+  if (typeof value !== 'object') return String(value)
+  if (Array.isArray(value)) {
+    return value.map((item) => formatJsonAsText(item)).filter(Boolean).join('\n')
+  }
+
+  const preferred = PREFERRED_TEXT_KEYS
+    .filter((key) => value[key] !== undefined && value[key] !== null && value[key] !== '')
+    .map((key) => formatJsonAsText(value[key]))
+    .filter(Boolean)
+  const meaningfulKeys = Object.entries(value)
+    .filter(([key, itemValue]) => !key.startsWith('_') && itemValue !== null && itemValue !== undefined && itemValue !== '')
+    .map(([key]) => key)
+  if (preferred.length && meaningfulKeys.every((key) => PREFERRED_TEXT_KEYS.includes(key))) {
+    return preferred.join('\n')
+  }
+
+  const parts = []
+  for (const [key, itemValue] of Object.entries(value)) {
+    if (key.startsWith('_') || itemValue === null || itemValue === undefined || itemValue === '') continue
+    const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    const formatted = formatJsonAsText(itemValue)
+    if (formatted) parts.push(`${label}: ${formatted}`)
+  }
   return parts.join('\n')
+}
+
+function cleanList(value) {
+  if (!value) return []
+  const list = Array.isArray(value) ? value : [value]
+  return list.map((item) => cleanDisplayText(item)).filter(Boolean)
+}
+
+function cleanRecord(record) {
+  const cleaned = {}
+  for (const [key, value] of Object.entries(record || {})) {
+    if (Array.isArray(value)) {
+      cleaned[key] = cleanList(value)
+    } else if (value && typeof value === 'object') {
+      cleaned[key] = cleanDisplayText(value)
+    } else {
+      cleaned[key] = cleanDisplayText(value)
+    }
+  }
+  return cleaned
+}
+
+function cleanAction(action) {
+  return {
+    ...action,
+    title: cleanDisplayText(action?.title),
+    risk_level: cleanDisplayText(action?.risk_level || 'low'),
+    payload: {
+      ...(action?.payload || {}),
+      title: cleanDisplayText(action?.payload?.title),
+      description: cleanDisplayText(action?.payload?.description),
+    },
+  }
 }
 
 const resolved = computed(() => {
   if (!props.response) {
     return {
       title: __('Output AI'),
-      executive_summary: props.fallback || __('Tidak ada output terstruktur.'),
+      executive_summary: cleanDisplayText(props.fallback) || __('Tidak ada output terstruktur.'),
       confidence: 0,
       sections: [],
       recommendations: [],
@@ -168,11 +294,28 @@ const resolved = computed(() => {
   const raw = props.response
   return {
     ...raw,
+    title: cleanDisplayText(raw.title),
     executive_summary: cleanDisplayText(raw.executive_summary),
     sections: (raw.sections || []).map((s) => ({
       ...s,
+      title: cleanDisplayText(s.title),
       summary: cleanDisplayText(s.summary),
+      items: cleanList(s.items),
+      metrics: (s.metrics || []).map((metric) => ({
+        ...metric,
+        label: cleanDisplayText(metric.label),
+        value: cleanDisplayText(metric.value),
+      })),
     })),
+    recommendations: (raw.recommendations || []).map(cleanRecord),
+    risks: (raw.risks || []).map(cleanRecord),
+    actions: (raw.actions || []).map(cleanAction),
+    sources: (raw.sources || []).map((source) => ({
+      ...source,
+      title: cleanDisplayText(source.title),
+      excerpt: cleanDisplayText(source.excerpt),
+    })),
+    limitations: cleanList(raw.limitations),
   }
 })
 

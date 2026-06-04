@@ -886,6 +886,12 @@ const localLabel = ref('')
 const localDescription = ref('')
 const localConfig = ref({})
 
+function cloneJson(value, fallback = {}) {
+  const source = value === undefined || value === null ? fallback : value
+  if (source === undefined || source === null) return source
+  return JSON.parse(JSON.stringify(source))
+}
+
 const nodeDef = computed(() => NODE_TYPES[props.node.data?.nodeType])
 const colorClasses = computed(() => {
   const colorName = nodeDef.value?.color || 'slate'
@@ -919,11 +925,7 @@ watch(
     if (newNode) {
       localLabel.value = newNode.data?.label || ''
       localDescription.value = newNode.data?.description || ''
-      localConfig.value = newNode.value?.data?.config
-        ? JSON.parse(JSON.stringify(newNode.data.config))
-        : newNode.data?.config
-        ? { ...newNode.data.config }
-        : {}
+      localConfig.value = cloneJson(newNode.data?.config, {})
     }
   },
   { immediate: true, deep: true }
@@ -958,7 +960,7 @@ function updateConfig() {
 const showFormDesigner = ref(false)
 
 function onFormDesignerApply(newVal) {
-  localConfig.value = newVal
+  localConfig.value = cloneJson(newVal, {})
   updateConfig()
 }
 

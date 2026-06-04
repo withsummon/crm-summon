@@ -499,26 +499,24 @@ def _clean_action_blocks(text):
 	return re.sub(r"```json\s*\{.*?\"_action\".*?\}\s*```", "", text or "", flags=re.DOTALL).strip()
 
 
-def _extract_json_object(text):
-	text = cstr(text or "").strip()
-	if not text:
+def _parse_json_object_candidate(candidate):
+	candidate = cstr(candidate or "").strip()
+	if not candidate:
 		return None
-	fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
-	if fenced:
-		text = fenced.group(1).strip()
-	if text.startswith("{"):
-		try:
-			return json.loads(text)
-		except Exception:
-			pass
-	start = text.find("{")
+	try:
+		data = json.loads(candidate)
+		if isinstance(data, dict):
+			return data
+	except Exception:
+		pass
+	start = candidate.find("{")
 	if start < 0:
 		return None
 	depth = 0
 	in_string = False
 	escape = False
-	for index in range(start, len(text)):
-		char = text[index]
+	for index in range(start, len(candidate)):
+		char = candidate[index]
 		if escape:
 			escape = False
 			continue
@@ -536,20 +534,104 @@ def _extract_json_object(text):
 			depth -= 1
 			if depth == 0:
 				try:
-					return json.loads(text[start : index + 1])
+					data = json.loads(candidate[start : index + 1])
+					return data if isinstance(data, dict) else None
 				except Exception:
 					return None
 	return None
+
+
+def _extract_json_object(text):
+	text = cstr(text or "").strip()
+	if not text:
+		return None
+	candidates = re.findall(r"```(?:json)?\s*(.*?)\s*```", text, flags=re.DOTALL | re.IGNORECASE)
+	candidates.append(text)
+	for candidate in candidates:
+		data = _parse_json_object_candidate(candidate)
+		if data is not None:
+			return data
+	return None
+
+
+def _humanize_label(key):
+	return cstr(key).replace("_", " ").strip().title()
+
+
+def _clean_ai_text(value):
+	text = cstr(value or "").strip()
+	if not text:
+		return ""
+	text = re.sub(r"```(?:json)?\s*", "", text, flags=re.IGNORECASE).replace("```", "")
+	text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+	text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+	text = re.sub(r"`(.+?)`", r"\1", text)
+	return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def _humanize_jsonish_text(value):
+	if value is None:
+		return ""
+	if isinstance(value, str):
+		data = _extract_json_object(value)
+		if data is not None:
+			return _humanize_jsonish_text(data)
+		return _clean_ai_text(value)
+	if isinstance(value, (int, float)):
+		return cstr(value)
+	if isinstance(value, (list, tuple)):
+		parts = [_humanize_jsonish_text(item) for item in value if item is not None]
+		return "\n".join(part for part in parts if part)
+	if isinstance(value, dict):
+		preferred_keys = (
+			"title",
+			"summary",
+			"executive_summary",
+			"description",
+			"rationale",
+			"reasoning",
+			"recommendation",
+			"next_step",
+			"mitigation",
+			"content",
+			"text",
+			"value",
+			"label",
+		)
+		meaningful_keys = [key for key, val in value.items() if not key.startswith("_") and val not in (None, "", [], {})]
+		preferred = [_humanize_jsonish_text(value.get(key)) for key in preferred_keys if value.get(key)]
+		if preferred and all(key in preferred_keys for key in meaningful_keys):
+			return "\n".join(part for part in preferred if part)
+		lines = []
+		for key, val in value.items():
+			if key.startswith("_") or val in (None, "", [], {}):
+				continue
+			formatted = _humanize_jsonish_text(val)
+			if formatted:
+				lines.append(f"{_humanize_label(key)}: {formatted}")
+		return "\n".join(lines)
+	return cstr(value)
+
+
+def _safe_text(value, fallback=""):
+	return _humanize_jsonish_text(value) or fallback
 
 
 def _as_list_of_text(value):
 	if not value:
 		return []
 	if isinstance(value, str):
-		return [value]
+		try:
+			parsed = json.loads(value)
+			if isinstance(parsed, list):
+				value = parsed
+			else:
+				return [_safe_text(value)]
+		except Exception:
+			return [_safe_text(value)]
 	if isinstance(value, (list, tuple)):
-		return [cstr(item) if not isinstance(item, dict) else cstr(item.get("text") or item.get("summary") or item) for item in value if item]
-	return [cstr(value)]
+		return [_safe_text(item) for item in value if _safe_text(item)]
+	return [_safe_text(value)]
 
 
 def _normalize_metrics(value):
@@ -560,8 +642,8 @@ def _normalize_metrics(value):
 		if isinstance(item, dict):
 			metrics.append(
 				{
-					"label": cstr(item.get("label") or item.get("name") or "Metrik"),
-					"value": cstr(item.get("value") if item.get("value") is not None else item.get("amount") if item.get("amount") is not None else "-"),
+					"label": _safe_text(item.get("label") or item.get("name") or "Metrik", "Metrik"),
+					"value": _safe_text(item.get("value") if item.get("value") is not None else item.get("amount") if item.get("amount") is not None else "-", "-"),
 					"status": cstr(item.get("status") or "neutral").lower(),
 				}
 			)
@@ -574,8 +656,8 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 		data = {}
 	normalized = _response_shell(
 		agent["key"],
-		title=cstr(data.get("title") or agent["name"]),
-		summary=cstr(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat."),
+		title=_safe_text(data.get("title") or agent["name"], agent["name"]),
+		summary=_safe_text(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat.", "Output AI berhasil dibuat."),
 		confidence=data.get("confidence") if data.get("confidence") is not None else confidence,
 		sources=data.get("sources") or sources,
 		limitations=_as_list_of_text(data.get("limitations")),
@@ -585,14 +667,14 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 	sections = data.get("sections") if isinstance(data.get("sections"), list) else []
 	for section in sections:
 		if isinstance(section, str):
-			normalized["sections"].append({"title": section, "summary": "", "items": [], "metrics": []})
+			normalized["sections"].append({"title": _safe_text(section, "Analisis"), "summary": "", "items": [], "metrics": []})
 			continue
 		if not isinstance(section, dict):
 			continue
 		normalized["sections"].append(
 			{
-				"title": cstr(section.get("title") or "Analisis"),
-				"summary": cstr(section.get("summary") or section.get("content") or ""),
+				"title": _safe_text(section.get("title") or "Analisis", "Analisis"),
+				"summary": _safe_text(section.get("summary") or section.get("content") or ""),
 				"items": _as_list_of_text(section.get("items") or section.get("bullets")),
 				"metrics": _normalize_metrics(section.get("metrics")),
 			}
@@ -606,9 +688,9 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 		rows = data.get(key) if isinstance(data.get(key), list) else []
 		for row in rows:
 			if isinstance(row, str):
-				normalized[key].append({"title": fallback_title, "description": row})
+				normalized[key].append({"title": fallback_title, "description": _safe_text(row)})
 			elif isinstance(row, dict):
-				normalized[key].append({k: row.get(k) for k in row.keys()})
+				normalized[key].append({k: _safe_text(row.get(k)) for k in row.keys()})
 	actions = data.get("actions") if isinstance(data.get("actions"), list) else []
 	normalized["actions"] = [action for action in actions if isinstance(action, dict) and action.get("_action")]
 	return normalized
@@ -618,18 +700,19 @@ def _parse_structured_response(raw_content, agent_key, sources=None, confidence=
 	data = _extract_json_object(raw_content)
 	if data is not None:
 		return _normalize_structured_response(data, agent_key, sources=sources, confidence=confidence)
+	fallback_summary = _safe_text(raw_content or "Model tidak mengembalikan JSON valid.")
 	fallback = _response_shell(
 		agent_key,
 		title="Output AI perlu divalidasi",
-		summary=cstr(raw_content or "Model tidak mengembalikan JSON valid.")[:800],
+		summary=fallback_summary[:800],
 		confidence=0,
 		sources=sources,
 		limitations=["Model tidak mengembalikan JSON valid. Output dinormalisasi agar aman ditampilkan."],
 	)
 	fallback["sections"] = [
 		{
-			"title": "Output Mentah",
-			"summary": cstr(raw_content or "")[:1200],
+			"title": "Output Dinormalisasi",
+			"summary": fallback_summary[:1200],
 			"items": [],
 			"metrics": [],
 		}
@@ -1197,7 +1280,6 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 						yield _sse("thinking", {"thinking": event.reasoning_delta})
 					if event.delta:
 						content_parts.append(event.delta)
-						yield _sse("delta", {"delta": event.delta})
 				elif event.event == "done":
 					stream_meta = event
 
