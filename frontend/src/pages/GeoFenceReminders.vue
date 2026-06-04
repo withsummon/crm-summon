@@ -218,19 +218,8 @@
               </div>
               <div>
                 <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Alamat') }}</label>
-                <input v-model="newReminder.address" type="text" :placeholder="__('Alamat lokasi')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600" />
                 <input v-model="newReminder.address" type="text" :placeholder="__('Alamat lengkap')" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-crm-teal" />
               </div>
-              <div>
-                <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Radius') }}</label>
-                <select v-model="newReminder.radius_meters" class="w-full rounded-xl border border-crm-border px-3 py-2.5 text-sm outline-none focus:border-primary-600">
-                  <option :value="100">100m</option>
-                  <option :value="200">200m</option>
-                  <option :value="500">500m</option>
-                  <option :value="1000">1km</option>
-                  <option :value="2000">2km</option>
-                  <option :value="5000">5km</option>
-                </select>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="text-xs font-medium text-crm-text-secondary mb-1.5 block">{{ __('Radius') }}</label>
