@@ -550,7 +550,7 @@
               </button>
             </div>
             <p v-if="meetingContent[item.kind]?.transcript_count < transcriptSegments.length" class="mt-2 text-xs text-amber-700">Transkrip bertambah setelah hasil ini dibuat. Buat ulang untuk memperbarui.</p>
-            <p v-if="meetingContent[item.kind]" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ meetingContent[item.kind].content }}</p>
+            <p v-if="meetingContent[item.kind]" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ meetingText(meetingContent[item.kind].content) }}</p>
             <p v-else class="mt-3 text-sm text-ink-gray-5">{{ item.empty }}</p>
           </section>
         </div>
@@ -948,6 +948,10 @@ const meetingContentSections = [
   { kind: 'analysis', title: 'Analisis hasil rapat', empty: 'Simpan transkrip sebelum membuat analisis.' },
 ]
 let transcriptConnection = null
+
+function meetingText(content) {
+  return content.replace(/^#{1,6}\s+/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*\n]+)\*/g, '$1')
+}
 
 async function loadMeetingWorkspace(meetingId) {
   transcriptStatus.value = ''

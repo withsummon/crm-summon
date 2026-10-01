@@ -63,23 +63,27 @@ const routes = [
         path: 'customer-360',
         name: 'Customer 360',
         component: () => import('@/pages/Customer360List.vue'),
+        meta: { ownHeader: true },
       },
       {
         path: 'customer-360/:customer',
         name: 'Customer 360 Detail',
         component: () => import('@/pages/Customer360.vue'),
         props: true,
+        meta: { ownHeader: true },
       },
       {
         path: 'credit-analysis',
         name: 'Credit Analysis',
         component: () => import('@/pages/CreditAnalysisList.vue'),
+        meta: { ownHeader: true },
       },
       {
         path: 'credit-analysis/:applicationId',
         name: 'Credit Analysis Detail',
         component: () => import('@/pages/CreditAnalysis.vue'),
         props: true,
+        meta: { ownHeader: true },
       },
       {
         alias: 'leads',
@@ -222,6 +226,7 @@ const routes = [
         path: 'portfolio-monitoring',
         name: 'Portfolio Monitoring',
         component: () => import('@/pages/PortfolioMonitoring.vue'),
+        meta: { ownHeader: true },
       },
       {
         path: 'product-configuration',
@@ -438,6 +443,7 @@ const routes = [
         path: 'omnichannel-workspace',
         name: 'Omnichannel Workspace',
         component: () => import('@/pages/OmnichannelWorkspace.vue'),
+        meta: { ownHeader: true },
       },
       {
         path: 'customer-portal',
