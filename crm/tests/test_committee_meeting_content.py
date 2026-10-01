@@ -12,11 +12,11 @@ class TestCommitteeMeetingContent(TestCase):
 		with patch("crm.api.committee._transcript_meeting", return_value=meeting), patch(
 			"crm.api.committee.frappe", SimpleNamespace(session=SimpleNamespace(user="Administrator"))
 		):
-			segment = save_live_transcript_segment("CRM-COMM-TEST", "Pembahasan risiko", "mic", 1250)
+			segment = save_live_transcript_segment.__wrapped__("CRM-COMM-TEST", "Pembahasan risiko", "mic", 1250)
 			self.assertEqual(segment["speaker"], "Anda")
 			self.assertEqual(segment["offset_ms"], 1250)
 			meeting.transcript_json = meeting.db_set.call_args.args[1]
-			bookmarked = set_live_transcript_bookmark("CRM-COMM-TEST", 0, True)
+			bookmarked = set_live_transcript_bookmark.__wrapped__("CRM-COMM-TEST", 0, True)
 			self.assertTrue(bookmarked["bookmarked"])
 
 	def test_analysis_uses_saved_transcript_and_persists_result(self):
@@ -31,7 +31,7 @@ class TestCommitteeMeetingContent(TestCase):
 		with patch("crm.api.committee._transcript_meeting", return_value=meeting), patch(
 			"crm.ai.openrouter.call_llm_chat", return_value=SimpleNamespace(content="Risiko belum diputuskan [segmen 1].")
 		) as generate:
-			result = generate_meeting_content("CRM-COMM-TEST", "analysis")
+			result = generate_meeting_content.__wrapped__("CRM-COMM-TEST", "analysis")
 
 		self.assertEqual(result["transcript_count"], 1)
 		self.assertIn("Risiko jaminan perlu ditinjau", generate.call_args.args[0][1]["content"])
