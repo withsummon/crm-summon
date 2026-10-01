@@ -1176,18 +1176,6 @@ TAG_PALETTE = [
 
 @frappe.whitelist()
 def list_tags():
-
-return {"processed": True}
-
-
-TAG_PALETTE = [
-	"#0f766e", "#FF6600", "#2563eb", "#9333ea",
-	"#dc2626", "#65a30d", "#0891b2", "#a16207",
-]
-
-
-@frappe.whitelist()
-def list_tags():
 	if not frappe.db.table_exists("CRM Lead Tag"):
 		return {"tags": [], "palette": TAG_PALETTE}
 	rows = frappe.get_all(
