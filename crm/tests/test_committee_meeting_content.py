@@ -4,7 +4,14 @@ from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from crm.api.committee import generate_meeting_content, save_live_transcript_segment, set_live_transcript_bookmark
+from crm.api.committee import (
+	generate_meeting_content,
+	get_meeting_speakers,
+	save_live_transcript_segment,
+	set_live_transcript_bookmark,
+	set_live_transcript_speaker,
+	set_meeting_speakers,
+)
 
 
 class TestCommitteeMeetingContent(TestCase):
@@ -24,6 +31,20 @@ class TestCommitteeMeetingContent(TestCase):
 			meeting.transcript_json = meeting.db_set.call_args.args[1]
 			bookmarked = set_live_transcript_bookmark.__wrapped__("CRM-COMM-TEST", 0, True)
 			self.assertTrue(bookmarked["bookmarked"])
+
+	def test_roster_labels_both_audio_sources_and_allows_correction(self):
+		meeting = SimpleNamespace(speaker_roster_json="", attendees_json="[]", transcript_json="[]", db_set=Mock())
+		frappe = SimpleNamespace(session=SimpleNamespace(user="raya@example.com"), db=SimpleNamespace(get_value=Mock(return_value="Raya")))
+		with patch("crm.api.committee._transcript_meeting", return_value=meeting), patch("crm.api.committee.frappe", frappe):
+			roster = set_meeting_speakers.__wrapped__("CRM-COMM-TEST", "Raya", '["Budi", "Sari", "budi", "Raya"]')
+			self.assertEqual(roster["participants"], ["Budi", "Sari"])
+			meeting.speaker_roster_json = meeting.db_set.call_args.args[1]
+			self.assertEqual(get_meeting_speakers.__wrapped__("CRM-COMM-TEST")["self_name"], "Raya")
+			self.assertEqual(save_live_transcript_segment.__wrapped__("CRM-COMM-TEST", "Halo", "mic")["speaker"], "Raya")
+			meeting.transcript_json = meeting.db_set.call_args.args[1]
+			self.assertEqual(save_live_transcript_segment.__wrapped__("CRM-COMM-TEST", "Setuju", "meeting", 1500, "Budi")["speaker"], "Budi")
+			meeting.transcript_json = meeting.db_set.call_args.args[1]
+			self.assertEqual(set_live_transcript_speaker.__wrapped__("CRM-COMM-TEST", 1, "Sari")["speaker"], "Sari")
 
 	def test_analysis_uses_saved_transcript_and_persists_result(self):
 		meeting = SimpleNamespace(

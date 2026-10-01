@@ -546,15 +546,27 @@
                 <article v-for="(segment, index) in transcriptSegments" :key="index" class="flex gap-3">
                   <span class="flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold" :class="segment.source === 'mic' ? 'bg-gray-100 text-gray-700' : 'bg-[#980000]/10 text-[#980000]'">{{ segment.source === 'mic' ? 'IN' : 'ME' }}</span>
                   <div class="min-w-0 flex-1">
-                    <div class="flex flex-wrap items-center gap-2 text-xs"><strong class="text-ink-gray-8">{{ segment.speaker || (segment.source === 'mic' ? 'Anda' : 'Peserta rapat') }}</strong><span class="text-ink-gray-5">{{ formatLiveOffset(segment.offset_ms) }}</span></div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs"><strong class="text-ink-gray-8">{{ segment.speaker || (segment.source === 'mic' ? 'Anda' : 'Belum dikenali') }}</strong><span class="text-ink-gray-5">{{ formatLiveOffset(segment.offset_ms) }}</span></div>
                     <p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ segment.text }}</p>
-                    <button @click="toggleTranscriptBookmark(index)" :aria-pressed="!!segment.bookmarked" class="mt-1 text-xs font-medium" :class="segment.bookmarked ? 'text-amber-700' : 'text-ink-gray-5'">{{ segment.bookmarked ? '★ Ditandai' : '☆ Tandai bagian ini' }}</button>
+                    <div class="mt-2 flex flex-wrap items-center gap-3">
+                      <select :value="speakerOptions.includes(segment.speaker) ? segment.speaker : ''" :aria-label="`Nama pembicara segmen ${index + 1}`" @change="setTranscriptSpeaker(index, $event)" class="rounded-md border border-outline-gray-2 px-2 py-1 text-xs">
+                        <option value="">Pilih nama pembicara</option>
+                        <option v-for="name in speakerOptions" :key="name" :value="name">{{ name }}</option>
+                      </select>
+                      <button @click="toggleTranscriptBookmark(index)" :aria-pressed="!!segment.bookmarked" class="text-xs font-medium" :class="segment.bookmarked ? 'text-amber-700' : 'text-ink-gray-5'">{{ segment.bookmarked ? '★ Ditandai' : '☆ Tandai bagian ini' }}</button>
+                    </div>
                   </div>
                 </article>
-                <p v-if="partialTranscript.meeting" class="ml-11 text-sm italic text-ink-gray-5">Peserta rapat · {{ partialTranscript.meeting }}</p>
-                <p v-if="partialTranscript.mic" class="ml-11 text-sm italic text-ink-gray-5">Anda · {{ partialTranscript.mic }}</p>
+                <p v-if="partialTranscript.meeting" class="ml-11 text-sm italic text-ink-gray-5">{{ pendingRemoteSpeaker || activeRemoteSpeaker || 'Belum dikenali' }} · {{ partialTranscript.meeting }}</p>
+                <p v-if="partialTranscript.mic" class="ml-11 text-sm italic text-ink-gray-5">{{ speakerRoster.selfName || 'Anda' }} · {{ partialTranscript.mic }}</p>
               </div>
               <div class="flex flex-wrap items-center justify-center gap-2 border-t border-outline-gray-2 p-4">
+                <label class="flex items-center gap-2 text-sm text-ink-gray-7">Sedang berbicara
+                  <select v-model="activeRemoteSpeaker" aria-label="Pembicara dari tab rapat" class="max-w-48 rounded-lg border border-outline-gray-2 px-2 py-2 text-sm">
+                    <option value="">Belum dikenali</option>
+                    <option v-for="name in speakerParticipants" :key="name" :value="name">{{ name }}</option>
+                  </select>
+                </label>
                 <button v-if="!capturing" @click="startTranscription" :disabled="!liveStarted || startingCapture" class="rounded-lg bg-[#980000] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{{ startingCapture ? 'Menyiapkan…' : 'Mulai tangkap' }}</button>
                 <button v-else @click="stopTranscription" class="rounded-lg bg-[#980000] px-4 py-2 text-sm font-medium text-white">Hentikan transkrip</button>
                 <button v-if="capturing && microphoneAvailable" @click="toggleMicrophone" :aria-pressed="microphoneEnabled" class="rounded-lg border border-outline-gray-2 px-3 py-2 text-sm">{{ microphoneEnabled ? 'Matikan mikrofon' : 'Aktifkan mikrofon' }}</button>
@@ -562,6 +574,17 @@
             </section>
 
             <aside class="space-y-4 bg-surface-gray-1 p-4">
+              <section class="rounded-xl border border-outline-gray-2 bg-white p-4">
+                <h4 class="font-semibold text-ink-gray-9">Nama pembicara</h4>
+                <p class="mt-1 text-xs text-ink-gray-5">Isi sebelum rapat. Saat pembicara berganti, pilih namanya di bawah transkrip. Nama setiap segmen bisa diperbaiki.</p>
+                <label class="mt-3 block text-xs font-medium text-ink-gray-7">Nama Anda
+                  <input v-model="speakerRoster.selfName" maxlength="80" class="mt-1 w-full rounded-lg border border-outline-gray-2 px-3 py-2 text-sm" />
+                </label>
+                <label class="mt-3 block text-xs font-medium text-ink-gray-7">Peserta lain (satu nama per baris)
+                  <textarea v-model="speakerRoster.participantsText" rows="3" class="mt-1 w-full resize-y rounded-lg border border-outline-gray-2 px-3 py-2 text-sm"></textarea>
+                </label>
+                <button @click="saveSpeakerRoster" :disabled="savingSpeakerRoster || !speakerRosterDirty" class="mt-3 rounded-lg bg-[#980000] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ savingSpeakerRoster ? 'Menyimpan…' : 'Simpan nama' }}</button>
+              </section>
               <section class="rounded-xl border border-outline-gray-2 bg-white p-4">
                 <h4 class="font-semibold text-ink-gray-9">Agenda rapat</h4>
                 <p class="mt-1 text-xs text-ink-gray-5">{{ liveCurrentMeeting.committee }} · {{ liveCurrentMeeting.members.length }} anggota</p>
@@ -974,6 +997,13 @@ const microphoneEnabled = ref(false)
 const partialTranscript = reactive({ meeting: '', mic: '' })
 const transcriptStatus = ref('')
 const transcriptSegments = ref([])
+const speakerRoster = reactive({ selfName: '', participantsText: '' })
+const speakerParticipants = ref([])
+const activeRemoteSpeaker = ref('')
+const savingSpeakerRoster = ref(false)
+const savedSpeakerRoster = ref('')
+const speakerRosterDirty = computed(() => JSON.stringify(speakerRoster) !== savedSpeakerRoster.value)
+const speakerOptions = computed(() => [...new Set([speakerRoster.selfName, ...speakerParticipants.value].filter(Boolean))])
 const liveElapsedSeconds = ref(0)
 const liveElapsedLabel = computed(() => `${String(Math.floor(liveElapsedSeconds.value / 60)).padStart(2, '0')}:${String(liveElapsedSeconds.value % 60).padStart(2, '0')}`)
 const meetingContent = ref({})
@@ -990,6 +1020,7 @@ let captureStartedAt = 0
 let elapsedTimer = null
 let saveQueue = Promise.resolve()
 let stopPromise = null
+let pendingRemoteSpeaker = ''
 
 function formatLiveOffset(offset) {
   const seconds = Math.floor(Number(offset || 0) / 1000)
@@ -1004,22 +1035,57 @@ async function loadMeetingWorkspace(meetingId) {
   transcriptStatus.value = ''
   transcriptSegments.value = []
   meetingContent.value = {}
+  speakerRoster.selfName = ''
+  speakerRoster.participantsText = ''
+  speakerParticipants.value = []
+  activeRemoteSpeaker.value = ''
+  savedSpeakerRoster.value = ''
   if (!meetingId) return
   liveStarted.value = meetings.value.find((meeting) => meeting.id === meetingId)?.status === 'in_progress'
   try {
-    const [segments, content] = await Promise.all([
+    const [segments, content, speakers] = await Promise.all([
       call('crm.api.committee.get_live_transcript', { meeting: meetingId }),
       call('crm.api.committee.get_meeting_content', { meeting: meetingId }),
+      call('crm.api.committee.get_meeting_speakers', { meeting: meetingId }),
     ])
     if (liveMeetingId.value !== meetingId) return
     transcriptSegments.value = segments || []
     meetingContent.value = content || {}
+    speakerRoster.selfName = speakers.self_name || ''
+    speakerParticipants.value = speakers.participants || []
+    speakerRoster.participantsText = speakerParticipants.value.join('\n')
+    activeRemoteSpeaker.value = speakerParticipants.value.length === 1 ? speakerParticipants.value[0] : ''
+    savedSpeakerRoster.value = speakers.configured ? JSON.stringify(speakerRoster) : ''
   } catch {
     if (liveMeetingId.value === meetingId) transcriptStatus.value = 'Data rapat belum dapat dimuat. Pilih rapat kembali untuk mencoba lagi.'
   }
 }
 
 watch(liveMeetingId, loadMeetingWorkspace)
+
+async function saveSpeakerRoster() {
+  if (!liveMeetingId.value || savingSpeakerRoster.value) return
+  const meetingId = liveMeetingId.value
+  savingSpeakerRoster.value = true
+  try {
+    const result = await call('crm.api.committee.set_meeting_speakers', {
+      meeting: meetingId,
+      self_name: speakerRoster.selfName,
+      participants: JSON.stringify(speakerRoster.participantsText.split('\n').map((name) => name.trim()).filter(Boolean)),
+    })
+    if (liveMeetingId.value !== meetingId) return
+    speakerRoster.selfName = result.self_name
+    speakerParticipants.value = result.participants
+    speakerRoster.participantsText = result.participants.join('\n')
+    if (!speakerParticipants.value.includes(activeRemoteSpeaker.value)) activeRemoteSpeaker.value = speakerParticipants.value.length === 1 ? speakerParticipants.value[0] : ''
+    savedSpeakerRoster.value = JSON.stringify(speakerRoster)
+    transcriptStatus.value = ''
+  } catch (error) {
+    transcriptStatus.value = error?.message || 'Nama pembicara belum tersimpan. Coba lagi.'
+  } finally {
+    savingSpeakerRoster.value = false
+  }
+}
 
 async function generateMeetingContent(kind) {
   if (!liveMeetingId.value || generatingContent.value) return
@@ -1048,11 +1114,14 @@ async function startLiveMeeting(meetingId) {
   liveStarted.value = true
   activeTab.value = 'live'
   transcriptStatus.value = ''
-  await loadMeetingWorkspace(meetingId)
 }
 
 async function startTranscription() {
   if (capturing.value || startingCapture.value || !liveMeetingId.value || !liveStarted.value) return
+  if (speakerRosterDirty.value) {
+    transcriptStatus.value = 'Simpan nama pembicara sebelum mulai menangkap audio.'
+    return
+  }
   transcriptStatus.value = ''
   startingCapture.value = true
   const meetingId = liveMeetingId.value
@@ -1088,13 +1157,18 @@ async function startTranscription() {
       })
       transcriptConnections[source] = connection
       connection.on(RealtimeEvents.OPEN, () => readySources.add(source))
-      connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, ({ text }) => { partialTranscript[source] = text || '' })
+      connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, ({ text }) => {
+        if (source === 'meeting' && text && !partialTranscript.meeting) pendingRemoteSpeaker = activeRemoteSpeaker.value
+        partialTranscript[source] = text || ''
+      })
       connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, ({ text }) => {
         partialTranscript[source] = ''
         if (!text?.trim()) return
         const offset_ms = Date.now() - captureStartedAt
+        const speaker = source === 'meeting' ? (pendingRemoteSpeaker || activeRemoteSpeaker.value) : ''
+        if (source === 'meeting') pendingRemoteSpeaker = ''
         saveQueue = saveQueue.then(async () => {
-          const saved = await call('crm.api.committee.save_live_transcript_segment', { meeting: meetingId, text, source, offset_ms })
+          const saved = await call('crm.api.committee.save_live_transcript_segment', { meeting: meetingId, text, source, offset_ms, speaker })
           if (liveMeetingId.value === meetingId) transcriptSegments.value.push(saved)
         }).catch(() => { transcriptStatus.value = 'Sebagian transkrip gagal disimpan. Periksa koneksi lalu mulai ulang.' })
       })
@@ -1144,8 +1218,24 @@ function stopTranscription() {
     await saveQueue
     partialTranscript.meeting = ''
     partialTranscript.mic = ''
+    pendingRemoteSpeaker = ''
   })().finally(() => { stopPromise = null })
   return stopPromise
+}
+
+async function setTranscriptSpeaker(index, event) {
+  if (!liveMeetingId.value || !event.target.value) return
+  const meetingId = liveMeetingId.value
+  const previous = transcriptSegments.value[index]?.speaker
+  const speaker = event.target.value
+  saveQueue = saveQueue.then(async () => {
+    const segment = await call('crm.api.committee.set_live_transcript_speaker', { meeting: meetingId, index, speaker })
+    if (liveMeetingId.value === meetingId) transcriptSegments.value[index] = segment
+  }).catch(() => {
+    event.target.value = speakerOptions.value.includes(previous) ? previous : ''
+    transcriptStatus.value = 'Nama pembicara belum tersimpan. Coba lagi.'
+  })
+  await saveQueue
 }
 
 function toggleMicrophone() {

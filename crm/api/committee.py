@@ -626,6 +626,69 @@ def _transcript_meeting(meeting, permission):
 	return doc
 
 
+def _speaker_roster(doc):
+	try:
+		roster = json.loads(getattr(doc, "speaker_roster_json", None) or "{}")
+	except (TypeError, ValueError):
+		roster = {}
+	return roster if isinstance(roster, dict) else {}
+
+
+@frappe.whitelist()
+def get_meeting_speakers(meeting):
+	doc = _transcript_meeting(meeting, "read")
+	roster = _speaker_roster(doc)
+	participants = roster.get("participants", [])
+	if not getattr(doc, "speaker_roster_json", None):
+		try:
+			attendees = json.loads(doc.attendees_json or "[]")
+		except (TypeError, ValueError):
+			attendees = []
+		participants = [a.get("name") for a in attendees if isinstance(a, dict) and a.get("name")]
+	self_names = roster.get("self_names", {})
+	self_name = self_names.get(frappe.session.user) if isinstance(self_names, dict) else None
+	return {
+		"self_name": self_name or frappe.db.get_value("User", frappe.session.user, "full_name") or frappe.session.user,
+		"participants": participants if isinstance(participants, list) else [],
+		"configured": bool(getattr(doc, "speaker_roster_json", None)),
+	}
+
+
+@frappe.whitelist()
+def set_meeting_speakers(meeting, self_name, participants):
+	doc = _transcript_meeting(meeting, "write")
+	if not isinstance(self_name, str):
+		frappe.throw(_("Invalid speaker name"))
+	self_name = " ".join(self_name.split())
+	if not 1 <= len(self_name) <= 80:
+		frappe.throw(_("Enter your name (up to 80 characters)"))
+	try:
+		participants = json.loads(participants) if isinstance(participants, str) else participants
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid participant list"))
+	if not isinstance(participants, list) or len(participants) > 30:
+		frappe.throw(_("Invalid participant list"))
+	names = []
+	seen = {self_name.casefold()}
+	for participant in participants:
+		if not isinstance(participant, str):
+			frappe.throw(_("Invalid participant name"))
+		name = " ".join(participant.split())
+		if not 1 <= len(name) <= 80:
+			frappe.throw(_("Invalid participant name"))
+		if name.casefold() not in seen:
+			names.append(name)
+			seen.add(name.casefold())
+	roster = _speaker_roster(doc)
+	self_names = roster.get("self_names", {})
+	if not isinstance(self_names, dict):
+		self_names = {}
+	self_names[frappe.session.user] = self_name
+	roster = {"self_names": self_names, "participants": names}
+	doc.db_set("speaker_roster_json", json.dumps(roster, ensure_ascii=False))
+	return {"self_name": self_name, "participants": names}
+
+
 @frappe.whitelist()
 def get_live_transcript(meeting):
 	doc = _transcript_meeting(meeting, "read")
@@ -711,7 +774,7 @@ def create_live_transcript_token(meeting):
 
 
 @frappe.whitelist()
-def save_live_transcript_segment(meeting, text, source="meeting", offset_ms=0):
+def save_live_transcript_segment(meeting, text, source="meeting", offset_ms=0, speaker=""):
 	doc = _transcript_meeting(meeting, "write")
 	text = (text or "").strip()
 	if not text or len(text) > 4000:
@@ -724,10 +787,38 @@ def save_live_transcript_segment(meeting, text, source="meeting", offset_ms=0):
 		frappe.throw(_("Invalid transcript offset"))
 	if not 0 <= offset_ms <= 43200000:
 		frappe.throw(_("Invalid transcript offset"))
+	roster = _speaker_roster(doc)
+	if source == "mic":
+		self_names = roster.get("self_names", {})
+		speaker = self_names.get(frappe.session.user, "Anda") if isinstance(self_names, dict) else "Anda"
+	else:
+		participants = roster.get("participants", [])
+		speaker = speaker if isinstance(participants, list) and speaker in participants else "Belum dikenali"
 	segments = json.loads(doc.transcript_json or "[]")
-	segments.append({"text": text, "source": source, "speaker": "Anda" if source == "mic" else "Peserta rapat", "offset_ms": offset_ms, "at": now_datetime().isoformat(), "by": frappe.session.user})
+	segments.append({"text": text, "source": source, "speaker": speaker, "offset_ms": offset_ms, "at": now_datetime().isoformat(), "by": frappe.session.user})
 	doc.db_set("transcript_json", json.dumps(segments, ensure_ascii=False))
 	return segments[-1]
+
+
+@frappe.whitelist()
+def set_live_transcript_speaker(meeting, index, speaker):
+	doc = _transcript_meeting(meeting, "write")
+	segments = json.loads(doc.transcript_json or "[]")
+	try:
+		index = int(index)
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid transcript segment"))
+	if not 0 <= index < len(segments):
+		frappe.throw(_("Invalid transcript segment"))
+	roster = _speaker_roster(doc)
+	self_names = roster.get("self_names", {})
+	participants = roster.get("participants", [])
+	allowed = (participants if isinstance(participants, list) else []) + list(self_names.values() if isinstance(self_names, dict) else [])
+	if speaker not in allowed:
+		frappe.throw(_("Select a name from the meeting roster"))
+	segments[index]["speaker"] = speaker
+	doc.db_set("transcript_json", json.dumps(segments, ensure_ascii=False))
+	return segments[index]
 
 
 @frappe.whitelist()
