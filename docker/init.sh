@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 set -e
 
 if [ -d "/home/frappe/frappe-bench/apps/frappe" ]; then

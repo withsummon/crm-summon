@@ -15,56 +15,9 @@ x-common-volumes: &common_volumes
   - logs:/home/frappe/frappe-bench/logs
 
 services:
-  mariadb:
-    image: mariadb:10.6
-    restart: always
-
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake
-      - --skip-innodb-read-only-compressed
-
-    environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-admin}
-
-    volumes:
-      - mariadb-data:/var/lib/mysql
-
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-    networks:
-      - crm-network
-
-  redis:
-    image: redis:alpine
-    restart: always
-
-    volumes:
-      - redis-data:/data
-
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-    networks:
-      - crm-network
-
   configurator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
     image: *worker_image
-    pull_policy: never
+    pull_policy: always
     restart: "no"
 
     environment:
@@ -140,18 +93,12 @@ services:
       - crm-network
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
     image: *worker_image
-    pull_policy: never
+    pull_policy: always
     restart: on-failure
 
     depends_on:
       - configurator
-      - mariadb
-      - redis
 
     command:
       - bash
@@ -195,18 +142,39 @@ services:
     networks:
       - crm-network
 
-  websocket:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
-    image: *worker_image
-    pull_policy: never
+  frontend:
+    image: *nginx_image
+    pull_policy: always
     restart: on-failure
 
     depends_on:
       - configurator
-      - redis
+      - backend
+      - websocket
+
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+
+    expose:
+      - "8080"
+
+    volumes: *common_volumes
+
+    networks:
+      - crm-network
+
+  websocket:
+    image: *worker_image
+    pull_policy: always
+    restart: on-failure
+
+    depends_on:
+      - configurator
 
     command:
       - bash
@@ -240,50 +208,13 @@ services:
 
     networks:
       - crm-network
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: nginx
-    image: *nginx_image
-    pull_policy: never
-    restart: on-failure
-
-    depends_on:
-      - configurator
-      - backend
-      - websocket
-
-    environment:
-      BACKEND: backend:8000
-      SOCKETIO: websocket:9000
-      FRAPPE_SITE_NAME_HEADER: crm.withsummon.com
-      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
-      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
-      UPSTREAM_REAL_IP_RECURSIVE: "off"
-
-    ports:
-      - "8080:8080"
-      - "8443:8443"
-
-    volumes: *common_volumes
-
-    networks:
-      - crm-network
-
   queue-default:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
     image: *worker_image
-    pull_policy: never
+    pull_policy: always
     restart: on-failure
 
     depends_on:
       - configurator
-      - redis
 
     command:
       - bash
@@ -320,17 +251,12 @@ services:
       - crm-network
 
   queue-long:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
     image: *worker_image
-    pull_policy: never
+    pull_policy: always
     restart: on-failure
 
     depends_on:
       - configurator
-      - redis
 
     command:
       - bash
@@ -367,17 +293,12 @@ services:
       - crm-network
 
   schedule:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
     image: *worker_image
-    pull_policy: never
+    pull_policy: always
     restart: on-failure
 
     depends_on:
       - configurator
-      - redis
 
     command:
       - bash
@@ -416,9 +337,7 @@ services:
 volumes:
   sites:
   logs:
-  mariadb-data:
-  redis-data:
 
 networks:
   crm-network:
-    driver: bridge
+    external: true

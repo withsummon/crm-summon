@@ -25,3 +25,5 @@ AGENTS.md
 my-frappe-bench/
 *.md
 module/
+.env.prod
+.env
