@@ -397,14 +397,16 @@ def get_portfolio_overview(from_date: str | None = None, to_date: str | None = N
 	watchlist_count = sum(1 for a in accounts if a["status"] == "Watchlist")
 	active_count = sum(1 for a in accounts if a["status"] == "Active")
 
-	prev_fd = (datetime.strptime(fd, "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
-	prev_accounts = _aggregate_exposure_accounts(prev_fd, fd)
-	prev_os = sum(flt(a["os_amount"]) for a in prev_accounts)
-	growth = ((total_os - prev_os) / prev_os * 100) if prev_os else 0
+	previous = _db_sql(
+		"SELECT total_os FROM `tabCRM Portfolio Snapshot` WHERE period <= %s ORDER BY period DESC LIMIT 1",
+		(fd,), as_dict=True,
+	)
+	prev_os = flt(previous[0].total_os) if previous else 0
+	growth = ((total_os - prev_os) / prev_os * 100) if prev_os else None
 
-	grade_map = {"AAA": 1, "AA": 2, "A": 3, "BBB": 4, "BB": 5, "B": 6, "CCC": 7, "CC": 8, "C": 9, "D": 10, "NR": 5}
-	grades = [grade_map.get(a["risk_grade"], 5) for a in accounts]
-	avg_grade = sum(grades) / len(grades) if grades else 5
+	grade_map = {"AAA": 1, "AA": 2, "A": 3, "BBB": 4, "BB": 5, "B": 6, "CCC": 7, "CC": 8, "C": 9, "D": 10}
+	grades = [grade_map[a["risk_grade"]] for a in accounts if a["risk_grade"] in grade_map]
+	avg_grade = sum(grades) / len(grades) if grades else None
 
 	return {
 		"total_os": round(total_os, 2),
@@ -415,9 +417,9 @@ def get_portfolio_overview(from_date: str | None = None, to_date: str | None = N
 		"npl_os": round(npl_os, 2),
 		"npl_os_display": _fmt_idr(npl_os),
 		"watchlist_count": watchlist_count,
-		"portfolio_growth": round(growth, 1),
-		"avg_risk_grade": round(avg_grade, 1),
-		"avg_risk_grade_letter": _grade_to_letter(round(avg_grade)),
+		"portfolio_growth": round(growth, 1) if growth is not None else None,
+		"avg_risk_grade": round(avg_grade, 1) if avg_grade is not None else None,
+		"avg_risk_grade_letter": _grade_to_letter(round(avg_grade)) if avg_grade is not None else "NR",
 		"period": {"from": fd, "to": td},
 	}
 
@@ -451,49 +453,20 @@ def _grade_to_letter(avg: float) -> str:
 
 @frappe.whitelist()
 def get_trend_chart(from_date: str | None = None, to_date: str | None = None) -> dict:
-	"""Return 12-month trend data for OS and NPL ratio."""
+	"""Return saved historical snapshots, never backfill from today's balance."""
 	if not _crm_data_available():
 		return _EMPTY_TREND()
+	ensure_portfolio_tables()
 	fd, td = _build_period_filter(from_date, to_date)
-	months = []
-	d = datetime.strptime(fd, "%Y-%m-%d")
-	end = datetime.strptime(td, "%Y-%m-%d")
-	while d <= end:
-		months.append(d.strftime("%Y-%m"))
-		d = (d.replace(day=28) + timedelta(days=35)).replace(day=1)
-		if len(months) >= 24:
-			break
-
-	os_trend = []
-	npl_trend = []
-	for m in months:
-		start_date = f"{m}-01"
-		if m == months[-1]:
-			end_date = td
-		else:
-			next_idx = months.index(m) + 1
-			if next_idx < len(months):
-				end_date = f"{months[next_idx]}-01"
-			else:
-				end_date = td
-		rows = _db_sql("""
-			SELECT COALESCE(SUM(outstanding), 0) as total_os,
-				COALESCE(SUM(CASE WHEN default_flag=1 THEN outstanding ELSE 0 END), 0) as npl_os
-			FROM `tabCRM Credit Facility`
-			WHERE status IN ('Active','Watchlist','Restructured')
-			AND (creation IS NULL OR creation < %s)
-		""", (end_date,), as_dict=True)
-		row = rows[0] if rows else {}
-		total_os = flt(row.get("total_os", 0))
-		npl_os = flt(row.get("npl_os", 0))
-		os_trend.append(round(total_os / 1_000_000_000_000, 2))
-		npl_trend.append(round((npl_os / total_os * 100) if total_os else 0, 2))
-
-	labels = months[-12:] if len(months) > 12 else months
+	rows = _db_sql(
+		"SELECT period, total_os, npl_rate FROM `tabCRM Portfolio Snapshot` WHERE period BETWEEN %s AND %s ORDER BY period DESC LIMIT 12",
+		(fd, td), as_dict=True,
+	)
+	rows.reverse()
 	return {
-		"labels": labels,
-		"os_trend": os_trend[-12:] if len(os_trend) > 12 else os_trend,
-		"npl_trend": npl_trend[-12:] if len(npl_trend) > 12 else npl_trend,
+		"labels": [str(row.period)[:7] for row in rows],
+		"os_trend": [round(flt(row.total_os) / 1_000_000_000_000, 2) for row in rows],
+		"npl_trend": [round(flt(row.npl_rate), 2) for row in rows],
 	}
 
 

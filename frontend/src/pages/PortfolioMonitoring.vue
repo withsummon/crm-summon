@@ -130,12 +130,12 @@
                 </div>
               </div>
               <div class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">{{ kpi.value }}</div>
-              <div class="flex items-center text-[10px] font-semibold space-x-1">
+              <div v-if="kpi.change != null" class="flex items-center text-[10px] font-semibold space-x-1">
                 <span :class="kpi.trendUp ? 'text-emerald-400' : 'text-rose-400'">
                   <FeatherIcon :name="kpi.trendUp ? 'arrow-up-right' : 'arrow-down-right'" class="w-3.5 h-3.5 inline mr-0.5" />
                   {{ kpi.change }}
                 </span>
-                <span class="text-slate-500">since last quarter</span>
+                <span class="text-slate-500">since period start</span>
               </div>
             </div>
           </div>
@@ -162,7 +162,8 @@
               </div>
 
               <!-- Interactive SVG Trend Chart -->
-              <div class="relative h-64 w-full bg-slate-50/60 rounded-lg border border-slate-200 p-4 flex items-end">
+              <div v-if="!trendLabels.length" class="flex h-64 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-500">Historical portfolio snapshots are not available.</div>
+              <div v-else class="relative h-64 w-full bg-slate-50/60 rounded-lg border border-slate-200 p-4 flex items-end">
                 <svg class="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
                   <line x1="0" y1="50" x2="600" y2="50" stroke="#e2e8f0" stroke-dasharray="4" />
                   <line x1="0" y1="100" x2="600" y2="100" stroke="#e2e8f0" stroke-dasharray="4" />
@@ -1188,10 +1189,10 @@ const eclData = computed(() => eclResource.data || { stages: [] })
 const watchlistData = computed(() => watchlistResource.data || { watchlist: [] })
 
 const kpiCards = computed(() => [
-  { title: 'Total Portfolio OS', value: overviewData.value.total_os_display || 'IDR 0', change: `+${overviewData.value.portfolio_growth || 0}%`, trendUp: (overviewData.value.portfolio_growth || 0) >= 0, icon: 'dollar-sign' },
-  { title: 'Active Loan Accounts', value: String(overviewData.value.active_account || 0), change: '+0%', trendUp: true, icon: 'users' },
-  { title: 'Portfolio NPL Ratio', value: `${overviewData.value.npl_rate || 0}%`, change: `${overviewData.value.npl_rate || 0}%`, trendUp: false, icon: 'trending-down' },
-  { title: 'Watchlist Borrowers', value: `${overviewData.value.watchlist_count || 0} Accs`, change: `${overviewData.value.watchlist_count || 0}`, trendUp: (overviewData.value.watchlist_count || 0) > 0, icon: 'eye' },
+  { title: 'Total Portfolio OS', value: overviewData.value.total_os_display || 'IDR 0', change: overviewData.value.portfolio_growth == null ? null : `${overviewData.value.portfolio_growth > 0 ? '+' : ''}${overviewData.value.portfolio_growth}%`, trendUp: (overviewData.value.portfolio_growth || 0) >= 0, icon: 'dollar-sign' },
+  { title: 'Active Loan Accounts', value: String(overviewData.value.active_account || 0), change: null, icon: 'users' },
+  { title: 'Portfolio NPL Ratio', value: `${overviewData.value.npl_rate || 0}%`, change: null, icon: 'trending-down' },
+  { title: 'Watchlist Borrowers', value: `${overviewData.value.watchlist_count || 0} Accs`, change: null, icon: 'eye' },
 ])
 
 const navigationGroups = [
