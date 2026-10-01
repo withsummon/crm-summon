@@ -431,7 +431,7 @@ def _fmt_idr(val: float) -> str:
 		return f"IDR {val / 1_000_000_000:.2f} B"
 	if val >= 1_000_000:
 		return f"IDR {val / 1_000_000:.2f} M"
-	return f"IDR {val:.2f}"
+	return f"IDR {val:,.0f}".replace(",", ".")
 
 
 def _grade_to_letter(avg: float) -> str:

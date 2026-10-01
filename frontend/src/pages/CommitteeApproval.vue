@@ -523,23 +523,36 @@
               </span>
             </div>
           </div>
-          <div class="mt-4 rounded-[10px] border border-white/20 p-4">
-            <div class="flex items-center justify-between gap-3">
-              <h3 class="font-semibold">Live transcript</h3>
-              <button @click="capturing ? stopTranscription() : startTranscription()" class="rounded bg-[#980000] px-3 py-1.5 text-sm">
-                {{ capturing ? 'Stop transcript' : 'Start transcript' }}
-              </button>
-            </div>
-            <p v-if="transcriptStatus" role="status" class="mt-2 text-sm text-amber-200">{{ transcriptStatus }}</p>
-            <div class="mt-3 max-h-56 space-y-2 overflow-y-auto text-sm" aria-live="polite">
-              <p v-for="(segment, index) in transcriptSegments" :key="index">{{ segment.text }}</p>
-              <p v-if="partialTranscript" class="italic text-white/70">{{ partialTranscript }}</p>
-              <p v-if="!transcriptSegments.length && !partialTranscript" class="text-white/60">No transcript yet.</p>
-            </div>
-          </div>
           <div class="mt-4 flex justify-end">
             <button @click="nextLiveItem" class="px-3 py-1.5 bg-[#980000] rounded text-sm font-medium">Next Item →</button>
           </div>
+        </div>
+        <div v-if="liveMeetingId" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-4">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="font-semibold">Transkrip rapat · {{ liveCurrentMeeting?.title }}</h3>
+            <button v-if="liveStarted" @click="capturing ? stopTranscription() : startTranscription()" class="rounded bg-[#980000] px-3 py-1.5 text-sm text-white">
+              {{ capturing ? 'Hentikan transkrip' : 'Mulai transkrip' }}
+            </button>
+          </div>
+          <p v-if="transcriptStatus" role="status" class="mt-2 text-sm text-red-700">{{ transcriptStatus }}</p>
+          <div class="mt-3 max-h-56 space-y-2 overflow-y-auto text-sm" aria-live="polite">
+            <p v-for="(segment, index) in transcriptSegments" :key="index"><span class="text-ink-gray-5">{{ index + 1 }}.</span> {{ segment.text }}</p>
+            <p v-if="partialTranscript" class="italic text-ink-gray-5">{{ partialTranscript }}</p>
+            <p v-if="!transcriptSegments.length && !partialTranscript" class="text-ink-gray-5">Belum ada transkrip tersimpan.</p>
+          </div>
+        </div>
+        <div v-if="liveMeetingId" class="grid gap-3 lg:grid-cols-3">
+          <section v-for="item in meetingContentSections" :key="item.kind" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-4">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-semibold">{{ item.title }}</h3>
+              <button @click="generateMeetingContent(item.kind)" :disabled="!!generatingContent || (item.kind === 'analysis' && !transcriptSegments.length)" class="rounded bg-[#980000] px-3 py-1.5 text-xs text-white disabled:opacity-50">
+                {{ generatingContent === item.kind ? 'Menyusun…' : meetingContent[item.kind] ? 'Buat ulang' : 'Buat' }}
+              </button>
+            </div>
+            <p v-if="meetingContent[item.kind]?.transcript_count < transcriptSegments.length" class="mt-2 text-xs text-amber-700">Transkrip bertambah setelah hasil ini dibuat. Buat ulang untuk memperbarui.</p>
+            <p v-if="meetingContent[item.kind]" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ meetingContent[item.kind].content }}</p>
+            <p v-else class="mt-3 text-sm text-ink-gray-5">{{ item.empty }}</p>
+          </section>
         </div>
       </div>
 
@@ -927,7 +940,48 @@ const capturing = ref(false)
 const partialTranscript = ref('')
 const transcriptStatus = ref('')
 const transcriptSegments = ref([])
+const meetingContent = ref({})
+const generatingContent = ref('')
+const meetingContentSections = [
+  { kind: 'topics', title: 'Bahasan rapat', empty: 'Buat bahasan dari agenda rapat.' },
+  { kind: 'questions', title: 'Pertanyaan rapat', empty: 'Buat pertanyaan dari agenda dan transkrip yang tersedia.' },
+  { kind: 'analysis', title: 'Analisis hasil rapat', empty: 'Simpan transkrip sebelum membuat analisis.' },
+]
 let transcriptConnection = null
+
+async function loadMeetingWorkspace(meetingId) {
+  transcriptStatus.value = ''
+  transcriptSegments.value = []
+  meetingContent.value = {}
+  if (!meetingId) return
+  try {
+    const [segments, content] = await Promise.all([
+      call('crm.api.committee.get_live_transcript', { meeting: meetingId }),
+      call('crm.api.committee.get_meeting_content', { meeting: meetingId }),
+    ])
+    if (liveMeetingId.value !== meetingId) return
+    transcriptSegments.value = segments || []
+    meetingContent.value = content || {}
+  } catch {
+    if (liveMeetingId.value === meetingId) transcriptStatus.value = 'Data rapat belum dapat dimuat. Pilih rapat kembali untuk mencoba lagi.'
+  }
+}
+
+watch(liveMeetingId, loadMeetingWorkspace)
+
+async function generateMeetingContent(kind) {
+  if (!liveMeetingId.value || generatingContent.value) return
+  const meetingId = liveMeetingId.value
+  generatingContent.value = kind
+  try {
+    const result = await call('crm.api.committee.generate_meeting_content', { meeting: meetingId, kind })
+    if (liveMeetingId.value === meetingId) meetingContent.value = { ...meetingContent.value, [kind]: result }
+  } catch {
+    if (liveMeetingId.value === meetingId) transcriptStatus.value = 'Hasil rapat belum dapat dibuat. Coba lagi beberapa saat.'
+  } finally {
+    generatingContent.value = ''
+  }
+}
 
 async function startLiveMeeting(meetingId) {
   try {
@@ -942,11 +996,7 @@ async function startLiveMeeting(meetingId) {
   liveStarted.value = true
   activeTab.value = 'live'
   transcriptStatus.value = ''
-  try {
-    transcriptSegments.value = await call('crm.api.committee.get_live_transcript', { meeting: meetingId })
-  } catch {
-    transcriptStatus.value = 'Saved transcript could not be loaded.'
-  }
+  await loadMeetingWorkspace(meetingId)
 }
 
 async function startTranscription() {

@@ -1482,18 +1482,28 @@ function initializeMap() {
 }
 
 async function updateMapMarkers() {
-  if (!map.value?.isStyleLoaded()) return
+  if (!map.value) return
   for (const marker of markerRefs.values()) marker.remove()
   markerRefs.clear()
   const token = mapConfigResource.data?.token
+  const islandCenters = {
+    jawa: [110.3, -7.5],
+    sumatera: [101.4, -0.7],
+    kalimantan: [114.0, -0.1],
+    sulawesi: [120.5, -2.0],
+    papua: [138.5, -4.0],
+  }
   for (const region of geographicData.value.regions || []) {
     if (!region.province || region.province === 'Other') continue
     try {
-      const query = encodeURIComponent(`${region.province}, Indonesia`)
-      const response = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${query}&country=id&limit=1&access_token=${encodeURIComponent(token)}`)
-      if (!response.ok) continue
-      const result = await response.json()
-      const coordinates = result.features?.[0]?.geometry?.coordinates
+      let coordinates = islandCenters[region.province.trim().toLowerCase()]
+      if (!coordinates) {
+        const query = encodeURIComponent(`${region.province}, Indonesia`)
+        const response = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${query}&country=id&limit=1&access_token=${encodeURIComponent(token)}`)
+        if (!response.ok) continue
+        const result = await response.json()
+        coordinates = result.features?.[0]?.geometry?.coordinates
+      }
       if (!coordinates) continue
       const marker = new mapboxgl.Marker({ color: '#980000' })
         .setLngLat(coordinates)
