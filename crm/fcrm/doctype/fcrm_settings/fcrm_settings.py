@@ -154,6 +154,8 @@ def get_standard_dropdown_items():
 
 
 def after_migrate():
+	if frappe.db.get_single_value("FCRM Settings", "ai_provider") == "Kimi":
+		frappe.db.set_single_value("FCRM Settings", "ai_provider", "OpenRouter")
 	sync_table("dropdown_items", "standard_dropdown_items")
 
 
