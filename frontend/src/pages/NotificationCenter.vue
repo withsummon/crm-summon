@@ -69,7 +69,7 @@
           </div>
           <div v-else class="space-y-2">
             <div
-              v-for="n in filteredNotifications"
+              v-for="n in pagedNotifications"
               :key="n.name"
               class="flex cursor-pointer items-start gap-3 rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm hover:bg-surface-gray-1"
               @click="openNotification(n)"
@@ -111,6 +111,7 @@
                 </Button>
               </div>
             </div>
+            <ListPagination v-model:page="inboxPage" :page-size="inboxPageSize" :total="filteredNotifications.length" class="mt-3 rounded-[10px] border border-outline-gray-2" />
           </div>
         </template>
 
@@ -276,6 +277,7 @@
                 </tr>
               </tbody>
             </table>
+            <ListPagination v-model:page="auditPage" :page-size="auditPageSize" :total="auditTotal" />
           </div>
         </template>
 
@@ -490,6 +492,7 @@
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import ListPagination from '@/components/ListPagination.vue'
 import {
   Badge,
   Button,
@@ -500,7 +503,7 @@ import {
   toast,
   usePageMeta,
 } from 'frappe-ui'
-import { computed, onMounted, ref, reactive } from 'vue'
+import { computed, onMounted, ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { loadPersisted, persistRef } from '@/utils/persist'
 import { sessionStore } from '@/stores/session'
@@ -510,6 +513,8 @@ const viewControls = ref(null)
 const activeTab = ref('inbox')
 const inboxTab = ref('all')
 const query = ref('')
+const inboxPage = ref(1)
+const inboxPageSize = 20
 const loading = ref(false)
 const notifications = ref([])
 const showPrefs = ref(false)
@@ -584,6 +589,9 @@ const soundEnabled = ref(true)
 
 const auditRows = ref([])
 const auditLoading = ref(false)
+const auditPage = ref(1)
+const auditPageSize = 20
+const auditTotal = ref(0)
 
 const visibleNotifications = computed(() => {
   const now = new Date()
@@ -607,6 +615,9 @@ const filteredNotifications = computed(() => {
   }
   return rows
 })
+const pagedNotifications = computed(() => filteredNotifications.value.slice((inboxPage.value - 1) * inboxPageSize, inboxPage.value * inboxPageSize))
+watch([inboxTab, query], () => { inboxPage.value = 1 })
+watch(filteredNotifications, () => { inboxPage.value = Math.min(inboxPage.value, Math.max(1, Math.ceil(filteredNotifications.value.length / inboxPageSize))) })
 
 async function fetchNotifications() {
   loading.value = true
@@ -762,13 +773,15 @@ async function savePreferences() {
 async function fetchAuditLog() {
   auditLoading.value = true
   try {
-    const res = await call('crm.api.notifications.get_audit_log', { filters: {}, limit: 50, offset: 0 })
+    const res = await call('crm.api.notifications.get_audit_log', { filters: {}, limit: auditPageSize, offset: (auditPage.value - 1) * auditPageSize })
     auditRows.value = res?.rows || []
+    auditTotal.value = res?.total || 0
   } catch (e) {
     toast.error(__('Failed to load audit log'))
   }
   auditLoading.value = false
 }
+watch(auditPage, fetchAuditLog)
 
 async function exportAuditCSV() {
   try {
