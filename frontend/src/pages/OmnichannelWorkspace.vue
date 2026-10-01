@@ -1053,12 +1053,9 @@ async function bulkAction(action) {
   if (action === 'tag') { tagName.value = ''; showTagDialog.value = true; return }
   bulkLoading.value = true
   try {
-    let value = null
-    if (action === 'assign') value = window.frappe?.session?.user
     const result = await call('crm.api.omnichannel.bulk_update_conversations', {
       conversation_ids: ids,
       action,
-      value,
     })
     toast.success(result?.updated?.length ? `${result.updated.length} ${__('updated')}` : __('Action completed'))
     selectedIds.value = []

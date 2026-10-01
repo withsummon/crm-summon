@@ -760,6 +760,7 @@
 import { computed, h, onMounted, ref, defineComponent } from 'vue'
 import { Button, Dialog, FeatherIcon, LoadingIndicator, call as _frappeCall, toast } from 'frappe-ui'
 import { loadPersisted, persistRef } from '@/utils/persist'
+import { sessionStore } from '@/stores/session'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 
 const call = (method, args = {}) => _frappeCall(method, args)
@@ -939,7 +940,7 @@ async function bumpVersion() {
   }
 }
 
-const currentUser = computed(() => window.frappe?.session?.user_fullname || window.frappe?.session?.user || 'You')
+const currentUser = computed(() => sessionStore().user || 'You')
 
 function __(s) { return s }
 function isActiveTab(v) { return activeView.value === v || (activeView.value === 'detail' && v === 'catalog') }

@@ -840,7 +840,7 @@ def bulk_update_conversations(conversation_ids, action: str, value=None):
 			tags.update(_clean_tags(value))
 			doc.tags = ", ".join(sorted(tags))
 		elif action == "assign":
-			doc.assigned_to = value
+			doc.assigned_to = frappe.session.user
 		elif action == "close":
 			doc.status = "Closed"
 			doc.closed_on = now()
