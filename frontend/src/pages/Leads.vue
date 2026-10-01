@@ -70,17 +70,6 @@
       </Dropdown>
       <Button
         v-if="!isMobile"
-        variant="solid"
-        :loading="isScraping"
-        :label="__('Run Lead Gen')"
-        @click="showPromptDialog = true"
-      >
-        <template #prefix>
-          <FeatherIcon name="cpu" class="h-4 w-4" />
-        </template>
-      </Button>
-      <Button
-        v-if="!isMobile"
         variant="outline"
         :label="__('Import Excel')"
         @click="showImportDialog = true"
@@ -523,39 +512,6 @@
       </div>
     </template>
   </Dialog>
-  <Dialog
-    v-model="showPromptDialog"
-    :options="{
-      title: __('Run Lead Gen'),
-      size: 'sm',
-      actions: [
-        {
-          label: __('Run Engine'),
-          variant: 'solid',
-          onClick: () => {
-            showPromptDialog = false
-            runMockScraping()
-          }
-        }
-      ]
-    }"
-  >
-    <template #body-content>
-      <div class="py-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('Scraping Prompt') }}</label>
-        <textarea
-          v-model="promptText"
-          rows="3"
-          :placeholder="__('E.g. Carikan saya 10 software engineer di jakarta...')"
-          class="w-full resize-none rounded-md border border-gray-300 p-2 text-sm focus:border-secondary-500 focus:outline-none focus:ring-1 focus:ring-secondary-500"
-        ></textarea>
-        <p class="mt-2 text-xs text-gray-500">
-          {{ __('AI will use this prompt to find matching leads in the global database.') }}
-        </p>
-      </div>
-    </template>
-  </Dialog>
-
   <!-- Reassign Dialog -->
   <Dialog v-model="reassignDialog.open" :options="{ title: __('Reassign Leads') }">
     <template #body-content>
@@ -744,10 +700,8 @@ const router = useRouter()
 const leadsListView = ref(null)
 const showLeadModal = ref(false)
 const showImportDialog = ref(false)
-const showPromptDialog = ref(false)
 const showLeadIntakeDialog = ref(false)
 const intakeLoading = ref(false)
-const promptText = ref('')
 const intakeChannels = [
   { value: 'Web Form', label: __('Web Form') },
   { value: 'WhatsApp', label: 'WhatsApp' },
@@ -814,54 +768,6 @@ const viewModeActions = computed(() => [
 ])
 
 
-async function runMockScraping() {
-  let count = 15;
-  const matchCount = promptText.value.match(/\b(\d+)\b/);
-  if (matchCount) {
-    count = Math.min(parseInt(matchCount[1], 10), 50);
-  }
-  startScraping(count)
-
-  // Simulate progress
-  const progressInterval = setInterval(() => {
-    if (scrapingProgress.value < 90) {
-      updateProgress(scrapingProcessed.value + 1)
-    }
-  }, 800)
-
-  try {
-    const res = await call('crm.api.lead_gen.mock_lead_scraping', {
-      prompt: promptText.value
-    })
-    
-    // Clear prompt text after successful execution
-    promptText.value = ''
-    clearInterval(progressInterval)
-    updateProgress(scrapingTotal.value)
-
-    // Small delay to show 100% before closing
-    setTimeout(() => {
-      stopScraping()
-      if (typeof toast === 'function') {
-        toast({
-          title: __('Lead Gen Complete'),
-          text: res.message,
-          icon: 'check-circle',
-          iconClasses: 'text-green-600',
-        })
-      } else {
-        toast.success(res.message)
-      }
-      onLeadsImported()
-    }, 1000)
-
-  } catch (e) {
-    clearInterval(progressInterval)
-    stopScraping()
-    toast.error(__('Lead Gen Failed: {0}', [e.message || 'Unknown error']))
-  }
-}
-
 on('trigger_lead_create', (data) => {
   showLeadModal.value = Boolean(data)
 })
@@ -924,10 +830,6 @@ const mobileActions = computed(() => {
   actions.push({
     label: __('Import Excel'),
     onClick: () => { showImportDialog.value = true }
-  })
-  actions.push({
-    label: __('Run Lead Gen'),
-    onClick: () => { showPromptDialog.value = true }
   })
   actions.push({
     label: __('Export'),

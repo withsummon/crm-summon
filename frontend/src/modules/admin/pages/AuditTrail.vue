@@ -557,92 +557,7 @@ async function fetchAuditData() {
   loading.value = false
 }
 
-const normalizedEvents = computed(() => (
-  auditEvents.value.length ? auditEvents.value : demoEvents.value
-))
-
-const demoEvents = computed(() => {
-  const actor = 'Compliance Officer'
-  const base = new Date()
-  const daysAgo = (days, hour = 9) => {
-    const date = new Date(base)
-    date.setDate(date.getDate() - days)
-    date.setHours(hour, 30, 0, 0)
-    return date.toISOString()
-  }
-  return [
-    {
-      name: 'DEMO-APPROVAL-OVERRIDE',
-      timestamp: daysAgo(1, 14),
-      category: 'approval',
-      action: 'override',
-      actor,
-      target_doctype: 'CRM Credit Application',
-      target_name: 'APP-DEMO-001',
-      severity: 'warning',
-      ip: '10.20.18.44',
-      geo: 'ID-JK',
-      summary: 'Director override approval with committee comment',
-      metadata: { approver_comment: 'Approved with covenant monitoring', override: true },
-    },
-    {
-      name: 'DEMO-BULK-EXPORT',
-      timestamp: daysAgo(2, 16),
-      category: 'export',
-      action: 'export',
-      actor,
-      target_doctype: 'CRM Lead',
-      target_name: 'Lead CSV',
-      severity: 'warning',
-      ip: '10.20.18.45',
-      geo: 'ID-JK',
-      summary: 'Large CSV export with watermark SUMMON-AUD-24',
-      metadata: { format: 'CSV', row_count: 2500, watermark_id: 'SUMMON-AUD-24' },
-    },
-    {
-      name: 'DEMO-PII-VIEW',
-      timestamp: daysAgo(3, 11),
-      category: 'view',
-      action: 'view',
-      actor,
-      target_doctype: 'Customer',
-      target_name: 'IGLO Corporate Customer',
-      severity: 'info',
-      ip: '10.20.18.41',
-      geo: 'ID-JK',
-      summary: 'PII record viewed for KYC review',
-      metadata: { purpose: 'KYC review', sensitive_fields: ['tax_id', 'address', 'financials'] },
-    },
-    {
-      name: 'DEMO-AI-CALL',
-      timestamp: daysAgo(4, 13),
-      category: 'ai',
-      action: 'invoke',
-      actor,
-      target_doctype: 'CRM Credit Application',
-      target_name: 'APP-DEMO-001',
-      severity: 'info',
-      ip: '10.20.18.42',
-      geo: 'ID-JK',
-      summary: 'AI risk insight generated using 2.4k tokens',
-      metadata: { model: 'gpt-4.1', prompt_tokens: 1400, completion_tokens: 1000, cost: 0.048 },
-    },
-    {
-      name: 'DEMO-FAILED-LOGIN',
-      timestamp: daysAgo(0, 8),
-      category: 'login',
-      action: 'fail',
-      actor: 'unknown@example.com',
-      target_doctype: 'User',
-      target_name: 'unknown@example.com',
-      severity: 'critical',
-      ip: '103.55.12.8',
-      geo: 'ID-JK',
-      summary: '6 failed login attempts in 10 minutes',
-      metadata: { attempts: 6, window: '10m', suspicious: true },
-    },
-  ]
-})
+const normalizedEvents = computed(() => auditEvents.value)
 
 const filteredEvents = computed(() => {
   let rows = normalizedEvents.value
@@ -711,7 +626,7 @@ const complianceCards = computed(() => [
   { label: 'Audit Volume', value: String(normalizedEvents.value.length), sub: 'Loaded events', icon: 'activity' },
   { label: 'Overrides', value: String(approvalRows.value.filter((row) => row.action === 'override').length), sub: '30 days', icon: 'shield', warn: approvalRows.value.some((row) => row.action === 'override') },
   { label: 'AML Alerts Open', value: String(alertRows.value.filter((row) => row.status !== 'Acknowledged').length), sub: 'Pending ack', icon: 'flag', warn: alertRows.value.some((row) => row.status !== 'Acknowledged') },
-  { label: 'Failed Logins', value: String(loginStats.value.failed), sub: 'Current sample', icon: 'log-in', warn: loginStats.value.failed > 0 },
+  { label: 'Failed Logins', value: String(loginStats.value.failed), sub: 'Loaded events', icon: 'log-in', warn: loginStats.value.failed > 0 },
 ])
 const workflowFilters = reactive({ status: '', search: '' })
 const workflowRuns = ref([])
@@ -1190,14 +1105,6 @@ onMounted(async () => {
   await fetchAuditData()
   await fetchAuditContext()
   await fetchWorkflowData()
-  if (auditEvents.value.length < 5) {
-    try {
-      await call('crm.api.audit.seed_audit_sample_data')
-      await fetchAuditData()
-    } catch (e) {
-      // ignore seed errors
-    }
-  }
 })
 usePageMeta(() => ({ title: __('Audit Trail') }))
 </script>

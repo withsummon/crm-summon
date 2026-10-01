@@ -120,25 +120,6 @@ export const summonModules = [
     ],
   },
   {
-    label: 'Workflow Engine',
-    sheet: '06_Workflow',
-    description:
-      'No-code workflow builder with approvals, SLA timers, conditional branching, and automation nodes.',
-    priority: 'High',
-    status: 'available',
-    href: '/crm/lending-risk/workflow-engine',
-    routeName: 'Workflow List',
-    group: 'Admin & Platform',
-    icon: 'git-branch',
-    features: [
-      'Workflow Builder Canvas',
-      'Approval Node',
-      'Decision Node',
-      'Notification Node',
-      'SLA Timer Node',
-    ],
-  },
-  {
     label: 'Credit Analysis',
     sheet: '07_CreditAnalysis',
     description:

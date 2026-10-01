@@ -1393,18 +1393,6 @@ async function deleteEscalationRule(r) {
   } catch (e) { toast.error(__('Failed')) }
 }
 
-async function maybeSeedTasks() {
-  try {
-    const r = await createResource({ url: 'crm.api.tasks.seed_task_sample_data' }).submit()
-    if (r.created) {
-      toast.success(__('Sample tasks created'))
-      onTaskChanged()
-    }
-  } catch (e) {
-    // ignore if module not ready
-  }
-}
-
 // ── Inline components ───────────────────────────────────────────────
 const KpiCard = defineComponent({
   name: 'KpiCard',
@@ -1471,6 +1459,5 @@ onMounted(() => {
   const params = new URLSearchParams(window.location.search)
   const t = params.get('task')
   if (t) openDrawer(t)
-  maybeSeedTasks()
 })
 </script>
