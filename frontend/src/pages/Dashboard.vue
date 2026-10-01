@@ -2,7 +2,7 @@
   <div class="flex flex-col h-full overflow-hidden">
     <LayoutHeader>
       <template #left-header>
-        <ViewBreadcrumbs routeName="Dashboard" />
+        <ViewBreadcrumbs routeName="CRM Core Dashboard" />
       </template>
       <template #right-header>
         <Button
@@ -70,8 +70,8 @@
             updateFilter('period', v, () => {
               showDatePicker = false
               if (!v) {
-                filters.period = getLastXDays()
-                preset = 'Last 30 Days'
+                filters.period = getLastXDays(365)
+                preset = 'Last 12 Months'
               } else {
                 preset = formatter(v)
               }
@@ -161,11 +161,11 @@ const editing = ref(false)
 
 const showDatePicker = ref(false)
 const datePickerRef = ref(null)
-const preset = ref('Last 30 Days')
+const preset = ref('Last 12 Months')
 const showAddChartModal = ref(false)
 
 const filters = reactive({
-  period: getLastXDays(),
+  period: getLastXDays(365),
   user: null,
 })
 
@@ -219,6 +219,14 @@ const options = computed(() => [
         onClick: () => {
           preset.value = 'Last 90 Days'
           filters.period = getLastXDays(90)
+          dashboardItems.reload()
+        },
+      },
+      {
+        label: __('Last 12 Months'),
+        onClick: () => {
+          preset.value = 'Last 12 Months'
+          filters.period = getLastXDays(365)
           dashboardItems.reload()
         },
       },

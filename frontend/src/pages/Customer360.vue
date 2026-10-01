@@ -855,6 +855,7 @@ const customersResource = createListResource({
   type: 'list',
   doctype: 'Customer',
   fields: ['name', 'customer_name', 'customer_type', 'customer_group', 'territory', 'website', 'tax_id', 'modified'],
+  filters: [['disabled', '=', 0]],
   limit: 100,
   auto: true,
 })

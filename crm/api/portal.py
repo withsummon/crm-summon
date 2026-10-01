@@ -56,7 +56,7 @@ def _resolve_customer(customer=None):
 		return customer
 
 	user = frappe.session.user
-	if user and user != "Guest" and _doctype_ready("Customer") and frappe.get_meta("Customer").has_field("email_id"):
+	if not can_select and user and user != "Guest" and _doctype_ready("Customer") and frappe.get_meta("Customer").has_field("email_id"):
 		match = frappe.get_all("Customer", filters={"email_id": user}, pluck="name", limit=1)
 		if match:
 			return match[0]
@@ -64,9 +64,20 @@ def _resolve_customer(customer=None):
 	if not can_select:
 		return None
 
-	for preferred in ("PT Maju Jaya", "PT Industri Nusantara", "CV Cahaya Terang", "PT Teknologi Maju"):
-		if frappe.db.exists("Customer", preferred):
-			return preferred
+	if _doctype_ready("CRM Credit Facility"):
+		rows = frappe.db.sql(
+			"""SELECT f.customer FROM `tabCRM Credit Facility` f
+			JOIN `tabCustomer` c ON c.name = f.customer
+			WHERE f.status = 'Active' AND f.outstanding > 0
+			GROUP BY f.customer ORDER BY COUNT(*) DESC, f.customer ASC LIMIT 1""",
+			as_dict=True,
+		)
+		if rows:
+			return rows[0]["customer"]
+	if _doctype_ready("CRM Credit Application"):
+		rows = frappe.get_all("CRM Credit Application", fields=["borrower"], order_by="modified desc", limit=1)
+		if rows and frappe.db.exists("Customer", rows[0].borrower):
+			return rows[0].borrower
 
 	rows = frappe.get_all("Customer", pluck="name", order_by="modified desc", limit=1)
 	return rows[0] if rows else None

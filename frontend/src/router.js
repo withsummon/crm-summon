@@ -42,7 +42,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'CRM Core Dashboard',
-        component: () => import('@/pages/ExecutiveDashboard.vue'),
+        component: () => import('@/pages/Dashboard.vue'),
       },
       {
         path: 'executive-dashboard',

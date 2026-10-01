@@ -453,70 +453,6 @@ def _row(doc) -> dict:
 	}
 
 
-def _ensure_demo_whatsapp_conversations():
-	"""Ensure the two allowlisted demo WhatsApp numbers have active conversation history."""
-	for recipient, customer_name in DEMO_WHATSAPP_RECIPIENTS.items():
-		normalized = _normalize_demo_phone(recipient)
-		# Check if conversation already exists
-		existing = frappe.db.get_value(
-			CONVERSATION,
-			{"channel": "WhatsApp", "provider_conversation_id": normalized},
-			"name"
-		)
-		if existing:
-			continue
-
-		# Create/Get Customer
-		customer = ensure_demo_whatsapp_customer(normalized)
-		customer_id = customer.get("name")
-
-		# Create conversation
-		conv = _ensure_conversation(
-			channel="WhatsApp",
-			subject=f"WhatsApp Demo - {customer_name}",
-			customer=customer_id,
-			reference_doctype="Customer",
-			reference_name=customer_id,
-			provider_conversation_id=normalized,
-		)
-
-		# Generate messages
-		if normalized == "6285591150319":
-			messages = [
-				("Inbound", "Halo IGLO, saya tertarik dengan Kredit Modal Kerja. Bagaimana persyaratannya?", -30),
-				("Outbound", "Halo Pak! Terima kasih telah menghubungi IGLO. Persyaratannya cukup mudah, salah satunya melampirkan NPWP dan laporan keuangan audit. Apakah Bapak sudah memiliki dokumen tersebut?", -25),
-				("Inbound", "NPWP sudah ada, laporan keuangan juga ada. Nanti saya kirimkan lewat sini ya.", -20),
-				("Outbound", "Baik Pak, siap kami terima dan proses segera.", -15),
-				("Inbound", "Oke siap Pak RM!", -10),
-			]
-		else:
-			messages = [
-				("Inbound", "Siang Pak, permohonan restructuring untuk PT Bhakti Nusantara apakah sudah disetujui?", -30),
-				("Outbound", "Selamat siang Pak. Restructuring proposal saat ini sedang dalam proses review oleh komite kredit. Kami targetkan selesai akhir minggu ini.", -25),
-				("Inbound", "Baik Pak, tolong dibantu ya karena cashflow kami agak ketat bulan ini.", -20),
-				("Outbound", "Tentu Pak, kami upayakan solusi terbaik untuk menjaga DSCR perusahaan Bapak.", -15),
-				("Inbound", "Terima kasih banyak atas dukungannya!", -10),
-			]
-
-		for direction, content, offset_minutes in messages:
-			msg_time = add_to_date(now(), minutes=offset_minutes, as_string=True)
-			# Create mock message doc
-			_create_message(
-				conv,
-				{
-					"channel": "WhatsApp",
-					"direction": direction,
-					"message_type": "Text",
-					"status": "Received" if direction == "Inbound" else "Sent",
-					"sent_or_received_on": msg_time,
-					"from_party": normalized if direction == "Inbound" else frappe.session.user,
-					"to_party": frappe.session.user if direction == "Inbound" else normalized,
-					"provider_message_id": f"demo:{normalized}:{hashlib.md5(content.encode()).hexdigest()[:8]}",
-					"content": content,
-				}
-			)
-
-
 @frappe.whitelist()
 def get_conversations(
 	channel: str | None = None,
@@ -534,10 +470,6 @@ def get_conversations(
 	if not _ready():
 		return {"rows": [], "counts": {"all": 0, "whatsapp": 0, "email": 0, "sms": 0, "in_app": 0, "voice": 0}, "has_more": False}
 
-	try:
-		_ensure_demo_whatsapp_conversations()
-	except Exception:
-		pass
 	filters = {}
 	if channel and channel != "All":
 		filters["channel"] = _normalize_channel(channel)

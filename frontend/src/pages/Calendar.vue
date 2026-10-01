@@ -127,6 +127,18 @@
       </template>
     </Calendar>
 
+    <aside v-if="Array.isArray(events.data) && !events.data.length && openTasks.data?.length" class="hidden w-72 flex-none overflow-y-auto border-l border-outline-gray-2 bg-surface-white p-4 lg:block">
+      <p class="font-medium text-ink-gray-9">Belum ada jadwal pada periode ini</p>
+      <p class="mt-1 text-sm text-ink-gray-5">Tugas yang sedang berjalan:</p>
+      <div class="mt-4 divide-y divide-outline-gray-2">
+        <div v-for="task in openTasks.data" :key="task.name" class="py-3">
+          <p class="text-sm font-medium text-ink-gray-9">{{ task.title }}</p>
+          <span class="text-xs text-ink-gray-5">{{ task.status }}</span>
+        </div>
+      </div>
+      <RouterLink :to="{ name: 'Tasks' }" class="mt-4 inline-block text-sm text-primary-600 hover:underline">Lihat semua tugas</RouterLink>
+    </aside>
+
     <!-- Event Panel Container -->
     <div
       class="overflow-hidden flex-none transition-all duration-300 ease-in-out flex flex-col"
@@ -269,6 +281,18 @@ const events = createListResource({
       .filter(
         (ev, index, self) => index === self.findIndex((e) => e.id === ev.id),
       ),
+})
+
+const openTasks = createListResource({
+  doctype: 'CRM Task',
+  fields: ['name', 'title', 'status'],
+  filters: [
+    ['assigned_to', '=', user],
+    ['status', 'in', ['Backlog', 'Todo', 'In Progress']],
+  ],
+  orderBy: 'modified desc',
+  pageLength: 5,
+  auto: true,
 })
 
 provide('events', events)

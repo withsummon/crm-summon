@@ -67,6 +67,7 @@
           </button>
         </div>
         <div class="flex shrink-0 items-center gap-2 py-1.5">
+          <span v-if="props.embedded" class="max-w-48 truncate text-xs text-ink-gray-5" :title="currentCustomerName">Preview: {{ currentCustomerName }}</span>
           <Button
             v-if="isActiveTab('applications')"
             variant="solid"

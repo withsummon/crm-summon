@@ -205,7 +205,7 @@
           </div>
           <div class="grid gap-3 md:grid-cols-2">
             <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
-              <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Channel</h3>
+              <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Channel · Delivered / Records</h3>
               <div v-for="c in analyticsByChannel" :key="c.channel" class="mb-3">
                 <div class="flex justify-between text-sm mb-1">
                   <span class="text-ink-gray-7">{{ c.channel }}</span>
@@ -217,7 +217,7 @@
               </div>
             </div>
             <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
-              <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Type</h3>
+              <h3 class="text-sm font-semibold text-ink-gray-8 mb-3">By Type · Read / Records</h3>
               <div v-for="t in analyticsByType" :key="t.type" class="mb-3">
                 <div class="flex justify-between text-sm mb-1">
                   <span class="text-ink-gray-7">{{ t.type }}</span>
@@ -233,7 +233,7 @@
               <div class="flex items-end gap-2 h-32">
                 <div v-for="(d, i) in analyticsTimeseries" :key="i" class="flex-1 flex flex-col items-center gap-1">
                   <span class="text-[10px] text-ink-gray-5">{{ d.count }}</span>
-                  <div class="w-full bg-[#980000] rounded-t" :style="{ height: (d.count / 50 * 100) + '%' }" />
+                  <div class="w-full bg-[#980000] rounded-t" :style="{ height: (d.count / Math.max(1, ...analyticsTimeseries.map((day) => day.count)) * 100) + '%' }" />
                   <span class="text-[10px] text-ink-gray-4">{{ d.day }}</span>
                 </div>
               </div>
@@ -503,6 +503,7 @@ import {
 import { computed, onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { loadPersisted, persistRef } from '@/utils/persist'
+import { sessionStore } from '@/stores/session'
 
 const router = useRouter()
 const viewControls = ref(null)
@@ -518,11 +519,8 @@ const placeholderBroadcast = 'Hello {{customer}}, ...'
 
 const PAGE_TABS = [
   { key: 'inbox', label: 'Inbox' },
-  { key: 'rules', label: 'Rules' },
-  { key: 'templates', label: 'Templates' },
   { key: 'analytics', label: 'Analytics' },
   { key: 'audit', label: 'Audit', adminOnly: true },
-  { key: 'broadcast', label: 'Broadcast' },
 ]
 
 const userRoles = ref([])
@@ -893,35 +891,45 @@ async function deleteTemplate(t) {
   try { await call('crm.api.notifications.delete_template', { id: t.id }) } catch (_) {}
 }
 
-const analyticsKPIs = computed(() => [
-  { label: 'Sent (7d)', value: 1284, sub: '+12% vs prev' },
-  { label: 'Delivered', value: '94.5%', sub: '1213 / 1284' },
-  { label: 'Opened', value: '38.2%', sub: '463 / 1213' },
-  { label: 'Failed', value: 71, sub: '5.5%' },
-])
+const analyticsKPIs = computed(() => {
+  const rows = notifications.value
+  return [
+    { label: 'Notifications', value: rows.length, sub: 'Active records' },
+    { label: 'Delivered', value: rows.filter((n) => n.delivery_status === 'Delivered').length, sub: 'Confirmed delivery' },
+    { label: 'Read', value: rows.filter((n) => n.read).length, sub: 'Opened notifications' },
+    { label: 'Failed', value: rows.filter((n) => n.delivery_status === 'Failed').length, sub: 'Recorded failures' },
+  ]
+})
 
-const analyticsByChannel = computed(() => [
-  { channel: 'Email', sent: 720, delivered: 695, deliveryRate: 96 },
-  { channel: 'In-app', sent: 380, delivered: 380, deliveryRate: 100 },
-  { channel: 'SMS', sent: 124, delivered: 108, deliveryRate: 87 },
-  { channel: 'WhatsApp', sent: 40, delivered: 30, deliveryRate: 75 },
-  { channel: 'Push', sent: 20, delivered: 18, deliveryRate: 90 },
-])
-
-const analyticsByType = computed(() => [
-  { type: 'Mention', sent: 220, opened: 165, openRate: 75 },
-  { type: 'Task', sent: 480, opened: 192, openRate: 40 },
-  { type: 'Assignment', sent: 200, opened: 80, openRate: 40 },
-  { type: 'SLA Alert', sent: 80, opened: 64, openRate: 80 },
-  { type: 'Broadcast', sent: 304, opened: 60, openRate: 20 },
-])
-
-const analyticsTimeseries = computed(() =>
-  Array.from({ length: 14 }, (_, i) => ({
-    day: `D-${13 - i}`,
-    count: 20 + Math.round(Math.sin(i / 2) * 8 + Math.random() * 15),
-  })),
+const analyticsByChannel = computed(() =>
+  [...new Set(notifications.value.map((n) => n.channel || 'In-app'))].map((channel) => {
+    const rows = notifications.value.filter((n) => (n.channel || 'In-app') === channel)
+    const delivered = rows.filter((n) => n.delivery_status === 'Delivered').length
+    return { channel, sent: rows.length, delivered, deliveryRate: rows.length ? Math.round(delivered / rows.length * 100) : 0 }
+  }),
 )
+
+const analyticsByType = computed(() =>
+  [...new Set(notifications.value.map((n) => n.type || 'Other'))].map((type) => {
+    const rows = notifications.value.filter((n) => (n.type || 'Other') === type)
+    const opened = rows.filter((n) => n.read).length
+    return { type, sent: rows.length, opened, openRate: rows.length ? Math.round(opened / rows.length * 100) : 0 }
+  }),
+)
+
+const analyticsTimeseries = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Array.from({ length: 14 }, (_, i) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - 13 + i)
+    const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    return {
+      day: day.slice(5),
+      count: notifications.value.filter((n) => n.creation?.slice(0, 10) === day).length,
+    }
+  })
+})
 
 const broadcast = reactive({ segment: 'all', channels: ['Email'], template: '', message: '', when: 'now', schedule: '' })
 const broadcastSending = ref(false)
@@ -991,21 +999,16 @@ function formatDate(value) {
 }
 
 onMounted(async () => {
+  const { user } = sessionStore()
   userRoles.value = await call('frappe.client.get_list', {
     doctype: 'Has Role',
-    filters: { parent: await call('frappe.session.user') },
+    filters: { parent: user },
     fields: ['role'],
     limit_page_length: 100,
   }).then((rows) => rows.map((r) => r.role)).catch(() => [])
   await fetchNotifications()
   await fetchPreferences()
   await fetchAuditLog()
-  if (!notifications.value.length) {
-    try {
-      await call('crm.api.notifications.seed_notification_sample_data')
-      await fetchNotifications()
-    } catch (e) {}
-  }
 })
 usePageMeta(() => ({ title: __('Notification Center') }))
 </script>

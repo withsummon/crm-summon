@@ -48,11 +48,30 @@
       (selections) => viewControls.updateSelections(selections)
     "
   />
-  <EmptyState
-    v-else-if="callLogs.data && !rows.length"
-    name="Call Logs"
-    :icon="PhoneIcon"
-  />
+  <div v-else-if="callLogs.data && !rows.length" class="mx-auto w-full max-w-2xl px-6 py-12">
+    <div class="flex items-center gap-3 rounded-xl border border-outline-gray-2 bg-surface-white p-5">
+      <PhoneIcon class="h-8 w-8 text-ink-gray-4" />
+      <div>
+        <h2 class="font-medium text-ink-gray-9">Belum ada panggilan tercatat</h2>
+        <p class="text-sm text-ink-gray-5">Aktivitas suara akan muncul setelah panggilan benar-benar tercatat.</p>
+      </div>
+    </div>
+    <div v-if="recentCommunications.data?.length" class="mt-6">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="font-medium text-ink-gray-9">Komunikasi pelanggan terbaru</h3>
+        <RouterLink :to="{ name: 'Omnichannel Workspace' }" class="text-sm text-ink-red-3 hover:underline">Buka Omnichannel</RouterLink>
+      </div>
+      <div class="divide-y divide-outline-gray-2 rounded-xl border border-outline-gray-2 bg-surface-white">
+        <div v-for="conversation in recentCommunications.data" :key="conversation.name" class="flex items-center justify-between gap-4 px-4 py-3">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium text-ink-gray-9">{{ conversation.subject }}</p>
+            <p class="truncate text-xs text-ink-gray-5">{{ conversation.last_message_preview || 'Tidak ada pratinjau pesan' }}</p>
+          </div>
+          <span class="shrink-0 text-xs text-ink-gray-5">{{ conversation.channel }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
   <CallLogDetailModal
     v-model="showCallLogDetailModal"
     v-model:callLog="callLog"
@@ -66,7 +85,6 @@ import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewControls from '@/components/ViewControls.vue'
 import CallLogsListView from '@/components/ListViews/CallLogsListView.vue'
-import EmptyState from '@/components/ListViews/EmptyState.vue'
 import CallLogDetailModal from '@/components/Modals/CallLogDetailModal.vue'
 import { useDoctypeModal } from '@/composables/doctypeModal'
 import { getCallLogDetail } from '@/utils/callLog'
@@ -75,6 +93,18 @@ import { createResource } from 'frappe-ui'
 import { computed, ref, onMounted } from 'vue'
 
 const callLogsListView = ref(null)
+
+const recentCommunications = createResource({
+  url: 'frappe.client.get_list',
+  params: {
+    doctype: 'CRM Omnichannel Conversation',
+    fields: ['name', 'subject', 'channel', 'last_message_preview'],
+    filters: [['status', '!=', 'Archived'], ['subject', 'not like', '%Demo%']],
+    order_by: 'last_message_at desc',
+    limit_page_length: 5,
+  },
+  auto: true,
+})
 
 // callLogs data is loaded in the ViewControls component
 const callLogs = ref({})
