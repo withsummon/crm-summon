@@ -368,7 +368,7 @@ def global_customer_search(query: str = "", limit: int = 20):
 def get_customer_360_table(query: str = "", filters=None, limit: int = 100):
 	query = cstr(query).strip().lower()
 	limit = int(limit or 100)
-	customers = frappe.get_all("Customer", fields=_customer_fields(), limit=limit, order_by="modified desc")
+	customers = frappe.get_all("Customer", fields=_customer_fields(), filters={"disabled": 0}, limit=limit, order_by="modified desc")
 	rows = []
 	for customer in customers:
 		if query:

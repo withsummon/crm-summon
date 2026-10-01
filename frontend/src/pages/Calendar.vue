@@ -186,11 +186,13 @@ import {
   CalendarActiveEvent as activeEvent,
   call,
   toast,
+  usePageMeta,
 } from 'frappe-ui'
 import { onMounted, ref, computed, provide, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 const { user } = sessionStore()
+usePageMeta(() => ({ title: __('Calendar') }))
 const { $dialog } = globalStore()
 const { settings } = getSettings()
 const { users, getUser } = usersStore()

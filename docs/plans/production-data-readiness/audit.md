@@ -18,3 +18,7 @@ Source: authenticated production navigation at `crm.withsummon.com`, read-only M
 Verification after deployment: read back exact counts and open the affected routes in an authenticated browser. Do not interpret missing historical snapshots, real calls, payment histories, or external integrations as successful data coverage.
 
 The two known generated conversations `CRM-OMNI-CONV-2026-00005` and `CRM-OMNI-CONV-2026-00006` were archived on the production site on 1 October 2026. Their prior statuses were `Closed` and `Open`; all other conversations were untouched. Their two generated Customer records were disabled, and Customer 360 now filters disabled records from the active directory.
+
+After browser verification, the CRM site's FCRM currency was changed from INR to IDR, consistent with its existing global default, and the live dashboard displayed `Rp`. The two legacy lead-source names were renamed through Frappe to `IGLO Lead Workbook` and `IGLO Referral`; Frappe updated their Lead and Deal links (17 Lead rows and four Deal rows). The single legacy product label was changed to `KPR Subsidi IGLO 2026` without changing its status or identifier.
+
+The nine Administrator notifications shown after fixing the loader match the historic sample notification messages from May 2026. They are persisted database rows, but they do not prove operational delivery. Some Omnichannel messages are also manual test content. No new activity records were invented during this audit.
