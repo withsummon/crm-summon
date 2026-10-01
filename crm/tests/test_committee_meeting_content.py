@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -7,6 +8,11 @@ from crm.api.committee import generate_meeting_content, save_live_transcript_seg
 
 
 class TestCommitteeMeetingContent(TestCase):
+	def setUp(self):
+		clock = patch("crm.api.committee.now_datetime", return_value=datetime(2026, 10, 2))
+		clock.start()
+		self.addCleanup(clock.stop)
+
 	def test_live_segment_preserves_audio_source_and_bookmark(self):
 		meeting = SimpleNamespace(transcript_json="[]", db_set=Mock())
 		with patch("crm.api.committee._transcript_meeting", return_value=meeting), patch(
