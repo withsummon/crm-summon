@@ -34,8 +34,9 @@ class TestCommitteeMeetingContent(TestCase):
 
 	def test_roster_labels_both_audio_sources_and_allows_correction(self):
 		meeting = SimpleNamespace(speaker_roster_json="", attendees_json="[]", transcript_json="[]", db_set=Mock())
-		frappe = SimpleNamespace(session=SimpleNamespace(user="raya@example.com"), db=SimpleNamespace(get_value=Mock(return_value="Raya")))
+		frappe = SimpleNamespace(session=SimpleNamespace(user="raya@example.com"))
 		with patch("crm.api.committee._transcript_meeting", return_value=meeting), patch("crm.api.committee.frappe", frappe):
+			self.assertEqual(get_meeting_speakers.__wrapped__("CRM-COMM-TEST"), {"self_name": "", "participants": [], "configured": False})
 			roster = set_meeting_speakers.__wrapped__("CRM-COMM-TEST", "Raya", '["Budi", "Sari", "budi", "Raya"]')
 			self.assertEqual(roster["participants"], ["Budi", "Sari"])
 			meeting.speaker_roster_json = meeting.db_set.call_args.args[1]

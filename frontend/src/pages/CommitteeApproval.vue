@@ -578,12 +578,12 @@
                 <h4 class="font-semibold text-ink-gray-9">Nama pembicara</h4>
                 <p class="mt-1 text-xs text-ink-gray-5">Isi sebelum rapat. Saat pembicara berganti, pilih namanya di bawah transkrip. Nama setiap segmen bisa diperbaiki.</p>
                 <label class="mt-3 block text-xs font-medium text-ink-gray-7">Nama Anda
-                  <input v-model="speakerRoster.selfName" maxlength="80" class="mt-1 w-full rounded-lg border border-outline-gray-2 px-3 py-2 text-sm" />
+                  <input v-model="speakerRoster.selfName" maxlength="80" placeholder="Nama yang digunakan saat rapat" class="mt-1 w-full rounded-lg border border-outline-gray-2 px-3 py-2 text-sm" />
                 </label>
                 <label class="mt-3 block text-xs font-medium text-ink-gray-7">Peserta lain (satu nama per baris)
                   <textarea v-model="speakerRoster.participantsText" rows="3" class="mt-1 w-full resize-y rounded-lg border border-outline-gray-2 px-3 py-2 text-sm"></textarea>
                 </label>
-                <button @click="saveSpeakerRoster" :disabled="savingSpeakerRoster || !speakerRosterDirty" class="mt-3 rounded-lg bg-[#980000] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ savingSpeakerRoster ? 'Menyimpan…' : 'Simpan nama' }}</button>
+                <button @click="saveSpeakerRoster" :disabled="savingSpeakerRoster || !speakerRosterDirty || !speakerRoster.selfName.trim()" class="mt-3 rounded-lg bg-[#980000] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">{{ savingSpeakerRoster ? 'Menyimpan…' : 'Simpan nama' }}</button>
               </section>
               <section class="rounded-xl border border-outline-gray-2 bg-white p-4">
                 <h4 class="font-semibold text-ink-gray-9">Agenda rapat</h4>

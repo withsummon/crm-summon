@@ -639,16 +639,10 @@ def get_meeting_speakers(meeting):
 	doc = _transcript_meeting(meeting, "read")
 	roster = _speaker_roster(doc)
 	participants = roster.get("participants", [])
-	if not getattr(doc, "speaker_roster_json", None):
-		try:
-			attendees = json.loads(doc.attendees_json or "[]")
-		except (TypeError, ValueError):
-			attendees = []
-		participants = [a.get("name") for a in attendees if isinstance(a, dict) and a.get("name")]
 	self_names = roster.get("self_names", {})
 	self_name = self_names.get(frappe.session.user) if isinstance(self_names, dict) else None
 	return {
-		"self_name": self_name or frappe.db.get_value("User", frappe.session.user, "full_name") or frappe.session.user,
+		"self_name": self_name or "",
 		"participants": participants if isinstance(participants, list) else [],
 		"configured": bool(getattr(doc, "speaker_roster_json", None)),
 	}
