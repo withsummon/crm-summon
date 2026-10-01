@@ -113,7 +113,7 @@
           <div v-else-if="dashboard.error" class="flex h-48 flex-col items-center justify-center text-ink-gray-4">
             <FeatherIcon name="alert-circle" class="mb-2 h-6 w-6" />
             <p class="text-base">Failed to load dashboard</p>
-            <p class="mt-1 text-sm">{{ dashboard.error.message || 'Check that demo data has been loaded' }}</p>
+            <p class="mt-1 text-sm">{{ dashboard.error.message || 'Customer data could not be loaded' }}</p>
             <Button class="mt-3" size="sm" variant="outline" label="Retry" @click="dashboard.reload()" />
           </div>
           <template v-else>
@@ -1289,7 +1289,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, h, nextTick, onMounted, watch } from 'vue'
+import { ref, reactive, computed, h, nextTick, watch } from 'vue'
 import { Badge, Button, Dialog, FeatherIcon, LoadingIndicator, call, createResource, toast } from 'frappe-ui'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import { loadPersisted, persistRef } from '@/utils/persist'
@@ -1360,11 +1360,9 @@ const ticketTab = ref('my')
 const ticketSubmitting = ref(false)
 const ticketForm = reactive({ category: '', subject: '', description: '' })
 const ticketAttachment = ref(null)
-const simulatedTickets = ref([])
 
 const uploading = ref(null)
 const docApplicationName = ref(null)
-const simulatedDocs = ref([])
 
 const topupAmount = ref('')
 const topupPurpose = ref('')
@@ -1374,7 +1372,6 @@ const topupAppName = ref('')
 const topupApp = ref(null)
 const statementPeriod = ref('')
 const statementDownloading = ref(false)
-const simulatedApps = ref([])
 
 const profileForm = reactive({ name: '', email: '', phone: '', address: '', ...loadPersisted('crm:portal:profile', {}) })
 const profileOriginal = reactive({ name: '', email: '', phone: '', address: '' })
@@ -1474,34 +1471,20 @@ const inProgressApps = computed(() =>
   applicationRows.value.filter((a) => a.stage_index > 0 && a.stage_index < 8)
 )
 
-const applicationRows = computed(() => [
-  ...(allApps.data || []),
-  ...simulatedApps.value,
-])
+const applicationRows = computed(() => allApps.data || [])
 
 const requestedAmountValue = computed(() => parseAmount(newApp.requested_amount))
 const canSubmitNewApplication = computed(() =>
   Boolean(newApp.facility_type && requestedAmountValue.value > 0 && newApp.purpose?.trim()),
 )
 
-const documentRows = computed(() => docs.data?.length ? docs.data : simulatedDocs.value)
+const documentRows = computed(() => docs.data || [])
 
-const ticketRows = computed(() => [
-  ...simulatedTickets.value,
-  ...(tickets.data || []),
-])
+const ticketRows = computed(() => tickets.data || [])
 
-const paymentSchedule = computed(() =>
-  facilityDetail.data?.schedule?.length
-    ? facilityDetail.data.schedule
-    : buildDemoSchedule(selectedFacility.value)
-)
+const paymentSchedule = computed(() => facilityDetail.data?.schedule || [])
 
-const paymentTransactions = computed(() =>
-  facilityDetail.data?.transactions?.length
-    ? facilityDetail.data.transactions
-    : buildDemoTransactions(selectedFacility.value)
-)
+const paymentTransactions = computed(() => facilityDetail.data?.transactions || [])
 
 const statementOptions = computed(() =>
   facilityDetail.data?.statements?.length
@@ -1757,7 +1740,6 @@ function loadFacility(name) {
 function loadDocs() {
   const app = docApplicationName.value || applicationRows.value.find((a) => a.status === 'Document Review')?.name
   docApplicationName.value = app || null
-  simulatedDocs.value = buildDemoDocuments(app)
   docs.params = app ? { application_name: app, customer: null } : { customer: null }
   docs.reload()
 }
@@ -1942,27 +1924,6 @@ function viewTopupApp() {
   topupPurpose.value = ''
 }
 
-async function seedSampleData() {
-  try {
-    await call('crm.api.portal.seed_portal_sample_data', { customer: null })
-    toast.success('Sample data loaded')
-    allApps.reload()
-    docs.reload()
-    tickets.reload()
-    facilities.reload()
-    dashboard.reload()
-  } catch (e) {
-    toast.error(__('Failed to load sample data: ') + (e?.message || ''))
-  }
-}
-
-onMounted(async () => {
-  await allApps.promise
-  if (!allApps.data?.length && !simulatedApps.value.length) {
-    await seedSampleData()
-  }
-})
-
 async function advanceApplication() {
   if (!selectedApp.value || selectedApp.value.stage_index >= STAGES.length) return
   const nextStage = STAGES[selectedApp.value.stage_index]
@@ -2117,103 +2078,6 @@ async function uploadAttachment(file, doctype, docname) {
 
 function openWa() {
   if (rm.value.wa_link) window.open(rm.value.wa_link, '_blank', 'noopener,noreferrer')
-}
-
-function buildDemoTicket() {
-  return {
-    name: `DEMO-TICKET-${Date.now().toString().slice(-6)}`,
-    subject: ticketForm.subject,
-    status: 'Open',
-    creation: new Date().toISOString(),
-    sla: ticketAttachment.value
-      ? `Attachment received: ${ticketAttachment.value.name}. First response within 4 business hours.`
-      : 'First response within 4 business hours.',
-  }
-}
-
-function buildDemoTopupApplication() {
-  return {
-    name: `DEMO-TOPUP-${Date.now().toString().slice(-6)}`,
-    borrower_name: topupFacility.value?.customer || currentCustomerName.value,
-    facility_type: 'Top-Up Request',
-    requested_amount: Number(topupAmount.value),
-    status: 'Application Received',
-    stage_label: 'Application Received',
-    stage_index: 1,
-    current_stage_detail: topupPurpose.value,
-    eta_date: addDays(5).toISOString().slice(0, 10),
-  }
-}
-
-function buildDemoDocuments(applicationName) {
-  return [
-    {
-      name: `${applicationName || 'DEMO'}-DOC-1`,
-      title: 'Company Registration Certificate',
-      document_type: 'Legal',
-      status_label: 'Pending Upload',
-      notes: '',
-    },
-    {
-      name: `${applicationName || 'DEMO'}-DOC-2`,
-      title: 'Latest Bank Statement',
-      document_type: 'Financial',
-      status_label: 'Pending Upload',
-      notes: '',
-    },
-    {
-      name: `${applicationName || 'DEMO'}-DOC-3`,
-      title: 'Tax Identification Document',
-      document_type: 'Tax',
-      status_label: 'Approved',
-      file_name: 'npwp.pdf',
-      notes: 'Verified',
-    },
-  ]
-}
-
-function buildDemoSchedule(facility) {
-  if (!facility) return []
-  const total = Number(facility.outstanding || 0) / 6
-  return Array.from({ length: 6 }, (_, i) => {
-    const principal = Math.round(total)
-    const interest = Math.round(principal * 0.012)
-    return {
-      no: i + 1,
-      due_date: addDays(30 * i).toISOString().slice(0, 10),
-      principal,
-      interest,
-      total: principal + interest,
-      status: i === 0 ? 'Due' : 'Upcoming',
-    }
-  })
-}
-
-function buildDemoTransactions(facility) {
-  if (!facility) return []
-  const amount = Math.round(Number(facility.outstanding || 0) / 12)
-  return [
-    {
-      name: `${facility.name}-PAY-1`,
-      transaction_type: 'Installment Payment',
-      transaction_date: addDays(-30).toISOString().slice(0, 10),
-      amount,
-      status: 'Posted',
-    },
-    {
-      name: `${facility.name}-PAY-2`,
-      transaction_type: 'Installment Payment',
-      transaction_date: addDays(-60).toISOString().slice(0, 10),
-      amount,
-      status: 'Posted',
-    },
-  ]
-}
-
-function addDays(days) {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  return date
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

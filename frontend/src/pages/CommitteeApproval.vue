@@ -53,17 +53,12 @@
             <input v-model="queueSearch" type="text" placeholder="Search applicant, facility..." class="flex-1 min-w-48 px-3 py-2 border border-outline-gray-2 rounded-lg text-sm" />
             <select v-model="queueFilterType" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm">
               <option value="">All Committees</option>
-              <option value="CC1">CC-1 (≤ Rp 10B)</option>
-              <option value="CC2">CC-2 (≤ Rp 50B)</option>
-              <option value="CC3">CC-3 (&gt; Rp 50B)</option>
+              <option v-for="committee in committees" :key="committee.id" :value="committee.id">{{ committee.name }}</option>
             </select>
             <select v-model="queueFilterStatus" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm">
               <option value="">All Status</option>
               <option value="pending">Pending</option>
               <option value="in_session">In Session</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="deferred">Deferred</option>
             </select>
             <select v-model="queueFilterPriority" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm">
               <option value="">All Priority</option>
@@ -171,7 +166,7 @@
                   <div class="flex gap-2 mt-2 flex-wrap">
                     <span class="px-2 py-0.5 bg-surface-gray-2 rounded text-xs text-ink-gray-6">{{ mtg.committee }}</span>
                     <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{{ mtg.cases }} cases</span>
-                    <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">{{ mtg.members.length }}/{{ mtg.quorum }} quorum</span>
+                    <span v-if="mtg.quorum" class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">{{ mtg.members.length }}/{{ mtg.quorum }} quorum</span>
                   </div>
                 </div>
               </div>
@@ -237,7 +232,7 @@
         <!-- Calendar View (simplified) -->
         <div v-else class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
           <div class="text-center mb-3">
-            <h3 class="text-base font-semibold text-ink-gray-9">May 2026</h3>
+            <h3 class="text-base font-semibold text-ink-gray-9">{{ new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }) }}</h3>
           </div>
           <div class="grid grid-cols-7 gap-1 text-center text-xs text-ink-gray-5 mb-2">
             <div v-for="d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']" :key="d">{{ d }}</div>
@@ -347,7 +342,7 @@
               </div>
 
               <!-- AI Recommendation -->
-              <div class="px-6 py-3 bg-blue-50 flex items-start gap-3 border-b border-blue-100">
+              <div v-if="currentCase.aiRec" class="px-6 py-3 bg-blue-50 flex items-start gap-3 border-b border-blue-100">
                 <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.362.362A3.001 3.001 0 0112 21a3 3 0 01-2.774-4.1l-.362-.362z" /></svg>
                 </div>
@@ -386,6 +381,9 @@
                 </div>
 
                 <textarea v-model="currentCase.voteComment" rows="2" placeholder="Voting remarks (optional)..." class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm resize-none mb-3"></textarea>
+                <label class="mb-3 flex items-center gap-2 text-xs text-ink-gray-6">
+                  <input v-model="voteSignatureAck" type="checkbox" /> I confirm this vote as my electronic signature.
+                </label>
 
                 <!-- Vote Tally -->
                 <div>
@@ -484,10 +482,7 @@
         <div class="flex items-center gap-3">
           <select v-model="calendarFilter" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm">
             <option value="">All committees</option>
-            <option value="CC-1">CC-1</option>
-            <option value="CC-2">CC-2</option>
-            <option value="CC-3">CC-3</option>
-            <option value="RMC">RMC</option>
+            <option v-for="committee in committees" :key="committee.id" :value="committee.id">{{ committee.name }}</option>
           </select>
           <input v-model="calendarMonth" type="month" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm" />
           <span class="text-sm text-ink-gray-5">{{ calendarEvents.length }} events</span>
@@ -503,55 +498,10 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Agenda ───── -->
-      <div v-if="activeTab === 'agenda'" class="space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <label class="text-sm font-medium text-ink-gray-7">Meeting:</label>
-            <select v-model="agendaMeetingId" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm">
-              <option v-for="m in meetings" :key="m.id" :value="m.id">{{ m.title }}</option>
-            </select>
-          </div>
-          <div class="flex gap-2">
-            <button @click="addAgendaItem" class="px-3 py-1.5 border border-[#980000] text-[#980000] rounded text-sm">+ Add Item</button>
-            <button @click="sendAgenda" class="px-3 py-1.5 bg-[#980000] text-white rounded text-sm">Send to Members</button>
-          </div>
-        </div>
-        <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-surface-gray-1 border-b border-outline-gray-2">
-              <tr>
-                <th class="px-3 py-1.5 text-left text-xs uppercase font-semibold text-ink-gray-5">#</th>
-                <th class="px-3 py-1.5 text-left text-xs uppercase font-semibold text-ink-gray-5">Case ID</th>
-                <th class="px-3 py-1.5 text-left text-xs uppercase font-semibold text-ink-gray-5">Applicant</th>
-                <th class="px-3 py-1.5 text-left text-xs uppercase font-semibold text-ink-gray-5">Time-box (min)</th>
-                <th class="px-3 py-1.5 text-right text-xs uppercase font-semibold text-ink-gray-5">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(it, i) in filteredAgenda" :key="it.id" class="border-b border-outline-gray-1 last:border-b-0">
-                <td class="px-3 py-1.5 text-ink-gray-5">{{ i + 1 }}</td>
-                <td class="px-3 py-1.5"><input v-model="it.caseId" class="border border-outline-gray-2 rounded px-2 py-1 text-sm w-32 font-mono" /></td>
-                <td class="px-3 py-1.5"><input v-model="it.applicant" class="border border-outline-gray-2 rounded px-2 py-1 text-sm w-64" /></td>
-                <td class="px-3 py-1.5"><input v-model.number="it.timebox" type="number" min="1" class="border border-outline-gray-2 rounded px-2 py-1 text-sm w-20" /></td>
-                <td class="px-3 py-1.5 text-right">
-                  <button @click="moveAgendaItem(it, -1)" class="text-ink-gray-5 hover:text-ink-gray-7 px-1">↑</button>
-                  <button @click="moveAgendaItem(it, 1)" class="text-ink-gray-5 hover:text-ink-gray-7 px-1">↓</button>
-                  <button @click="removeAgendaItem(it)" class="text-red-500 hover:text-red-700 px-1">✕</button>
-                </td>
-              </tr>
-              <tr v-if="!filteredAgenda.length">
-                <td colspan="5" class="px-4 py-8 text-center text-ink-gray-5">No agenda items yet for this meeting.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <!-- ───── TAB: Live Meeting ───── -->
       <div v-if="activeTab === 'live'" class="space-y-3">
         <div v-if="!liveStarted" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3 text-center">
-          <p class="text-ink-gray-7 mb-3">Start a live meeting to broadcast a real-time tally to attendees.</p>
+          <p class="text-ink-gray-7 mb-3">Open a meeting to capture its live transcript.</p>
           <select v-model="liveMeetingId" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm mr-2">
             <option v-for="m in meetings" :key="m.id" :value="m.id">{{ m.title }}</option>
           </select>
@@ -563,36 +513,28 @@
               <p class="text-xs uppercase tracking-widest text-ink-gray-4">LIVE · {{ liveCurrentMeeting?.title }}</p>
               <p class="text-2xl font-bold mt-1">{{ liveCurrentAgenda?.caseId }} — {{ liveCurrentAgenda?.applicant }}</p>
             </div>
-            <button @click="liveStarted = false" class="px-3 py-1.5 border border-white/30 rounded text-sm">End Session</button>
-          </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-green-700 rounded-[14px] p-6 text-center">
-              <p class="text-xs uppercase">Approve</p>
-              <p class="text-5xl font-bold mt-2">{{ liveTally.approve }}</p>
-              <button @click="liveVote('approve')" class="mt-3 px-3 py-1 bg-green-900 rounded text-sm">+1</button>
-            </div>
-            <div class="bg-red-700 rounded-[10px] p-3 text-center">
-              <p class="text-xs uppercase">Reject</p>
-              <p class="text-5xl font-bold mt-2">{{ liveTally.reject }}</p>
-              <button @click="liveVote('reject')" class="mt-3 px-3 py-1 bg-red-900 rounded text-sm">+1</button>
-            </div>
-            <div class="bg-amber-700 rounded-[10px] p-3 text-center">
-              <p class="text-xs uppercase">Defer</p>
-              <p class="text-5xl font-bold mt-2">{{ liveTally.defer }}</p>
-              <button @click="liveVote('defer')" class="mt-3 px-3 py-1 bg-amber-900 rounded text-sm">+1</button>
-            </div>
-            <div class="bg-surface-gray-2 rounded-[10px] p-3 text-center">
-              <p class="text-xs uppercase">Abstain</p>
-              <p class="text-5xl font-bold mt-2">{{ liveTally.abstain }}</p>
-              <button @click="liveVote('abstain')" class="mt-3 px-3 py-1 bg-gray-900 rounded text-sm">+1</button>
-            </div>
+            <button @click="endLiveMeeting" class="px-3 py-1.5 border border-white/30 rounded text-sm">End Session</button>
           </div>
           <div class="bg-surface-white/5 rounded-[10px] p-3">
             <p class="text-xs uppercase tracking-widest text-ink-gray-4 mb-2">Members Present</p>
             <div class="flex flex-wrap gap-2">
-              <span v-for="m in (liveCurrentMeeting?.members || [])" :key="m.name" class="px-3 py-1 rounded-full text-xs" :class="m.confirmed ? 'bg-green-700' : 'bg-surface-gray-2'">
+              <span v-for="m in (liveCurrentMeeting?.members || [])" :key="m.name" class="px-3 py-1 rounded-full bg-surface-gray-2 text-xs">
                 {{ m.name }}
               </span>
+            </div>
+          </div>
+          <div class="mt-4 rounded-[10px] border border-white/20 p-4">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="font-semibold">Live transcript</h3>
+              <button @click="capturing ? stopTranscription() : startTranscription()" class="rounded bg-[#980000] px-3 py-1.5 text-sm">
+                {{ capturing ? 'Stop transcript' : 'Start transcript' }}
+              </button>
+            </div>
+            <p v-if="transcriptStatus" role="status" class="mt-2 text-sm text-amber-200">{{ transcriptStatus }}</p>
+            <div class="mt-3 max-h-56 space-y-2 overflow-y-auto text-sm" aria-live="polite">
+              <p v-for="(segment, index) in transcriptSegments" :key="index">{{ segment.text }}</p>
+              <p v-if="partialTranscript" class="italic text-white/70">{{ partialTranscript }}</p>
+              <p v-if="!transcriptSegments.length && !partialTranscript" class="text-white/60">No transcript yet.</p>
             </div>
           </div>
           <div class="mt-4 flex justify-end">
@@ -628,105 +570,6 @@
         </div>
       </div>
 
-      <!-- ───── TAB: Analytics ───── -->
-      <div v-if="activeTab === 'analytics'">
-        <!-- KPI Row -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div v-for="kpi in analyticsKPIs" :key="kpi.label" class="bg-surface-white rounded-[14px] p-4 border border-outline-gray-2">
-            <p class="text-xs text-ink-gray-5 mb-1">{{ kpi.label }}</p>
-            <p class="text-2xl font-bold text-ink-gray-9">{{ kpi.value }}</p>
-            <p :class="['text-xs mt-1', kpi.trend >= 0 ? 'text-green-600' : 'text-red-600']">{{ kpi.trend >= 0 ? '↑' : '↓' }} {{ Math.abs(kpi.trend) }}% vs last month</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Approval Rate by Committee -->
-          <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
-            <h3 class="text-sm font-semibold text-ink-gray-7 mb-3">Approval Rate by Committee</h3>
-            <div class="space-y-3">
-              <div v-for="row in approvalByCommittee" :key="row.name">
-                <div class="flex justify-between text-sm mb-1">
-                  <span class="text-ink-gray-7">{{ row.name }}</span>
-                  <span class="font-semibold text-ink-gray-9">{{ row.rate }}%</span>
-                </div>
-                <div class="flex gap-1 h-3 rounded-full overflow-hidden">
-                  <div class="bg-green-500 rounded-full" :style="{ width: row.approvedPct + '%' }"></div>
-                  <div class="bg-red-400" :style="{ width: row.rejectedPct + '%' }"></div>
-                  <div class="bg-amber-400" :style="{ width: row.deferredPct + '%' }"></div>
-                </div>
-                <div class="flex gap-3 text-xs text-ink-gray-4 mt-1">
-                  <span>✓ {{ row.approved }}</span>
-                  <span>✗ {{ row.rejected }}</span>
-                  <span>⏳ {{ row.deferred }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="flex gap-3 mt-4 text-xs text-ink-gray-5">
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>Approved</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span>Rejected</span>
-              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>Deferred</span>
-            </div>
-          </div>
-
-          <!-- TAT Distribution -->
-          <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
-            <h3 class="text-sm font-semibold text-ink-gray-7 mb-3">TAT Distribution (Days)</h3>
-            <div class="space-y-3">
-              <div v-for="bucket in tatBuckets" :key="bucket.label" class="flex items-center gap-3">
-                <span class="text-xs text-ink-gray-5 w-20">{{ bucket.label }}</span>
-                <div class="flex-1 h-6 bg-surface-gray-2 rounded overflow-hidden">
-                  <div :class="['h-full rounded flex items-center px-2 text-xs text-white font-medium', bucket.color]" :style="{ width: (bucket.count / 50 * 100) + '%' }">
-                    {{ bucket.count }}
-                  </div>
-                </div>
-                <span class="text-xs text-ink-gray-4 w-12 text-right">{{ bucket.pct }}%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Member Participation -->
-          <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
-            <h3 class="text-sm font-semibold text-ink-gray-7 mb-3">Member Participation</h3>
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-outline-gray-1">
-                  <th class="text-left pb-2 text-xs text-ink-gray-5">Member</th>
-                  <th class="text-center pb-2 text-xs text-ink-gray-5">Meetings</th>
-                  <th class="text-center pb-2 text-xs text-ink-gray-5">Attendance</th>
-                  <th class="text-center pb-2 text-xs text-ink-gray-5">Votes</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-outline-gray-1">
-                <tr v-for="member in memberParticipation" :key="member.name">
-                  <td class="py-2">
-                    <div class="flex items-center gap-2">
-                      <div :class="['w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white', avatarColor(member.name)]">{{ member.name.charAt(0) }}</div>
-                      <span class="text-ink-gray-7">{{ member.name }}</span>
-                    </div>
-                  </td>
-                  <td class="py-2 text-center text-ink-gray-6">{{ member.meetings }}</td>
-                  <td class="py-2 text-center">
-                    <span :class="['font-semibold', member.attendance >= 90 ? 'text-green-600' : member.attendance >= 70 ? 'text-amber-600' : 'text-red-600']">{{ member.attendance }}%</span>
-                  </td>
-                  <td class="py-2 text-center text-ink-gray-6">{{ member.votes }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Monthly Volume -->
-          <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
-            <h3 class="text-sm font-semibold text-ink-gray-7 mb-3">Monthly Case Volume</h3>
-            <div class="flex items-end gap-2 h-32">
-              <div v-for="bar in monthlyVolume" :key="bar.month" class="flex-1 flex flex-col items-center gap-1">
-                <span class="text-xs text-ink-gray-5">{{ bar.count }}</span>
-                <div class="w-full bg-[#980000] rounded-t" :style="{ height: (bar.count / 25 * 100) + '%' }"></div>
-                <span class="text-xs text-ink-gray-4">{{ bar.month }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- ───── MODALS ───── -->
@@ -740,30 +583,33 @@
         </div>
         <div class="space-y-3">
           <div>
+            <label class="block text-sm font-medium text-ink-gray-7 mb-1">Meeting title</label>
+            <input v-model="meetingForm.title" type="text" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div>
             <label class="block text-sm font-medium text-ink-gray-7 mb-1">Committee</label>
-            <select class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm">
-              <option>Credit Committee Level 1 (CC-1)</option>
-              <option>Credit Committee Level 2 (CC-2)</option>
-              <option>Risk Management Committee (RMC)</option>
+            <select v-model="meetingForm.committee" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm">
+              <option value="">Select committee</option>
+              <option v-for="committee in committees" :key="committee.id" :value="committee.id">{{ committee.name }}</option>
             </select>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-ink-gray-7 mb-1">Date</label>
-              <input type="date" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
+              <input v-model="meetingForm.date" type="date" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
             </div>
             <div>
               <label class="block text-sm font-medium text-ink-gray-7 mb-1">Time</label>
-              <input type="time" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
+              <input v-model="meetingForm.time" type="time" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-ink-gray-7 mb-1">Location / Room</label>
-            <input type="text" placeholder="e.g. IGLO Office - Board Room 3" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
+            <input v-model="meetingForm.location" type="text" placeholder="Meeting room or link" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
             <label class="block text-sm font-medium text-ink-gray-7 mb-1">Agenda Notes</label>
-            <textarea rows="3" placeholder="Meeting agenda..." class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+            <textarea v-model="meetingForm.agenda" rows="3" placeholder="One agenda item per line" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
           </div>
         </div>
         <div class="flex gap-3 mt-6">
@@ -881,9 +727,6 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <button v-if="selectedCase.status === 'pending'" @click="showCaseModal = false; openVoting(selectedCase)" class="flex-1 py-2 bg-[#980000] text-white rounded-lg text-sm font-medium">Open Voting</button>
-          <button v-if="selectedCase.status === 'pending'" @click="startCircularApproval(selectedCase)" class="px-3 py-2 border border-[#980000] text-[#980000] rounded-lg text-sm">Circular Approval</button>
-          <button v-if="['approved', 'rejected', 'deferred'].includes(selectedCase.status)" @click="generateMinutes(selectedCase)" class="px-3 py-2 border border-outline-gray-2 text-ink-gray-7 rounded-lg text-sm">Generate Minutes</button>
-          <button v-if="['approved', 'rejected'].includes(selectedCase.status) && canOverride" @click="overrideDecision(selectedCase)" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg text-sm">Override Decision</button>
           <button @click="showCaseModal = false" class="px-3 py-1.5 border border-outline-gray-2 rounded-lg text-sm text-ink-gray-6">Close</button>
         </div>
       </div>
@@ -927,15 +770,16 @@
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
-import { Badge, Button, FeatherIcon, LoadingIndicator, usePageMeta } from 'frappe-ui'
+import { Badge, Button, FeatherIcon, LoadingIndicator, usePageMeta, call } from 'frappe-ui'
+import { Scribe, RealtimeEvents, CommitStrategy } from '@elevenlabs/client'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { loadPersisted, persistRef } from '@/utils/persist'
 
 const viewControls = ref(null)
 
 usePageMeta(() => ({ title: __('Committee Approval') }))
 
 const activeTab = ref('queue')
+const voteSignatureAck = ref(false)
 const queueSearch = ref('')
 const queueFilterType = ref('')
 const queueFilterStatus = ref('')
@@ -944,6 +788,7 @@ const meetingView = ref('list')
 const activeSession = ref(null)
 const activeSessionCaseIdx = ref(0)
 const showScheduleModal = ref(false)
+const meetingForm = reactive({ title: '', committee: '', date: '', time: '', location: '', agenda: '' })
 const showSetupModal = ref(false)
 const showCaseModal = ref(false)
 const selectedCase = ref(null)
@@ -963,6 +808,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  stopTranscription()
 })
 
 const emptyCommitteeForm = () => ({
@@ -1011,17 +857,15 @@ function closeSetupModal() {
   committeeForm.value = emptyCommitteeForm()
 }
 
-const pageTabs = [
-  { id: 'queue', label: 'Case Queue', badge: 8 },
+const pageTabs = computed(() => [
+  { id: 'queue', label: 'Case Queue', badge: queueItems.value.length },
   { id: 'meetings', label: 'Meetings' },
   { id: 'voting', label: 'Voting' },
   { id: 'decisions', label: 'Decisions' },
   { id: 'calendar', label: 'Calendar' },
-  { id: 'agenda', label: 'Agenda' },
   { id: 'live', label: 'Live Mode' },
   { id: 'committees', label: 'Committees' },
-  { id: 'analytics', label: 'Analytics' },
-]
+])
 
 const calendarFilter = ref('')
 const calendarMonth = ref(new Date().toISOString().slice(0, 7))
@@ -1075,66 +919,96 @@ function monthDay(monthAbbr, day) {
   return d.toISOString().slice(0, 10)
 }
 
-const agendaItems = ref(loadPersisted('crm:committee:agenda', [
-  { id: 1, meetingId: 1, order: 1, caseId: 'CC-2026-0187', applicant: 'PT Maju Bersama Tbk', timebox: 20, attachments: [] },
-  { id: 2, meetingId: 1, order: 2, caseId: 'CC-2026-0186', applicant: 'CV Sukses Makmur', timebox: 15, attachments: [] },
-  { id: 3, meetingId: 1, order: 3, caseId: 'CC-2026-0184', applicant: 'PT Agri Sejahtera', timebox: 20, attachments: [] },
-]))
-persistRef('crm:committee:agenda', agendaItems)
-const agendaMeetingId = ref(1)
-const filteredAgenda = computed(() =>
-  agendaItems.value.filter((a) => a.meetingId === agendaMeetingId.value).sort((a, b) => a.order - b.order),
-)
-
-function addAgendaItem() {
-  const order = filteredAgenda.value.length + 1
-  agendaItems.value.push({ id: Date.now(), meetingId: agendaMeetingId.value, order, caseId: '', applicant: '', timebox: 15, attachments: [] })
-}
-
-function removeAgendaItem(it) {
-  agendaItems.value = agendaItems.value.filter((a) => a.id !== it.id)
-}
-
-function moveAgendaItem(it, dir) {
-  const list = filteredAgenda.value
-  const idx = list.findIndex((a) => a.id === it.id)
-  const targetIdx = idx + dir
-  if (targetIdx < 0 || targetIdx >= list.length) return
-  const other = list[targetIdx]
-  ;[it.order, other.order] = [other.order, it.order]
-}
-
-function sendAgenda() {
-  showToast('Agenda sent to members')
-}
-
+const agendaItems = ref([])
 const liveMeetingId = ref(null)
 const liveAgendaIdx = ref(0)
-const livePresence = ref({})
-const liveTally = reactive({ approve: 0, reject: 0, defer: 0, abstain: 0 })
 const liveStarted = ref(false)
+const capturing = ref(false)
+const partialTranscript = ref('')
+const transcriptStatus = ref('')
+const transcriptSegments = ref([])
+let transcriptConnection = null
 
-function startLiveMeeting(meetingId) {
+async function startLiveMeeting(meetingId) {
+  try {
+    await call('crm.api.committee.set_meeting_status', { meeting: meetingId, status: 'In Progress' })
+    await loadMeetings()
+  } catch (error) {
+    showToast(error?.message || 'Meeting could not be started')
+    return
+  }
   liveMeetingId.value = meetingId
   liveAgendaIdx.value = 0
-  Object.assign(liveTally, { approve: 0, reject: 0, defer: 0, abstain: 0 })
-  livePresence.value = {}
   liveStarted.value = true
   activeTab.value = 'live'
+  transcriptStatus.value = ''
+  try {
+    transcriptSegments.value = await call('crm.api.committee.get_live_transcript', { meeting: meetingId })
+  } catch {
+    transcriptStatus.value = 'Saved transcript could not be loaded.'
+  }
 }
 
-function liveVote(action) {
-  liveTally[action] = (liveTally[action] || 0) + 1
+async function startTranscription() {
+  if (capturing.value || !liveMeetingId.value) return
+  transcriptStatus.value = ''
+  try {
+    const { token } = await call('crm.api.committee.create_live_transcript_token', { meeting: liveMeetingId.value })
+    transcriptConnection = Scribe.connect({
+      token,
+      modelId: 'scribe_v2_realtime',
+      commitStrategy: CommitStrategy.VAD,
+      languageCode: 'id',
+      microphone: { echoCancellation: true, noiseSuppression: true },
+    })
+    transcriptConnection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, ({ text }) => { partialTranscript.value = text })
+    transcriptConnection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, async ({ text }) => {
+      partialTranscript.value = ''
+      if (!text?.trim()) return
+      try {
+        const saved = await call('crm.api.committee.save_live_transcript_segment', { meeting: liveMeetingId.value, text })
+        transcriptSegments.value.push(saved)
+      } catch {
+        transcriptStatus.value = 'A transcript segment could not be saved. Please retry recording.'
+      }
+    })
+    transcriptConnection.on(RealtimeEvents.ERROR, () => {
+      transcriptStatus.value = 'Live transcription stopped unexpectedly.'
+      stopTranscription()
+    })
+    capturing.value = true
+  } catch {
+    transcriptStatus.value = 'Live transcription is unavailable. Check microphone access and service configuration.'
+    stopTranscription()
+  }
+}
+
+function stopTranscription() {
+  transcriptConnection?.close()
+  transcriptConnection = null
+  capturing.value = false
+  partialTranscript.value = ''
+}
+
+async function endLiveMeeting() {
+  stopTranscription()
+  try {
+    await call('crm.api.committee.set_meeting_status', { meeting: liveMeetingId.value, status: 'Completed' })
+    await loadMeetings()
+  } catch (error) {
+    showToast(error?.message || 'Meeting could not be completed')
+    return
+  }
+  liveStarted.value = false
 }
 
 function nextLiveItem() {
   const items = agendaItems.value.filter((a) => a.meetingId === liveMeetingId.value)
   if (liveAgendaIdx.value < items.length - 1) {
     liveAgendaIdx.value++
-    Object.assign(liveTally, { approve: 0, reject: 0, defer: 0, abstain: 0 })
   } else {
     showToast('Live meeting completed')
-    liveStarted.value = false
+    endLiveMeeting()
   }
 }
 
@@ -1144,73 +1018,44 @@ const liveCurrentAgenda = computed(() => {
   return items[liveAgendaIdx.value]
 })
 
-const userRoles = ref(['Committee Member', 'Committee Override'])
-const canOverride = computed(() => userRoles.value.includes('Committee Override'))
+const queueItems = ref([])
+const queueKPIs = computed(() => [
+  { label: 'Pending Cases', value: String(queueItems.value.length), sub: 'Awaiting committee', color: 'text-amber-600' },
+  { label: 'In Session', value: String(meetings.value.filter((m) => m.status === 'in_progress').length), sub: 'Active meetings', color: 'text-[#980000]' },
+  { label: 'Approved', value: String(decisionsList.value.filter((d) => d.outcome === 'Approved').length), sub: 'Recorded decisions', color: 'text-green-600' },
+  { label: 'Rejected', value: String(decisionsList.value.filter((d) => d.outcome === 'Rejected').length), sub: 'Recorded decisions', color: 'text-red-600' },
+])
 
-function startCircularApproval(cas) {
-  cas.circular = true
-  cas.circularVotes = (cas.circularVotes || [])
-  showToast(`Circular ballot dispatched for ${cas.caseId}`)
-}
-
-function overrideDecision(cas) {
-  if (!canOverride.value) {
-    showToast('You lack Committee Override role')
-    return
+async function loadQueue() {
+  try {
+    const rows = await call('crm.api.committee.get_queue')
+    queueItems.value = (rows || []).map((item) => ({
+      id: item.name,
+      caseId: item.name,
+      applicant: item.applicant_name || item.application || item.name,
+      facility: item.facility_type || '',
+      amount: item.requested_amount == null ? '—' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.requested_amount),
+      committee: item.committee,
+      slaDue: item.sla_due || '—',
+      slaBreached: item.sla_state === 'breached',
+      priority: item.sla_state === 'breached' ? 'urgent' : item.sla_state === 'amber' ? 'high' : 'normal',
+      status: item.status === 'Pending' ? 'pending' : 'in_session',
+      rm: '',
+      myVote: item.my_vote?.decision?.toLowerCase() || null,
+      voteComment: '',
+      voted: !!item.my_vote,
+      aiScore: null,
+      aiRec: '',
+      aiReason: '',
+      metrics: [],
+      documents: [],
+    }))
+  } catch {
+    showToast('Committee queue could not be loaded')
   }
-  const reason = window.prompt(`Override decision for ${cas.caseId}. Reason (mandatory):`)
-  if (!reason || !reason.trim()) {
-    showToast('Override cancelled — reason required')
-    return
-  }
-  cas.overridden = { previous: cas.status, by: 'Current User', reason, at: new Date().toISOString() }
-  cas.status = cas.status === 'approved' ? 'rejected' : 'approved'
-  showToast(`${cas.caseId} overridden`)
 }
 
-function generateMinutes(cas) {
-  const text = [
-    `MINUTES OF DECISION`,
-    `Case: ${cas.caseId}`,
-    `Applicant: ${cas.applicant}`,
-    `Facility: ${cas.facility}`,
-    `Committee: ${cas.committee}`,
-    `Decision: ${cas.status.toUpperCase()}`,
-    cas.overridden ? `Override: by ${cas.overridden.by} — ${cas.overridden.reason}` : '',
-    ``,
-    `Members present: (from agenda)`,
-    `Votes recorded: see attached voting log`,
-    ``,
-    `Generated ${new Date().toISOString()}`,
-  ].filter(Boolean).join('\n')
-  const blob = new Blob([text], { type: 'application/pdf' })
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = `minutes-${cas.caseId}.pdf`
-  link.click()
-  URL.revokeObjectURL(link.href)
-  showToast(`Minutes generated for ${cas.caseId}`)
-}
-
-const queueKPIs = [
-  { label: 'Pending Cases', value: '8', sub: 'Awaiting committee', color: 'text-amber-600' },
-  { label: 'In Session', value: '3', sub: 'Active deliberation', color: 'text-[#980000]' },
-  { label: 'Approved MTD', value: '24', sub: 'This month', color: 'text-green-600' },
-  { label: 'Rejected MTD', value: '6', sub: 'This month', color: 'text-red-600' },
-  { label: 'Avg TAT', value: '3.2d', sub: 'vs SLA 5 days', color: 'text-blue-600' },
-]
-
-const queueItems = ref(loadPersisted('crm:committee:queueItems', [
-  { id: 1, caseId: 'CC-2026-0187', applicant: 'PT Maju Bersama Tbk', facility: 'Kredit Modal Kerja', amount: 'Rp 8.5B', committee: 'CC-1', slaDue: 'Due in 2d', slaBreached: false, priority: 'urgent', status: 'pending', rm: 'Budi Santoso', myVote: null, voteComment: '', voted: false, aiScore: 78, aiRec: 'Approve with Conditions', aiReason: 'Strong cash flow ratio (1.8x), minor covenant concern on DSCR.', metrics: [{ label: 'LTV', value: '62%' }, { label: 'DSCR', value: '1.82x' }, { label: 'Credit Score', value: '720', color: 'text-green-600' }, { label: 'Industry Risk', value: 'Medium', color: 'text-amber-600' }], documents: ['Credit Application Form.pdf', 'Financial Statements 2025.pdf', 'Collateral Appraisal.pdf', 'BI Checking Report.pdf'] },
-  { id: 2, caseId: 'CC-2026-0186', applicant: 'CV Sukses Makmur', facility: 'Kredit Investasi', amount: 'Rp 3.2B', committee: 'CC-1', slaDue: 'Due in 1d', slaBreached: false, priority: 'urgent', status: 'in_session', rm: 'Sari Dewi', myVote: null, voteComment: '', voted: false, aiScore: 65, aiRec: 'Approve with Conditions', aiReason: 'Moderate risk. Owner guarantee required.', metrics: [{ label: 'LTV', value: '70%' }, { label: 'DSCR', value: '1.45x' }, { label: 'Credit Score', value: '685', color: 'text-amber-600' }, { label: 'Industry Risk', value: 'Medium' }], documents: ['Credit Application Form.pdf', 'Business Plan 2025.pdf', 'SKMHT Notarial Deed.pdf'] },
-  { id: 3, caseId: 'CC-2026-0185', applicant: 'PT Teknologi Nusantara', facility: 'Term Loan', amount: 'Rp 28B', committee: 'CC-2', slaDue: 'Due in 4d', slaBreached: false, priority: 'high', status: 'pending', rm: 'Andi Wahyudi', myVote: null, voteComment: '', voted: false, aiScore: 82, aiRec: 'Approve', aiReason: 'Excellent financials, low NPL risk sector.', metrics: [{ label: 'LTV', value: '55%' }, { label: 'DSCR', value: '2.1x' }, { label: 'Credit Score', value: '755', color: 'text-green-600' }, { label: 'Industry Risk', value: 'Low', color: 'text-green-600' }], documents: ['Credit Application Form.pdf', 'Financial Statements 2023-2025.pdf', 'Collateral Appraisal.pdf'] },
-  { id: 4, caseId: 'CC-2026-0184', applicant: 'PT Agri Sejahtera', facility: 'KUR Pertanian', amount: 'Rp 500M', committee: 'CC-1', slaDue: 'BREACHED', slaBreached: true, priority: 'urgent', status: 'pending', rm: 'Rina Kartika', myVote: null, voteComment: '', voted: false, aiScore: 55, aiRec: 'Reject', aiReason: 'Multiple outstanding obligations. Debt burden ratio exceeds threshold.', metrics: [{ label: 'LTV', value: '85%', color: 'text-red-600' }, { label: 'DSCR', value: '0.92x', color: 'text-red-600' }, { label: 'Credit Score', value: '610', color: 'text-red-600' }, { label: 'Industry Risk', value: 'High', color: 'text-red-600' }], documents: ['Credit Application Form.pdf', 'Income Statement.pdf'] },
-  { id: 5, caseId: 'CC-2026-0183', applicant: 'PT Bangun Graha Mandiri', facility: 'Property Financing', amount: 'Rp 65B', committee: 'CC-3', slaDue: 'Due in 7d', slaBreached: false, priority: 'high', status: 'pending', rm: 'Hendra Gunawan', myVote: null, voteComment: '', voted: false, aiScore: 75, aiRec: 'Approve with Conditions', aiReason: 'Large exposure requires board-level authorization. Adequate collateral coverage.', metrics: [{ label: 'LTV', value: '68%' }, { label: 'DSCR', value: '1.65x' }, { label: 'Credit Score', value: '730', color: 'text-green-600' }, { label: 'Industry Risk', value: 'Medium' }], documents: ['Credit Application Form.pdf', 'AMDAL Certificate.pdf', 'Title Certificate.pdf', 'Appraisal Report.pdf'] },
-  { id: 6, caseId: 'CC-2026-0182', applicant: 'Koperasi Sejahtera Bersama', facility: 'Linkage Program', amount: 'Rp 2.1B', committee: 'CC-1', slaDue: 'Due in 3d', slaBreached: false, priority: 'normal', status: 'approved', rm: 'Dewi Susanti', myVote: 'approve', voteComment: '', voted: true, aiScore: 80, aiRec: 'Approve', aiReason: 'Well-established cooperative, clean credit history.', metrics: [{ label: 'LTV', value: '60%' }, { label: 'DSCR', value: '1.9x' }, { label: 'Credit Score', value: '745', color: 'text-green-600' }, { label: 'Industry Risk', value: 'Low', color: 'text-green-600' }], documents: ['Credit Application Form.pdf', 'Cooperative Deed.pdf'] },
-  { id: 7, caseId: 'CC-2026-0181', applicant: 'PT Logistik Prima', facility: 'Fleet Financing', amount: 'Rp 12B', committee: 'CC-2', slaDue: 'Due in 5d', slaBreached: false, priority: 'normal', status: 'deferred', rm: 'Wahyu Prasetyo', myVote: null, voteComment: '', voted: false, aiScore: 60, aiRec: 'Defer', aiReason: 'Pending environmental clearance certificate for new routes.', metrics: [{ label: 'LTV', value: '72%' }, { label: 'DSCR', value: '1.5x' }, { label: 'Credit Score', value: '700' }, { label: 'Industry Risk', value: 'Medium' }], documents: ['Credit Application Form.pdf', 'Fleet Inventory.pdf'] },
-  { id: 8, caseId: 'CC-2026-0180', applicant: 'PT Herbal Nusantara', facility: 'Export Financing', amount: 'Rp 4.8B', committee: 'CC-1', slaDue: 'Due in 6d', slaBreached: false, priority: 'normal', status: 'rejected', rm: 'Fikri Hakim', myVote: 'reject', voteComment: '', voted: true, aiScore: 40, aiRec: 'Reject', aiReason: 'Insufficient export license, high concentration risk in single buyer.', metrics: [{ label: 'LTV', value: '80%', color: 'text-red-600' }, { label: 'DSCR', value: '1.1x' }, { label: 'Credit Score', value: '640', color: 'text-amber-600' }, { label: 'Industry Risk', value: 'High', color: 'text-red-600' }], documents: ['Credit Application Form.pdf', 'Export Invoice.pdf'] },
-]))
-persistRef('crm:committee:queueItems', queueItems)
+onMounted(() => { loadQueue(); loadDecisions() })
 
 const filteredQueue = computed(() => {
   return queueItems.value.filter((item) => {
@@ -1222,155 +1067,82 @@ const filteredQueue = computed(() => {
   })
 })
 
-const meetings = ref([
-  {
-    id: 1,
-    title: 'Credit Committee Level 1 — May Session',
-    committee: 'CC-1',
-    day: '28',
-    month: 'MAY',
-    time: '09:00 – 11:00 WIB',
-    location: 'Board Room 1, IGLO Office Jakarta',
-    color: 'bg-[#980000]',
-    status: 'upcoming',
-    cases: 3,
-    quorum: 3,
-    members: [
-      { name: 'Budi Hartono', role: 'Chair', confirmed: true },
-      { name: 'Siti Rahma', role: 'Risk Officer', confirmed: true },
-      { name: 'Agus Setiawan', role: 'Credit Analyst', confirmed: true },
-      { name: 'Lina Permata', role: 'Compliance', confirmed: false },
-    ],
-    agenda: ['Review CC-2026-0187 PT Maju Bersama Tbk', 'Review CC-2026-0186 CV Sukses Makmur', 'Review CC-2026-0184 PT Agri Sejahtera', 'AOB'],
-  },
-  {
-    id: 2,
-    title: 'Credit Committee Level 2 — Emergency Session',
-    committee: 'CC-2',
-    day: '26',
-    month: 'MAY',
-    time: '14:00 – 16:00 WIB',
-    location: 'Video Conference (Teams)',
-    color: 'bg-amber-600',
-    status: 'in_progress',
-    cases: 2,
-    quorum: 4,
-    members: [
-      { name: 'Direktur Kredit', role: 'Chair', confirmed: true },
-      { name: 'Divisi Risiko', role: 'Risk Officer', confirmed: true },
-      { name: 'Divisi Kepatuhan', role: 'Compliance', confirmed: true },
-      { name: 'Branch Manager', role: 'Proposing RM', confirmed: true },
-      { name: 'Legal Counsel', role: 'Legal', confirmed: false },
-    ],
-    agenda: ['Review CC-2026-0185 PT Teknologi Nusantara', 'Review CC-2026-0181 PT Logistik Prima'],
-  },
-  {
-    id: 3,
-    title: 'Risk Management Committee — Monthly Review',
-    committee: 'RMC',
-    day: '30',
-    month: 'MAY',
-    time: '10:00 – 12:00 WIB',
-    location: 'Executive Floor, IGLO Office',
-    color: 'bg-blue-600',
-    status: 'upcoming',
-    cases: 5,
-    quorum: 5,
-    members: [
-      { name: 'Direktur Utama', role: 'Chair', confirmed: true },
-      { name: 'Direktur Kredit', role: 'Member', confirmed: true },
-      { name: 'Direktur Risiko', role: 'Member', confirmed: true },
-      { name: 'Direktur Kepatuhan', role: 'Member', confirmed: false },
-      { name: 'Komisaris Independen', role: 'Observer', confirmed: true },
-    ],
-    agenda: ['Portfolio NPL Review Q1 2026', 'Sector Concentration Review', 'Large Exposure Report', 'Early Warning System Update', 'New Credit Policy Endorsement'],
-  },
-])
+const meetings = ref([])
 
-const committees = ref(loadPersisted('crm:committee:committees', [
-  {
-    id: 1, name: 'Credit Committee Level 1', code: 'CC-1',
-    description: 'Handles credit facilities up to Rp 10 Billion per borrower/group.',
-    authority: '≤ Rp 10 Billion',
-    quorum: 3,
-    sla: '3 business days',
-    approvalRule: 'Simple Majority (>50%)',
-    members: ['Budi Hartono', 'Siti Rahma', 'Agus Setiawan', 'Lina Permata', 'Wahyu Prasetyo'],
-  },
-  {
-    id: 2, name: 'Credit Committee Level 2', code: 'CC-2',
-    description: 'Handles credit facilities from Rp 10B to Rp 50 Billion per borrower/group.',
-    authority: 'Rp 10B – Rp 50B',
-    quorum: 4,
-    sla: '5 business days',
-    approvalRule: 'Supermajority (≥2/3)',
-    members: ['Direktur Kredit', 'Divisi Risiko', 'Divisi Kepatuhan', 'Branch Manager', 'Legal Counsel', 'Komisaris'],
-  },
-  {
-    id: 3, name: 'Credit Committee Level 3', code: 'CC-3',
-    description: 'Board-level committee for large exposures exceeding Rp 50 Billion.',
-    authority: '> Rp 50 Billion',
-    quorum: 5,
-    sla: '7 business days',
-    approvalRule: 'Unanimous',
-    members: ['Direktur Utama', 'Direktur Kredit', 'Direktur Risiko', 'Direktur Kepatuhan', 'Komisaris Independen', 'Komisaris Utama'],
-  },
-  {
-    id: 4, name: 'Risk Management Committee', code: 'RMC',
-    description: 'Enterprise-wide risk oversight including NPL policy and portfolio concentration.',
-    authority: 'Policy & Oversight',
-    quorum: 5,
-    sla: '10 business days',
-    approvalRule: 'Simple Majority (>50%)',
-    members: ['Direktur Utama', 'Direktur Kredit', 'Direktur Risiko', 'Direktur Kepatuhan', 'Komisaris Independen'],
-  },
-]))
-persistRef('crm:committee:committees', committees)
+async function loadMeetings() {
+  try {
+    const rows = await call('crm.api.committee.list_meetings')
+    meetings.value = (rows || []).map((m) => {
+      const date = new Date(m.scheduled_at)
+      return {
+        id: m.name,
+        scheduledAt: m.scheduled_at,
+        title: m.title,
+        committee: m.committee,
+        day: String(date.getDate()),
+        month: date.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        time: date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        location: m.location || '',
+        color: 'bg-[#980000]',
+        status: m.status === 'In Progress' ? 'in_progress' : m.status?.toLowerCase() || 'scheduled',
+        cases: m.agenda?.length || 0,
+        members: Array.isArray(m.attendees) ? m.attendees.map((a) => typeof a === 'string' ? { name: a, role: '', confirmed: false } : { name: a.name || a.user || '', role: a.role || '', confirmed: a.response === 'yes' }) : [],
+        agenda: (m.agenda || []).map((a) => typeof a === 'string' ? a : a.item || a.title || ''),
+      }
+    })
+    agendaItems.value = meetings.value.flatMap((meeting) => meeting.agenda.map((item, index) => ({
+      id: `${meeting.id}-${index}`,
+      meetingId: meeting.id,
+      order: index + 1,
+      caseId: '',
+      applicant: item,
+      timebox: 15,
+      attachments: [],
+    })))
+    liveMeetingId.value ||= meetings.value[0]?.id || null
+  } catch {
+    showToast('Meetings could not be loaded')
+  }
+}
 
-const analyticsKPIs = [
-  { label: 'Approval Rate', value: '79.2%', trend: 3.1 },
-  { label: 'Avg TAT', value: '3.2 days', trend: -8.5 },
-  { label: 'SLA Compliance', value: '94.1%', trend: 1.8 },
-  { label: 'Quorum Met Rate', value: '96.7%', trend: 0.5 },
-]
+onMounted(loadMeetings)
 
-const approvalByCommittee = [
-  { name: 'CC-1', rate: 82, approved: 41, rejected: 7, deferred: 2, approvedPct: 82, rejectedPct: 14, deferredPct: 4 },
-  { name: 'CC-2', rate: 74, approved: 22, rejected: 6, deferred: 2, approvedPct: 74, rejectedPct: 20, deferredPct: 7 },
-  { name: 'CC-3', rate: 67, approved: 4, rejected: 2, deferred: 0, approvedPct: 67, rejectedPct: 33, deferredPct: 0 },
-  { name: 'RMC', rate: 90, approved: 9, rejected: 1, deferred: 0, approvedPct: 90, rejectedPct: 10, deferredPct: 0 },
-]
+const committees = ref([])
 
-const tatBuckets = [
-  { label: '0–1 days', count: 12, pct: 24, color: 'bg-green-500' },
-  { label: '2–3 days', count: 22, pct: 44, color: 'bg-green-400' },
-  { label: '4–5 days', count: 10, pct: 20, color: 'bg-amber-400' },
-  { label: '6–7 days', count: 4, pct: 8, color: 'bg-orange-500' },
-  { label: '> 7 days', count: 2, pct: 4, color: 'bg-red-500' },
-]
+async function loadCommittees() {
+  try {
+    const rows = await call('crm.api.committee.list_committees')
+    committees.value = (rows || []).map((c) => ({
+      id: c.name,
+      name: c.committee_name,
+      code: c.name,
+      description: c.description || '',
+      authority: '',
+      quorumPct: c.quorum_pct,
+      quorum: Math.ceil((c.members?.length || 0) * (c.quorum_pct || 0) / 100),
+      sla: '',
+      approvalRule: c.majority_rule,
+      chairTieBreak: !!c.chairman_tie_break,
+      members: (c.members || []).map((m) => m.member_name || m.member),
+    }))
+  } catch {
+    showToast('Committees could not be loaded')
+  }
+}
 
-const memberParticipation = [
-  { name: 'Budi Hartono', meetings: 12, attendance: 100, votes: 48 },
-  { name: 'Siti Rahma', meetings: 12, attendance: 92, votes: 44 },
-  { name: 'Agus Setiawan', meetings: 12, attendance: 83, votes: 40 },
-  { name: 'Direktur Kredit', meetings: 8, attendance: 88, votes: 32 },
-  { name: 'Direktur Risiko', meetings: 8, attendance: 100, votes: 30 },
-]
-
-const monthlyVolume = [
-  { month: 'Dec', count: 14 },
-  { month: 'Jan', count: 18 },
-  { month: 'Feb', count: 16 },
-  { month: 'Mar', count: 22 },
-  { month: 'Apr', count: 20 },
-  { month: 'May', count: 25 },
-]
+onMounted(loadCommittees)
 
 const calendarCells = computed(() => {
   const cells = []
-  for (let i = 0; i < 4; i++) cells.push({ key: 'pre' + i, day: '', hasEvent: false, today: false })
-  for (let d = 1; d <= 31; d++) {
-    cells.push({ key: d, day: d, hasEvent: [6, 13, 20, 26, 28, 30].includes(d), today: d === 24 })
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const firstDay = new Date(year, month, 1).getDay()
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const meetingDays = new Set(meetings.value.map((meeting) => new Date(meeting.scheduledAt)).filter((date) => date.getFullYear() === year && date.getMonth() === month).map((date) => date.getDate()))
+  for (let i = 0; i < firstDay; i++) cells.push({ key: 'pre' + i, day: '', hasEvent: false, today: false })
+  for (let d = 1; d <= lastDay; d++) {
+    cells.push({ key: d, day: d, hasEvent: meetingDays.has(d), today: d === now.getDate() })
   }
   return cells
 })
@@ -1424,8 +1196,9 @@ function openVoting(item) {
   const session = meetings.value.find((m) => m.status === 'in_progress') || meetings.value[0]
   activeSession.value = {
     ...session,
+    members: session?.members || [],
     cases: queueItems.value.filter((q) => ['pending', 'in_session'].includes(q.status)),
-    votedCount: 2,
+    votedCount: 0,
   }
   const idx = activeSession.value.cases.findIndex((c) => c.id === item.id)
   activeSessionCaseIdx.value = idx >= 0 ? idx : 0
@@ -1443,15 +1216,23 @@ function startSession(mtg) {
   activeTab.value = 'voting'
 }
 
-function castVote(cas, vote) {
-  cas.myVote = vote
-  cas.voted = true
-  if (activeSession.value) {
-    activeSession.value.votedCount = Math.min(activeSession.value.votedCount + 1, activeSession.value.members.length)
-    const member = activeSession.value.members.find((m) => m.name === 'Budi Hartono')
-    if (member) member.vote = vote
+async function castVote(cas, vote) {
+  if (!voteSignatureAck.value) return showToast('Confirm your electronic signature before voting')
+  const decision = { approve: 'Approve', reject: 'Reject', defer: 'Refer Back' }[vote]
+  try {
+    await call('crm.api.committee.submit_vote', {
+      item: cas.id,
+      decision,
+      comment: cas.voteComment,
+      signature_ack: 1,
+    })
+    voteSignatureAck.value = false
+    showToast('Vote recorded')
+    await loadQueue()
+    await loadDecisions()
+  } catch (error) {
+    showToast(error?.message || 'Vote could not be recorded')
   }
-  showToast(`Vote recorded: ${vote.charAt(0).toUpperCase() + vote.slice(1)}`)
 }
 
 function caseDetailFields(cas) {
@@ -1463,46 +1244,54 @@ function caseDetailFields(cas) {
     { label: 'Relationship Manager', value: cas.rm },
     { label: 'Status', value: statusLabel(cas.status) },
     { label: 'SLA Due', value: cas.slaDue },
-    { label: 'AI Score', value: cas.aiScore + '/100' },
+    { label: 'Risk Score', value: cas.aiScore == null ? '—' : cas.aiScore + '/100' },
   ]
 }
 
-function saveMeeting() {
-  showScheduleModal.value = false
-  showToast('Meeting scheduled successfully')
+async function saveMeeting() {
+  if (!meetingForm.title.trim() || !meetingForm.committee || !meetingForm.date || !meetingForm.time) {
+    showToast('Title, committee, date, and time are required')
+    return
+  }
+  try {
+    await call('crm.api.committee.create_meeting', {
+      title: meetingForm.title.trim(),
+      committee: meetingForm.committee,
+      scheduled_at: `${meetingForm.date} ${meetingForm.time}:00`,
+      location: meetingForm.location,
+      agenda: JSON.stringify(meetingForm.agenda.split('\n').map((item) => item.trim()).filter(Boolean).map((item) => ({ item }))),
+    })
+    showScheduleModal.value = false
+    Object.assign(meetingForm, { title: '', committee: '', date: '', time: '', location: '', agenda: '' })
+    await loadMeetings()
+    showToast('Meeting scheduled')
+  } catch (error) {
+    showToast(error?.message || 'Meeting could not be scheduled')
+  }
 }
 
-function saveCommittee() {
+async function saveCommittee() {
   const f = committeeForm.value
-  if (!f.name || !f.code) {
-    showToast('Name and code are required')
+  if (!f.name) {
+    showToast('Committee name is required')
     return
   }
   const members = f.members.filter((m) => m.name && m.name.trim())
-  const quorumCount = Math.max(1, Math.ceil((members.length || 1) * (f.quorumPct / 100)))
-  const payload = {
-    id: f.id || (committees.value.length ? Math.max(...committees.value.map((c) => c.id)) + 1 : 1),
-    name: f.name,
-    code: f.code,
-    description: f.description,
-    authority: f.authority,
-    quorum: quorumCount,
-    quorumPct: f.quorumPct,
-    sla: `${f.slaDays} business days`,
-    slaDays: f.slaDays,
-    approvalRule: f.approvalRule,
-    chairTieBreak: f.chairTieBreak,
-    members,
+  try {
+    await call('crm.api.committee.upsert_committee', {
+      committee_name: f.name,
+      quorum_pct: f.quorumPct,
+      majority_rule: f.approvalRule,
+      chairman_tie_break: Number(f.chairTieBreak),
+      description: f.description,
+      members: JSON.stringify(members.map((m) => ({ member: m.name, role: m.role, weight: m.weight }))),
+    })
+    await loadCommittees()
+    closeSetupModal()
+    showToast('Committee saved')
+  } catch (error) {
+    showToast(error?.message || 'Committee could not be saved')
   }
-  if (f.id) {
-    const idx = committees.value.findIndex((c) => c.id === f.id)
-    if (idx >= 0) committees.value.splice(idx, 1, { ...committees.value[idx], ...payload, members: members.map((m) => m.name) })
-    showToast('Committee updated')
-  } else {
-    committees.value.push({ ...payload, members: members.map((m) => m.name) })
-    showToast('Committee created successfully')
-  }
-  closeSetupModal()
 }
 
 function fmtDate(d) {

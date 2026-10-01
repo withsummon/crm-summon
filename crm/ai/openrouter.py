@@ -14,7 +14,7 @@ def get_ai_settings():
 		{
 			"provider": "OpenRouter",
 			"model": os.getenv("OPENROUTER_MODEL") or DEFAULT_LLM_MODEL,
-			"api_key": os.getenv("OPENROUTER_API_KEY"),
+			"api_key": os.getenv("OPENROUTER_API_KEY") or frappe.conf.get("openrouter_api_key"),
 			"rag_storage_path": "",
 			"local_embedding_model": "BAAI/bge-m3",
 			"guardrail_confidence_threshold": 0.45,
@@ -25,7 +25,7 @@ def get_ai_settings():
 	try:
 		doc = frappe.get_doc("FCRM Settings")
 		settings.model = doc.get("llm_model") or os.getenv("OPENROUTER_MODEL") or DEFAULT_LLM_MODEL
-		settings.api_key = os.getenv("OPENROUTER_API_KEY") or doc.get_password("openrouter_api_key")
+		settings.api_key = os.getenv("OPENROUTER_API_KEY") or frappe.conf.get("openrouter_api_key") or doc.get_password("openrouter_api_key")
 		settings.rag_storage_path = doc.get("rag_storage_path") or ""
 		settings.local_embedding_model = doc.get("local_embedding_model") or "BAAI/bge-m3"
 		val = doc.get("guardrail_confidence_threshold")
@@ -39,7 +39,7 @@ def get_ai_settings():
 
 def _client(settings, timeout):
 	if not settings.api_key or "******" in settings.api_key:
-		frappe.throw(_("OpenRouter API key is not configured. Set OPENROUTER_API_KEY or add it in AI Settings."))
+		frappe.throw(_("AI service is not configured. Ask an administrator to update AI Settings."))
 	return OpenRouter(api_key=settings.api_key, x_open_router_title="IGLO CRM", timeout_ms=timeout * 1000)
 
 

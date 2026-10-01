@@ -140,9 +140,6 @@
         <div class="rounded-xl bg-white p-4 shadow-sm border border-crm-border">
           <h3 class="text-sm font-semibold text-crm-text mb-3">
             {{ __('Hasil Ekstraksi') }}
-            <span class="text-xs font-normal text-crm-text-secondary ml-2">
-              ({{ ocrResult.model }})
-            </span>
           </h3>
           <pre class="text-xs text-crm-text bg-crm-surface rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">{{ extractedText }}</pre>
         </div>

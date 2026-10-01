@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -288,7 +289,7 @@ def _get_base_capital() -> float:
 	return float(
 		frappe.db.get_single_value("FCRM Settings", "core_capital")
 		or frappe.db.get_value("FCRM Settings", None, "core_capital")
-		or 12500000000000
+		or 0
 	)
 
 
@@ -326,22 +327,43 @@ def _aggregate_exposure_accounts(from_date: str | None = None, to_date: str | No
 		return []
 
 	accounts = []
+	customer_names = {row.customer for row in rows if row.customer}
+	customers = {
+		customer.name: customer
+		for customer in frappe.get_all(
+			"Customer",
+			filters={"name": ["in", list(customer_names)]},
+			fields=["name", "customer_name", "territory"],
+		)
+	} if customer_names and frappe.db.table_exists("Customer") else {}
+	industries = {}
+	if customer_names and frappe.db.table_exists("CRM Credit Application"):
+		for application in frappe.get_all(
+			"CRM Credit Application",
+			filters={"borrower": ["in", list(customer_names)]},
+			fields=["borrower", "industry", "kbli"],
+			order_by="modified desc",
+		):
+			industries.setdefault(application.borrower, application)
 	for row in rows:
+		customer = customers.get(row.customer)
+		industry = industries.get(row.customer)
 		os_val = flt(row.os_amount or 0)
 		is_npl = int(row.npl_flag or 0) or (os_val > 0 and row.status == "Restructured")
-		dpd = frappe.db.count("CRM Transaction History", {"customer": row.customer, "docstatus": 0}) if frappe.db.table_exists("CRM Transaction History") else 0
+		# A transaction count is not a days-past-due measurement.
+		dpd = 0
 
 		accounts.append({
 			"customer": row.customer,
-			"customer_name": row.customer_name or row.customer,
+			"customer_name": (customer.customer_name if customer else None) or row.customer,
 			"group_name": "",
 			"os_amount": os_val,
 			"limit_amount": flt(row.limit_amount or 0),
 			"product": row.product or "",
-			"industry_kbli": "",
-			"industry_name": "",
-			"region": "",
-			"province": "",
+			"industry_kbli": (industry.kbli if industry else None) or "",
+			"industry_name": (industry.industry if industry else None) or "",
+			"region": (customer.territory if customer else None) or "",
+			"province": (customer.territory if customer else None) or "",
 			"risk_grade": row.risk_grade or "NR",
 			"dpd": dpd,
 			"status": row.status or "Active",
@@ -352,15 +374,8 @@ def _aggregate_exposure_accounts(from_date: str | None = None, to_date: str | No
 
 
 def _sync_exposure_accounts(from_date=None, to_date=None):
-	"""Sync exposure accounts table from live CRM data."""
-	ensure_portfolio_tables()
-	accounts = _aggregate_exposure_accounts(from_date, to_date)
-	quote = '"' if frappe.db.db_type == 'postgres' else '`'
-	if frappe.db.table_exists("CRM Exposure Account"):
-		frappe.db.sql(f"DELETE FROM {quote}tabCRM Exposure Account{quote}")
-		for acc in accounts:
-			_raw_insert("CRM Exposure Account", acc)
-	return accounts
+	"""Read live facilities without rewriting exposure records on every request."""
+	return _aggregate_exposure_accounts(from_date, to_date)
 
 
 # ============================================================
@@ -507,8 +522,8 @@ def get_industry_exposure(from_date: str | None = None, to_date: str | None = No
 	for ind, data in industry_map.items():
 		pct = (data["os"] / total_os * 100) if total_os else 0
 		limit_info = limits.get(ind, {})
-		limit_pct = limit_info.get("limit_percent", 25.0)
-		usage = (pct / limit_pct * 100) if limit_pct else 0
+		limit_pct = flt(limit_info.get("limit_percent")) or None
+		usage = (pct / limit_pct * 100) if limit_pct else None
 		industries.append({
 			"name": ind,
 			"kbli": data["kbli"],
@@ -516,15 +531,15 @@ def get_industry_exposure(from_date: str | None = None, to_date: str | None = No
 			"os_raw": round(data["os"], 2),
 			"pct": f"{pct:.1f}%",
 			"pct_raw": round(pct, 1),
-			"limit": f"{limit_pct:.1f}%",
+			"limit": f"{limit_pct:.1f}%" if limit_pct else "—",
 			"limit_raw": limit_pct,
-			"usage": round(usage, 1),
+			"usage": round(usage, 1) if usage is not None else None,
 			"count": data["count"],
 		})
 
 	industries.sort(key=lambda x: x["os_raw"], reverse=True)
-	breach_count = sum(1 for i in industries if i["usage"] > 100)
-	warning_count = sum(1 for i in industries if 80 < i["usage"] <= 100)
+	breach_count = sum(1 for i in industries if i["usage"] is not None and i["usage"] > 100)
+	warning_count = sum(1 for i in industries if i["usage"] is not None and 80 < i["usage"] <= 100)
 
 	return {
 		"industries": industries[:20],
@@ -542,18 +557,18 @@ def _get_concentration_limits(dimension: str) -> dict:
 		(dimension,),
 		as_dict=True,
 	)
-	if not rows:
-		defaults = {
-			"industry": {"Food & Beverage Processing": 25.0, "Real Estate & Property": 20.0, "Wholesale Trade": 25.0, "Agriculture": 25.0, "Manufacturing": 25.0, "Mining": 20.0, "Construction": 20.0, "Transportation": 25.0, "Financial Services": 25.0, "Other Services": 30.0},
-			"region": {"Jawa": 40.0, "Sumatera": 25.0, "Kalimantan": 20.0, "Sulawesi": 15.0, "Papua": 10.0, "Other": 15.0},
-		}
-		return defaults.get(dimension, {})
 	return {r["dimension_value"]: r for r in rows}
 
 
 # ============================================================
 #  GEOGRAPHIC EXPOSURE (3.0)
 # ============================================================
+
+@frappe.whitelist()
+def get_map_config() -> dict:
+	"""Expose only the public browser token, never a secret token."""
+	token = frappe.conf.get("mapbox_access_token") or os.environ.get("MAPBOX_ACCESS_TOKEN", "")
+	return {"token": token if token.startswith("pk.") else ""}
 
 @frappe.whitelist()
 def get_geographic_exposure(from_date: str | None = None, to_date: str | None = None) -> dict:
@@ -954,10 +969,27 @@ def get_watchlist(from_date: str | None = None) -> dict:
 		return _EMPTY_WATCHLIST()
 
 	watchlist = _db_sql("""
-		SELECT * FROM `tabCRM Watchlist Case`
+		SELECT * FROM `tabCRM Watchlist Case` WHERE customer IS NOT NULL AND customer != ''
 		ORDER BY creation DESC
 		LIMIT 50
 	""", as_dict=True)
+	linked_customers = {row.customer for row in watchlist}
+	for facility in frappe.get_all(
+		"CRM Credit Facility",
+		filters={"status": "Watchlist"},
+		fields=["name", "customer", "outstanding"],
+	):
+		if not facility.customer or facility.customer in linked_customers:
+			continue
+		watchlist.append({
+			"name": facility.name,
+			"customer": facility.customer,
+			"borrower_name": frappe.db.get_value("Customer", facility.customer, "customer_name") or facility.customer,
+			"os_amount": facility.outstanding,
+			"dpd": None,
+			"reason": "Facility on watchlist",
+			"source": "facility",
+		})
 
 	return {"watchlist": watchlist, "count": len(watchlist)}
 
@@ -984,8 +1016,11 @@ def add_to_watchlist(borrower_name: str, os_amount: float, dpd: int = 0, reason:
 	"""Add a borrower to the watchlist."""
 	_check_portfolio_permission()
 	ensure_portfolio_tables()
+	customer = frappe.db.get_value("Customer", {"customer_name": borrower_name}, "name") or frappe.db.exists("Customer", borrower_name)
+	if not customer:
+		frappe.throw(_("Select an existing customer before adding a watchlist case."))
 	watch_id = _raw_insert("CRM Watchlist Case", {
-		"customer": "",
+		"customer": customer,
 		"borrower_name": borrower_name,
 		"os_amount": os_amount,
 		"dpd": dpd,
@@ -1017,15 +1052,8 @@ def request_watchlist_removal(watch_id: str, reason: str) -> dict:
 
 @frappe.whitelist()
 def get_simulation_presets() -> dict:
-	"""Return preset hypothetical accounts for what-if simulation."""
-	presets = [
-		{"name": "Purnama Property Group", "sector": "Real Estate", "os": "IDR 0.85 T", "os_raw": 850_000_000_000},
-		{"name": "Kalpataru Food Processor", "sector": "Food Processing", "os": "IDR 0.42 T", "os_raw": 420_000_000_000},
-		{"name": "Nusantara Mining Corp", "sector": "Mining", "os": "IDR 1.20 T", "os_raw": 1_200_000_000_000},
-		{"name": "Merpati Airlines", "sector": "Transportation", "os": "IDR 0.65 T", "os_raw": 650_000_000_000},
-		{"name": "Sinar Laut Perikanan", "sector": "Agriculture", "os": "IDR 0.28 T", "os_raw": 280_000_000_000},
-	]
-	return {"presets": presets}
+	"""Do not present invented borrowers as portfolio records."""
+	return {"presets": []}
 
 
 @frappe.whitelist()

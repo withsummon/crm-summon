@@ -243,11 +243,6 @@ const routes = [
         name: 'Committee Approval',
         component: () => import('@/pages/CommitteeApproval.vue'),
       },
-      {
-        path: 'covenant-monitoring',
-        name: 'Covenant Monitoring',
-        component: () => import('@/pages/CovenantMonitoring.vue'),
-      },
       // ─── Workflow Engine ───────────────────────────────────
       {
         path: 'workflow-engine',

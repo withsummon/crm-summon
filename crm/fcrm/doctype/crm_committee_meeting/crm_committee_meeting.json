@@ -16,7 +16,8 @@
   "location",
   "agenda_json",
   "attendees_json",
-  "notes"
+  "notes",
+  "transcript_json"
  ],
  "fields": [
   {"default": "CRM-COMM-.YYYY.-", "fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "CRM-COMM-.YYYY.-"},
@@ -30,7 +31,8 @@
   {"fieldname": "location", "fieldtype": "Data", "label": "Location"},
   {"fieldname": "agenda_json", "fieldtype": "Long Text", "label": "Agenda (JSON)"},
   {"fieldname": "attendees_json", "fieldtype": "Long Text", "label": "Attendees (JSON)"},
-  {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes / Minutes"}
+  {"fieldname": "notes", "fieldtype": "Text Editor", "label": "Notes / Minutes"},
+  {"fieldname": "transcript_json", "fieldtype": "Long Text", "label": "Live Transcript", "read_only": 1}
  ],
  "index_web_pages_for_search": 1,
  "links": [],

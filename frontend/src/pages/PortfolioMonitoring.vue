@@ -241,7 +241,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
-                  <tr v-for="ind in (industryData?.industries || [])" :key="ind.kbli" class="hover:bg-slate-50 transition-all">
+                  <tr v-for="ind in (industryData?.industries || [])" :key="ind.name" class="hover:bg-slate-50 transition-all">
                     <td class="py-4 font-bold text-slate-900">
                       {{ ind.name }}
                       <span class="block text-[10px] text-slate-500 font-light">KBLI Code: {{ ind.kbli || 'N/A' }}</span>
@@ -250,7 +250,7 @@
                     <td class="py-4 font-semibold text-primary-400">{{ ind.pct }}</td>
                     <td class="py-4 text-slate-500">{{ ind.limit }}</td>
                     <td class="py-4 w-1/4">
-                      <div class="space-y-1">
+                      <div v-if="ind.usage != null" class="space-y-1">
                         <div class="flex justify-between text-[10px] font-semibold text-slate-500">
                           <span>Usage: {{ ind.usage }}%</span>
                         </div>
@@ -264,15 +264,16 @@
                           ></div>
                         </div>
                       </div>
+                      <span v-else class="text-slate-400">—</span>
                     </td>
                     <td class="py-4">
                       <span 
                         :class="[
                           'px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border',
-                          ind.usage > 100 ? 'bg-red-500/10 text-red-400 border-red-500/30' : ind.usage > 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-primary-500/10 text-primary-400 border-primary-500/30'
+                          ind.usage == null ? 'bg-slate-100 text-slate-500 border-slate-200' : ind.usage > 100 ? 'bg-red-500/10 text-red-400 border-red-500/30' : ind.usage > 80 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-primary-500/10 text-primary-400 border-primary-500/30'
                         ]"
                       >
-                        {{ ind.usage > 100 ? 'Breach' : ind.usage > 80 ? 'Warning' : 'Normal' }}
+                        {{ ind.usage == null ? 'No limit set' : ind.usage > 100 ? 'Breach' : ind.usage > 80 ? 'Warning' : 'Normal' }}
                       </span>
                     </td>
                   </tr>
@@ -290,8 +291,14 @@
                 <h3 class="text-sm font-bold text-slate-900">Regional Exposure breakdown</h3>
                 <p class="text-xs text-slate-500">NPL and outstanding tracking per Indonesian provinces.</p>
               </div>
-              <div v-if="!geographicData?.regions?.length" class="p-4 text-center text-slate-500 text-xs">
+              <div v-if="geographicResource.loading" class="p-4 text-center text-slate-500 text-xs">
                 Loading geographic data...
+              </div>
+              <div v-else-if="geographicResource.error" class="p-4 text-center text-red-600 text-xs">
+                Regional data could not be loaded.
+              </div>
+              <div v-else-if="!geographicData?.regions?.length" class="p-4 text-center text-slate-500 text-xs">
+                No credit facilities with regional data are available.
               </div>
               <div class="space-y-3" v-else>
                 <div 
@@ -328,17 +335,18 @@
                 </div>
               </div>
 
+              <p v-if="mapStatus" class="mb-2 text-xs text-slate-600" role="status">{{ mapStatus }}</p>
               <div id="portfolio-map" class="h-96 w-full rounded-xl border border-slate-200 shadow-inner overflow-hidden"></div>
 
               <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="rounded-3xl bg-slate-50 border border-slate-100 p-4">
                   <p class="text-[10px] uppercase tracking-widest text-slate-500">Selected Region</p>
                   <h4 class="mt-2 text-lg font-semibold text-slate-900">{{ selectedProvince }}</h4>
-                  <p class="mt-2 text-sm text-slate-600">Regional markers are linked to the geographic metrics sidebar and update on every map interaction.</p>
+                  <p class="mt-2 text-sm text-slate-600">The map follows regions present in current facility records.</p>
                 </div>
                 <div class="rounded-3xl bg-slate-50 border border-slate-100 p-4">
                   <p class="text-[10px] uppercase tracking-widest text-slate-500">Interaction Guide</p>
-                  <p class="mt-2 text-sm text-slate-600">Use the map or regional list to fly directly to hubs in Jawa, Sumatera, Kalimantan, Sulawesi, and Papua.</p>
+                  <p class="mt-2 text-sm text-slate-600">Select a region from the map or list to inspect its exposure.</p>
                 </div>
               </div>
             </div>
@@ -823,14 +831,14 @@
                   <tr v-for="w in (watchlistData?.watchlist || [])" :key="w.name" class="hover:bg-slate-50 transition-all">
                     <td class="py-4 font-bold text-slate-900">{{ w.borrower_name }}</td>
                     <td class="py-4 font-semibold text-slate-700">{{ formatIDR(w.os_amount) }}</td>
-                    <td class="py-4 text-rose-400 font-bold">{{ w.dpd }} Days</td>
+                    <td class="py-4 text-rose-400 font-bold">{{ w.dpd == null ? '—' : `${w.dpd} Days` }}</td>
                     <td class="py-4">
                       <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
                         {{ w.reason }}
                       </span>
                     </td>
                     <td class="py-4 text-right">
-                      <button 
+                      <button v-if="w.source !== 'facility'"
                         class="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 text-[10px] font-bold transition-all"
                         @click="requestRemoveWatchlist(w)"
                       >
@@ -1041,25 +1049,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { FeatherIcon, Dialog, Button, createResource, call } from 'frappe-ui'
 
 // ─── Period & Navigation ─────────────────────────────
 const activePeriod = ref('12M')
 const activeTab = ref('overview')
-const selectedProvince = ref('Jawa')
+const selectedProvince = ref('')
 const selectedMatrixCell = ref(null)
 const showReportBuilder = ref(false)
 const selectedTemplate = ref('Committee Meeting Summary Package (PDF)')
 const sendEmailReport = ref(false)
 const loading = ref(true)
 
-const map = ref(null)
+const map = shallowRef(null)
 const mapInitialized = ref(false)
+const mapStatus = ref('')
 const toast = ref({ show: false, message: '', type: 'success' })
-const markerRefs = ref({})
+const markerRefs = new Map()
 
 const currentDateLabel = computed(() => {
   const d = new Date()
@@ -1093,6 +1102,12 @@ const industryResource = createResource({
 const geographicResource = createResource({
   url: 'crm.api.portfolio_monitoring.get_geographic_exposure',
   auto: true,
+})
+
+const mapConfigResource = createResource({
+  url: 'crm.api.portfolio_monitoring.get_map_config',
+  auto: true,
+  onSuccess: () => nextTick(initializeMap),
 })
 
 const sblResource = createResource({
@@ -1178,14 +1193,6 @@ const kpiCards = computed(() => [
   { title: 'Portfolio NPL Ratio', value: `${overviewData.value.npl_rate || 0}%`, change: `${overviewData.value.npl_rate || 0}%`, trendUp: false, icon: 'trending-down' },
   { title: 'Watchlist Borrowers', value: `${overviewData.value.watchlist_count || 0} Accs`, change: `${overviewData.value.watchlist_count || 0}`, trendUp: (overviewData.value.watchlist_count || 0) > 0, icon: 'eye' },
 ])
-
-const regionalCenters = [
-  { province: 'Jawa', coords: [-7.250445, 112.768845], label: 'Greater Java Hub' },
-  { province: 'Sumatera', coords: [0.789275, 113.921327], label: 'Sumatera Banking Cluster' },
-  { province: 'Kalimantan', coords: [-1.493850, 113.144722], label: 'Kalimantan Regional Center' },
-  { province: 'Sulawesi', coords: [-0.789275, 120.741444], label: 'Sulawesi Growth Corridor' },
-  { province: 'Papua', coords: [-4.931132, 140.970716], label: 'Papua Emerging Hub' },
-]
 
 const navigationGroups = [
   {
@@ -1439,41 +1446,64 @@ function formatIDR(val) {
 
 // ─── Map ─────────────────────────────────────────────
 function initializeMap() {
-  if (mapInitialized.value) return
+  if (mapInitialized.value || activeTab.value !== 'geographic') return
   const mapElement = document.getElementById('portfolio-map')
   if (!mapElement) return
-
-  map.value = L.map(mapElement, {
-    center: [-2.5489, 118.0149],
-    zoom: 5,
-    zoomControl: true,
-    attributionControl: false,
-  })
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 18,
-  }).addTo(map.value)
-
-  regionalCenters.forEach(center => {
-    const marker = L.circleMarker(center.coords, {
-      radius: 10,
-      color: '#750000',
-      fillColor: '#14b8a6',
-      fillOpacity: 0.85,
-      weight: 2,
-      opacity: 0.95,
-    })
-      .addTo(map.value)
-      .bindPopup(`<strong>${center.province}</strong><br>${center.label}`)
-      .on('click', () => { selectedProvince.value = center.province })
-
-    markerRefs.value[center.province] = marker
-  })
-
-  if (markerRefs.value[selectedProvince.value]) {
-    markerRefs.value[selectedProvince.value].openPopup()
+  const token = mapConfigResource.data?.token
+  if (!token) {
+    mapStatus.value = 'Map access is not configured yet.'
+    return
   }
+  mapStatus.value = ''
+  mapboxgl.accessToken = token
+  map.value = new mapboxgl.Map({
+    container: mapElement,
+    style: 'mapbox://styles/mapbox/standard',
+    center: [118.0149, -2.5489],
+    zoom: 4.5,
+    pitch: 55,
+    bearing: -20,
+    projection: 'globe',
+  })
+  map.value.addControl(new mapboxgl.NavigationControl(), 'top-left')
+  map.value.on('load', () => {
+    map.value.addSource('terrain', {
+      type: 'raster-dem',
+      url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+      tileSize: 512,
+      maxzoom: 14,
+    })
+    map.value.setTerrain({ source: 'terrain', exaggeration: 1.4 })
+    updateMapMarkers()
+  })
+  map.value.on('error', () => { mapStatus.value = 'Map could not be loaded. Check map access.' })
   mapInitialized.value = true
+}
+
+async function updateMapMarkers() {
+  if (!map.value?.isStyleLoaded()) return
+  for (const marker of markerRefs.values()) marker.remove()
+  markerRefs.clear()
+  const token = mapConfigResource.data?.token
+  for (const region of geographicData.value.regions || []) {
+    if (!region.province || region.province === 'Other') continue
+    try {
+      const query = encodeURIComponent(`${region.province}, Indonesia`)
+      const response = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${query}&country=id&limit=1&access_token=${encodeURIComponent(token)}`)
+      if (!response.ok) continue
+      const result = await response.json()
+      const coordinates = result.features?.[0]?.geometry?.coordinates
+      if (!coordinates) continue
+      const marker = new mapboxgl.Marker({ color: '#980000' })
+        .setLngLat(coordinates)
+        .setPopup(new mapboxgl.Popup({ offset: 20 }).setText(`${region.province}: ${region.os}`))
+        .addTo(map.value)
+      marker.getElement().addEventListener('click', () => { selectedProvince.value = region.province })
+      markerRefs.set(region.province, marker)
+    } catch {
+      mapStatus.value = 'Some region markers could not be located.'
+    }
+  }
 }
 
 onMounted(() => {
@@ -1491,15 +1521,20 @@ watch(activeTab, async (tab) => {
   }
 })
 
+watch(geographicData, async (data) => {
+  if (!selectedProvince.value && data.regions?.length) selectedProvince.value = data.regions[0].province
+  await updateMapMarkers()
+})
+
 watch(selectedProvince, (province) => {
   if (!mapInitialized.value || !map.value || !province) return
-  const center = regionalCenters.find(item => item.province === province)
-  if (!center) return
-  map.value.flyTo(center.coords, 6, { duration: 1.2 })
-  if (markerRefs.value[province]) {
-    markerRefs.value[province].openPopup()
-  }
+  const marker = markerRefs.get(province)
+  if (!marker) return
+  map.value.flyTo({ center: marker.getLngLat(), zoom: 8, pitch: 65, essential: true })
+  marker.togglePopup()
 })
+
+onBeforeUnmount(() => map.value?.remove())
 
 watch(ewsData, () => {
   // update navigation badge when EWS changes

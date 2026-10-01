@@ -28,8 +28,6 @@
             <div class="min-w-0 flex-1">
               <div class="truncate text-sm font-semibold text-slate-900">{{ agent.name }}</div>
               <div class="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
-                <span>{{ agent.model || 'openai/gpt-6-luna' }}</span>
-                <span class="h-1 w-1 rounded-full bg-slate-300" />
                 <span>${{ formatCost(agent.cost_today) }}</span>
               </div>
             </div>
@@ -46,7 +44,7 @@
         <template #left-header>
           <div>
             <h2 class="text-base font-semibold text-slate-900">{{ selectedAgent?.name || __('AI Agent Center') }}</h2>
-            <p class="text-xs text-slate-500">{{ selectedAgent?.role || __('RAG-grounded banking assistant') }}</p>
+            <p class="text-xs text-slate-500">{{ selectedAgent?.role || __('Banking assistant') }}</p>
           </div>
         </template>
         <template #right-header>
@@ -58,7 +56,7 @@
             <Button variant="outline" size="sm" :label="__('AI Settings')" @click="openAISettings">
               <template #prefix><FeatherIcon name="settings" class="h-4 w-4" /></template>
             </Button>
-            <Button variant="outline" size="sm" :label="__('Reindex RAG')" :loading="isReindexing" @click="reindexRag">
+            <Button variant="outline" size="sm" :label="__('Refresh knowledge')" :loading="isReindexing" @click="reindexRag">
               <template #prefix><FeatherIcon name="refresh-cw" class="h-4 w-4" /></template>
             </Button>
             <Button variant="ghost" size="sm" :label="__('Clear')" @click="clearChat">
@@ -109,7 +107,7 @@
                 >
                   <div v-if="message.loading" class="flex items-center gap-2 text-sm text-slate-500">
                     <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-primary-600" />
-                    {{ message.statusMessage || __('Memproses analisis terstruktur dengan OpenRouter dan RAG...') }}
+                    {{ message.statusMessage || __('Memproses analisis terstruktur...') }}
                   </div>
                   <div v-else-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-6">
                     {{ message.content }}
@@ -153,7 +151,6 @@
                     <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600" @click="submitFeedback(message, 'down')">
                       <FeatherIcon name="thumbs-down" class="h-4 w-4" />
                     </button>
-                    <span class="ml-auto text-[11px] text-slate-400">{{ message.model }} · {{ message.tokens || 0 }} tokens</span>
                   </div>
                 </div>
                 <div v-if="message.role === 'user'" class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-white">
@@ -420,16 +417,9 @@
                     <span class="font-semibold text-slate-800">{{ ragStatus.status || '-' }}</span>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <span>{{ __('Fallback chunks') }}</span>
+                    <span>{{ __('Indexed records') }}</span>
                     <span class="font-mono text-slate-800">{{ ragStatus.chunk_count || 0 }}</span>
                   </div>
-                  <div class="flex justify-between gap-3">
-                    <span>{{ __('RAGAnything') }}</span>
-                    <span class="font-semibold" :class="ragStatus.native_raganything_ready ? 'text-primary-700' : 'text-orange-700'">
-                      {{ ragStatus.native_raganything_ready ? __('Ready') : __('Parser missing') }}
-                    </span>
-                  </div>
-                  <p v-if="ragStatus.message" class="leading-5 text-orange-700">{{ ragStatus.message }}</p>
                 </div>
               </PanelBlock>
             </div>

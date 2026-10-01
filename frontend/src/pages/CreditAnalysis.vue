@@ -245,12 +245,12 @@
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <h3 class="font-bold text-slate-800">{{ __('AI Extraction Review') }}</h3>
-                  <p class="text-sm text-slate-500 mt-1">{{ __('RAGAnything parses document content and OpenRouter reviews extracted financial cells before save.') }}</p>
+                  <p class="text-sm text-slate-500 mt-1">{{ __('Document content and financial figures are reviewed before saving.') }}</p>
                 </div>
                 <Badge :label="extraction.status || __('Pending')" :theme="extraction.status === 'Extracted' ? 'green' : 'teal'" />
               </div>
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <MetricCard :label="__('Parser')" :value="extraction.parser || __('Not imported')" icon="cpu" />
+                <MetricCard :label="__('Document review')" :value="extraction.parser ? __('Completed') : __('Not imported')" icon="cpu" />
                 <MetricCard :label="__('Cells')" :value="String(extraction.cell_count || spreadRows.length)" icon="grid" />
                 <MetricCard :label="__('Low Confidence')" :value="String((extraction.low_confidence || []).length)" icon="alert-triangle" />
                 <MetricCard :label="__('File')" :value="extraction.file_url || __('No file imported')" icon="paperclip" />

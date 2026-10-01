@@ -1,6 +1,8 @@
 import hashlib
 import json
+import os
 from collections import defaultdict
+from urllib.request import Request, urlopen
 
 import frappe
 from frappe import _
@@ -541,7 +543,7 @@ def list_committees():
 		return []
 	committees = frappe.get_all(
 		"CRM Committee",
-		fields=["name", "committee_name", "active", "quorum_pct", "majority_rule", "chairman_tie_break"],
+		fields=["name", "committee_name", "description", "active", "quorum_pct", "majority_rule", "chairman_tie_break"],
 		order_by="committee_name asc",
 	)
 	for c in committees:
@@ -555,6 +557,8 @@ def list_committees():
 
 @frappe.whitelist()
 def upsert_committee(committee_name, quorum_pct=60, majority_rule="Simple", chairman_tie_break=0, active=1, description=None, members=None):
+	if not frappe.has_permission("CRM Committee", "write" if frappe.db.exists("CRM Committee", committee_name) else "create"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
 	doc = None
 	if frappe.db.exists("CRM Committee", committee_name):
 		doc = frappe.get_doc("CRM Committee", committee_name)
@@ -612,6 +616,63 @@ def list_meetings():
 	return meetings
 
 
+def _transcript_meeting(meeting, permission):
+	doc = frappe.get_doc("CRM Committee Meeting", meeting)
+	allowed = frappe.has_permission("CRM Committee Meeting", permission, doc=doc)
+	if permission == "write" and not allowed and frappe.has_permission("CRM Committee Meeting", "read", doc=doc):
+		allowed = doc.committee in {committee["name"] for committee in _user_committees()}
+	if not allowed:
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+	return doc
+
+
+@frappe.whitelist()
+def get_live_transcript(meeting):
+	doc = _transcript_meeting(meeting, "read")
+	return json.loads(doc.transcript_json or "[]")
+
+
+@frappe.whitelist()
+def set_meeting_status(meeting, status):
+	if status not in ("In Progress", "Completed"):
+		frappe.throw(_("Invalid meeting status"))
+	doc = _transcript_meeting(meeting, "write")
+	doc.db_set("status", status)
+	return {"status": status}
+
+
+@frappe.whitelist()
+def create_live_transcript_token(meeting):
+	_transcript_meeting(meeting, "write")
+	key = frappe.conf.get("elevenlabs_api_key") or os.environ.get("ELEVENLABS_API_KEY")
+	if not key:
+		frappe.throw(_("Live transcription is not configured"))
+	request = Request(
+		"https://api.elevenlabs.io/v1/single-use-token/realtime_scribe",
+		data=b"",
+		headers={"xi-api-key": key},
+		method="POST",
+	)
+	try:
+		with urlopen(request, timeout=15) as response:
+			return {"token": json.load(response)["token"]}
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Committee live transcript token")
+		frappe.throw(_("Live transcription is temporarily unavailable"))
+
+
+@frappe.whitelist()
+def save_live_transcript_segment(meeting, text):
+	doc = _transcript_meeting(meeting, "write")
+	text = (text or "").strip()
+	if not text or len(text) > 4000:
+		frappe.throw(_("Invalid transcript segment"))
+	segments = json.loads(doc.transcript_json or "[]")
+	segments.append({"text": text, "at": now_datetime().isoformat(), "by": frappe.session.user})
+	doc.db_set("transcript_json", json.dumps(segments, ensure_ascii=False))
+	return segments[-1]
+
+
 @frappe.whitelist()
 def rsvp_meeting(meeting, response):
 	if not _doctype_ready("CRM Committee Meeting"):
@@ -634,9 +695,11 @@ def rsvp_meeting(meeting, response):
 
 
 @frappe.whitelist()
-def create_meeting(title, committee, scheduled_at, duration_minutes=60, location=None):
+def create_meeting(title, committee, scheduled_at, duration_minutes=60, location=None, agenda=None):
 	if not _doctype_ready("CRM Committee Meeting"):
 		frappe.throw(_("Meetings not enabled."))
+	if not frappe.has_permission("CRM Committee Meeting", "create"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
 	if not frappe.db.exists("CRM Committee", committee):
 		frappe.throw(_("Committee not found."))
 	mt = frappe.get_doc({
@@ -647,9 +710,10 @@ def create_meeting(title, committee, scheduled_at, duration_minutes=60, location
 		"duration_minutes": int(duration_minutes),
 		"location": location or "",
 		"status": "Scheduled",
+		"agenda_json": agenda or "[]",
 		"attendees_json": "[]",
 	})
-	mt.insert(ignore_permissions=True)
+	mt.insert()
 	frappe.db.commit()
 	return {"name": mt.name, "message": "Meeting scheduled"}
 

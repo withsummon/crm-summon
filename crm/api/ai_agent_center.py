@@ -1353,8 +1353,8 @@ def get_rag_status():
 		"mineru_parser_available": mineru_available,
 		"chunk_count": chunk_count,
 		"document_count": document_count,
-		"status": "RAGAnything Ready" if raganything_available and mineru_available else "Fallback RAG Ready" if chunk_count else "Not Indexed",
-		"message": _("Install the MinerU CLI command and reindex RAG to enable native RAGAnything parsing.") if raganything_available and not mineru_available else "",
+		"status": "Ready" if raganything_available and mineru_available else "Available" if chunk_count else "Not Indexed",
+		"message": "",
 	}
 
 

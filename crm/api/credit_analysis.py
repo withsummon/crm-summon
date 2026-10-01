@@ -846,11 +846,11 @@ def _rows_from_pdf_file(application, file_url, file_path):
 	settings = get_ai_settings()
 	api_key = cstr(settings.api_key).strip()
 	if not api_key or "******" in api_key:
-		return [], [], [_("OpenRouter API key is not configured.")]
+		return [], [], [_("AI analysis is not configured.")]
 
 	text = _extract_pdf_text(file_path)
 	if not text.strip():
-		return [], [], [_("PDF text extraction is unavailable or returned no text. Configure OCR/RAGAnything runtime for scanned PDFs.")]
+		return [], [], [_("Document text could not be read. Check the file and try again.")]
 
 	metrics = []
 	for statement_type, items in STATEMENT_TEMPLATES.items():
@@ -1667,7 +1667,7 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 		parser = "Structured spreadsheet parser"
 		rows, low_confidence, errors = _rows_from_tabular_file(application, file_url, file_path, file_type)
 	elif file_type == "pdf":
-		parser = "PDF text extraction + OpenRouter"
+		parser = "Document analysis"
 		rows, low_confidence, errors = _rows_from_pdf_file(application, file_url, file_path)
 	else:
 		errors = [_("Unsupported file type: {0}. Upload PDF, XLSX, XLS, or CSV.").format(file_type or "unknown")]
@@ -2165,8 +2165,8 @@ def _ai_agent_features():
 		},
 		{
 			"key": "ai_agent_center_rag_openrouter",
-			"feature": "RAGAnything + OpenRouter",
-			"uat": "Grounded retrieval with real OpenRouter call path and audit/cost logging.",
+			"feature": "Knowledge-based assistance",
+			"uat": "Grounded retrieval with an audit trail and cost logging.",
 			"route": "/crm/crm-core/ai-agent-center",
 			"api": "crm.api.ai_agent_center.query_agent",
 		},
