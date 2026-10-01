@@ -27,10 +27,10 @@
         <div class="w-full space-y-6 px-4">
           <div class="text-center transition-all duration-300">
             <h3 class="text-xl font-bold text-gray-900 tracking-tight">
-              {{ statusMessage }}
+              {{ __('Adding matching leads') }}
             </h3>
             <p class="mt-1.5 text-sm text-gray-500 font-medium">
-              {{ subMessage }}
+              {{ __('Existing leads are skipped.') }}
             </p>
           </div>
 
@@ -67,7 +67,7 @@
             <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-secondary-400 to-secondary-600"></div>
             <div class="h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)] animate-pulse"></div>
             <p class="text-xs font-mono text-green-400/90 truncate tracking-wide">
-              {{ tickerMessage }}
+              {{ __('Processing available lead records') }}
             </p>
           </div>
         </div>
@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch } from 'vue'
 import { Dialog, FeatherIcon } from 'frappe-ui'
 
 const props = defineProps({
@@ -102,48 +102,6 @@ const show = ref(props.modelValue)
 watch(() => props.modelValue, (val) => show.value = val)
 watch(show, (val) => emit('update:modelValue', val))
 
-const statusMessage = ref('Initializing Engine...')
-const subMessage = ref('Connecting to high-speed data nodes')
-const tickerMessage = ref('BOOT_SYSTEM_OK')
-
-const tickers = [
-  'SCANNING_WEB_GRAPH...',
-  'EXTRACTING_COMPANY_META...',
-  'RESOLVING_CONTACT_IDENTITIES...',
-  'VALIDATING_EMAIL_REPUTATION...',
-  'BYPASSING_GATEKEEPERS...',
-  'FETCHING_INDUSTRY_TRENDS...',
-  'SYNCING_TO_SUMMON_DB...',
-  'OPTIMIZING_DATA_STRUCTURE...',
-]
-
-const statusFlow = [
-  { status: 'Searching Nodes', sub: 'Scanning global lead databases' },
-  { status: 'Scraping Data', sub: 'Extracting contact and organization info' },
-  { status: 'AI Enrichment', sub: 'Enhancing profiles with intelligent data' },
-  { status: 'Syncing Leads', sub: 'Storing validated leads into your CRM' },
-]
-
-let tickerInterval
-let statusInterval
-
-onMounted(() => {
-  tickerInterval = setInterval(() => {
-    tickerMessage.value = tickers[Math.floor(Math.random() * tickers.length)]
-  }, 1000)
-
-  statusInterval = setInterval(() => {
-    const progressFactor = props.progress > 0 ? (props.progress / 100) : 0
-    const flowIdx = Math.min(Math.floor(progressFactor * statusFlow.length), statusFlow.length - 1)
-    statusMessage.value = statusFlow[flowIdx].status
-    subMessage.value = statusFlow[flowIdx].sub
-  }, 2500)
-})
-
-onUnmounted(() => {
-  clearInterval(tickerInterval)
-  clearInterval(statusInterval)
-})
 </script>
 
 <style scoped>

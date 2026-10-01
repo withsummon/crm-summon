@@ -70,6 +70,17 @@
       </Dropdown>
       <Button
         v-if="!isMobile"
+        variant="solid"
+        :loading="isScraping"
+        :label="__('Run Lead Gen')"
+        @click="showPromptDialog = true"
+      >
+        <template #prefix>
+          <FeatherIcon name="cpu" class="h-4 w-4" />
+        </template>
+      </Button>
+      <Button
+        v-if="!isMobile"
         variant="outline"
         :label="__('Import Excel')"
         @click="showImportDialog = true"
@@ -463,6 +474,29 @@
     :processedCount="scrapingProcessed"
   />
   <Dialog
+    v-model="showPromptDialog"
+    :options="{
+      title: __('Run Lead Gen'),
+      size: 'sm',
+      actions: [{ label: __('Run Lead Gen'), variant: 'solid', onClick: runLeadGen }],
+    }"
+  >
+    <template #body-content>
+      <div class="py-4">
+        <label class="mb-2 block text-sm font-medium text-ink-gray-7">{{ __('Search criteria') }}</label>
+        <textarea
+          v-model="promptText"
+          rows="3"
+          :placeholder="__('E.g. 10 companies in Jakarta')"
+          class="w-full resize-none rounded-md border border-outline-gray-2 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+        ></textarea>
+        <p class="mt-2 text-xs text-ink-gray-5">
+          {{ __('Search the available lead data and add matching leads to CRM. Existing leads are skipped. Maximum 50 leads per run.') }}
+        </p>
+      </div>
+    </template>
+  </Dialog>
+  <Dialog
     v-model="showLeadIntakeDialog"
     :options="{
       title: __('Lead Intake'),
@@ -700,8 +734,10 @@ const router = useRouter()
 const leadsListView = ref(null)
 const showLeadModal = ref(false)
 const showImportDialog = ref(false)
+const showPromptDialog = ref(false)
 const showLeadIntakeDialog = ref(false)
 const intakeLoading = ref(false)
+const promptText = ref('')
 const intakeChannels = [
   { value: 'Web Form', label: __('Web Form') },
   { value: 'WhatsApp', label: 'WhatsApp' },
@@ -768,13 +804,28 @@ const viewModeActions = computed(() => [
 ])
 
 
+async function runLeadGen() {
+  showPromptDialog.value = false
+  startScraping(15)
+  try {
+    const result = await call('crm.api.lead_gen.mock_lead_scraping', { prompt: promptText.value })
+    promptText.value = ''
+    toast.success(result.message)
+    onLeadsImported()
+  } catch (error) {
+    toast.error(__('Lead Gen Failed: {0}', [error.message || __('Unknown error')]))
+  } finally {
+    stopScraping()
+  }
+}
+
 on('trigger_lead_create', (data) => {
   showLeadModal.value = Boolean(data)
 })
 
 // Real-time listener for scraping and list updates
 on('lead_gen_start', (data) => {
-  startScraping(data.total || 10)
+  startScraping(data.total ?? 0)
 })
 
 on('lead_scraped', (data) => {
@@ -830,6 +881,10 @@ const mobileActions = computed(() => {
   actions.push({
     label: __('Import Excel'),
     onClick: () => { showImportDialog.value = true }
+  })
+  actions.push({
+    label: __('Run Lead Gen'),
+    onClick: () => { showPromptDialog.value = true }
   })
   actions.push({
     label: __('Export'),

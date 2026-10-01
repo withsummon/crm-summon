@@ -1,11 +1,13 @@
 import frappe
 from unittest import TestCase
+from unittest.mock import patch
 
 from crm.api.lead_gen import (
 	DEFAULT_IMPORT_OPTIONS,
 	_build_workbook_payload_from_path,
 	_bundled_workbook_path,
 	_import_rows,
+	mock_lead_scraping,
 )
 
 
@@ -37,3 +39,16 @@ class TestLeadGenAPI(TestCase):
 		self.assertIn("note_names", result)
 		self.assertIn("task_names", result)
 		self.assertGreaterEqual(result["total"], 1)
+
+	def test_search_without_matches_does_not_import_other_leads(self):
+		rows = [{"company": "Jakarta Software"}, {"company": "Bali Hotel"}]
+		with (
+			patch("crm.api.lead_gen.os.path.exists", return_value=True),
+			patch("crm.api.lead_gen._build_workbook_payload_from_path", return_value={"row_objects": rows, "warnings": []}),
+			patch("crm.api.lead_gen._import_rows", return_value={"created": 0, "skipped": 0, "warnings": []}) as import_rows,
+			patch("crm.api.lead_gen.frappe.publish_realtime"),
+			patch("crm.api.lead_gen.frappe.clear_cache"),
+		):
+			result = mock_lead_scraping("Carikan 10 nonexistentsector")
+		self.assertEqual(result["created"], 0)
+		self.assertEqual(import_rows.call_args.args[0], [])

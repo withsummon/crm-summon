@@ -614,19 +614,15 @@ def mock_lead_scraping(prompt: str | None = None):
 		if match_count:
 			limit = min(int(match_count.group(1)), 50)
 
-		filter_terms = []
-		cleaned = prompt.lower()
-		for token in ["carikan", "saya", "tolong", "find", "me", "get", "lead", "data", "orang", "buatkan", "cariin", "dari"]:
-			cleaned = cleaned.replace(token, " ")
-		filter_terms = [term.strip() for term in cleaned.split() if term.strip() and not term.isdigit()]
+		ignored_words = {"cari", "carikan", "saya", "tolong", "find", "me", "get", "lead", "data", "orang", "buatkan", "cariin", "dari", "di", "yang", "untuk"}
+		filter_terms = [term for term in re.findall(r"\w+", prompt.lower()) if term not in ignored_words and not term.isdigit()]
 		if filter_terms:
 			filtered_rows = []
 			for row in row_objects:
 				haystack = " ".join(str(row.get(fieldname) or "").lower() for fieldname in FIELD_ORDER)
 				if any(term in haystack for term in filter_terms):
 					filtered_rows.append(row)
-			if filtered_rows:
-				row_objects = filtered_rows
+			row_objects = filtered_rows
 
 	frappe.publish_realtime("lead_gen_start", {"total": min(limit, len(row_objects))}, user=frappe.session.user)
 	result = _import_rows(row_objects, DEFAULT_IMPORT_OPTIONS, limit=limit, publish_progress=True)
