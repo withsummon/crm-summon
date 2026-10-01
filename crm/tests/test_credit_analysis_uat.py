@@ -337,7 +337,7 @@ class TestCreditAnalysisUAT(TestCase):
 		with open(file_path, "wb") as handle:
 			handle.write(b"%PDF-1.4\n%%EOF")
 
-		with patch("crm.ai.kimi.get_ai_settings", return_value=frappe._dict({"kimi_api_key": "", "thinking_mode": "disabled"})):
+		with patch("crm.ai.openrouter.get_ai_settings", return_value=frappe._dict({"api_key": "", "thinking_mode": "disabled"})):
 			result = import_statement_file(self.application.name, file_url, file_type="pdf")
 
 		self.assertEqual(result["status"], "Failed")
@@ -350,7 +350,7 @@ class TestCreditAnalysisUAT(TestCase):
 			"response": "AI generated credit memo with sourced recommendation.",
 			"sources": [{"title": "Credit Analysis workspace"}],
 			"confidence": 0.81,
-			"model": "kimi-k2.6",
+			"model": "openai/gpt-6-luna",
 		}
 		with patch("crm.api.ai_agent_center.query_agent", return_value=fake_response):
 			memo = generate_credit_memo(self.application.name)

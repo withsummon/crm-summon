@@ -28,7 +28,7 @@
             <div class="min-w-0 flex-1">
               <div class="truncate text-sm font-semibold text-slate-900">{{ agent.name }}</div>
               <div class="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
-                <span>{{ agent.model || 'kimi-k2.6' }}</span>
+                <span>{{ agent.model || 'openai/gpt-6-luna' }}</span>
                 <span class="h-1 w-1 rounded-full bg-slate-300" />
                 <span>${{ formatCost(agent.cost_today) }}</span>
               </div>
@@ -109,7 +109,7 @@
                 >
                   <div v-if="message.loading" class="flex items-center gap-2 text-sm text-slate-500">
                     <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-primary-600" />
-                    {{ message.statusMessage || __('Memproses analisis terstruktur dengan Kimi K2.6 dan RAG...') }}
+                    {{ message.statusMessage || __('Memproses analisis terstruktur dengan OpenRouter dan RAG...') }}
                   </div>
                   <div v-else-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-6">
                     {{ message.content }}

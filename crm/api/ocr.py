@@ -4,7 +4,7 @@ import re
 import frappe
 from frappe import _
 
-from crm.ai.kimi import call_kimi_chat, get_ai_settings
+from crm.ai.openrouter import call_llm_chat, get_ai_settings
 
 
 def _get_ocr_prompt(document_type):
@@ -121,7 +121,7 @@ def scan_document(image_data=None, image_url=None, document_type="KTP"):
         ]},
     ]
 
-    result = call_kimi_chat(messages, thinking_mode=settings.kimi_thinking_mode or "disabled")
+    result = call_llm_chat(messages, thinking_mode=settings.thinking_mode)
     parsed = _extract_json(result.content)
 
     return {

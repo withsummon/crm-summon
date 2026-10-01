@@ -841,12 +841,12 @@ def _extract_pdf_text(file_path):
 
 
 def _rows_from_pdf_file(application, file_url, file_path):
-	from crm.ai.kimi import call_kimi_chat, get_ai_settings
+	from crm.ai.openrouter import call_llm_chat, get_ai_settings
 
 	settings = get_ai_settings()
-	api_key = cstr(settings.kimi_api_key).strip()
+	api_key = cstr(settings.api_key).strip()
 	if not api_key or "******" in api_key:
-		return [], [], [_("Kimi/Moonshot API key is not configured in FCRM Settings.")]
+		return [], [], [_("OpenRouter API key is not configured.")]
 
 	text = _extract_pdf_text(file_path)
 	if not text.strip():
@@ -865,7 +865,7 @@ Use only these metric keys and labels:
 PDF text:
 {text[:24000]}
 """
-	response = call_kimi_chat(
+	response = call_llm_chat(
 		[
 			{"role": "system", "content": "You extract Indonesian banking financial statement tables into structured JSON."},
 			{"role": "user", "content": prompt},
@@ -1667,7 +1667,7 @@ def import_statement_file(application_id: str, file_url: str | None = None, file
 		parser = "Structured spreadsheet parser"
 		rows, low_confidence, errors = _rows_from_tabular_file(application, file_url, file_path, file_type)
 	elif file_type == "pdf":
-		parser = "PDF text extraction + Kimi"
+		parser = "PDF text extraction + OpenRouter"
 		rows, low_confidence, errors = _rows_from_pdf_file(application, file_url, file_path)
 	else:
 		errors = [_("Unsupported file type: {0}. Upload PDF, XLSX, XLS, or CSV.").format(file_type or "unknown")]
@@ -1883,7 +1883,7 @@ def _call_credit_agent(application, prompt, fallback):
 			"structured_response": structured,
 			"sources": sources,
 			"confidence": 0.74,
-			"model": "kimi-k2.6",
+			"model": "local-fallback",
 			"tokens": 0,
 			"cost": 0,
 			"fallback": True,
@@ -2164,9 +2164,9 @@ def _ai_agent_features():
 			"api": "crm.api.ai_agent_center.get_agents",
 		},
 		{
-			"key": "ai_agent_center_rag_kimi",
-			"feature": "RAGAnything + Kimi K2.6",
-			"uat": "Grounded retrieval with real Moonshot/Kimi call path and audit/cost logging.",
+			"key": "ai_agent_center_rag_openrouter",
+			"feature": "RAGAnything + OpenRouter",
+			"uat": "Grounded retrieval with real OpenRouter call path and audit/cost logging.",
 			"route": "/crm/crm-core/ai-agent-center",
 			"api": "crm.api.ai_agent_center.query_agent",
 		},

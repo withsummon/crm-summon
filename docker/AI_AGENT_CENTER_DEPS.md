@@ -6,7 +6,7 @@ AI Agent Center uses RAG-Anything for document parsing and multimodal retrieval.
 
 - Install this app with its Python dependencies during image build or deploy. `bench get-app /path/to/frappe-crm` should install the pinned packages from `pyproject.toml`.
 - Keep the site `private/files` directory on a persistent volume. The native RAGAnything index is stored at `sites/<site>/private/files/ai_agent_center_rag` by default.
-- Configure `FCRM Settings > AI Settings` before reindexing: provider `Kimi`, base URL `https://api.moonshot.ai/v1`, model `kimi-k2.6`, and a valid Moonshot API key.
+- Configure `OPENROUTER_API_KEY` on the backend and queue workers, or save the key in `FCRM Settings > AI Settings`, before reindexing.
 - Run the post-deploy status check and reindex commands below after migrations.
 - Size the worker/container for AI indexing. Use at least 4 GB RAM for demo data; 8 GB is safer for PDF/Excel parsing plus local embeddings.
 
@@ -29,6 +29,7 @@ apt-get install -y --no-install-recommends \
 If you build a custom Frappe image, add the Debian/Ubuntu packages above before `bench get-app` or app install. The Python dependencies pinned in `pyproject.toml` include:
 
 - `raganything[all]`
+- `openrouter`
 - `lightrag-hku`
 - `mineru`
 - `sentence-transformers`
@@ -37,9 +38,9 @@ RAGAnything calls MinerU through the `mineru` CLI. The application prepends the 
 
 ## Runtime Settings
 
-- Configure `FCRM Settings > AI Settings > Kimi API Key` or `Moonshot API Key`.
+- Configure `OPENROUTER_API_KEY` or `FCRM Settings > AI Settings > OpenRouter API Key`. The environment key takes priority.
 - Keep the API key server-side only.
-- Default model: `kimi-k2.6`.
+- Default model: `openai/gpt-6-luna`. Set `OPENROUTER_MODEL` or save a model in AI Settings.
 - Default local embedding model: `BAAI/bge-m3`.
 - Default RAG storage: `private/files/ai_agent_center_rag`.
 
@@ -68,7 +69,7 @@ Expected healthy status:
 
 If `mineru_command_available` is false, the app dependencies were not installed into the active bench Python environment. Reinstall the CRM app dependencies in the backend image/container, then rerun the status command.
 
-If reindexing times out on Moonshot/Kimi, rerun it once after network/API latency settles. For demos, keep the first indexed dataset small and reindex before the presentation.
+If reindexing times out on OpenRouter, rerun it once after network/API latency settles. For demos, keep the first indexed dataset small and reindex before the presentation.
 
 ## Omnichannel Runtime
 

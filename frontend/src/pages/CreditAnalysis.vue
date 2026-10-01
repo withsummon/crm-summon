@@ -245,7 +245,7 @@
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <h3 class="font-bold text-slate-800">{{ __('AI Extraction Review') }}</h3>
-                  <p class="text-sm text-slate-500 mt-1">{{ __('RAGAnything parses document content and Kimi reviews extracted financial cells before save.') }}</p>
+                  <p class="text-sm text-slate-500 mt-1">{{ __('RAGAnything parses document content and OpenRouter reviews extracted financial cells before save.') }}</p>
                 </div>
                 <Badge :label="extraction.status || __('Pending')" :theme="extraction.status === 'Extracted' ? 'green' : 'teal'" />
               </div>

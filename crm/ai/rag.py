@@ -10,7 +10,7 @@ from functools import partial
 import frappe
 from frappe import _
 
-from crm.ai.kimi import call_kimi_chat, get_ai_settings
+from crm.ai.openrouter import call_llm_chat, get_ai_settings
 
 
 STRUCTURED_DOCTYPES = {
@@ -252,15 +252,15 @@ def get_raganything_instance():
 		for row in history_messages or []:
 			messages.append(row)
 		messages.append({"role": "user", "content": prompt})
-		return call_kimi_chat(messages, thinking_mode=settings.thinking_mode, timeout=180).content
+		return call_llm_chat(messages, thinking_mode=settings.thinking_mode, timeout=180).content
 
 	async def vision_model_func(prompt, system_prompt=None, history_messages=None, image_data=None, messages=None, **kwargs):
 		if messages:
-			return call_kimi_chat(messages, thinking_mode=settings.thinking_mode).content
+			return call_llm_chat(messages, thinking_mode=settings.thinking_mode).content
 		payload = [{"type": "text", "text": prompt}]
 		if image_data:
 			payload.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}})
-		return call_kimi_chat(
+		return call_llm_chat(
 			[
 				{"role": "system", "content": system_prompt or "You are a banking document analysis assistant."},
 				{"role": "user", "content": payload},

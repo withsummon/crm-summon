@@ -11,7 +11,7 @@ from frappe import _
 from frappe.utils import cstr
 from werkzeug.wrappers import Response
 
-from crm.ai.kimi import DEFAULT_KIMI_MODEL, call_kimi_chat, estimate_kimi_cost, get_ai_settings, normalize_kimi_model, stream_kimi_chat_events
+from crm.ai.openrouter import DEFAULT_LLM_MODEL, call_llm_chat, get_ai_settings, stream_llm_chat_events
 from crm.ai.rag import parser_command_available, query_rag, reindex_structured_data
 
 
@@ -953,7 +953,7 @@ def get_agents():
 			"SELECT MAX(creation) FROM `tabCRM AI Audit Log` WHERE agent_key=%s",
 			(agent["key"],),
 		)[0][0]
-		rows.append({**agent, "tools": _agent_tools(agent["key"]), "model": settings.kimi_model or DEFAULT_KIMI_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
+		rows.append({**agent, "tools": _agent_tools(agent["key"]), "model": settings.model or DEFAULT_LLM_MODEL, "status": "Ready", "cost_today": float(cost or 0), "last_activity": last_activity})
 	return rows
 
 
@@ -1192,13 +1192,13 @@ def query_agent(agent_key="general", message=None, session_id=None, customer=Non
 		structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
 		response = _plain_text_from_structured(structured)
 		message_id = _save_message(session_id, agent["key"], "assistant", response, rag["sources"])
-		_audit(agent["key"], DEFAULT_KIMI_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
+		_audit(agent["key"], DEFAULT_LLM_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
 		return {"response": response, "structured_response": structured, "session_id": session_id, "message_id": message_id, "sources": rag["sources"], "actions": [], "confidence": rag["confidence"]}
 
 	settings = get_ai_settings()
 	system_prompt = _system_prompt(agent, rag["context"], customer=customer)
 	messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
-	result = call_kimi_chat(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode)
+	result = call_llm_chat(messages, model=settings.model, thinking_mode=settings.thinking_mode)
 	structured = _parse_structured_response(result.content, agent["key"], rag["sources"], rag["confidence"])
 	actions = _handle_actions(agent["key"], session_id, structured.get("actions") or [], structured)
 	reply = _plain_text_from_structured(structured)
@@ -1243,7 +1243,7 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 				structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
 				reply = _plain_text_from_structured(structured)
 				message_id = _save_message(current_session, agent["key"], "assistant", reply, rag["sources"])
-				_audit(agent["key"], DEFAULT_KIMI_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
+				_audit(agent["key"], DEFAULT_LLM_MODEL, message, json.dumps(structured, ensure_ascii=False), rag["sources"], confidence=rag["confidence"], status="Guardrail Blocked")
 				frappe.db.commit()
 				yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
 				yield _sse("status", {"code": "memvalidasi_output", "message": "Output dibatasi karena sumber belum cukup."})
@@ -1257,7 +1257,7 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 						"sources": rag["sources"],
 						"actions": [],
 						"confidence": rag["confidence"],
-						"model": DEFAULT_KIMI_MODEL,
+						"model": DEFAULT_LLM_MODEL,
 						"tokens": 0,
 						"cost": 0,
 					},
@@ -1272,8 +1272,8 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 
 			content_parts = []
 			reasoning_parts = []
-			stream_meta = frappe._dict({"model": settings.kimi_model or DEFAULT_KIMI_MODEL, "total_tokens": 0, "cost": Decimal("0")})
-			for event in stream_kimi_chat_events(messages, model=settings.kimi_model, thinking_mode=settings.thinking_mode):
+			stream_meta = frappe._dict({"model": settings.model or DEFAULT_LLM_MODEL, "total_tokens": 0, "cost": Decimal("0")})
+			for event in stream_llm_chat_events(messages, model=settings.model, thinking_mode=settings.thinking_mode):
 				if event.event == "delta":
 					if event.get("reasoning_delta"):
 						reasoning_parts.append(event.reasoning_delta)
@@ -1510,7 +1510,7 @@ def run_sandbox(prompt_id=None, input_payload=None, model_override=None):
 			prompt = row[0].prompt + "\n\nInput:\n" + json.dumps(payload, default=str, indent=2)
 	if not prompt:
 		frappe.throw(_("Sandbox prompt is required"))
-	result = call_kimi_chat(
+	result = call_llm_chat(
 		[
 			{"role": "system", "content": _system_prompt(agent, "Sandbox mode: no production mutation. Gunakan payload user sebagai input uji; jika tidak ada sumber, isi limitations.", customer=payload.get("customer"))},
 			{"role": "user", "content": prompt},
@@ -1530,31 +1530,22 @@ def reindex_rag(scope=None, docname=None):
 
 
 @frappe.whitelist()
-def save_ai_settings(provider, model, base_url=None, api_key=None):
-	VALID_PROVIDERS = {"Kimi", "OpenAI", "Anthropic", "Gemini", "Custom"}
-	if provider not in VALID_PROVIDERS:
-		frappe.throw(_("Invalid AI provider: {0}. Must be one of: {1}").format(provider, ", ".join(sorted(VALID_PROVIDERS))))
-
+def save_ai_settings(model, api_key=None):
+	frappe.only_for("System Manager")
 	raw = (model or "").strip()
 	if not raw:
 		frappe.throw(_("Model name cannot be empty."))
 	if raw != model:
 		frappe.throw(_("Model name contains leading or trailing whitespace."))
-	normalized = normalize_kimi_model(raw)
 
 	settings = frappe.get_doc("FCRM Settings", "FCRM Settings")
-	settings.ai_provider = provider
-	settings.kimi_model = normalized
-	if base_url is not None:
-		settings.kimi_base_url = (base_url or "https://api.moonshot.ai/v1").rstrip("/")
+	settings.ai_provider = "OpenRouter"
+	settings.llm_model = raw
 	if api_key:
-		if provider == "Gemini":
-			settings.gemini_api_key = api_key
-		else:
-			settings.kimi_api_key = api_key
+		settings.openrouter_api_key = api_key
 	settings.save(ignore_permissions=True)
 	frappe.db.commit()
-	return settings.as_dict()
+	return {"provider": "OpenRouter", "model": raw}
 
 
 @frappe.whitelist()

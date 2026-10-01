@@ -189,6 +189,8 @@ services:
 
     environment:
       <<: *common_env
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-6-luna}
 
     volumes: *common_volumes
 
@@ -313,6 +315,8 @@ services:
 
     environment:
       <<: *common_env
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-6-luna}
 
     volumes: *common_volumes
 
@@ -360,6 +364,8 @@ services:
 
     environment:
       <<: *common_env
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openai/gpt-6-luna}
 
     volumes: *common_volumes
 
