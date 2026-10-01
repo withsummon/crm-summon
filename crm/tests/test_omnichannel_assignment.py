@@ -10,7 +10,7 @@ class TestOmnichannelAssignment(unittest.TestCase):
 		frappe.session.user = "Administrator"
 		frappe.db.exists.return_value = True
 
-		result = bulk_update_conversations(["CRM-OMNI-CONV-1"], "assign", "Guest")
+		result = bulk_update_conversations.__wrapped__(["CRM-OMNI-CONV-1"], "assign", "Guest")
 
 		self.assertEqual(result["updated"], ["CRM-OMNI-CONV-1"])
 		self.assertEqual(frappe.get_doc.return_value.assigned_to, "Administrator")
