@@ -19,7 +19,7 @@ def get_context():
 		frappe.redirect("/login?redirect-to=/crm")
 
 	if not check_app_permission():
-		frappe.throw(_("You do not have permission to access BNI CRM"), frappe.PermissionError)
+		frappe.throw(_("You do not have permission to access IGLO CRM"), frappe.PermissionError)
 
 	frappe.db.commit()
 	context = frappe._dict()

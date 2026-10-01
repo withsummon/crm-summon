@@ -7,7 +7,7 @@
           <button class="shrink-0 text-crm-muted hover:text-crm-text" @click="goBack">
             <LucideArrowLeft class="h-5 w-5" />
           </button>
-          <div class="flex h-8 w-8 items-center justify-center rounded-[10px]" style="background: linear-gradient(135deg, #0d9488, #06b6d4)">
+          <div class="flex h-8 w-8 items-center justify-center rounded-[10px]" style="background: linear-gradient(135deg, #980000, #06b6d4)">
             <LucideActivity class="h-4 w-4 text-white" />
           </div>
           <h1 class="text-base font-bold text-crm-text">{{ __('Flow Monitor') }}</h1>
@@ -192,7 +192,7 @@
                 <!-- Legend badges -->
                 <div class="flex items-center gap-3 text-[9px] font-bold">
                   <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#10b981]" /> {{ __('Completed') }}</span>
-                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#0d9488]" /> {{ __('Active') }}</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#980000]" /> {{ __('Active') }}</span>
                   <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-300" /> {{ __('Skipped') }}</span>
                 </div>
               </div>

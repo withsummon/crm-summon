@@ -20,7 +20,7 @@
             v-for="r in RANGES"
             :key="r.key"
             class="rounded-md border px-2 py-1 text-xs"
-            :class="filters.range === r.key ? 'border-[#FF6600] bg-[#FF6600] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
+            :class="filters.range === r.key ? 'border-[#980000] bg-[#980000] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
             @click="filters.range = r.key"
           >
             {{ r.label }}
@@ -128,7 +128,7 @@
                 <polyline
                   :points="perDayPoints"
                   fill="none"
-                  stroke="#FF6600"
+                  stroke="#980000"
                   stroke-width="1.5"
                 />
               </svg>

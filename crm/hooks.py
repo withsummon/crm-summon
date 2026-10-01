@@ -1,16 +1,16 @@
 app_name = "crm"
-app_title = "BNI CRM"
-app_publisher = "BNI"
-app_description = "BNI teal CRM workspace for lead generation and customer 360"
-app_email = "hello@withsummon.com"
+app_title = "IGLO CRM"
+app_publisher = "IGLO"
+app_description = "IGLO CRM workspace for lead generation and customer 360"
+app_email = "info@indocyber.co.id"
 app_license = "AGPLv3"
-app_icon_url = "/assets/crm/images/bni-logo.png"
-app_logo_url = "/assets/crm/images/bni-logo.png"
-app_icon_title = "BNI CRM"
+app_icon_url = "/assets/crm/images/iglo-logo.png"
+app_logo_url = "/assets/crm/images/iglo-logo.png"
+app_icon_title = "IGLO CRM"
 app_icon_route = "/crm"
 
 website_context = {
-	"splash_image": "/assets/crm/images/bni-logo.png"
+	"splash_image": "/assets/crm/images/iglo-logo.png"
 }
 
 
@@ -22,8 +22,8 @@ website_context = {
 add_to_apps_screen = [
 	{
 		"name": "crm",
-		"logo": "/assets/crm/images/bni-logo.png",
-		"title": "BNI CRM",
+		"logo": "/assets/crm/images/iglo-logo.png",
+		"title": "IGLO CRM",
 		"route": "/crm",
 		"has_permission": "crm.api.check_app_permission",
 	}
@@ -370,7 +370,7 @@ standard_dropdown_items = [
 	},
 	{
 		"name1": "login_to_fc",
-		"label": "Login to BNI Cloud Workspace",
+		"label": "Login to IGLO CRM Workspace",
 		"type": "Route",
 		"route": "#",
 		"is_standard": 1,

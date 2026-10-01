@@ -102,7 +102,7 @@
               'text-primary-600': file.uploaded == file.total,
             }"
             :theme="{
-              primary: '#FF6600',
+              primary: '#980000',
               secondary: 'lightgray',
             }"
             :step="file.uploaded || 1"

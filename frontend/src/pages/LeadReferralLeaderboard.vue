@@ -17,7 +17,7 @@
             v-for="r in RANGES"
             :key="r.key"
             class="rounded-md border px-2 py-1 text-xs"
-            :class="filters.range === r.key ? 'border-[#FF6600] bg-[#FF6600] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
+            :class="filters.range === r.key ? 'border-[#980000] bg-[#980000] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
             @click="filters.range = r.key"
           >
             {{ r.label }}
@@ -29,7 +29,7 @@
             v-for="t in TYPES"
             :key="t.key"
             class="rounded-md border px-2 py-1 text-xs"
-            :class="filters.type === t.key ? 'border-[#0f766e] bg-[#0f766e] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
+            :class="filters.type === t.key ? 'border-[#750000] bg-[#750000] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
             @click="filters.type = t.key"
           >
             {{ t.label }}

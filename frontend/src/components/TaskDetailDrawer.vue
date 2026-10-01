@@ -155,7 +155,7 @@
                 <Button size="sm" variant="outline" label="Save" @click="saveChecklist" />
               </div>
               <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-gray-2">
-                <div class="h-full rounded-full" :style="`width: ${checklistPct}%; background: #008C95`" />
+                <div class="h-full rounded-full" :style="`width: ${checklistPct}%; background: #980000`" />
               </div>
               <ul class="mt-2 space-y-1">
                 <li v-for="(item, i) in checklistEdit" :key="i" class="flex items-center gap-2 rounded border border-outline-gray-1 px-2 py-1.5">

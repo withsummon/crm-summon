@@ -89,11 +89,11 @@
           </div>
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 text-sm text-ink-gray-7">
-              <input v-model="editing.active" type="checkbox" class="size-4 accent-[#FF6600]" />
+              <input v-model="editing.active" type="checkbox" class="size-4 accent-[#980000]" />
               Active
             </label>
             <label class="flex items-center gap-2 text-sm text-ink-gray-7">
-              <input v-model="editing.captcha_enabled" type="checkbox" class="size-4 accent-[#FF6600]" />
+              <input v-model="editing.captcha_enabled" type="checkbox" class="size-4 accent-[#980000]" />
               Captcha
             </label>
           </div>

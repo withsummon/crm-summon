@@ -28,7 +28,7 @@ def run():
 		parent=styles['Heading1'],
 		fontName='Helvetica-Bold',
 		fontSize=18,
-		textColor=colors.HexColor('#0d9488'),
+		textColor=colors.HexColor('#980000'),
 		spaceAfter=4
 	)
 	
@@ -75,7 +75,7 @@ def run():
 	)
 
 	# Add Header elements
-	story.append(Paragraph("BNI CRM ENTERPRISE", subtitle_style))
+	story.append(Paragraph("IGLO CRM ENTERPRISE", subtitle_style))
 	story.append(Paragraph("Financial Spreading Statement (PSAK Format)", title_style))
 	story.append(Paragraph("Classification: INTERNAL USE ONLY &bull; Prepared for Credit Analysis RAG Extract Validation", meta_style))
 	story.append(Spacer(1, 10))
@@ -103,9 +103,9 @@ def run():
 	# Column widths: Statement Type (100), Line Item (200), Year (60), Amount (160)
 	t = Table(table_data, colWidths=[100, 210, 60, 150])
 	
-	# Design styling matching BNI Teal Theme
+	# Design styling matching IGLO Red Theme
 	t_style = TableStyle([
-		('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d9488')),
+		('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#980000')),
 		('ALIGN', (0, 0), (-1, -1), 'LEFT'),
 		('ALIGN', (3, 0), (3, -1), 'RIGHT'), # right-align amounts
 		('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -133,7 +133,7 @@ def run():
 		textColor=colors.HexColor('#94a3b8'),
 		alignment=1 # Center align
 	)
-	story.append(Paragraph("This PDF report serves as a secure mock statement for checking automated financial spreading and ratio calculations in BNI CRM.", footer_style))
+	story.append(Paragraph("This PDF report serves as a secure mock statement for checking automated financial spreading and ratio calculations in IGLO CRM.", footer_style))
 
 	doc.build(story)
 	print(f"Successfully generated PDF: {pdf_path} ({os.path.getsize(pdf_path)} bytes)")

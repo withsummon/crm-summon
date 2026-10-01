@@ -522,7 +522,7 @@ def _default_spreading(application):
 						"amount": round(values.get(metric_key, 0), 2),
 						"adjusted_amount": round(values.get(metric_key, 0), 2),
 						"confidence": 0.98,
-						"source": "BNI UAT Demo Adapter",
+						"source": "IGLO UAT Demo Adapter",
 						"notes": "Deterministic seeded spreading for Credit Analysis UAT.",
 					}
 				)
@@ -2243,7 +2243,7 @@ def get_uat_proof_pack(scope: str = "all", application_id: str | None = None):
 @frappe.whitelist()
 def create_uat_demo_pack(application_id: str):
 	application = _get_application(application_id)
-	saved = save_spreading(application.name, _default_spreading(application), status="BNI UAT Demo")
+	saved = save_spreading(application.name, _default_spreading(application), status="IGLO UAT Demo")
 	refresh_bureau_report(application.name)
 	scan_news_sentiment(application.name)
 	generate_credit_recommendation(application.name)

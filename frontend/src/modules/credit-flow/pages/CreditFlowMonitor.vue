@@ -11,7 +11,7 @@
           </button>
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #ff6600, #006699)"
+            style="background: linear-gradient(135deg, #980000, #980000)"
           >
             <LucideActivity class="h-4 w-4 text-white" />
           </div>

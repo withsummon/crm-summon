@@ -17,7 +17,7 @@
             v-for="r in RANGES"
             :key="r.key"
             class="rounded-md border px-2 py-1 text-xs"
-            :class="filters.range === r.key ? 'border-[#FF6600] bg-[#FF6600] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
+            :class="filters.range === r.key ? 'border-[#980000] bg-[#980000] text-white' : 'border-outline-gray-2 bg-white text-ink-gray-7'"
             @click="filters.range = r.key"
           >
             {{ r.label }}
@@ -255,8 +255,8 @@ const trendSeries = computed(() => {
   })
   return [
     make('fresh', 'Fresh', '#94a3b8'),
-    make('warm', 'Warm', '#0f766e'),
-    make('stale', 'Stale', '#FF6600'),
+    make('warm', 'Warm', '#750000'),
+    make('stale', 'Stale', '#980000'),
     make('frozen', 'Frozen', '#dc2626'),
   ]
 })

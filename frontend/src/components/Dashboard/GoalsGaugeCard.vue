@@ -44,7 +44,7 @@
         <path
           :d="activeArcPath"
           fill="none"
-          stroke="#008C95"
+          stroke="#980000"
           :stroke-width="strokeWidth"
           stroke-linecap="round"
           class="gauge-progress"

@@ -378,7 +378,7 @@ def create_fcrm_role(role_name: str, description: str = ""):
     role = frappe.get_doc({
         "doctype": "Role",
         "role_name": role_name,
-        "description": description or f"{role_name} role for BNI CRM",
+        "description": description or f"{role_name} role for IGLO CRM",
         "is_custom": 1,
     })
     role.insert(ignore_permissions=True)

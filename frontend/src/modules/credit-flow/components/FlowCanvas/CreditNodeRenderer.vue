@@ -188,13 +188,13 @@ const statusDotClass = computed(() => {
   width: 12px;
   height: 12px;
   border: 2px solid white;
-  background: #006699;
+  background: #980000;
   transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 .credit-handle:hover {
   transform: scale(1.3);
-  background: #005b8a;
+  background: #850000;
 }
 
 .credit-handle-input {

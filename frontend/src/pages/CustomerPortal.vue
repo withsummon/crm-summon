@@ -161,7 +161,7 @@
                     </div>
                     <div class="mt-5">
                       <div class="h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                        <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
+                        <div class="h-full rounded-full bg-[#980000]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
                       </div>
                       <div class="mt-2 flex items-center justify-between gap-3 text-sm leading-5 text-ink-gray-4">
                         <span>{{ pct(f.outstanding, f.limit_amount) }}% utilised</span>
@@ -193,7 +193,7 @@
                       <Badge :label="app.stage_label" theme="blue" variant="subtle" />
                     </div>
                     <div class="mt-3 flex gap-0.5">
-                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#FF6600]' : 'bg-surface-gray-2'" />
+                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#980000]' : 'bg-surface-gray-2'" />
                     </div>
                     <p class="mt-1 text-xs text-ink-gray-4">Stage {{ app.stage_index }} of 8</p>
                   </div>
@@ -229,7 +229,7 @@
                 <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                   <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Relationship Manager</p>
                   <div class="flex items-center gap-3">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF6600] text-sm font-bold text-white">{{ rm.initials }}</div>
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#980000] text-sm font-bold text-white">{{ rm.initials }}</div>
                     <div>
                       <p class="text-base font-medium text-ink-gray-9">{{ rm.name }}</p>
                       <p class="text-sm text-ink-gray-5">{{ rm.role }}</p>
@@ -279,7 +279,7 @@
                   </td>
                   <td class="px-3 py-2">
                     <div class="flex w-20 gap-0.5">
-                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#FF6600]' : 'bg-surface-gray-2'" />
+                      <div v-for="i in 8" :key="i" class="h-1.5 flex-1 rounded-sm" :class="i <= app.stage_index ? 'bg-[#980000]' : 'bg-surface-gray-2'" />
                     </div>
                   </td>
                   <td class="px-3 py-2 text-right">
@@ -318,7 +318,7 @@
                       v-if="idx < STAGES.length - 1"
                       class="my-1 w-px flex-1"
                       style="min-height:18px"
-                      :class="idx + 1 < selectedApp.stage_index ? 'bg-[#FF6600]' : 'bg-outline-gray-2'"
+                      :class="idx + 1 < selectedApp.stage_index ? 'bg-[#980000]' : 'bg-outline-gray-2'"
                     />
                   </div>
                   <div class="pb-4 pt-0.5">
@@ -443,7 +443,7 @@
                   <span class="font-medium text-ink-gray-9">{{ formatAmount(f.outstanding) }}</span>
                 </div>
                 <div class="h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                  <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
+                  <div class="h-full rounded-full bg-[#980000]" :style="{ width: pct(f.outstanding, f.limit_amount) + '%' }" />
                 </div>
                 <div class="mt-2 flex items-center justify-between gap-3 text-sm leading-5 text-ink-gray-4">
                   <span>Limit: {{ formatAmount(f.limit_amount) }}</span>
@@ -472,7 +472,7 @@
               <p class="text-sm text-ink-gray-5">Outstanding Balance</p>
               <p class="mt-1 text-xl font-semibold text-ink-gray-9">{{ formatAmount(selectedFacility.outstanding) }}</p>
               <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
-                <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: pct(selectedFacility.outstanding, selectedFacility.limit_amount) + '%' }" />
+                <div class="h-full rounded-full bg-[#980000]" :style="{ width: pct(selectedFacility.outstanding, selectedFacility.limit_amount) + '%' }" />
               </div>
               <p class="mt-1 text-xs text-ink-gray-4">of {{ formatAmount(selectedFacility.limit_amount) }} limit</p>
             </div>
@@ -763,7 +763,7 @@
               <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
                 <p class="mb-3 text-xs font-medium uppercase tracking-wider text-ink-gray-4">Your RM</p>
                 <div class="flex items-center gap-3">
-	                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF6600] text-sm font-bold text-white">{{ rm.initials }}</div>
+	                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#980000] text-sm font-bold text-white">{{ rm.initials }}</div>
 	                  <div>
 	                    <p class="text-base font-medium text-ink-gray-9">{{ rm.name }}</p>
 	                    <p class="text-sm text-ink-gray-5">{{ rm.phone }}</p>
@@ -976,9 +976,9 @@
             <div class="rounded-lg border border-outline-gray-2 bg-surface-white p-3">
               <h2 class="text-base font-semibold text-ink-gray-9 mb-3">Refer a friend, earn rewards</h2>
               <p class="text-sm text-ink-gray-6">Share your referral code below. When someone you refer becomes a customer, you both receive a reward.</p>
-              <div class="mt-4 rounded-md border border-dashed border-[#FF6600] bg-[#006699]/10 p-3">
+              <div class="mt-4 rounded-md border border-dashed border-[#980000] bg-[#980000]/10 p-3">
                 <p class="text-xs uppercase text-ink-gray-5 tracking-wider">Your code</p>
-                <p class="text-3xl font-bold font-mono text-[#FF6600]">{{ referralCode }}</p>
+                <p class="text-3xl font-bold font-mono text-[#980000]">{{ referralCode }}</p>
                 <Button class="mt-3" size="sm" variant="outline" label="Copy" @click="copyReferral" />
               </div>
               <div class="mt-4 flex gap-2">
@@ -1084,7 +1084,7 @@
         v-if="assistantOpen"
         class="pointer-events-auto flex h-[520px] w-[380px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-xl border border-outline-gray-2 bg-surface-white shadow-2xl"
       >
-        <div class="flex items-center justify-between gap-2 border-b border-outline-gray-2 px-3 py-2" style="background: #FF6600">
+        <div class="flex items-center justify-between gap-2 border-b border-outline-gray-2 px-3 py-2" style="background: #980000">
           <div class="flex items-center gap-2 text-white">
             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
               <FeatherIcon name="zap" class="h-4 w-4" />
@@ -1108,7 +1108,7 @@
             <div
               class="max-w-[85%] whitespace-pre-line rounded-lg px-3 py-2 text-sm leading-relaxed"
               :class="msg.role === 'user'
-                ? 'bg-[#FF6600] text-white'
+                ? 'bg-[#980000] text-white'
                 : 'border border-outline-gray-2 bg-surface-white text-ink-gray-8'"
             >
               {{ msg.content }}
@@ -1141,7 +1141,7 @@
             @keydown.enter="askAssistant(assistantInput)"
           />
           <button
-            class="flex h-8 w-9 shrink-0 items-center justify-center rounded-md bg-[#FF6600] text-white hover:opacity-90 disabled:opacity-50"
+            class="flex h-8 w-9 shrink-0 items-center justify-center rounded-md bg-[#980000] text-white hover:opacity-90 disabled:opacity-50"
             :disabled="!assistantInput || assistantLoading"
             @click="askAssistant(assistantInput)"
           >
@@ -1151,7 +1151,7 @@
       </div>
       <button
         class="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105"
-        style="background: #FF6600"
+        style="background: #980000"
         @click="assistantOpen = !assistantOpen"
       >
         <FeatherIcon :name="assistantOpen ? 'chevron-down' : 'message-circle'" class="h-6 w-6" />
@@ -1590,10 +1590,10 @@ async function loadReferral() {
   if (referralCode.value) return
   try {
     const res = await call('crm.api.portal.get_referral_info', { customer: null }).catch(() => null)
-    referralCode.value = res?.code || ('BNI-' + Math.random().toString(36).slice(2, 8).toUpperCase())
+    referralCode.value = res?.code || ('IGLO-' + Math.random().toString(36).slice(2, 8).toUpperCase())
     referrals.value = res?.history || []
   } catch (_) {
-    referralCode.value = 'BNI-' + Math.random().toString(36).slice(2, 8).toUpperCase()
+    referralCode.value = 'IGLO-' + Math.random().toString(36).slice(2, 8).toUpperCase()
   }
 }
 
@@ -1606,8 +1606,8 @@ function copyReferral() {
 
 function shareReferral(channel) {
   const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${referralCode.value}`
-  if (channel === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(`Join BNI with my referral: ${link}`)}`, '_blank')
-  else if (channel === 'email') window.open(`mailto:?subject=Join BNI&body=${encodeURIComponent(`Join BNI: ${link}`)}`)
+  if (channel === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(`Join IGLO with my referral: ${link}`)}`, '_blank')
+  else if (channel === 'email') window.open(`mailto:?subject=Join IGLO&body=${encodeURIComponent(`Join IGLO: ${link}`)}`)
   else if (channel === 'link' && typeof navigator !== 'undefined' && navigator.clipboard) {
     navigator.clipboard.writeText(link)
     toast.success('Link copied')
@@ -2265,8 +2265,8 @@ function stageBadgeTheme(status) {
 }
 
 function stageCircleClass(i, current) {
-  if (i < current) return 'bg-[#FF6600] text-white'
-  if (i === current) return 'border-2 border-[#FF6600] text-[#FF6600] bg-surface-white'
+  if (i < current) return 'bg-[#980000] text-white'
+  if (i === current) return 'border-2 border-[#980000] text-[#980000] bg-surface-white'
   return 'border-2 border-outline-gray-2 text-ink-gray-4 bg-surface-white'
 }
 

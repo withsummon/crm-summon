@@ -21,15 +21,15 @@
 .bpmn-node-active .djs-visual circle,
 .bpmn-node-active .djs-visual polygon,
 .bpmn-node-active .djs-visual path {
-  stroke: #0d9488 !important;
-  fill: rgba(13, 148, 136, 0.08) !important;
+  stroke: #980000 !important;
+  fill: rgba(152, 0, 0, 0.08) !important;
   stroke-width: 3px !important;
-  filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.4));
+  filter: drop-shadow(0 0 8px rgba(152, 0, 0, 0.4));
   animation: bpmnTealPulse 2s infinite ease-in-out;
 }
 
 .bpmn-node-active .djs-visual text {
-  fill: #0f766e !important;
+  fill: #750000 !important;
   font-weight: 700 !important;
 }
 
@@ -71,9 +71,9 @@
 /* Pulsing Teal Animation */
 @keyframes bpmnTealPulse {
   0% {
-    stroke: #0d9488;
-    fill: rgba(13, 148, 136, 0.08);
-    filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.3));
+    stroke: #980000;
+    fill: rgba(152, 0, 0, 0.08);
+    filter: drop-shadow(0 0 4px rgba(152, 0, 0, 0.3));
   }
   50% {
     stroke: #14b8a6;
@@ -81,8 +81,8 @@
     filter: drop-shadow(0 0 12px rgba(20, 184, 166, 0.6));
   }
   100% {
-    stroke: #0d9488;
-    fill: rgba(13, 148, 136, 0.08);
-    filter: drop-shadow(0 0 4px rgba(13, 148, 136, 0.3));
+    stroke: #980000;
+    fill: rgba(152, 0, 0, 0.08);
+    filter: drop-shadow(0 0 4px rgba(152, 0, 0, 0.3));
   }
 }

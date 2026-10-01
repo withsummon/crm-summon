@@ -37,7 +37,7 @@
             <div class="flex min-w-0 items-center gap-2">
               <span
                 class="inline-block size-4 shrink-0 rounded-full"
-                :style="{ backgroundColor: t.color || '#0f766e' }"
+                :style="{ backgroundColor: t.color || '#750000' }"
               />
               <div class="min-w-0">
                 <div class="truncate text-sm font-semibold text-ink-gray-9">{{ t.tag }}</div>
@@ -135,7 +135,7 @@
             />
           </div>
           <label class="flex items-center gap-2 text-sm text-ink-gray-7">
-            <input v-model="editing.is_active" type="checkbox" class="size-4 accent-[#FF6600]" />
+            <input v-model="editing.is_active" type="checkbox" class="size-4 accent-[#980000]" />
             Active
           </label>
         </div>
@@ -159,7 +159,7 @@ const deletingTag = ref(null)
 const editing = reactive({
   name: '',
   tag: '',
-  color: '#0f766e',
+  color: '#750000',
   description: '',
   is_active: true,
 })
@@ -172,7 +172,7 @@ const tagsResource = createResource({
 
 const tags = computed(() => tagsResource.data?.tags || [])
 const palette = computed(() => tagsResource.data?.palette || [
-  '#0f766e', '#FF6600', '#2563eb', '#9333ea',
+  '#750000', '#980000', '#2563eb', '#9333ea',
   '#dc2626', '#65a30d', '#0891b2', '#a16207',
 ])
 

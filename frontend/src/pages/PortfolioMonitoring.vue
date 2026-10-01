@@ -1457,7 +1457,7 @@ function initializeMap() {
   regionalCenters.forEach(center => {
     const marker = L.circleMarker(center.coords, {
       radius: 10,
-      color: '#0f766e',
+      color: '#750000',
       fillColor: '#14b8a6',
       fillOpacity: 0.85,
       weight: 2,

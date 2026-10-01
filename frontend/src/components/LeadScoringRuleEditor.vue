@@ -30,7 +30,7 @@
 
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">Weight: {{ editing.weight }}</label>
-            <input v-model.number="editing.weight" type="range" min="0" max="100" class="w-full accent-[#FF6600]" />
+            <input v-model.number="editing.weight" type="range" min="0" max="100" class="w-full accent-[#980000]" />
           </div>
 
           <div>

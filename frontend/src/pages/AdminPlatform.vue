@@ -5,7 +5,7 @@
         <div class="flex min-w-0 items-center gap-3">
           <div
             class="flex h-8 w-8 items-center justify-center rounded-[10px]"
-            style="background: linear-gradient(135deg, #FF6600, #FF944D)"
+            style="background: linear-gradient(135deg, #980000, #c45050)"
           >
             <FeatherIcon name="layout" class="h-4 w-4 text-white" />
           </div>
@@ -51,7 +51,7 @@
         class="px-4 py-2.5 text-sm font-medium transition-colors"
         :class="
           activeTab === tab.key
-            ? 'border-b-2 border-[#FF6600] text-[#FF6600]'
+            ? 'border-b-2 border-[#980000] text-[#980000]'
             : 'text-ink-gray-5 hover:text-ink-gray-8'
         "
         @click="activeTab = tab.key"
@@ -92,7 +92,7 @@
         <div
           v-for="feat in featureCards"
           :key="feat.key"
-            class="group cursor-pointer rounded-[14px] border border-crm-border bg-white p-4 shadow-sm transition-all hover:border-[#FF6600] hover:shadow-md"
+            class="group cursor-pointer rounded-[14px] border border-crm-border bg-white p-4 shadow-sm transition-all hover:border-[#980000] hover:shadow-md"
           @click="navigate(feat)"
         >
           <div class="flex items-start justify-between gap-2">
@@ -109,13 +109,13 @@
               :theme="feat.badgeTheme || 'gray'"
             />
           </div>
-          <div class="mt-3 text-sm font-semibold text-ink-gray-8 group-hover:text-[#CC5200]">
+          <div class="mt-3 text-sm font-semibold text-ink-gray-8 group-hover:text-[#750000]">
             {{ __(feat.label) }}
           </div>
           <div class="mt-0.5 text-[11px] text-ink-gray-4 leading-relaxed">
             {{ __(feat.desc) }}
           </div>
-          <div class="mt-2 text-[10px] text-[#FF6600] font-medium">
+          <div class="mt-2 text-[10px] text-[#980000] font-medium">
             {{ feat.stat }}
           </div>
         </div>
@@ -126,7 +126,7 @@
         <div class="mb-3 flex items-center justify-between">
           <div class="text-sm font-semibold text-ink-gray-8">{{ __('Recent Admin Activity') }}</div>
           <button
-            class="text-xs text-[#FF6600] hover:underline"
+            class="text-xs text-[#980000] hover:underline"
             @click="activeTab = 'audit'"
           >
             {{ __('View Full Audit Log →') }}
@@ -167,7 +167,7 @@
           class="rounded-full border px-3 py-1 text-xs transition-colors"
           :class="
             userSubTab === st
-               ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]'
+               ? 'border-[#980000] bg-[#fceaea] text-[#750000]'
                : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
            "
            @click="userSubTab = st"
@@ -425,10 +425,10 @@
               {{ __('Role & Permission Summary') }}
             </div>
             <div class="flex gap-2">
-               <a href="/crm/admin-platform/roles" class="text-xs text-[#FF6600] hover:underline">
+               <a href="/crm/admin-platform/roles" class="text-xs text-[#980000] hover:underline">
                  {{ __('Manage Roles →') }}
                </a>
-               <a href="/crm/admin-platform/role-permissions" class="text-xs text-[#FF6600] hover:underline">
+               <a href="/crm/admin-platform/role-permissions" class="text-xs text-[#980000] hover:underline">
                  {{ __('Permission Matrix →') }}
                </a>
             </div>
@@ -445,7 +445,7 @@
                   <span
                     v-for="perm in r.permissions.slice(0, 3)"
                     :key="perm"
-                    class="rounded bg-[#FFF0E0] px-1.5 py-0.5 text-[10px] text-[#CC5200]"
+                    class="rounded bg-[#fceaea] px-1.5 py-0.5 text-[10px] text-[#750000]"
                   >
                   {{ perm }}
                 </span>
@@ -563,7 +563,7 @@
           class="rounded-full border px-3 py-1 text-xs transition-colors"
           :class="
             configSubTab === st
-               ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]'
+               ? 'border-[#980000] bg-[#fceaea] text-[#750000]'
                : 'border-outline-gray-2 text-ink-gray-5 hover:border-ink-gray-4'
            "
            @click="configSubTab = st"
@@ -658,7 +658,7 @@
               <span
                 v-for="ch in nt.channels"
                 :key="ch"
-                class="rounded bg-[#FFF0E0] px-1.5 py-0.5 text-[10px] text-[#CC5200]"
+                class="rounded bg-[#fceaea] px-1.5 py-0.5 text-[10px] text-[#750000]"
               >
                 {{ ch }}
               </span>
@@ -724,11 +724,11 @@
             <div class="space-y-2 text-xs">
               <a href="/crm/admin-platform/rules-engine" class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2 hover:bg-surface-gray-1">
                 <span class="font-medium text-ink-gray-8">{{ __('Rules Engine') }}</span>
-                <span class="text-[#FF6600]">{{ __('Open') }}</span>
+                <span class="text-[#980000]">{{ __('Open') }}</span>
               </a>
               <a href="/crm/operations/partner-vendor-management" class="flex items-center justify-between rounded-lg border border-outline-gray-1 px-3 py-2 hover:bg-surface-gray-1">
                 <span class="font-medium text-ink-gray-8">{{ __('Partner & Vendor Management') }}</span>
-                <span class="text-[#FF6600]">{{ __('Open') }}</span>
+                <span class="text-[#980000]">{{ __('Open') }}</span>
               </a>
             </div>
           </div>
@@ -901,7 +901,7 @@
                   <div class="text-ink-gray-4">{{ lang.coverage }}% {{ __('translated') }}</div>
                 </div>
                 <div class="h-1.5 w-20 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-1.5 rounded-full bg-[#FF6600]" :style="{ width: lang.coverage + '%' }" />
+                  <div class="h-1.5 rounded-full bg-[#980000]" :style="{ width: lang.coverage + '%' }" />
                 </div>
                 <Badge :label="lang.default ? 'Default' : 'Installed'" variant="subtle" :theme="lang.default ? 'orange' : 'gray'" />
               </div>
@@ -933,7 +933,7 @@
               <button
                 v-if="setting.type === 'toggle'"
                 class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
-                :class="setting.value ? 'bg-[#FF6600]' : 'bg-surface-gray-3'"
+                :class="setting.value ? 'bg-[#980000]' : 'bg-surface-gray-3'"
                 @click="setting.value = !setting.value"
               >
                 <span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform"
@@ -958,7 +958,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-ink-gray-5">{{ __('Licensed To') }}</span>
-                <span class="font-medium text-ink-gray-7">PT Bank BNI</span>
+                <span class="font-medium text-ink-gray-7">PT Indocyber Global Teknologi</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-ink-gray-5">{{ __('Users') }}</span>
@@ -974,7 +974,7 @@
               </div>
             </div>
             <div class="mt-2 h-1.5 w-full rounded-full bg-surface-gray-2 overflow-hidden">
-              <div class="h-1.5 rounded-full bg-[#FF6600]" :style="{ width: (users.length / 500 * 100) + '%' }" />
+              <div class="h-1.5 rounded-full bg-[#980000]" :style="{ width: (users.length / 500 * 100) + '%' }" />
             </div>
             <div class="mt-1 text-[10px] text-ink-gray-4">{{ users.length }}/500 {{ __('seats used') }}</div>
           </div>
@@ -1148,7 +1148,7 @@
           <option v-for="a in ['Create', 'Update', 'Delete', 'Login', 'Logout', 'Export']" :key="a">{{ a }}</option>
         </select>
         <div class="ml-auto">
-          <a href="/crm/admin-platform/audit-trail" class="text-xs text-[#FF6600] hover:underline">{{ __('Full Audit Trail →') }}</a>
+          <a href="/crm/admin-platform/audit-trail" class="text-xs text-[#980000] hover:underline">{{ __('Full Audit Trail →') }}</a>
         </div>
       </div>
       <div class="rounded-[14px] border border-crm-border bg-white shadow-sm overflow-hidden">
@@ -1379,7 +1379,7 @@ const maintenanceMessage = ref('System maintenance in progress. Please try again
 // ── Branding ─────────────────────────────────────────────────
 const branding = ref({
   platformName: 'SUMMON OS',
-  primaryColor: '#FF6600',
+  primaryColor: '#980000',
   accentColor: '#14b8a6',
   faviconUrl: '/assets/favicon.ico',
   footer: '© 2026 SUMMON OS — Powered by AI',
@@ -1413,7 +1413,7 @@ const platformHealth = [
 
 // ── Feature Cards ────────────────────────────────────────────
 const featureCards = [
-  { key: 'users', label: 'User Management', desc: 'Invite, manage, and deactivate users across branches', icon: 'users', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '24 active users', tab: 'users', subTab: 'Users' },
+  { key: 'users', label: 'User Management', desc: 'Invite, manage, and deactivate users across branches', icon: 'users', gradient: 'linear-gradient(135deg, #980000, #c45050)', stat: '24 active users', tab: 'users', subTab: 'Users' },
   { key: 'branches', label: 'Branch Management', desc: 'Configure organizational branches and hierarchy', icon: 'git-branch', gradient: 'linear-gradient(135deg, #2563eb, #60a5fa)', stat: '5 branches', tab: 'users', subTab: 'Branches' },
   { key: 'rbac', label: 'Role & Permissions', desc: 'Granular RBAC with permission matrix', icon: 'lock', gradient: 'linear-gradient(135deg, #dc2626, #f87171)', stat: '7 roles configured', route: '/admin-platform/roles' },
   { key: 'sla', label: 'SLA Configuration', desc: 'Response and resolution SLA per module and priority', icon: 'clock', gradient: 'linear-gradient(135deg, #0891b2, #22d3ee)', stat: '12 SLA rules', tab: 'config', subTab: 'SLA' },
@@ -1421,25 +1421,25 @@ const featureCards = [
   { key: 'notif', label: 'Notification Templates', desc: 'System notification templates across channels', icon: 'bell', gradient: 'linear-gradient(135deg, #d97706, #fbbf24)', stat: '15 templates', tab: 'config', subTab: 'Notifications' },
   { key: 'holiday', label: 'Holiday Calendar', desc: 'Public holidays for SLA business-hours calculation', icon: 'calendar', gradient: 'linear-gradient(135deg, #e11d48, #fb7185)', stat: '18 holidays', tab: 'config', subTab: 'Holidays' },
   { key: 'settings', label: 'System Settings', desc: 'Platform-wide configuration toggles', icon: 'settings', gradient: 'linear-gradient(135deg, #475569, #94a3b8)', stat: '20 settings', tab: 'platform' },
-  { key: 'api', label: 'API Credentials', desc: 'API key management and OAuth configuration', icon: 'key', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '4 active keys', tab: 'security' },
+  { key: 'api', label: 'API Credentials', desc: 'API key management and OAuth configuration', icon: 'key', gradient: 'linear-gradient(135deg, #980000, #c45050)', stat: '4 active keys', tab: 'security' },
   { key: 'audit', label: 'Audit Trail', desc: 'Full activity logs and compliance tracking', icon: 'clipboard', gradient: 'linear-gradient(135deg, #1e3a5f, #3b82f6)', stat: '2,847 events', route: '/admin-platform/audit-trail' },
-  { key: 'tenant', label: 'Multi-Tenant', desc: 'Manage platform tenants and subdomain configuration', icon: 'layers', gradient: 'linear-gradient(135deg, #0f766e, #2dd4bf)', stat: '1 tenant active', tab: 'platform' },
-  { key: 'branding', label: 'Branding & White Label', desc: 'Custom logo, colors, and platform identity', icon: 'aperture', gradient: 'linear-gradient(135deg, #c026d3, #e879f9)', stat: 'BNI theme applied', tab: 'platform' },
+  { key: 'tenant', label: 'Multi-Tenant', desc: 'Manage platform tenants and subdomain configuration', icon: 'layers', gradient: 'linear-gradient(135deg, #750000, #2dd4bf)', stat: '1 tenant active', tab: 'platform' },
+  { key: 'branding', label: 'Branding & White Label', desc: 'Custom logo, colors, and platform identity', icon: 'aperture', gradient: 'linear-gradient(135deg, #c026d3, #e879f9)', stat: 'IGLO theme applied', tab: 'platform' },
   { key: 'backup', label: 'Backup & Restore', desc: 'Automated backups with point-in-time restore', icon: 'database', gradient: 'linear-gradient(135deg, #1d4ed8, #60a5fa)', stat: 'Last: 2h ago', tab: 'platform' },
   { key: 'maintenance', label: 'Maintenance Mode', desc: 'Block user access during system maintenance', icon: 'tool', gradient: 'linear-gradient(135deg, #92400e, #fbbf24)', stat: 'Currently off', tab: 'platform' },
   { key: 'license', label: 'License', desc: 'Enterprise license management and seat tracking', icon: 'file-text', gradient: 'linear-gradient(135deg, #065f46, #34d399)', stat: '24/500 seats', tab: 'platform' },
-  { key: 'session', label: 'Session Management', desc: 'View and terminate active user sessions', icon: 'monitor', gradient: 'linear-gradient(135deg, #FF6600, #FF944D)', stat: '8 sessions', tab: 'users', subTab: 'Sessions' },
+  { key: 'session', label: 'Session Management', desc: 'View and terminate active user sessions', icon: 'monitor', gradient: 'linear-gradient(135deg, #980000, #c45050)', stat: '8 sessions', tab: 'users', subTab: 'Sessions' },
   { key: 'password', label: 'Password Policy', desc: 'Enforce password strength and rotation rules', icon: 'shield', gradient: 'linear-gradient(135deg, #b91c1c, #f87171)', stat: 'Policy active', tab: 'security' },
   { key: 'fields', label: 'Custom Field Builder', desc: 'Add custom fields to CRM doctypes', icon: 'sliders', gradient: 'linear-gradient(135deg, #0369a1, #38bdf8)', stat: '6 custom fields', tab: 'config', subTab: 'Custom Fields' },
-  { key: 'locale', label: 'Localization', desc: 'Language, currency, timezone, and date format', icon: 'globe', gradient: 'linear-gradient(135deg, #0f766e, #34d399)', stat: 'ID + EN', tab: 'config', subTab: 'Localization' },
+  { key: 'locale', label: 'Localization', desc: 'Language, currency, timezone, and date format', icon: 'globe', gradient: 'linear-gradient(135deg, #750000, #34d399)', stat: 'ID + EN', tab: 'config', subTab: 'Localization' },
 ]
 
 // ── Recent Activity ──────────────────────────────────────────
 const recentActivity = [
-  { id: 1, icon: 'user-plus', iconBg: 'bg-[#FFF0E0] text-[#CC5200]', actor: 'Admin', action: 'invited user Siti Rahayu (RM role)', time: '5m ago' },
+  { id: 1, icon: 'user-plus', iconBg: 'bg-[#fceaea] text-[#750000]', actor: 'Admin', action: 'invited user Siti Rahayu (RM role)', time: '5m ago' },
   { id: 2, icon: 'lock', iconBg: 'bg-red-100 text-red-700', actor: 'Admin', action: 'updated Role Permissions for Credit Analyst', time: '1h ago' },
   { id: 3, icon: 'settings', iconBg: 'bg-gray-100 text-gray-600', actor: 'System', action: 'automated backup completed — 4.2 GB', time: '2h ago' },
-  { id: 4, icon: 'key', iconBg: 'bg-amber-100 text-amber-700', actor: 'IT Admin', action: 'generated new API key for BNI Integration', time: '3h ago' },
+  { id: 4, icon: 'key', iconBg: 'bg-amber-100 text-amber-700', actor: 'IT Admin', action: 'generated new API key for IGLO Integration', time: '3h ago' },
   { id: 5, icon: 'globe', iconBg: 'bg-blue-100 text-blue-700', actor: 'Admin', action: 'updated locale settings to Bahasa Indonesia', time: 'Yesterday' },
   { id: 6, icon: 'clock', iconBg: 'bg-cyan-100 text-cyan-700', actor: 'Admin', action: 'added SLA rule — Omnichannel High Priority 15m', time: 'Yesterday' },
 ]
@@ -1447,13 +1447,13 @@ const recentActivity = [
 // ── Users ────────────────────────────────────────────────────
 const allRoles = ['Super Admin', 'IT Admin', 'RM', 'Credit Analyst', 'Operations', 'Collection Officer', 'Compliance', 'Read Only']
 const users = ref([
-  { id: 'u1', name: 'Ahmad Santoso', email: 'ahmad@bni.co.id', role: 'Super Admin', branch: 'Head Office', lastLogin: '2026-05-24 09:15', status: 'Active' },
-  { id: 'u2', name: 'Dewi Pratama', email: 'dewi@bni.co.id', role: 'RM', branch: 'Jakarta Pusat', lastLogin: '2026-05-24 08:42', status: 'Active' },
-  { id: 'u3', name: 'Rizky Andalan', email: 'rizky@bni.co.id', role: 'RM', branch: 'Surabaya', lastLogin: '2026-05-23 17:30', status: 'Active' },
-  { id: 'u4', name: 'Maya Lestari', email: 'maya@bni.co.id', role: 'Collection Officer', branch: 'Bandung', lastLogin: '2026-05-24 07:55', status: 'Active' },
-  { id: 'u5', name: 'Budi Santoso', email: 'budi@bni.co.id', role: 'Credit Analyst', branch: 'Head Office', lastLogin: '2026-05-22 16:00', status: 'Active' },
-  { id: 'u6', name: 'Siti Rahayu', email: 'siti@bni.co.id', role: 'Operations', branch: 'Jakarta Selatan', lastLogin: '—', status: 'Invited' },
-  { id: 'u7', name: 'Hendra Wijaya', email: 'hendra@bni.co.id', role: 'Compliance', branch: 'Head Office', lastLogin: '2026-05-20 14:22', status: 'Inactive' },
+  { id: 'u1', name: 'Ahmad Santoso', email: 'ahmad@example.com', role: 'Super Admin', branch: 'Head Office', lastLogin: '2026-05-24 09:15', status: 'Active' },
+  { id: 'u2', name: 'Dewi Pratama', email: 'dewi@example.com', role: 'RM', branch: 'Jakarta Pusat', lastLogin: '2026-05-24 08:42', status: 'Active' },
+  { id: 'u3', name: 'Rizky Andalan', email: 'rizky@example.com', role: 'RM', branch: 'Surabaya', lastLogin: '2026-05-23 17:30', status: 'Active' },
+  { id: 'u4', name: 'Maya Lestari', email: 'maya@example.com', role: 'Collection Officer', branch: 'Bandung', lastLogin: '2026-05-24 07:55', status: 'Active' },
+  { id: 'u5', name: 'Budi Santoso', email: 'budi@example.com', role: 'Credit Analyst', branch: 'Head Office', lastLogin: '2026-05-22 16:00', status: 'Active' },
+  { id: 'u6', name: 'Siti Rahayu', email: 'siti@example.com', role: 'Operations', branch: 'Jakarta Selatan', lastLogin: '—', status: 'Invited' },
+  { id: 'u7', name: 'Hendra Wijaya', email: 'hendra@example.com', role: 'Compliance', branch: 'Head Office', lastLogin: '2026-05-20 14:22', status: 'Inactive' },
 ])
 
 const filteredUsers = computed(() => {
@@ -1516,7 +1516,7 @@ const rolesSummary = [
 
 // ── API Keys ─────────────────────────────────────────────────
 const apiKeys = ref([
-  { id: 'k1', name: 'BNI Core Banking Integration', preview: 'sk_live_bniBNI****8x2k', scopes: ['Read', 'Write'], created: '2026-01-15', lastUsed: '2026-05-24', status: 'Active' },
+  { id: 'k1', name: 'Core Banking Integration', preview: 'sk_live_iglo****8x2k', scopes: ['Read', 'Write'], created: '2026-01-15', lastUsed: '2026-05-24', status: 'Active' },
   { id: 'k2', name: 'WhatsApp Business API', preview: 'sk_live_wa****m9qp', scopes: ['Messaging'], created: '2026-02-10', lastUsed: '2026-05-24', status: 'Active' },
   { id: 'k3', name: 'Privy e-Signature', preview: 'sk_live_privy****k3pl', scopes: ['Signing', 'Audit'], created: '2026-03-01', lastUsed: '2026-05-20', status: 'Active' },
   { id: 'k4', name: 'Legacy Report Export (deprecated)', preview: 'sk_test_dep****00x1', scopes: ['Read'], created: '2025-10-01', lastUsed: '2026-04-01', status: 'Inactive' },
@@ -1611,8 +1611,8 @@ const systemSettings = ref([
 
 // ── Tenants ──────────────────────────────────────────────────
 const tenants = ref([
-  { id: 't1', name: 'BNI Production', subdomain: 'bni.summonos.id', users: 24, plan: 'Enterprise', status: 'Active', color: '#ea580c' },
-  { id: 't2', name: 'BNI Staging', subdomain: 'bni-stg.summonos.id', users: 5, plan: 'Dev', status: 'Active', color: '#2563eb' },
+  { id: 't1', name: 'IGLO Production', subdomain: 'iglo.example.com', users: 24, plan: 'Enterprise', status: 'Active', color: '#ea580c' },
+  { id: 't2', name: 'IGLO Staging', subdomain: 'iglo-stg.example.com', users: 5, plan: 'Dev', status: 'Active', color: '#2563eb' },
 ])
 
 // ── Backups ──────────────────────────────────────────────────
@@ -1630,7 +1630,7 @@ const auditLogs = [
   { id: 'al3', timestamp: '2026-05-24 08:42:00', actor: 'Dewi Pratama', action: 'Login', module: 'Users', resource: 'User Session', ip: '192.168.1.45', result: 'Success' },
   { id: 'al4', timestamp: '2026-05-24 08:05:30', actor: 'System', action: 'Create', module: 'Backup', resource: 'backup_20260524_0700.tar.gz', ip: 'localhost', result: 'Success' },
   { id: 'al5', timestamp: '2026-05-23 17:55:11', actor: 'Ahmad Santoso', action: 'Update', module: 'RBAC', resource: 'Role: Credit Analyst', ip: '192.168.1.10', result: 'Success' },
-  { id: 'al6', timestamp: '2026-05-23 16:30:44', actor: 'IT Admin', action: 'Create', module: 'API', resource: 'API Key: BNI Core Banking', ip: '192.168.1.88', result: 'Success' },
+  { id: 'al6', timestamp: '2026-05-23 16:30:44', actor: 'IT Admin', action: 'Create', module: 'API', resource: 'API Key: Core Banking', ip: '192.168.1.88', result: 'Success' },
   { id: 'al7', timestamp: '2026-05-23 14:12:08', actor: 'Unknown', action: 'Login', module: 'Users', resource: 'User: hacker@test.com', ip: '45.83.21.12', result: 'Failed' },
   { id: 'al8', timestamp: '2026-05-23 11:00:00', actor: 'Ahmad Santoso', action: 'Update', module: 'System', resource: 'System Settings', ip: '192.168.1.10', result: 'Success' },
   { id: 'al9', timestamp: '2026-05-22 10:44:22', actor: 'Ahmad Santoso', action: 'Export', module: 'Users', resource: 'User List (24 records)', ip: '192.168.1.10', result: 'Success' },
@@ -1649,7 +1649,7 @@ const filteredAuditLogs = computed(() => {
 
 // ── Helpers ──────────────────────────────────────────────────
 function avatarGradient(name) {
-  const colors = ['#FF6600', '#2563eb', '#059669', '#dc2626', '#d97706', '#0891b2', '#c026d3']
+  const colors = ['#980000', '#2563eb', '#059669', '#dc2626', '#d97706', '#0891b2', '#c026d3']
   return colors[name.charCodeAt(0) % colors.length]
 }
 function permIcon(level) {

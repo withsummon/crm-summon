@@ -360,7 +360,7 @@ def _json_schema_instruction(agent):
 def _system_prompt(agent, rag_context, customer=None):
 	tools = ", ".join(_agent_tools(agent["key"]))
 	return (
-		f"Anda adalah {agent['name']}, {agent['role']} untuk BNI SUMMON CRM.\n"
+		f"Anda adalah {agent['name']}, {agent['role']} untuk IGLO CRM.\n"
 		"Jawab selalu dalam Bahasa Indonesia profesional, ringkas, dan spesifik untuk konteks banking/CRM.\n"
 		"Gunakan hanya sumber CRM/RAG yang diberikan untuk klaim faktual terkait nasabah, kredit, risiko, dokumen, transaksi, dan portofolio.\n"
 		"Jika sumber tidak cukup, jelaskan data yang kurang di field limitations. Jangan mengarang fakta.\n"
@@ -982,7 +982,7 @@ def _inject_rag_context(message, rag, customer=None):
 				limit=10
 			)
 			
-		context_lines = ["RAG DATA - BNI CRM RELATIONS & REFERRALS (REAL-TIME DATABASE):"]
+		context_lines = ["RAG DATA - IGLO CRM RELATIONS & REFERRALS (REAL-TIME DATABASE):"]
 		if relations:
 			for r in relations:
 				rel_party = r.get("related_party") or r.get("related_customer") or "Terafiliasi"
@@ -1024,11 +1024,11 @@ def _inject_rag_context(message, rag, customer=None):
 						)
 					else:
 						context_lines.append(
-							f"  * Peluang Referral Baru: '{rel_party}' belum memiliki fasilitas kredit aktif di BNI. Peluang pendekatan referral kerja sama KMK via nasabah '{r.get('customer')}'."
+							f"  * Peluang Referral Baru: '{rel_party}' belum memiliki fasilitas kredit aktif. Peluang pendekatan referral kerja sama KMK via nasabah '{r.get('customer')}'."
 						)
 				else:
 					context_lines.append(
-						f"  * Peluang Referral Baru: '{rel_party}' terdaftar sebagai relasi non-nasabah. Rekomendasikan pendekatan program BNI SUMMON."
+						f"  * Peluang Referral Baru: '{rel_party}' terdaftar sebagai relasi non-nasabah. Rekomendasikan pendekatan program IGLO."
 					)
 		else:
 			# Fallback if no relations are seeded yet
@@ -1042,7 +1042,7 @@ def _inject_rag_context(message, rag, customer=None):
 				"- Peluang Referral Baru: PT Bogasari Flour Mills sedang membutuhkan Kredit Kerja (KMK) ekspansi sebesar Rp 10 Miliar. Relasi erat dengan PT Indofood mempermudah pendekatan referral."
 			)
 			context_lines.append(
-				"- Tindakan Direkomendasikan: Hubungi UBO/Direktur terafiliasi PT Indofood untuk menawarkan program KMK BNI khusus grup usaha."
+				"- Tindakan Direkomendasikan: Hubungi UBO/Direktur terafiliasi PT Indofood untuk menawarkan program KMK khusus grup usaha."
 			)
 			
 		injected_context = "\n".join(context_lines)
@@ -1089,7 +1089,7 @@ def _inject_rag_context(message, rag, customer=None):
 		status_target = "Sangat Sehat / On Track" if achievement_pct >= 80 else "Butuh Perhatian"
 		
 		context_lines = [
-			"RAG DATA - BNI CRM DAILY ACTIVITY RECAP (REAL-TIME DATABASE):",
+			"RAG DATA - IGLO CRM DAILY ACTIVITY RECAP (REAL-TIME DATABASE):",
 			f"- Jumlah Nasabah Disentuh: {touched_count} Nasabah ({touched_names or 'Belum ada komunikasi hari ini'}).",
 			f"- Status Komunikasi: {wa_count} Pesan WhatsApp terkirim, {email_count} Email draf dikirim.",
 			f"- Progres Proposal Baru: {proposals_today} Proposal hari ini (Total Pipeline: {proposals_total} Proposal).",
@@ -1130,7 +1130,7 @@ def _inject_rag_context(message, rag, customer=None):
 			maturity_lines.append(f"  * Fasilitas {m.get('facility_type')} '{m.get('customer')}' senilai Rp {m.get('limit_amount'):,.0f} jatuh tempo pada {m.get('due_date')}.")
 		
 		context_lines = [
-			"RAG DATA - BNI CRM PORTFOLIO ANALYSIS (REAL-TIME DATABASE):",
+			"RAG DATA - IGLO CRM PORTFOLIO ANALYSIS (REAL-TIME DATABASE):",
 			f"- Total Portofolio Dikelola: Rp {total_outstanding:,.0f} Outstanding (Total Limit: Rp {total_limit:,.0f}, {unique_customers} Nasabah Aktif).",
 			f"- Kualitas Aset (Distribusi KOL): {kol_str or 'Semua KOL-1 (Lancar)'}.",
 		]
@@ -1158,7 +1158,7 @@ def _inject_rag_context(message, rag, customer=None):
 			gap_amount = 0
 			
 		context_lines = [
-			"RAG DATA - BNI CRM MONTHLY TARGETS (REAL-TIME DATABASE):",
+			"RAG DATA - IGLO CRM MONTHLY TARGETS (REAL-TIME DATABASE):",
 			f"- Target KPI Penyaluran (Disbursement) Bulan Ini: Rp {target_amount:,.0f}.",
 			f"- Pencapaian Saat Ini: Rp {total_outstanding:,.0f} ({achievement_pct:.1f}% dari target).",
 			f"- Sisa Gap Target: Rp {gap_amount:,.0f}.",
@@ -1172,9 +1172,9 @@ def _inject_rag_context(message, rag, customer=None):
 		rag["context"] = (rag.get("context") or "") + "\n\n" + injected_context
 		rag["passes_guardrail"] = True
 		if not rag.get("sources"):
-			rag["sources"] = [{"title": "BNI RM Portfolio Data", "excerpt": injected_context}]
+			rag["sources"] = [{"title": "CRM Portfolio Data", "excerpt": injected_context}]
 		else:
-			rag["sources"].insert(0, {"title": "BNI RM Portfolio Data", "excerpt": injected_context})
+			rag["sources"].insert(0, {"title": "CRM Portfolio Data", "excerpt": injected_context})
 	return rag
 
 

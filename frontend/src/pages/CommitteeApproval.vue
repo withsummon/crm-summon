@@ -98,7 +98,7 @@
                 @click="openCaseDetail(item)"
               >
                 <td class="px-3 py-2">
-                  <span class="font-mono text-xs text-[#FF6600] font-semibold">{{ item.caseId }}</span>
+                  <span class="font-mono text-xs text-[#980000] font-semibold">{{ item.caseId }}</span>
                 </td>
                 <td class="px-3 py-2">
                   <div class="font-medium text-ink-gray-9">{{ item.applicant }}</div>
@@ -107,7 +107,7 @@
                 <td class="px-3 py-2 text-ink-gray-7">{{ item.facility }}</td>
                 <td class="px-3 py-2 text-right font-semibold text-ink-gray-9">{{ item.amount }}</td>
                 <td class="px-3 py-2">
-                  <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[#006699]/10 text-[#FF6600]">{{ item.committee }}</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[#980000]/10 text-[#980000]">{{ item.committee }}</span>
                 </td>
                 <td class="px-3 py-2">
                   <span :class="['text-xs font-medium', item.slaBreached ? 'text-red-600' : 'text-green-600']">
@@ -124,7 +124,7 @@
                   <button
                     v-if="item.status === 'pending'"
                     @click.stop="openVoting(item)"
-                    class="px-3 py-1 bg-[#FF6600] text-white rounded text-xs font-medium hover:bg-[#E55A00]"
+                    class="px-3 py-1 bg-[#980000] text-white rounded text-xs font-medium hover:bg-[#E55A00]"
                   >
                     Vote
                   </button>
@@ -147,8 +147,8 @@
         <div class="flex justify-between items-center mb-2">
           <h2 class="text-base font-semibold text-ink-gray-9">Scheduled Committee Meetings</h2>
           <div class="flex gap-2">
-            <button @click="meetingView = 'list'" :class="['px-3 py-1 rounded text-sm', meetingView==='list' ? 'bg-[#FF6600] text-white' : 'bg-surface-white border text-ink-gray-6']">List</button>
-            <button @click="meetingView = 'calendar'" :class="['px-3 py-1 rounded text-sm', meetingView==='calendar' ? 'bg-[#FF6600] text-white' : 'bg-surface-white border text-ink-gray-6']">Calendar</button>
+            <button @click="meetingView = 'list'" :class="['px-3 py-1 rounded text-sm', meetingView==='list' ? 'bg-[#980000] text-white' : 'bg-surface-white border text-ink-gray-6']">List</button>
+            <button @click="meetingView = 'calendar'" :class="['px-3 py-1 rounded text-sm', meetingView==='calendar' ? 'bg-[#980000] text-white' : 'bg-surface-white border text-ink-gray-6']">Calendar</button>
           </div>
         </div>
 
@@ -180,7 +180,7 @@
                 <button
                   v-if="mtg.status === 'upcoming'"
                   @click="startSession(mtg)"
-                  class="px-4 py-1.5 bg-[#FF6600] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]"
+                  class="px-4 py-1.5 bg-[#980000] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]"
                 >
                   Start Session
                 </button>
@@ -193,7 +193,7 @@
                 </button>
                 <button
                   @click="startLiveMeeting(mtg.id)"
-                  class="px-3 py-1.5 border border-[#FF6600] text-[#FF6600] rounded-lg text-sm hover:bg-[#006699]/10"
+                  class="px-3 py-1.5 border border-[#980000] text-[#980000] rounded-lg text-sm hover:bg-[#980000]/10"
                 >
                   Go Live
                 </button>
@@ -226,7 +226,7 @@
               <p class="text-xs text-ink-gray-5 mb-2 uppercase tracking-wide font-semibold">Agenda Items ({{ mtg.agenda.length }})</p>
               <div class="space-y-1">
                 <div v-for="(item, idx) in mtg.agenda" :key="idx" class="flex items-center gap-2 text-sm text-ink-gray-6">
-                  <span class="w-5 h-5 rounded-full bg-[#006699]/10 text-[#FF6600] text-xs flex items-center justify-center font-semibold">{{ idx + 1 }}</span>
+                  <span class="w-5 h-5 rounded-full bg-[#980000]/10 text-[#980000] text-xs flex items-center justify-center font-semibold">{{ idx + 1 }}</span>
                   {{ item }}
                 </div>
               </div>
@@ -243,9 +243,9 @@
             <div v-for="d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']" :key="d">{{ d }}</div>
           </div>
           <div class="grid grid-cols-7 gap-1">
-            <div v-for="cell in calendarCells" :key="cell.key" :class="['aspect-square rounded-lg flex flex-col items-center justify-center text-sm', cell.today ? 'bg-[#FF6600] text-white font-bold' : cell.hasEvent ? 'bg-[#006699]/10 text-[#FF6600] font-semibold cursor-pointer hover:bg-[#006699]/15' : 'text-ink-gray-5']">
+            <div v-for="cell in calendarCells" :key="cell.key" :class="['aspect-square rounded-lg flex flex-col items-center justify-center text-sm', cell.today ? 'bg-[#980000] text-white font-bold' : cell.hasEvent ? 'bg-[#980000]/10 text-[#980000] font-semibold cursor-pointer hover:bg-[#980000]/15' : 'text-ink-gray-5']">
               <span>{{ cell.day }}</span>
-              <span v-if="cell.hasEvent" class="w-1.5 h-1.5 rounded-full bg-[#FF6600] mt-0.5" :class="cell.today ? 'bg-surface-white' : ''"></span>
+              <span v-if="cell.hasEvent" class="w-1.5 h-1.5 rounded-full bg-[#980000] mt-0.5" :class="cell.today ? 'bg-surface-white' : ''"></span>
             </div>
           </div>
         </div>
@@ -277,7 +277,7 @@
             <svg class="w-8 h-8 text-ink-gray-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <p class="text-ink-gray-5 mb-3">No active session. Start a meeting from the Meetings tab.</p>
-          <button @click="activeTab = 'meetings'" class="px-3 py-1.5 bg-[#FF6600] text-white rounded-lg text-sm">View Meetings</button>
+          <button @click="activeTab = 'meetings'" class="px-3 py-1.5 bg-[#980000] text-white rounded-lg text-sm">View Meetings</button>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -298,7 +298,7 @@
               >
                 <div class="flex justify-between items-start">
                   <div>
-                    <p class="font-mono text-xs text-[#FF6600] font-semibold">{{ cas.caseId }}</p>
+                    <p class="font-mono text-xs text-[#980000] font-semibold">{{ cas.caseId }}</p>
                     <p class="text-sm font-medium text-ink-gray-9 mt-0.5">{{ cas.applicant }}</p>
                     <p class="text-xs text-ink-gray-5">{{ cas.amount }}</p>
                   </div>
@@ -327,7 +327,7 @@
                 </button>
                 <div class="flex justify-between items-start">
                   <div>
-                    <span class="font-mono text-sm text-[#FF6600] font-semibold">{{ currentCase.caseId }}</span>
+                    <span class="font-mono text-sm text-[#980000] font-semibold">{{ currentCase.caseId }}</span>
                     <h2 class="text-lg font-bold text-ink-gray-9 mt-1">{{ currentCase.applicant }}</h2>
                     <p class="text-sm text-ink-gray-5">{{ currentCase.facility }} · RM: {{ currentCase.rm }}</p>
                   </div>
@@ -412,7 +412,7 @@
                     <span>{{ activeSession.votedCount }}/{{ activeSession.members.length }} voted · need {{ activeSession.quorum }}</span>
                   </div>
                   <div class="h-2 bg-surface-gray-2 rounded-full overflow-hidden">
-                    <div class="h-full bg-[#FF6600] rounded-full transition-all" :style="{ width: (activeSession.votedCount / activeSession.members.length * 100) + '%' }"></div>
+                    <div class="h-full bg-[#980000] rounded-full transition-all" :style="{ width: (activeSession.votedCount / activeSession.members.length * 100) + '%' }"></div>
                   </div>
                 </div>
               </div>
@@ -473,7 +473,7 @@
             </div>
             <div class="flex gap-2 mt-4">
               <button @click="openEditCommittee(committee)" class="flex-1 py-1.5 border border-outline-gray-2 rounded text-xs text-ink-gray-6 hover:bg-surface-gray-1">Edit</button>
-              <button @click="openEditCommittee(committee, true)" class="flex-1 py-1.5 border border-[#FF6600] text-[#FF6600] rounded text-xs hover:bg-[#006699]/10">Members</button>
+              <button @click="openEditCommittee(committee, true)" class="flex-1 py-1.5 border border-[#980000] text-[#980000] rounded text-xs hover:bg-[#980000]/10">Members</button>
             </div>
           </div>
         </div>
@@ -494,7 +494,7 @@
         </div>
         <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3">
           <div v-for="ev in calendarEvents" :key="ev.label + ev.date" class="flex items-center gap-3 border-b border-outline-gray-1 last:border-b-0 py-2">
-            <div :class="['w-2 h-2 rounded-full', ev.color || 'bg-[#FF6600]']"></div>
+            <div :class="['w-2 h-2 rounded-full', ev.color || 'bg-[#980000]']"></div>
             <span class="text-sm font-mono text-ink-gray-5 w-28">{{ ev.date }}</span>
             <span class="text-xs px-2 py-0.5 rounded bg-surface-gray-2 text-ink-gray-6">{{ ev.committee }}</span>
             <span class="text-sm text-ink-gray-8">{{ ev.label }}</span>
@@ -513,8 +513,8 @@
             </select>
           </div>
           <div class="flex gap-2">
-            <button @click="addAgendaItem" class="px-3 py-1.5 border border-[#FF6600] text-[#FF6600] rounded text-sm">+ Add Item</button>
-            <button @click="sendAgenda" class="px-3 py-1.5 bg-[#FF6600] text-white rounded text-sm">Send to Members</button>
+            <button @click="addAgendaItem" class="px-3 py-1.5 border border-[#980000] text-[#980000] rounded text-sm">+ Add Item</button>
+            <button @click="sendAgenda" class="px-3 py-1.5 bg-[#980000] text-white rounded text-sm">Send to Members</button>
           </div>
         </div>
         <div class="bg-surface-white rounded-[10px] border border-outline-gray-2 overflow-hidden">
@@ -555,7 +555,7 @@
           <select v-model="liveMeetingId" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm mr-2">
             <option v-for="m in meetings" :key="m.id" :value="m.id">{{ m.title }}</option>
           </select>
-          <button @click="liveMeetingId && startLiveMeeting(liveMeetingId)" class="px-3 py-1.5 bg-[#FF6600] text-white rounded-lg text-sm font-medium">Start Live Mode</button>
+          <button @click="liveMeetingId && startLiveMeeting(liveMeetingId)" class="px-3 py-1.5 bg-[#980000] text-white rounded-lg text-sm font-medium">Start Live Mode</button>
         </div>
         <div v-else class="bg-gray-900 text-white rounded-[14px] p-8">
           <div class="flex items-center justify-between mb-3">
@@ -596,7 +596,7 @@
             </div>
           </div>
           <div class="mt-4 flex justify-end">
-            <button @click="nextLiveItem" class="px-3 py-1.5 bg-[#FF6600] rounded text-sm font-medium">Next Item →</button>
+            <button @click="nextLiveItem" class="px-3 py-1.5 bg-[#980000] rounded text-sm font-medium">Next Item →</button>
           </div>
         </div>
       </div>
@@ -720,7 +720,7 @@
             <div class="flex items-end gap-2 h-32">
               <div v-for="bar in monthlyVolume" :key="bar.month" class="flex-1 flex flex-col items-center gap-1">
                 <span class="text-xs text-ink-gray-5">{{ bar.count }}</span>
-                <div class="w-full bg-[#FF6600] rounded-t" :style="{ height: (bar.count / 25 * 100) + '%' }"></div>
+                <div class="w-full bg-[#980000] rounded-t" :style="{ height: (bar.count / 25 * 100) + '%' }"></div>
                 <span class="text-xs text-ink-gray-4">{{ bar.month }}</span>
               </div>
             </div>
@@ -759,7 +759,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-ink-gray-7 mb-1">Location / Room</label>
-            <input type="text" placeholder="e.g. BNI HQ - Board Room 3" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
+            <input type="text" placeholder="e.g. IGLO Office - Board Room 3" class="w-full border border-outline-gray-2 rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
             <label class="block text-sm font-medium text-ink-gray-7 mb-1">Agenda Notes</label>
@@ -768,7 +768,7 @@
         </div>
         <div class="flex gap-3 mt-6">
           <button @click="showScheduleModal = false" class="flex-1 py-2 border border-outline-gray-2 rounded-lg text-sm text-ink-gray-7 hover:bg-surface-gray-1">Cancel</button>
-          <button @click="saveMeeting" class="flex-1 py-2 bg-[#FF6600] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]">Schedule Meeting</button>
+          <button @click="saveMeeting" class="flex-1 py-2 bg-[#980000] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]">Schedule Meeting</button>
         </div>
       </div>
     </div>
@@ -834,7 +834,7 @@
                 <input v-model.number="m.weight" type="number" min="0" step="0.1" placeholder="Wt" class="w-16 border border-outline-gray-2 rounded-lg px-2 py-2 text-sm" />
                 <button type="button" @click="removeMember(idx)" class="text-red-500 hover:text-red-700 text-sm px-2">✕</button>
               </div>
-              <button type="button" @click="addMember" class="text-[#FF6600] hover:text-[#FF6600] text-sm font-medium">+ Add Member</button>
+              <button type="button" @click="addMember" class="text-[#980000] hover:text-[#980000] text-sm font-medium">+ Add Member</button>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -844,7 +844,7 @@
         </div>
         <div class="flex gap-3 mt-6">
           <button @click="closeSetupModal" class="flex-1 py-2 border border-outline-gray-2 rounded-lg text-sm text-ink-gray-7 hover:bg-surface-gray-1">Cancel</button>
-          <button @click="saveCommittee" class="flex-1 py-2 bg-[#FF6600] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]">{{ committeeForm.id ? 'Save Changes' : 'Create Committee' }}</button>
+          <button @click="saveCommittee" class="flex-1 py-2 bg-[#980000] text-white rounded-lg text-sm font-medium hover:bg-[#E55A00]">{{ committeeForm.id ? 'Save Changes' : 'Create Committee' }}</button>
         </div>
       </div>
     </div>
@@ -854,7 +854,7 @@
       <div class="bg-surface-white rounded-[14px] w-full max-w-2xl p-3 shadow-2xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-3">
           <div>
-            <span class="font-mono text-sm text-[#FF6600] font-semibold">{{ selectedCase.caseId }}</span>
+            <span class="font-mono text-sm text-[#980000] font-semibold">{{ selectedCase.caseId }}</span>
             <h2 class="text-lg font-bold text-ink-gray-9">{{ selectedCase.applicant }}</h2>
           </div>
           <button @click="showCaseModal = false" class="text-ink-gray-4 hover:text-ink-gray-6">✕</button>
@@ -880,8 +880,8 @@
           <p>Reason: {{ selectedCase.overridden.reason }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button v-if="selectedCase.status === 'pending'" @click="showCaseModal = false; openVoting(selectedCase)" class="flex-1 py-2 bg-[#FF6600] text-white rounded-lg text-sm font-medium">Open Voting</button>
-          <button v-if="selectedCase.status === 'pending'" @click="startCircularApproval(selectedCase)" class="px-3 py-2 border border-[#FF6600] text-[#FF6600] rounded-lg text-sm">Circular Approval</button>
+          <button v-if="selectedCase.status === 'pending'" @click="showCaseModal = false; openVoting(selectedCase)" class="flex-1 py-2 bg-[#980000] text-white rounded-lg text-sm font-medium">Open Voting</button>
+          <button v-if="selectedCase.status === 'pending'" @click="startCircularApproval(selectedCase)" class="px-3 py-2 border border-[#980000] text-[#980000] rounded-lg text-sm">Circular Approval</button>
           <button v-if="['approved', 'rejected', 'deferred'].includes(selectedCase.status)" @click="generateMinutes(selectedCase)" class="px-3 py-2 border border-outline-gray-2 text-ink-gray-7 rounded-lg text-sm">Generate Minutes</button>
           <button v-if="['approved', 'rejected'].includes(selectedCase.status) && canOverride" @click="overrideDecision(selectedCase)" class="px-3 py-2 border border-red-300 text-red-700 rounded-lg text-sm">Override Decision</button>
           <button @click="showCaseModal = false" class="px-3 py-1.5 border border-outline-gray-2 rounded-lg text-sm text-ink-gray-6">Close</button>
@@ -1194,7 +1194,7 @@ function generateMinutes(cas) {
 
 const queueKPIs = [
   { label: 'Pending Cases', value: '8', sub: 'Awaiting committee', color: 'text-amber-600' },
-  { label: 'In Session', value: '3', sub: 'Active deliberation', color: 'text-[#FF6600]' },
+  { label: 'In Session', value: '3', sub: 'Active deliberation', color: 'text-[#980000]' },
   { label: 'Approved MTD', value: '24', sub: 'This month', color: 'text-green-600' },
   { label: 'Rejected MTD', value: '6', sub: 'This month', color: 'text-red-600' },
   { label: 'Avg TAT', value: '3.2d', sub: 'vs SLA 5 days', color: 'text-blue-600' },
@@ -1230,8 +1230,8 @@ const meetings = ref([
     day: '28',
     month: 'MAY',
     time: '09:00 – 11:00 WIB',
-    location: 'Board Room 1, BNI HQ Jakarta',
-    color: 'bg-[#FF6600]',
+    location: 'Board Room 1, IGLO Office Jakarta',
+    color: 'bg-[#980000]',
     status: 'upcoming',
     cases: 3,
     quorum: 3,
@@ -1271,7 +1271,7 @@ const meetings = ref([
     day: '30',
     month: 'MAY',
     time: '10:00 – 12:00 WIB',
-    location: 'Executive Floor, BNI HQ',
+    location: 'Executive Floor, IGLO Office',
     color: 'bg-blue-600',
     status: 'upcoming',
     cases: 5,
@@ -1391,7 +1391,7 @@ function priorityBadge(p) {
 function statusBadge(s) {
   return {
     pending: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium',
-    in_session: 'px-2 py-0.5 bg-[#006699]/10 text-[#FF6600] rounded text-xs font-medium',
+    in_session: 'px-2 py-0.5 bg-[#980000]/10 text-[#980000] rounded text-xs font-medium',
     approved: 'px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium',
     rejected: 'px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium',
     deferred: 'px-2 py-0.5 bg-surface-gray-2 text-ink-gray-6 rounded text-xs font-medium',
@@ -1411,7 +1411,7 @@ function mtgStatusBadge(s) {
 }
 
 function avatarColor(name) {
-  const colors = ['bg-[#FF6600]', 'bg-blue-500', 'bg-green-500', 'bg-amber-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500', 'bg-[#FF6600]']
+  const colors = ['bg-[#980000]', 'bg-blue-500', 'bg-green-500', 'bg-amber-500', 'bg-red-500', 'bg-indigo-500', 'bg-pink-500', 'bg-[#980000]']
   return colors[(name?.charCodeAt(0) || 0) % colors.length]
 }
 

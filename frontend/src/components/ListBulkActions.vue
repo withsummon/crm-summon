@@ -73,7 +73,7 @@
           v-model="tagColor"
           type="text"
           :label="__('Color')"
-          placeholder="#0f766e"
+          placeholder="#750000"
         />
       </div>
     </template>
@@ -187,7 +187,7 @@ const pendingSelections = ref([])
 const reassignTo = ref('')
 const reassignReason = ref('')
 const tagName = ref('')
-const tagColor = ref('#0f766e')
+const tagColor = ref('#750000')
 
 function assignValues(selections, unselectAll) {
   showAssignmentModal.value = true
@@ -227,7 +227,7 @@ function openTagDialog(selections, unselectAll) {
   pendingSelections.value = Array.from(selections)
   unselectAllAction.value = unselectAll
   tagName.value = ''
-  tagColor.value = '#0f766e'
+  tagColor.value = '#750000'
   showTagDialog.value = true
 }
 
@@ -241,7 +241,7 @@ async function submitTag() {
     await call('crm.api.lead_management.bulk_tag_leads', {
       leads: pendingSelections.value,
       tag: tagName.value,
-      color: tagColor.value || '#0f766e',
+      color: tagColor.value || '#750000',
     })
     toast.success(__('Tags applied'))
     showTagDialog.value = false

@@ -3,7 +3,7 @@
     <LayoutHeader>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#980000] to-[#750000]">
             <FeatherIcon name="bar-chart-2" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
@@ -13,11 +13,11 @@
       </template>
       <template #right-header>
         <div class="flex items-center gap-2">
-          <button @click="doRefresh" class="flex items-center gap-1.5 rounded-lg border border-[#006699] px-3 py-1.5 text-xs font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors bg-white">
+          <button @click="doRefresh" class="flex items-center gap-1.5 rounded-lg border border-[#980000] px-3 py-1.5 text-xs font-semibold text-[#980000] hover:bg-[#fceaea] transition-colors bg-white">
             <FeatherIcon :name="refreshing ? 'loader' : 'refresh-cw'" class="h-3.5 w-3.5" :class="refreshing && 'animate-spin'" />
             {{ __('Refresh') }}
           </button>
-          <button @click="doExport" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+          <button @click="doExport" class="flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
             <FeatherIcon name="download" class="h-3.5 w-3.5" />
             {{ __('Export') }}
           </button>
@@ -33,11 +33,11 @@
             v-for="nav in navItems" :key="nav.id"
             @click="activeNav = nav.id"
             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all text-left"
-            :class="activeNav === nav.id ? 'bg-[#FFF8F2] text-[#CC5200] font-semibold' : 'text-gray-600 hover:bg-gray-50'"
+            :class="activeNav === nav.id ? 'bg-[#fff8f8] text-[#750000] font-semibold' : 'text-gray-600 hover:bg-gray-50'"
           >
             <FeatherIcon :name="nav.icon" class="h-3.5 w-3.5 shrink-0" />
             <span class="truncate">{{ nav.label }}</span>
-            <span v-if="nav.badge" class="ml-auto text-[9px] bg-[#FFF0E6] text-[#CC5200] rounded-full px-1.5 font-bold">{{ nav.badge }}</span>
+            <span v-if="nav.badge" class="ml-auto text-[9px] bg-[#fceaea] text-[#750000] rounded-full px-1.5 font-bold">{{ nav.badge }}</span>
           </button>
         </div>
 
@@ -82,7 +82,7 @@
               </div>
               <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all"
-                  :class="kpi.pct >= 100 ? 'bg-green-500' : kpi.pct >= 80 ? 'bg-[#FF6600]' : 'bg-amber-400'"
+                  :class="kpi.pct >= 100 ? 'bg-green-500' : kpi.pct >= 80 ? 'bg-[#980000]' : 'bg-amber-400'"
                   :style="{ width: Math.min(kpi.pct, 100) + '%' }" />
               </div>
             </div>
@@ -131,7 +131,7 @@
                 <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                   <button v-for="ct in ['Bar','Line']" :key="ct" @click="chartType = ct"
                     class="px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
-                    :class="chartType===ct ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-400'">
+                    :class="chartType===ct ? 'bg-white text-[#750000] shadow-sm' : 'text-gray-400'">
                     {{ ct }}
                   </button>
                 </div>
@@ -142,13 +142,13 @@
                   <rect v-for="(v,i) in disbursement" :key="i"
                     :x="(400/disbursement.length)*i+3" :y="110-(v/maxDisb)*110"
                     :width="(400/disbursement.length)-6" :height="(v/maxDisb)*110"
-                    :fill="i===disbursement.length-1?'#FF6600':'#FFD9B3'" rx="2" />
+                    :fill="i===disbursement.length-1?'#980000':'#f2b7b7'" rx="2" />
                 </template>
                 <template v-else>
-                  <polyline :points="linePoints" fill="none" stroke="#FF6600" stroke-width="2" stroke-linejoin="round" />
+                  <polyline :points="linePoints" fill="none" stroke="#980000" stroke-width="2" stroke-linejoin="round" />
                   <circle v-for="(v,i) in disbursement" :key="i"
                     :cx="(400/disbursement.length)*i+(400/disbursement.length/2)"
-                    :cy="110-(v/maxDisb)*110" r="3" fill="#FF6600" />
+                    :cy="110-(v/maxDisb)*110" r="3" fill="#980000" />
                 </template>
               </svg>
               <div class="flex justify-around mt-1">
@@ -221,7 +221,7 @@
             <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div class="flex items-center justify-between mb-3">
                 <h3 class="text-sm font-bold text-gray-800">{{ __('Recent Reports') }}</h3>
-                <button @click="activeNav='hub'" class="text-[10px] text-[#FF6600] hover:underline">{{ __('View all') }}</button>
+                <button @click="activeNav='hub'" class="text-[10px] text-[#980000] hover:underline">{{ __('View all') }}</button>
               </div>
               <div class="space-y-1.5">
                 <div v-for="r in recentReports.slice(0,5)" :key="r.id"
@@ -235,7 +235,7 @@
                     <p class="text-[10px] text-gray-400">{{ r.lastRun }}</p>
                   </div>
                   <button @click.stop="downloadReport(r)" class="shrink-0">
-                    <FeatherIcon name="download" class="h-3 w-3 text-gray-300 hover:text-[#FF6600]" />
+                    <FeatherIcon name="download" class="h-3 w-3 text-gray-300 hover:text-[#980000]" />
                   </button>
                 </div>
               </div>
@@ -250,13 +250,13 @@
               <div class="relative flex-1 max-w-md">
                 <FeatherIcon name="search" class="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                 <input v-model="reportSearch" type="text" :placeholder="__('Search reports...')"
-                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
+                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#980000]" />
               </div>
               <select v-model="reportCategory" class="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none bg-white text-gray-600">
                 <option value="">{{ __('All Categories') }}</option>
                 <option>Regulatory</option><option>Executive</option><option>Portfolio</option><option>Operations</option><option>Sales</option>
               </select>
-              <button @click="showCreateReport = true" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-2 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+              <button @click="showCreateReport = true" class="flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-2 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
                 <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('New Report') }}
               </button>
             </div>
@@ -268,7 +268,7 @@
               <div class="grid grid-cols-4 gap-3">
                 <div v-for="r in favoriteReports" :key="r.id"
                   @click="openReport(r)"
-                  class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-[#FFB380] hover:shadow-md transition-all group">
+                  class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-[#db8a8a] hover:shadow-md transition-all group">
                   <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform" :class="r.colorBg">
                     <FeatherIcon :name="r.icon" class="h-4 w-4" :class="r.colorText" />
                   </div>
@@ -280,7 +280,7 @@
                   </div>
                 </div>
                 <div @click="showCreateReport = true"
-                  class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-[#FFB380] transition-all flex flex-col items-center justify-center gap-2">
+                  class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-[#db8a8a] transition-all flex flex-col items-center justify-center gap-2">
                   <FeatherIcon name="plus-circle" class="h-6 w-6 text-gray-300" />
                   <p class="text-[11px] text-gray-400 font-medium text-center">{{ __('New Report') }}</p>
                 </div>
@@ -326,7 +326,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <select v-model="r.visibility" @click.stop class="text-[10px] border rounded-lg px-2 py-1 focus:outline-none font-semibold cursor-pointer"
-                        :class="r.visibility==='Public' ? 'border-green-300 text-green-700 bg-green-50' : r.visibility==='Private' ? 'border-red-200 text-red-600 bg-red-50' : 'border-[#B3DDEF] text-[#006699] bg-[#E6F4FA]'">
+                        :class="r.visibility==='Public' ? 'border-green-300 text-green-700 bg-green-50' : r.visibility==='Private' ? 'border-red-200 text-red-600 bg-red-50' : 'border-[#f5b8b8] text-[#980000] bg-[#fceaea]'">
                         <option>Public</option><option>Team</option><option>Private</option>
                       </select>
                     </td>
@@ -334,13 +334,13 @@
                     <td class="px-4 py-3 text-gray-500">{{ r.lastRun }}</td>
                     <td class="px-4 py-3">
                       <div class="flex gap-1">
-                        <span v-for="fmt in r.formats" :key="fmt" class="text-[9px] border border-[#006699] rounded px-1.5 py-0.5 text-[#006699] font-semibold">{{ fmt }}</span>
+                        <span v-for="fmt in r.formats" :key="fmt" class="text-[9px] border border-[#980000] rounded px-1.5 py-0.5 text-[#980000] font-semibold">{{ fmt }}</span>
                       </div>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
-                        <button @click.stop="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
-                        <button @click.stop="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#F0F8FC] text-gray-400 hover:text-[#006699] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
+                        <button @click.stop="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#fff8f8] text-gray-400 hover:text-[#980000] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
+                        <button @click.stop="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#fff5f5] text-gray-400 hover:text-[#980000] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
                   </tr>
@@ -356,12 +356,12 @@
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
               <button v-for="p in ['Daily','Weekly','Monthly','YTD']" :key="p" @click="kpiPeriod = p"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="kpiPeriod===p ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                :class="kpiPeriod===p ? 'bg-white text-[#750000] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
                 {{ p }}
               </button>
             </div>
             <span class="text-xs text-gray-400">{{ activePeriod }}</span>
-            <button @click="showToast('KPI added')" class="ml-auto flex items-center gap-1.5 rounded-lg border border-[#006699] px-3 py-1.5 text-xs font-semibold text-[#006699] hover:bg-[#E6F4FA] transition-colors">
+            <button @click="showToast('KPI added')" class="ml-auto flex items-center gap-1.5 rounded-lg border border-[#980000] px-3 py-1.5 text-xs font-semibold text-[#980000] hover:bg-[#fceaea] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('Add KPI') }}
             </button>
           </div>
@@ -393,7 +393,7 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-2">
                         <div class="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full" :class="k.pct>=100?'bg-green-500':k.pct>=80?'bg-[#FF6600]':'bg-amber-400'" :style="{width:Math.min(k.pct,100)+'%'}" />
+                          <div class="h-full rounded-full" :class="k.pct>=100?'bg-green-500':k.pct>=80?'bg-[#980000]':'bg-amber-400'" :style="{width:Math.min(k.pct,100)+'%'}" />
                         </div>
                         <span class="font-semibold" :class="k.pct>=100?'text-green-600':'text-amber-600'">{{ k.pct }}%</span>
                       </div>
@@ -412,7 +412,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <svg :viewBox="`0 0 60 24`" class="w-16 h-6">
-                        <polyline :points="sparkline(k.spark)" fill="none" :stroke="k.up?'#FF6600':'#f97316'" stroke-width="1.5" stroke-linejoin="round" />
+                        <polyline :points="sparkline(k.spark)" fill="none" :stroke="k.up?'#980000':'#f97316'" stroke-width="1.5" stroke-linejoin="round" />
                       </svg>
                     </td>
                   </tr>
@@ -430,7 +430,7 @@
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 ml-auto">
               <button v-for="b in ['All','Jakarta','Surabaya','Bandung','Medan','Bali']" :key="b" @click="leaderboardFilter = b"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="leaderboardFilter===b ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500'">
+                :class="leaderboardFilter===b ? 'bg-white text-[#750000] shadow-sm' : 'text-gray-500'">
                 {{ b }}
               </button>
             </div>
@@ -452,7 +452,7 @@
                 <tbody>
                   <tr v-for="(rm, idx) in filteredLeaderboard" :key="rm.id"
                     class="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
-                    :class="idx === 0 ? 'bg-[#FFF8F2]' : ''">
+                    :class="idx === 0 ? 'bg-[#fff8f8]' : ''">
                     <td class="px-4 py-3 text-center">
                       <span v-if="idx === 0" class="text-lg">🥇</span>
                       <span v-else-if="idx === 1" class="text-lg">🥈</span>
@@ -461,7 +461,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ rm.name[0] }}</div>
+                        <div class="w-7 h-7 rounded-full bg-[#fceaea] text-[#750000] flex items-center justify-center text-[9px] font-bold">{{ rm.name[0] }}</div>
                         <span class="font-semibold text-gray-800">{{ rm.name }}</span>
                       </div>
                     </td>
@@ -474,9 +474,9 @@
                     <td class="px-4 py-3 text-center">
                       <div class="inline-flex items-center gap-1.5">
                         <div class="w-10 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div class="h-full rounded-full" :class="rm.score >= 90 ? 'bg-green-500' : rm.score >= 75 ? 'bg-[#FF6600]' : 'bg-amber-400'" :style="{ width: rm.score + '%' }" />
+                          <div class="h-full rounded-full" :class="rm.score >= 90 ? 'bg-green-500' : rm.score >= 75 ? 'bg-[#980000]' : 'bg-amber-400'" :style="{ width: rm.score + '%' }" />
                         </div>
-                        <span class="text-[10px] font-bold" :class="rm.score >= 90 ? 'text-green-600' : rm.score >= 75 ? 'text-[#CC5200]' : 'text-amber-600'">{{ rm.score }}</span>
+                        <span class="text-[10px] font-bold" :class="rm.score >= 90 ? 'text-green-600' : rm.score >= 75 ? 'text-[#750000]' : 'text-amber-600'">{{ rm.score }}</span>
                       </div>
                     </td>
                   </tr>
@@ -566,7 +566,7 @@
                 <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                   <button v-for="f in ['All','Monthly','Weekly','Quarterly']" :key="f" @click="creditFilter = f"
                     class="px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all"
-                    :class="creditFilter===f ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500'">
+                    :class="creditFilter===f ? 'bg-white text-[#750000] shadow-sm' : 'text-gray-500'">
                     {{ f }}
                   </button>
                 </div>
@@ -610,8 +610,8 @@
                   <td class="px-4 py-3 text-gray-500">{{ r.generated }}</td>
                   <td class="px-4 py-3">
                     <div class="flex items-center justify-end gap-1.5">
-                      <button @click="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
-                      <button @click="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#F0F8FC] text-gray-400 hover:text-[#006699] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
+                      <button @click="downloadReport(r)" class="p-1.5 rounded-lg hover:bg-[#fff8f8] text-gray-400 hover:text-[#980000] transition-colors"><FeatherIcon name="download" class="h-3.5 w-3.5" /></button>
+                      <button @click="openShareModal(r)" class="p-1.5 rounded-lg hover:bg-[#fff5f5] text-gray-400 hover:text-[#980000] transition-colors"><FeatherIcon name="share-2" class="h-3.5 w-3.5" /></button>
                     </div>
                   </td>
                 </tr>
@@ -627,7 +627,7 @@
             <button v-for="pt in ['Overview','Industry Exposure','Geographic','ECL PSAK 71','Concentration','Stress Test']" :key="pt"
               @click="portfolioTab = pt"
               class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap"
-              :class="portfolioTab===pt ? 'bg-white text-[#CC5200] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+              :class="portfolioTab===pt ? 'bg-white text-[#750000] shadow-sm' : 'text-gray-500 hover:text-gray-700'">
               {{ __(pt) }}
             </button>
           </div>
@@ -740,7 +740,7 @@
                   </div>
                 </div>
               </div>
-              <button @click="showToast('Full Top 20 loaded')" class="mt-2 w-full text-[10px] text-[#FF6600] hover:underline font-semibold py-1">
+              <button @click="showToast('Full Top 20 loaded')" class="mt-2 w-full text-[10px] text-[#980000] hover:underline font-semibold py-1">
                 {{ __('View all 20 →') }}
               </button>
             </div>
@@ -755,7 +755,7 @@
                 <div v-for="scenario in stressScenarios" :key="scenario.name"
                   @click="selectedScenario = scenario"
                   class="rounded-xl border-2 p-4 cursor-pointer transition-all text-center"
-                  :class="selectedScenario?.name === scenario.name ? 'border-[#FF6600] bg-[#FFF8F2]' : 'border-gray-200 hover:border-[#FFB380]'">
+                  :class="selectedScenario?.name === scenario.name ? 'border-[#980000] bg-[#fff8f8]' : 'border-gray-200 hover:border-[#db8a8a]'">
                   <p class="text-xs font-bold text-gray-800 mb-1">{{ scenario.name }}</p>
                   <p class="text-[10px] text-gray-400 mb-2">{{ scenario.desc }}</p>
                   <p class="text-lg font-black" :class="scenario.impact.includes('-') ? 'text-red-600' : 'text-green-600'">{{ scenario.impact }}</p>
@@ -796,7 +796,7 @@
                 <h3 class="text-sm font-bold text-gray-800">{{ __('Portfolio Pivot Analysis') }}</h3>
                 <p class="text-[10px] text-gray-400">{{ __('Outstanding balance by product × branch (Rp Billion)') }}</p>
               </div>
-              <button @click="doExport" class="flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] transition-colors border border-[#006699] rounded-lg px-3 py-1.5">
+              <button @click="doExport" class="flex items-center gap-1.5 text-xs text-[#980000] hover:text-[#6f0000] transition-colors border border-[#980000] rounded-lg px-3 py-1.5">
                 <FeatherIcon name="download" class="h-3.5 w-3.5" />{{ __('Export Excel') }}
               </button>
             </div>
@@ -806,18 +806,18 @@
                   <tr class="bg-gray-50 border-b border-gray-200">
                     <th class="px-5 py-3 text-left font-semibold text-gray-600 border-r border-gray-200">{{ __('Product / Branch') }}</th>
                     <th v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right font-semibold text-gray-600 min-w-[100px]">{{ branch }}</th>
-                    <th class="px-4 py-3 text-right font-semibold text-[#CC5200] border-l border-gray-200">{{ __('Total') }}</th>
+                    <th class="px-4 py-3 text-right font-semibold text-[#750000] border-l border-gray-200">{{ __('Total') }}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="row in pivotData" :key="row.product" class="border-b border-gray-100 hover:bg-[#FFF8F2]/30 transition-colors">
+                  <tr v-for="row in pivotData" :key="row.product" class="border-b border-gray-100 hover:bg-[#fff8f8]/30 transition-colors">
                     <td class="px-5 py-3 font-semibold text-gray-800 border-r border-gray-100">{{ row.product }}</td>
                     <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-gray-700">{{ row[branch] || '-' }}</td>
-                    <td class="px-4 py-3 text-right font-black text-[#CC5200] border-l border-gray-200">{{ row.total }}</td>
+                    <td class="px-4 py-3 text-right font-black text-[#750000] border-l border-gray-200">{{ row.total }}</td>
                   </tr>
-                  <tr class="bg-[#FFF8F2] border-t-2 border-[#FFD9B3] font-bold">
-                    <td class="px-5 py-3 text-[#CC5200] font-black border-r border-gray-200">{{ __('Grand Total') }}</td>
-                    <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-[#993D00]">{{ pivotTotals[branch] }}</td>
+                  <tr class="bg-[#fff8f8] border-t-2 border-[#f2b7b7] font-bold">
+                    <td class="px-5 py-3 text-[#750000] font-black border-r border-gray-200">{{ __('Grand Total') }}</td>
+                    <td v-for="branch in pivotBranches" :key="branch" class="px-4 py-3 text-right text-[#5f0000]">{{ pivotTotals[branch] }}</td>
                     <td class="px-4 py-3 text-right text-[#7A3000] font-black text-sm border-l border-gray-200">Rp 2.4T</td>
                   </tr>
                 </tbody>
@@ -831,7 +831,7 @@
           <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
             <h3 class="text-sm font-semibold text-gray-800">{{ __('Scheduled Reports') }}</h3>
             <span class="text-[11px] text-gray-400">{{ schedules.length }} {{ __('schedules') }}</span>
-            <button @click="showToast('Schedule created')" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+            <button @click="showToast('Schedule created')" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
               <FeatherIcon name="plus" class="h-3.5 w-3.5" />{{ __('Add Schedule') }}
             </button>
           </div>
@@ -859,7 +859,7 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-0.5">
                         <span v-for="(rec,i) in s.recipients.slice(0,2)" :key="i"
-                          class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold border border-white -ml-1 first:ml-0">
+                          class="w-6 h-6 rounded-full bg-[#fceaea] text-[#750000] flex items-center justify-center text-[9px] font-bold border border-white -ml-1 first:ml-0">
                           {{ rec[0] }}
                         </span>
                         <span v-if="s.recipients.length>2" class="text-[10px] text-gray-400 ml-1">+{{ s.recipients.length-2 }}</span>
@@ -867,7 +867,7 @@
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex gap-1">
-                        <span v-for="fmt in s.formats" :key="fmt" class="text-[9px] border border-[#006699] rounded px-1.5 py-0.5 text-[#006699] font-semibold">{{ fmt }}</span>
+                        <span v-for="fmt in s.formats" :key="fmt" class="text-[9px] border border-[#980000] rounded px-1.5 py-0.5 text-[#980000] font-semibold">{{ fmt }}</span>
                       </div>
                     </td>
                     <td class="px-4 py-3">
@@ -895,12 +895,12 @@
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
               <button v-for="t in ['OJK','Bank Indonesia','Tax']" :key="t" @click="regTab=t"
                 class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-                :class="regTab===t?'bg-white text-[#CC5200] shadow-sm':'text-gray-500 hover:text-gray-700'">
+                :class="regTab===t?'bg-white text-[#750000] shadow-sm':'text-gray-500 hover:text-gray-700'">
                 {{ t }}
               </button>
             </div>
             <span class="text-xs text-gray-400">{{ activePeriod }}</span>
-            <button @click="generateReg" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+            <button @click="generateReg" class="ml-auto flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
               <FeatherIcon name="file-text" class="h-3.5 w-3.5" />{{ __('Generate') }}
             </button>
           </div>
@@ -929,20 +929,20 @@
                     </td>
                     <td class="px-4 py-3">
                       <span class="rounded-full px-2 py-0.5 text-[9px] font-bold"
-                        :class="r.status==='Submitted'?'bg-[#FFF0E6] text-[#CC5200]':r.status==='Ready'?'bg-[#E6F4FA] text-[#004D73]':'bg-gray-100 text-gray-600'">
+                        :class="r.status==='Submitted'?'bg-[#fceaea] text-[#750000]':r.status==='Ready'?'bg-[#fceaea] text-[#6f0000]':'bg-gray-100 text-gray-600'">
                         {{ r.status }}
                       </span>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-end gap-1.5">
-                        <button class="p-1.5 rounded-lg hover:bg-[#FFF8F2] text-gray-400 hover:text-[#FF6600] transition-colors" @click="downloadReport(r)">
+                        <button class="p-1.5 rounded-lg hover:bg-[#fff8f8] text-gray-400 hover:text-[#980000] transition-colors" @click="downloadReport(r)">
                           <FeatherIcon name="download" class="h-3.5 w-3.5" />
                         </button>
                         <button v-if="r.status!=='Submitted'" @click="submitReg(r)"
-                          class="px-2.5 py-1 rounded-lg bg-[#FF6600] text-white text-[10px] font-semibold hover:bg-[#CC5200] transition-colors">
+                          class="px-2.5 py-1 rounded-lg bg-[#980000] text-white text-[10px] font-semibold hover:bg-[#750000] transition-colors">
                           {{ __('Submit') }}
                         </button>
-                        <span v-else class="text-[10px] text-[#FF6600] font-semibold">✓ {{ __('Submitted') }}</span>
+                        <span v-else class="text-[10px] text-[#980000] font-semibold">✓ {{ __('Submitted') }}</span>
                       </div>
                     </td>
                   </tr>
@@ -969,10 +969,10 @@
               <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span class="text-[10px] text-gray-400">{{ rep.period }} · {{ rep.pages }} pages</span>
                 <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#FF6600] font-semibold flex items-center gap-1 hover:underline">
+                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#980000] font-semibold flex items-center gap-1 hover:underline">
                     <FeatherIcon name="download" class="h-3 w-3" />PDF
                   </button>
-                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#006699] font-semibold flex items-center gap-1 hover:underline">
+                  <button @click.stop="downloadReport(rep)" class="text-[10px] text-[#980000] font-semibold flex items-center gap-1 hover:underline">
                     <FeatherIcon name="file" class="h-3 w-3" />Excel
                   </button>
                 </div>
@@ -991,16 +991,16 @@
             </div>
             <div class="flex-1 overflow-y-auto p-3 space-y-2">
               <div v-for="tbl in queryTables" :key="tbl.name"
-                class="p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-[#FFB380] transition-all"
-                :class="selectedTable===tbl.name?'bg-[#FFF8F2] border-[#FFB380]':''"
+                class="p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-[#db8a8a] transition-all"
+                :class="selectedTable===tbl.name?'bg-[#fff8f8] border-[#db8a8a]':''"
                 @click="selectedTable=tbl.name; buildQuery()">
                 <div class="flex items-center gap-2 mb-1">
-                  <FeatherIcon name="database" class="h-3.5 w-3.5 text-[#FF6600]" />
+                  <FeatherIcon name="database" class="h-3.5 w-3.5 text-[#980000]" />
                   <span class="text-xs font-semibold text-gray-800">{{ tbl.name }}</span>
                 </div>
                 <div v-if="selectedTable===tbl.name" class="space-y-1 mt-2">
                   <label v-for="col in tbl.columns" :key="col" class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="selectedColumns" :value="col" class="rounded text-[#FF6600]" />
+                    <input type="checkbox" v-model="selectedColumns" :value="col" class="rounded text-[#980000]" />
                     <span class="text-[11px] text-gray-600">{{ col }}</span>
                   </label>
                 </div>
@@ -1014,7 +1014,7 @@
             <div class="border-b border-gray-200 p-4 bg-white shrink-0">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-semibold text-gray-700">{{ __('SQL Preview') }}</span>
-                <button @click="runQuery" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+                <button @click="runQuery" class="flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
                   <FeatherIcon :name="queryRunning?'loader':'play'" class="h-3.5 w-3.5" :class="queryRunning&&'animate-spin'" />
                   {{ queryRunning ? __('Running...') : __('Run Query') }}
                 </button>
@@ -1029,13 +1029,13 @@
             <div class="flex-1 overflow-auto p-4">
               <div v-if="queryRunning" class="flex items-center justify-center h-32">
                 <div class="flex items-center gap-2 text-sm text-gray-500">
-                  <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-[#FF6600]" />{{ __('Running query...') }}
+                  <FeatherIcon name="loader" class="h-4 w-4 animate-spin text-[#980000]" />{{ __('Running query...') }}
                 </div>
               </div>
               <template v-else-if="queryResults.length > 0">
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-xs text-gray-500">{{ queryResults.length }} {{ __('rows') }} · {{ queryTime }}ms</span>
-                  <button @click="doExport" class="text-xs text-[#FF6600] font-semibold hover:underline flex items-center gap-1">
+                  <button @click="doExport" class="text-xs text-[#980000] font-semibold hover:underline flex items-center gap-1">
                     <FeatherIcon name="download" class="h-3 w-3" />{{ __('Export CSV') }}
                   </button>
                 </div>
@@ -1067,7 +1067,7 @@
           <div class="bg-white border-b border-gray-200 px-5 py-3 shrink-0 flex items-center gap-3">
             <h3 class="text-sm font-semibold text-gray-800">{{ __('Report Activity Audit Log') }}</h3>
             <span class="text-[11px] text-gray-400">{{ reportAuditLog.length }} events</span>
-            <button @click="doExport" class="ml-auto flex items-center gap-1.5 text-xs text-[#006699] hover:text-[#004D73] transition-colors border border-[#006699] rounded-lg px-3 py-1.5">
+            <button @click="doExport" class="ml-auto flex items-center gap-1.5 text-xs text-[#980000] hover:text-[#6f0000] transition-colors border border-[#980000] rounded-lg px-3 py-1.5">
               <FeatherIcon name="download" class="h-3.5 w-3.5" />{{ __('Export CSV') }}
             </button>
           </div>
@@ -1089,7 +1089,7 @@
                     <td class="px-5 py-3 text-gray-500 font-mono text-[11px]">{{ log.ts }}</td>
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-[#FFF0E6] text-[#CC5200] flex items-center justify-center text-[9px] font-bold">{{ log.user[0] }}</div>
+                        <div class="w-6 h-6 rounded-full bg-[#fceaea] text-[#750000] flex items-center justify-center text-[9px] font-bold">{{ log.user[0] }}</div>
                         <span class="text-gray-700 font-medium">{{ log.user }}</span>
                       </div>
                     </td>
@@ -1098,7 +1098,7 @@
                     </td>
                     <td class="px-4 py-3 font-semibold text-gray-800">{{ log.report }}</td>
                     <td class="px-4 py-3">
-                      <span class="text-[10px] font-semibold" :class="log.visibility==='Public' ? 'text-green-600' : log.visibility==='Private' ? 'text-red-500' : 'text-[#006699]'">{{ log.visibility }}</span>
+                      <span class="text-[10px] font-semibold" :class="log.visibility==='Public' ? 'text-green-600' : log.visibility==='Private' ? 'text-red-500' : 'text-[#980000]'">{{ log.visibility }}</span>
                     </td>
                     <td class="px-4 py-3">
                       <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="log.result==='Success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ log.result }}</span>
@@ -1117,8 +1117,8 @@
     <div v-if="shareTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="shareTarget = null">
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
         <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
-            <FeatherIcon name="share-2" class="h-5 w-5 text-[#006699]" />
+          <div class="w-10 h-10 rounded-xl bg-[#fceaea] flex items-center justify-center shrink-0">
+            <FeatherIcon name="share-2" class="h-5 w-5 text-[#980000]" />
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-800">Share Report</h3>
@@ -1131,14 +1131,14 @@
             <div class="flex gap-2">
               <button v-for="v in ['Public','Team','Private']" :key="v" @click="shareTarget.visibility = v"
                 class="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
-                :class="shareTarget.visibility===v ? (v==='Public' ? 'bg-green-50 border-green-400 text-green-700' : v==='Private' ? 'bg-red-50 border-red-400 text-red-600' : 'bg-[#E6F4FA] border-[#006699] text-[#006699]') : 'border-gray-200 text-gray-500 hover:bg-gray-50'">
+                :class="shareTarget.visibility===v ? (v==='Public' ? 'bg-green-50 border-green-400 text-green-700' : v==='Private' ? 'bg-red-50 border-red-400 text-red-600' : 'bg-[#fceaea] border-[#980000] text-[#980000]') : 'border-gray-200 text-gray-500 hover:bg-gray-50'">
                 {{ v }}
               </button>
             </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1.5">Link Expiry</label>
-            <select v-model="shareLinkExpiry" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#006699]">
+            <select v-model="shareLinkExpiry" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#980000]">
               <option>1 hour</option><option>24 hours</option><option>7 days</option><option>30 days</option><option>Never</option>
             </select>
           </div>
@@ -1148,7 +1148,7 @@
               <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[11px] text-gray-500 font-mono truncate">
                 https://crm.summon.id/r/{{ shareTarget?.id }}-{{ (shareTarget?.name||'').toLowerCase().replace(/\s+/g,'-') }}?token=abc123
               </div>
-              <button @click="copyShareLink" class="px-3 py-2 bg-[#E6F4FA] border border-[#006699] text-[#006699] rounded-lg text-xs font-semibold hover:bg-[#CCE6F5] transition-colors shrink-0">
+              <button @click="copyShareLink" class="px-3 py-2 bg-[#fceaea] border border-[#980000] text-[#980000] rounded-lg text-xs font-semibold hover:bg-[#f2b7b7] transition-colors shrink-0">
                 {{ linkCopied ? '✓ Copied' : 'Copy' }}
               </button>
             </div>
@@ -1165,8 +1165,8 @@
           </div>
         </div>
         <div class="flex gap-2 mt-5">
-          <button @click="shareTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Close</button>
-          <button @click="confirmShare" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">Save & Notify</button>
+          <button @click="shareTarget = null" class="flex-1 rounded-lg border border-[#980000] py-2 text-sm font-semibold text-[#980000] hover:bg-[#fceaea]">Close</button>
+          <button @click="confirmShare" class="flex-1 rounded-lg bg-[#980000] py-2 text-sm font-semibold text-white hover:bg-[#750000] transition-colors">Save & Notify</button>
         </div>
       </div>
     </div>
@@ -1174,7 +1174,7 @@
     <!-- Toast -->
     <transition name="fade">
       <div v-if="toast" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
-        <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF8533]" />{{ toast }}
+        <FeatherIcon name="check-circle" class="h-4 w-4 text-[#b92d2d]" />{{ toast }}
       </div>
     </transition>
   </div>
@@ -1239,7 +1239,7 @@ const linePoints = computed(() => {
 
 // ── Portfolio Donut ──
 const portfolioBreakdown = [
-  { label: 'Working Capital', pct: 38, color: '#FF6600' },
+  { label: 'Working Capital', pct: 38, color: '#980000' },
   { label: 'Investment Loan', pct: 24, color: '#06b6d4' },
   { label: 'KPR', pct: 18, color: '#8b5cf6' },
   { label: 'KKB', pct: 11, color: '#f59e0b' },
@@ -1287,10 +1287,10 @@ const kpiAlerts = [
 
 // ── Recent Reports ──
 const recentReports = ref([
-  { id: 1, name: 'OJK LPBB Monthly', category: 'Regulatory', lastRun: '24 May 09:00', icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]' },
+  { id: 1, name: 'OJK LPBB Monthly', category: 'Regulatory', lastRun: '24 May 09:00', icon: 'shield', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]' },
   { id: 2, name: 'Board Pack May 2026', category: 'Executive', lastRun: '24 May 08:30', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600' },
   { id: 3, name: 'NPL Report MTD', category: 'Portfolio', lastRun: '23 May 18:00', icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600' },
-  { id: 4, name: 'Disbursement Summary', category: 'Operations', lastRun: '23 May 17:30', icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]' },
+  { id: 4, name: 'Disbursement Summary', category: 'Operations', lastRun: '23 May 17:30', icon: 'credit-card', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]' },
   { id: 5, name: 'Sales Pipeline Report', category: 'Sales', lastRun: '23 May 16:00', icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600' },
 ])
 
@@ -1301,15 +1301,15 @@ const showCreateReport = ref(false)
 
 const favoriteReports = [
   { id: 1, name: 'Board Pack', category: 'Executive', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', lastRun: '24 May' },
-  { id: 2, name: 'OJK LPBB Report', category: 'Regulatory', icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]', lastRun: '24 May' },
+  { id: 2, name: 'OJK LPBB Report', category: 'Regulatory', icon: 'shield', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]', lastRun: '24 May' },
   { id: 3, name: 'NPL Monitoring', category: 'Portfolio', icon: 'activity', colorBg: 'bg-amber-100', colorText: 'text-amber-600', lastRun: '23 May' },
 ]
 
 const allReports = ref([
-  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-[#E6F4FA]', colorText: 'text-[#006699]', visibility: 'Team' },
+  { id: 1, name: 'OJK LPBB Monthly Report', desc: 'Laporan Bulanan Bank Umum', category: 'Regulatory', schedule: 'Monthly', lastRun: '24 May 09:00', formats: ['PDF', 'XML'], icon: 'shield', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]', visibility: 'Team' },
   { id: 2, name: 'Board Pack Dashboard', desc: 'Executive summary for board', category: 'Executive', schedule: 'Monthly', lastRun: '24 May 08:30', formats: ['PDF', 'PPT'], icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', visibility: 'Private' },
   { id: 3, name: 'NPL Report MTD', desc: 'Non-performing loan monitoring', category: 'Portfolio', schedule: 'Daily', lastRun: '23 May 18:00', formats: ['Excel', 'PDF'], icon: 'trending-down', colorBg: 'bg-amber-100', colorText: 'text-amber-600', visibility: 'Team' },
-  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', visibility: 'Public' },
+  { id: 4, name: 'Disbursement Summary', desc: 'Daily disbursement tracker', category: 'Operations', schedule: 'Daily', lastRun: '23 May 17:30', formats: ['Excel', 'CSV'], icon: 'credit-card', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]', visibility: 'Public' },
   { id: 5, name: 'Sales Pipeline Report', desc: 'Pipeline and conversion analytics', category: 'Sales', schedule: 'Weekly', lastRun: '23 May 16:00', formats: ['PDF', 'Excel'], icon: 'trending-up', colorBg: 'bg-green-100', colorText: 'text-green-600', visibility: 'Team' },
   { id: 6, name: 'BI LKPBU Report', desc: 'Laporan Keuangan Publikasi BU', category: 'Regulatory', schedule: 'Quarterly', lastRun: '30 Mar 2026', formats: ['XML', 'PDF'], icon: 'file-text', colorBg: 'bg-indigo-100', colorText: 'text-indigo-600', visibility: 'Team' },
   { id: 7, name: 'Credit Approval Analytics', desc: 'Approval rate & SLA tracking', category: 'Portfolio', schedule: 'Weekly', lastRun: '22 May 09:00', formats: ['Excel', 'PDF'], icon: 'check-circle', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600', visibility: 'Private' },
@@ -1329,7 +1329,7 @@ const filteredReportsList = computed(() => {
 })
 
 function categoryBadge(cat) {
-  const map = { Regulatory: 'bg-[#E6F4FA] text-[#004D73]', Executive: 'bg-purple-100 text-purple-700', Portfolio: 'bg-amber-100 text-amber-700', Operations: 'bg-[#FFF0E6] text-[#CC5200]', Sales: 'bg-green-100 text-green-700' }
+  const map = { Regulatory: 'bg-[#fceaea] text-[#6f0000]', Executive: 'bg-purple-100 text-purple-700', Portfolio: 'bg-amber-100 text-amber-700', Operations: 'bg-[#fceaea] text-[#750000]', Sales: 'bg-green-100 text-green-700' }
   return map[cat] || 'bg-gray-100 text-gray-600'
 }
 
@@ -1362,7 +1362,7 @@ const creditFilter = ref('All')
 
 const creditKpis = [
   { label: 'Approval Rate', value: '87.2%', icon: 'check-circle', iconBg: 'bg-green-100', iconColor: 'text-green-600', badge: '+2.1%', badgeClass: 'bg-green-100 text-green-700' },
-  { label: 'Avg Approval SLA', value: '18.4h', icon: 'clock', iconBg: 'bg-[#FFF0E6]', iconColor: 'text-[#FF6600]', badge: 'On Track', badgeClass: 'bg-[#FFF0E6] text-[#CC5200]' },
+  { label: 'Avg Approval SLA', value: '18.4h', icon: 'clock', iconBg: 'bg-[#fceaea]', iconColor: 'text-[#980000]', badge: 'On Track', badgeClass: 'bg-[#fceaea] text-[#750000]' },
   { label: 'Pending Approvals', value: '12', icon: 'clock', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', badge: '3 Overdue', badgeClass: 'bg-amber-100 text-amber-700' },
   { label: 'Rejection Rate', value: '8.4%', icon: 'x-circle', iconBg: 'bg-red-100', iconColor: 'text-red-600', badge: '-0.8%', badgeClass: 'bg-red-100 text-red-700' },
 ]
@@ -1390,7 +1390,7 @@ const slaPerformance = [
 ]
 
 const creditReports = ref([
-  { id: 1, name: 'Monthly Approval Dashboard', desc: 'Approval rate, SLA, and pipeline summary', period: 'May 2026', frequency: 'Monthly', approvalRate: 87.2, avgSLA: 18.4, rejectionRate: 8.4, generated: '24 May 2026', icon: 'bar-chart-2', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', visibility: 'Team' },
+  { id: 1, name: 'Monthly Approval Dashboard', desc: 'Approval rate, SLA, and pipeline summary', period: 'May 2026', frequency: 'Monthly', approvalRate: 87.2, avgSLA: 18.4, rejectionRate: 8.4, generated: '24 May 2026', icon: 'bar-chart-2', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]', visibility: 'Team' },
   { id: 2, name: 'SLA Breach Analysis', desc: 'SLA violations, escalation triggers, and root cause', period: 'May 2026', frequency: 'Weekly', approvalRate: 72, avgSLA: 52, rejectionRate: 12, generated: '23 May 2026', icon: 'alert-triangle', colorBg: 'bg-red-100', colorText: 'text-red-600', visibility: 'Private' },
   { id: 3, name: 'Approver Productivity Report', desc: 'Per-approver turnaround time and workload', period: 'May 2026', frequency: 'Weekly', approvalRate: 88, avgSLA: 14, rejectionRate: 6, generated: '22 May 2026', icon: 'users', colorBg: 'bg-sky-100', colorText: 'text-sky-600', visibility: 'Team' },
   { id: 4, name: 'Credit Committee Summary', desc: 'Committee decisions, quorum, and voting results', period: 'Q1 2026', frequency: 'Quarterly', approvalRate: 82, avgSLA: 32, rejectionRate: 10, generated: '05 Apr 2026', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', visibility: 'Private' },
@@ -1452,9 +1452,9 @@ function submitReg(r) { r.status = 'Submitted'; showToast(`${r.name} submitted`)
 const executiveReports = [
   { id: 1, name: 'Board Pack — May 2026', desc: 'Executive summary with KPI, financial highlights, and portfolio overview', icon: 'briefcase', colorBg: 'bg-purple-100', colorText: 'text-purple-600', period: 'May 2026', pages: 24, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
   { id: 2, name: 'Risk Dashboard Report', desc: 'Comprehensive risk metrics, NPL analysis, and concentration report', icon: 'shield', colorBg: 'bg-amber-100', colorText: 'text-amber-600', period: 'May 2026', pages: 18, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
-  { id: 3, name: 'Financial Performance Summary', desc: 'P&L, balance sheet highlights, and ROA/ROE analysis', icon: 'trending-up', colorBg: 'bg-[#FFF0E6]', colorText: 'text-[#FF6600]', period: 'May 2026', pages: 12, status: 'Draft', statusClass: 'bg-gray-100 text-gray-600' },
+  { id: 3, name: 'Financial Performance Summary', desc: 'P&L, balance sheet highlights, and ROA/ROE analysis', icon: 'trending-up', colorBg: 'bg-[#fceaea]', colorText: 'text-[#980000]', period: 'May 2026', pages: 12, status: 'Draft', statusClass: 'bg-gray-100 text-gray-600' },
   { id: 4, name: 'Loan Portfolio Analytics', desc: 'Disbursement trend, vintage analysis, and segment breakdown', icon: 'pie-chart', colorBg: 'bg-sky-100', colorText: 'text-sky-600', period: 'May 2026', pages: 16, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
-  { id: 5, name: 'Collection & Recovery Report', desc: 'Collection rate, officer productivity, and delinquency buckets', icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', period: 'May 2026', pages: 10, status: 'Generating...', statusClass: 'bg-[#E6F4FA] text-[#004D73]' },
+  { id: 5, name: 'Collection & Recovery Report', desc: 'Collection rate, officer productivity, and delinquency buckets', icon: 'users', colorBg: 'bg-rose-100', colorText: 'text-rose-600', period: 'May 2026', pages: 10, status: 'Generating...', statusClass: 'bg-[#fceaea] text-[#6f0000]' },
   { id: 6, name: 'Operational Excellence Report', desc: 'SLA tracking, branch performance, and approval analytics', icon: 'activity', colorBg: 'bg-emerald-100', colorText: 'text-emerald-600', period: 'May 2026', pages: 14, status: 'Ready', statusClass: 'bg-green-100 text-green-700' },
 ]
 
@@ -1555,17 +1555,17 @@ function addAuditLog(action, report, visibility) {
 }
 
 function auditActionClass(action) {
-  const map = { Download: 'bg-[#FFF0E6] text-[#CC5200]', Share: 'bg-[#E6F4FA] text-[#006699]', View: 'bg-gray-100 text-gray-600', Generate: 'bg-green-100 text-green-700', 'Copy Link': 'bg-purple-100 text-purple-700', 'View Share': 'bg-[#E6F4FA] text-[#006699]' }
+  const map = { Download: 'bg-[#fceaea] text-[#750000]', Share: 'bg-[#fceaea] text-[#980000]', View: 'bg-gray-100 text-gray-600', Generate: 'bg-green-100 text-green-700', 'Copy Link': 'bg-purple-100 text-purple-700', 'View Share': 'bg-[#fceaea] text-[#980000]' }
   return map[action] || 'bg-gray-100 text-gray-600'
 }
 
 // ── Pipeline Conversion Funnel ──
 const funnelStages = [
-  { label: 'Prospek', count: 248, pct: 100, drop: 25, bg: 'bg-gray-100', bar: 'bg-[#006699]', width: 100 },
+  { label: 'Prospek', count: 248, pct: 100, drop: 25, bg: 'bg-gray-100', bar: 'bg-[#980000]', width: 100 },
   { label: 'Pengajuan', count: 186, pct: 75, drop: 24, bg: 'bg-gray-100', bar: 'bg-[#3399CC]', width: 75 },
-  { label: 'Analisis', count: 142, pct: 57, drop: 31, bg: 'bg-gray-100', bar: 'bg-[#FFB380]', width: 57 },
-  { label: 'Approval', count: 98, pct: 40, drop: 27, bg: 'bg-gray-100', bar: 'bg-[#FF8533]', width: 40 },
-  { label: 'Disbursement', count: 72, pct: 29, drop: 0, bg: 'bg-gray-100', bar: 'bg-[#FF6600]', width: 29 },
+  { label: 'Analisis', count: 142, pct: 57, drop: 31, bg: 'bg-gray-100', bar: 'bg-[#db8a8a]', width: 57 },
+  { label: 'Approval', count: 98, pct: 40, drop: 27, bg: 'bg-gray-100', bar: 'bg-[#b92d2d]', width: 40 },
+  { label: 'Disbursement', count: 72, pct: 29, drop: 0, bg: 'bg-gray-100', bar: 'bg-[#980000]', width: 29 },
 ]
 
 // ── RM Productivity Leaderboard ──
@@ -1592,9 +1592,9 @@ const filteredLeaderboard = computed(() => {
 // ── Portfolio Monitoring ──
 const portfolioTab = ref('Overview')
 const portfolioSummary = [
-  { label: 'Total Portfolio', value: 'Rp 2.4T', color: 'text-[#FF6600]' },
+  { label: 'Total Portfolio', value: 'Rp 2.4T', color: 'text-[#980000]' },
   { label: 'Active Borrowers', value: '342', color: 'text-gray-800' },
-  { label: 'Avg Exposure', value: 'Rp 7.0B', color: 'text-[#006699]' },
+  { label: 'Avg Exposure', value: 'Rp 7.0B', color: 'text-[#980000]' },
   { label: 'NPL Ratio', value: '2.14%', color: 'text-green-600' },
 ]
 const industryExposure = [

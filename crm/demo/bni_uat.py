@@ -71,7 +71,7 @@ def _create_customer_records(customer, sample_row, index, records):
 			"industry": sample_row.get("industry") or "Banking",
 			"kbli": "6419",
 			"risk_grade": "A-" if index == 0 else "B+",
-			"purpose": f"BNI UAT seeded pipeline for {display_name}.",
+			"purpose": f"IGLO UAT seeded pipeline for {display_name}.",
 		},
 	)
 	_append_record(records, "CRM Credit Application", application.get("name"))
@@ -119,7 +119,7 @@ def _create_customer_records(customer, sample_row, index, records):
 			"kol_status": "KOL-1",
 			"score": 760 + (index * 5),
 			"external_exposure": 850000000 + (index * 50000000),
-			"notes": "Seeded for BNI UAT dashboard verification.",
+			"notes": "Seeded for IGLO UAT dashboard verification.",
 		},
 	)
 	_append_record(records, "CRM Bureau Report", bureau.get("name"))
@@ -139,7 +139,7 @@ def _create_customer_records(customer, sample_row, index, records):
 			"ekyc_result": "Verified",
 			"watchlist": 1 if index == 0 else 0,
 			"watchlist_reason": "Strategic review account." if index == 0 else "",
-			"notes": "BNI teal UAT seeded profile.",
+			"notes": "IGLO red UAT seeded profile.",
 		},
 	)
 	_append_record(records, "CRM KYC Review", kyc.get("name"))
@@ -251,7 +251,7 @@ def _create_customer_records(customer, sample_row, index, records):
 
 	tag = create_or_update_customer360_record(
 		"CRM Customer Tag",
-		{"customer": customer_name, "tag": "BNI UAT", "color": "#008C95"},
+		{"customer": customer_name, "tag": "IGLO UAT", "color": "#980000"},
 	)
 	_append_record(records, "CRM Customer Tag", tag.get("name"))
 
@@ -274,7 +274,7 @@ def _create_customer_records(customer, sample_row, index, records):
 		"FCRM Note",
 		{
 			"title": "AI Customer Summary",
-			"content": f"- {display_name} seeded for BNI teal UAT\n- Linked lead workbook context and credit artifacts are available.",
+			"content": f"- {display_name} seeded for IGLO red UAT\n- Linked lead workbook context and credit artifacts are available.",
 			"reference_doctype": "Customer",
 			"reference_docname": customer_name,
 		},
@@ -294,7 +294,7 @@ def create_bni_uat_seed():
 			"created": False,
 			"status": "already_seeded",
 			"records": records,
-			"message": _("BNI UAT seed already exists. Clear it before reseeding."),
+			"message": _("IGLO UAT seed already exists. Clear it before reseeding."),
 		}
 
 	workbook_path = _bundled_workbook_path()
@@ -334,7 +334,7 @@ def clear_bni_uat_seed():
 	_assert_seed_permissions()
 	records = _load_seed_records()
 	if not records:
-		return {"cleared": False, "message": _("No BNI UAT seed data found.")}
+		return {"cleared": False, "message": _("No IGLO UAT seed data found.")}
 
 	delete_credit_analysis_artifacts(records.get("CRM Credit Application", []))
 

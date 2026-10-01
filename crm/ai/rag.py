@@ -404,7 +404,7 @@ def query_rag(query, agent_key=None, customer=None):
 
 	if is_conversational_query(query):
 		return {
-			"context": "User greeted the assistant or initiated a generic conversation. Respond politely in Indonesian/English, introduce yourself as the BNI CRM AI Agent Co-pilot, and ask how you can help with BNI CRM Core, credit analysis, portfolio monitoring, or omnichannel communications today.",
+			"context": "User greeted the assistant or initiated a generic conversation. Respond politely in Indonesian/English, introduce yourself as the IGLO CRM AI Agent Co-pilot, and ask how you can help with IGLO CRM Core, credit analysis, portfolio monitoring, or omnichannel communications today.",
 			"sources": [{"title": "Conversational Greeting", "excerpt": "General greeting/conversation bypass."}],
 			"confidence": 1.0,
 			"passes_guardrail": True,

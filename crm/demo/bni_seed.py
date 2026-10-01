@@ -1,8 +1,8 @@
 """
-BNI Comprehensive Seed Data — semua modul terhubung dalam satu ekosistem korporasi BNI.
+IGLO Comprehensive Seed Data — semua modul terhubung dalam satu ekosistem korporasi IGLO.
 
 Modul yang di-seed: Leads, Customer 360, Credit Analysis, Omnichannel, Portfolio Monitoring.
-Semua data menggunakan nama debitur korporasi BNI yang realistik dan saling ber-relasi via customer_name.
+Semua data menggunakan nama debitur korporasi yang realistik dan saling ber-relasi via customer_name.
 """
 
 import datetime
@@ -19,7 +19,7 @@ from crm.api.portfolio_monitoring import (
 	ensure_portfolio_tables,
 )
 
-# ─── DATA MASTER: 25 Debitur Korporasi BNI ──────────────────────────
+# ─── DATA MASTER: 25 Debitur Korporasi IGLO ──────────────────────────
 # Setiap debitur punya: segmen, industri, KBLI, provinsi, risk profile, dan fasilitas kredit
 
 BNI_CORPORATE_BORROWERS = [
@@ -118,7 +118,7 @@ BNI_CORPORATE_BORROWERS = [
 	]),
 ]
 
-# ─── LEAD DATA (prospek yang sedang di pipeline BNI) ───────────────
+# ─── LEAD DATA (prospek yang sedang di pipeline IGLO) ───────────────
 BNI_LEADS = [
 	("PT Erajaya Swasembada Tbk", "Telecommunication", "Distributor smartphone dan aksesoris", "KMK Modal Kerja", 500_000_000_000, "Hot"),
 	("PT Gojek Indonesia", "Transportation", "Platform transportasi dan fintech", "SBL Teknologi", 2_000_000_000_000, "Hot"),
@@ -135,7 +135,7 @@ BNI_LEADS = [
 # ─── OMNICHANNEL CONVERSATIONS ─────────────────────────────────────
 BNI_OMNICHANNEL_CONVOS = [
 	{"customer": "PT Indofood Sukses Makmur Tbk", "channel": "WhatsApp", "messages": [
-		("RM", "Selamat siang Bapak/Ibu dari Indofood. Kami dari BNI ingin menindaklanjuti pengajuan KMK Ekspor Bapak/Ibu."),
+		("RM", "Selamat siang Bapak/Ibu dari Indofood. Kami dari IGLO ingin menindaklanjuti pengajuan KMK Ekspor Bapak/Ibu."),
 		("Customer", "Siang, baik. Apakah ada dokumen tambahan yang diperlukan?"),
 		("RM", "Kami membutuhkan laporan keuangan audit 3 tahun terakhir dan NPWP Perusahaan."),
 		("Customer", "Baik, akan kami kirimkan minggu ini. Terima kasih."),
@@ -149,7 +149,7 @@ BNI_OMNICHANNEL_CONVOS = [
 	{"customer": "PT Bhakti Nusantara Corp", "channel": "WhatsApp", "messages": [
 		("RM", "Yth. Manajemen Bhakti Nusantara, kami mengingatkan bahwa terdapat covenant DSCR yang mendekati batas minimum. Mohon segera dilakukan review."),
 		("Customer", "Baik, kami sudah sadar. Kami sedang menyiapkan restructuring proposal."),
-		("RM", "Baik, kami tunggu proposalnya. Tim risk BNI akan membantu proses assessment."),
+		("RM", "Baik, kami tunggu proposalnya. Tim risk IGLO akan membantu proses assessment."),
 	]},
 	{"customer": "PT Pioneer Logistik Tbk", "channel": "WhatsApp", "messages": [
 		("RM", "Selamat pagi, Pak. Ada kabar terbaru mengenai gugatan class action yang dilaporkan media? Apakah ada dampak ke operasional?"),
@@ -161,8 +161,8 @@ BNI_OMNICHANNEL_CONVOS = [
 		("Customer", "Dokumen sudah kami terima. Akan kami review bersama legal dan finance."),
 	]},
 	{"customer": "PT Indosat Tbk", "channel": "WhatsApp", "messages": [
-		("RM", "Selamat siang, Pak. BNI mengucapkan selamat atas pelunasan SBL Telekomunikasi tepat waktu. Kami siap melayani kebutuhan kredit Bapak/Ibu selanjutnya."),
-		("Customer", "Terima kasih, Pak. Pelayanan BNI sangat baik. Kami ada rencana ekspansi 5G, mungkin butuh tambahan fasilitas."),
+		("RM", "Selamat siang, Pak. IGLO mengucapkan selamat atas pelunasan SBL Telekomunikasi tepat waktu. Kami siap melayani kebutuhan kredit Bapak/Ibu selanjutnya."),
+		("Customer", "Terima kasih, Pak. Pelayanan IGLO sangat baik. Kami ada rencana ekspansi 5G, mungkin butuh tambahan fasilitas."),
 		("RM", "Wah, kabar baik! Kami siap diskusikan kebutuhan pembiayaan 5G Bapak/Ibu."),
 	]},
 ]
@@ -288,13 +288,13 @@ def _ensure_master_data():
 				except Exception:
 					pass
 
-	# Create CRM Lead Source record for BNI Referral
+	# Create CRM Lead Source record for IGLO Referral
 	if frappe.db.exists("DocType", "CRM Lead Source"):
-		if not frappe.db.exists("CRM Lead Source", "BNI Referral"):
+		if not frappe.db.exists("CRM Lead Source", "IGLO Referral"):
 			try:
 				frappe.get_doc({
 					"doctype": "CRM Lead Source",
-					"source_name": "BNI Referral",
+					"source_name": "IGLO Referral",
 					"source_group": "Referral",
 					"is_active": 1,
 				}).insert(ignore_permissions=True)
@@ -306,7 +306,7 @@ def _ensure_master_data():
 
 
 def seed_customers():
-	"""Seed Customer records for all BNI corporate borrowers."""
+	"""Seed Customer records for all IGLO corporate borrowers."""
 	_ensure_master_data()
 	created = []
 	for name, segmen, industri, kbli, provinsi, grade, score, watchlist, npl, _fasilitas in BNI_CORPORATE_BORROWERS:
@@ -524,7 +524,7 @@ def seed_credit_analysis_data():
 						"metric_label": metric_key.replace("_", " "),
 						"year": year,
 						"amount": amount,
-						"source": "BNI Annual Report",
+						"source": "Annual Report",
 					})
 					doc.insert(ignore_permissions=True)
 				except Exception:
@@ -532,7 +532,7 @@ def seed_credit_analysis_data():
 
 
 def seed_leads():
-	"""Seed CRM Lead untuk prospek BNI."""
+	"""Seed CRM Lead untuk prospek IGLO."""
 	if not frappe.db.table_exists("CRM Lead"):
 		return 0
 	count = 0
@@ -547,7 +547,7 @@ def seed_leads():
 				"organization": name,
 				"industry": industry,
 				"website": f"https://www.{name.lower().replace(' ', '').replace('pt', '').replace('tbk', '').strip()}.com" if "pt" in name.lower() else "",
-				"source": "BNI Referral",
+				"source": "IGLO Referral",
 				"status": status,
 				"notes": desc + f" | Potensi fasilitas: {facility} Rp{amount/1_000_000_000:.0f} Miliar",
 			})
@@ -586,7 +586,7 @@ def seed_portfolio_tables():
 
 
 def clear_all():
-	"""Bersihkan semua data seed BNI."""
+	"""Bersihkan semua data seed IGLO."""
 	# Hapus portfolio tables
 	tables = [
 		"CRM EWS Signal", "CRM Covenant Test Result", "CRM Watchlist Case",
@@ -665,36 +665,36 @@ def clear_all():
 
 @frappe.whitelist()
 def seed_all():
-	"""Seed semua data BNI — semua modul terhubung."""
+	"""Seed semua data IGLO — semua modul terhubung."""
 	clear_all()
 	frappe.db.commit()
 
 	customers = seed_customers()
-	print(f"[BNI SEED] {len(customers)} customers created")
+	print(f"[IGLO SEED] {len(customers)} customers created")
 
 	seed_risk_profiles(customers)
-	print(f"[BNI SEED] Risk profiles seeded")
+	print(f"[IGLO SEED] Risk profiles seeded")
 
 	seed_credit_facilities(customers)
-	print(f"[BNI SEED] Credit facilities seeded")
+	print(f"[IGLO SEED] Credit facilities seeded")
 
 	seed_transaction_histories(customers)
-	print(f"[BNI SEED] Transaction histories seeded")
+	print(f"[IGLO SEED] Transaction histories seeded")
 
 	seed_omnichannel(customers)
-	print(f"[BNI SEED] Omnichannel conversations seeded")
+	print(f"[IGLO SEED] Omnichannel conversations seeded")
 
 	seed_credit_applications(customers)
-	print(f"[BNI SEED] Credit applications seeded")
+	print(f"[IGLO SEED] Credit applications seeded")
 
 	seed_credit_analysis_data()
-	print(f"[BNI SEED] Credit analysis data seeded")
+	print(f"[IGLO SEED] Credit analysis data seeded")
 
 	lead_count = seed_leads()
-	print(f"[BNI SEED] {lead_count} leads created")
+	print(f"[IGLO SEED] {lead_count} leads created")
 
 	seed_portfolio_tables()
-	print(f"[BNI SEED] Portfolio monitoring tables seeded")
+	print(f"[IGLO SEED] Portfolio monitoring tables seeded")
 
 	frappe.db.commit()
 	return {
@@ -702,7 +702,7 @@ def seed_all():
 		"customers": len(customers),
 		"leads": lead_count,
 		"total_borrowers": len(BNI_CORPORATE_BORROWERS),
-		"message": f"BNI seed data berhasil: {len(customers)} debitur, {lead_count} leads, semua modul terhubung",
+		"message": f"IGLO seed data berhasil: {len(customers)} debitur, {lead_count} leads, semua modul terhubung",
 	}
 
 

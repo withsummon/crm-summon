@@ -1118,7 +1118,7 @@ def initiate_payment(facility_name, installment_no, amount, channel, customer=No
 		qris_payload = f"QRIS|{payment_id}|{amount}"
 		instructions = ["Scan QRIS code with your e-wallet app.", "Confirm payment in your app."]
 	else:
-		instructions = [f"Open {channel} app.", f"Search for merchant 'BNI SUMMON' and pay {amount}."]
+		instructions = [f"Open {channel} app.", f"Search for merchant 'IGLO' and pay {amount}."]
 	return {
 		"payment_id": payment_id,
 		"channel": channel,
@@ -1137,7 +1137,7 @@ def confirm_payment(payment_id, customer=None):
 @frappe.whitelist(allow_guest=True)
 def list_payment_methods(customer=None):
 	return [
-		{"channel": "VA-BNI", "name": "BNI Virtual Account", "active": True},
+		{"channel": "VA-BNI", "name": "Virtual Account BNI", "active": True},
 		{"channel": "VA-Mandiri", "name": "Mandiri Virtual Account", "active": True},
 		{"channel": "GoPay", "name": "GoPay", "active": True},
 		{"channel": "OVO", "name": "OVO", "active": True},

@@ -123,7 +123,7 @@
       <FeatherIcon name="plus" class="size-6" />
     </button>
 
-    <!-- PROXIMITY ALERT POPUP MODAL (Wow Birthday Proximity Alert Card with BNI Teal branding) -->
+    <!-- PROXIMITY ALERT POPUP MODAL (Wow Birthday Proximity Alert Card with IGLO Red branding) -->
     <TransitionRoot :show="showProximityAlert">
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <TransitionChild as="template" enter="transition-opacity duration-200" enter-from="opacity-0" enter-to="opacity-100" leave="transition-opacity duration-200" leave-from="opacity-100" leave-to="opacity-0">
@@ -173,7 +173,7 @@
                 {{ __('Hari ini adalah ') }}<strong class="text-crm-text">{{ __('Hari Ulang Tahun') }}</strong>{{ __(' beliau! Berikan sentuhan personal hangat sebagai Relationship Manager profesional sekarang juga.') }}
               </p>
               <div class="bg-crm-surface p-2.5 rounded-lg border border-crm-border text-xs text-crm-text-secondary italic pl-3 border-l-4 border-crm-teal leading-relaxed">
-                {{ __('"Selamat Ulang Tahun! Semoga sukses dan sehat selalu. Terima kasih atas loyalitas bersama BNI..."') }}
+                {{ __('"Selamat Ulang Tahun! Semoga sukses dan sehat selalu. Terima kasih atas kepercayaan Anda kepada IGLO..."') }}
               </div>
             </div>
 
@@ -314,7 +314,7 @@ function onCustomerSelected() {
   if (cust) {
     newReminder.value.location_name = `Momen Spesial: ${cust.customer_name}`
     newReminder.value.address = cust.registered_address || `Area Terdaftar Nasabah ${cust.customer_name}`
-    newReminder.value.note = `Ulang tahun ${cust.customer_name}. Beliau menyukai produk KMK BNI.`
+    newReminder.value.note = `Ulang tahun ${cust.customer_name}. Beliau menyukai produk KMK.`
   }
 }
 

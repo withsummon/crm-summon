@@ -322,7 +322,7 @@
               >
                 <div class="flex items-center justify-between">
                   <span :class="cell.isToday ? 'flex h-5 w-5 items-center justify-center rounded-full text-white text-[11px] font-medium' : 'text-[11px] text-ink-gray-6'"
-                        :style="cell.isToday ? 'background: #FF6600' : ''">
+                        :style="cell.isToday ? 'background: #980000' : ''">
                     {{ cell.day }}
                   </span>
                 </div>
@@ -378,7 +378,7 @@
                   <div class="relative h-5 flex-1 rounded bg-surface-gray-1">
                     <div
                       class="absolute top-0 bottom-0 rounded"
-                      :style="`left: ${t.barLeft}%; width: ${t.barWidth}%; background: ${t.isCritical ? '#dc2626' : '#FF6600'}`"
+                      :style="`left: ${t.barLeft}%; width: ${t.barWidth}%; background: ${t.isCritical ? '#dc2626' : '#980000'}`"
                     />
                     <FeatherIcon
                       v-if="t.is_milestone"
@@ -497,13 +497,13 @@
                     />
                     <div
                       class="rounded-b"
-                      :style="`height: ${Math.min(100, d.completed * 8)}%; background: #FF6600`"
+                      :style="`height: ${Math.min(100, d.completed * 8)}%; background: #980000`"
                     />
                   </div>
                 </div>
                 <div class="mt-2 flex gap-3 text-xs text-ink-gray-5">
                   <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#dc2626"></span>Breached</span>
-                  <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#FF6600"></span>Completed</span>
+                  <span><span class="mr-1 inline-block h-2 w-2 rounded-full" style="background:#980000"></span>Completed</span>
                 </div>
               </div>
               <div class="rounded-[10px] border border-outline-gray-2 bg-white p-3 shadow-sm">
@@ -517,7 +517,7 @@
                     <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-gray-2">
                       <div
                         class="h-full rounded-full"
-                        :style="`width: ${g.compliance}%; background: ${g.compliance < 80 ? '#dc2626' : '#FF6600'}`"
+                        :style="`width: ${g.compliance}%; background: ${g.compliance < 80 ? '#dc2626' : '#980000'}`"
                       />
                     </div>
                   </div>
@@ -593,7 +593,7 @@
               <tbody>
                 <tr v-for="t in taskTypes.data || []" :key="t.name" class="border-b border-outline-gray-1 last:border-b-0">
                   <td class="px-3 py-1.5">
-                    <span class="inline-flex h-2 w-2 rounded-full mr-2" :style="`background: ${t.color || '#FF6600'}`" />
+                    <span class="inline-flex h-2 w-2 rounded-full mr-2" :style="`background: ${t.color || '#980000'}`" />
                     <span class="text-ink-gray-8">{{ t.type_name }}</span>
                   </td>
                   <td class="px-3 py-1.5 text-right text-ink-gray-7">{{ formatMinutes(t.sla_matrix?.Critical) }}</td>
@@ -1150,7 +1150,7 @@ function loadColor(open, capacity) {
   const r = open / Math.max(1, capacity)
   if (r > 1) return '#dc2626'
   if (r > 0.7) return '#d97706'
-  return '#FF6600'
+  return '#980000'
 }
 
 let searchTimer = null
@@ -1415,7 +1415,7 @@ const KpiCard = defineComponent({
         h('span', { class: 'text-[11px] font-medium uppercase tracking-wide text-ink-gray-5' }, props.label),
         h(FeatherIcon, { name: props.icon || 'circle', class: 'h-3.5 w-3.5 text-ink-gray-4' }),
       ]),
-      h('div', { class: 'mt-1.5 text-xl font-semibold leading-tight', style: props.theme === 'red' ? 'color:#dc2626' : props.theme === 'orange' ? 'color:#d97706' : props.theme === 'blue' ? 'color:#1d4ed8' : props.theme === 'teal' ? 'color:#FF6600' : 'color:#111827' }, props.value),
+      h('div', { class: 'mt-1.5 text-xl font-semibold leading-tight', style: props.theme === 'red' ? 'color:#dc2626' : props.theme === 'orange' ? 'color:#d97706' : props.theme === 'blue' ? 'color:#1d4ed8' : props.theme === 'teal' ? 'color:#980000' : 'color:#111827' }, props.value),
     ])
   },
 })

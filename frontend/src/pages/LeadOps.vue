@@ -420,7 +420,7 @@
             <!-- AI Lead Quality Prediction Model Details -->
             <div class="rounded-[10px] border border-outline-gray-2 bg-white p-4 shadow-sm h-fit">
               <h3 class="text-sm font-semibold text-ink-gray-9 mb-2">AI Lead Quality ML Engine</h3>
-              <p class="text-xs text-ink-gray-5 mb-4">Underlying XGBoost model based on spreadings & BNI Credit scoring historical approvals.</p>
+              <p class="text-xs text-ink-gray-5 mb-4">Underlying XGBoost model based on spreadings & credit scoring historical approvals.</p>
               
               <div class="space-y-3">
                 <div class="flex justify-between items-center text-xs">
@@ -579,7 +579,7 @@
                 <div v-if="llmResult" class="rounded-xl bg-primary-50/30 border border-primary-100 p-4 font-sans text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {{ llmResult }}
                 </div>
-                <p v-else class="text-xs text-ink-gray-5 italic">Click the button above to run a live quality assessment using BNI's enterprise LLM orchestrator.</p>
+                <p v-else class="text-xs text-ink-gray-5 italic">Click the button above to run a live quality assessment using the enterprise LLM orchestrator.</p>
               </div>
             </div>
           </template>
@@ -1013,11 +1013,11 @@ const referralStats = computed(() => [
 ])
 
 const referrals = ref([
-  { id: 1, referee: 'PT Sukses Mandiri', referrer: 'Andi Putra', referrerType: 'BNI Employee', facility: 'Term Loan', points: 1500, status: 'Converted' },
+  { id: 1, referee: 'PT Sukses Mandiri', referrer: 'Andi Putra', referrerType: 'IGLO Employee', facility: 'Term Loan', points: 1500, status: 'Converted' },
   { id: 2, referee: 'CV Tunas Makmur', referrer: 'Siti Rahayu', referrerType: 'External Broker', facility: 'Kredit Investasi', points: 800, status: 'Qualified' },
-  { id: 3, referee: 'PT Global Trans', referrer: 'Dewi Pratama', referrerType: 'BNI Employee', facility: 'Working Capital', points: 1200, status: 'Qualified' },
+  { id: 3, referee: 'PT Global Trans', referrer: 'Dewi Pratama', referrerType: 'IGLO Employee', facility: 'Working Capital', points: 1200, status: 'Qualified' },
   { id: 4, referee: 'Koperasi Sejahtera', referrer: 'Maya Lestari', referrerType: 'Referral Partner', facility: 'Linkage Program', points: 1000, status: 'Converted' },
-  { id: 5, referee: 'PT Agro Prima', referrer: 'Budi Santoso', referrerType: 'BNI Employee', facility: 'KUR Pertanian', points: 500, status: 'New' },
+  { id: 5, referee: 'PT Agro Prima', referrer: 'Budi Santoso', referrerType: 'IGLO Employee', facility: 'KUR Pertanian', points: 500, status: 'New' },
 ])
 
 const referrerLeaderboard = ref([
@@ -1029,13 +1029,13 @@ const referrerLeaderboard = ref([
 
 // ── UTM / Campaigns State ─────────────────────────────────────────
 const utmFilterCampaign = ref('')
-const utmCampaigns = computed(() => ['ramadan_promo_2026', 'sme_q2_newsletter', 'bni_referral_direct', 'google_ads_working_capital'])
+const utmCampaigns = computed(() => ['ramadan_promo_2026', 'sme_q2_newsletter', 'iglo_referral_direct', 'google_ads_working_capital'])
 
 const utmLeads = ref([
   { id: 1, name: 'PT Sukses Mandiri', campaign: 'google_ads_working_capital', source: 'google', medium: 'cpc', term: 'kredit modal kerja', content: 'text_ad_v1', date: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
   { id: 2, name: 'CV Tunas Makmur', campaign: 'ramadan_promo_2026', source: 'facebook', medium: 'social_ads', term: 'kpr syariah', content: 'banner_green', date: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString() },
   { id: 3, name: 'PT Global Trans', campaign: 'sme_q2_newsletter', source: 'newsletter', medium: 'email', term: 'loan offering', content: 'button_click', date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-  { id: 4, name: 'Koperasi Sejahtera', campaign: 'bni_referral_direct', source: 'bni_portal', medium: 'referral', term: 'linkage program', content: 'banner_top', date: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString() },
+  { id: 4, name: 'Koperasi Sejahtera', campaign: 'iglo_referral_direct', source: 'iglo_portal', medium: 'referral', term: 'linkage program', content: 'banner_top', date: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString() },
 ])
 
 const filteredUtmLeads = computed(() => {
@@ -1176,8 +1176,8 @@ async function runLlmPrediction(pred) {
 **Skor Konversi AI**: ${pred.score}% (Rekomendasi: ${pred.recommendation})
 
 #### 1. Analisis Parameter Utama
-- **DSCR (${pred.dscr}x)**: Kapasitas pembayaran kembali sangat memadai. Rasio cakupan utang berada di atas batas aman internal BNI (1.25x).
-- **LTV (${pred.ltv}%)**: Rasio jaminan terhadap kredit sangat aman. BNI memiliki ruang perlindungan agunan yang cukup besar apabila terjadi default.
+- **DSCR (${pred.dscr}x)**: Kapasitas pembayaran kembali sangat memadai. Rasio cakupan utang berada di atas batas aman internal (1.25x).
+- **LTV (${pred.ltv}%)**: Rasio jaminan terhadap kredit sangat aman. Tim memiliki ruang perlindungan agunan yang cukup besar apabila terjadi default.
 - **Credit Score (${pred.credit}/1000)**: Profil kolektibilitas sangat baik dengan riwayat pembayaran tepat waktu.
 
 #### 2. Kekuatan Utama (Strengths)

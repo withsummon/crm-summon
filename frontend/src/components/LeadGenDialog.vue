@@ -18,7 +18,7 @@
               {{ __('Upload Excel File') }}
             </h3>
             <p class="mt-1 text-sm text-ink-gray-5">
-              {{ __('Upload the BNI lead workbook. We will validate the column mapping, warn on dirty rows, and optionally create follow-up tasks and notes.') }}
+              {{ __('Upload the IGLO lead workbook. We will validate the column mapping, warn on dirty rows, and optionally create follow-up tasks and notes.') }}
             </p>
           </div>
           <FileUploader
@@ -303,7 +303,7 @@ const previewData = ref({
   default_options: {},
 })
 const importOptions = ref({
-  default_source: 'BNI Lead Workbook',
+  default_source: 'IGLO Lead Workbook',
   default_channel: 'Excel Import',
   create_follow_up_tasks: true,
   create_notes: true,
@@ -333,7 +333,7 @@ async function onFileUploaded(file) {
     })
     previewData.value = result
     importOptions.value = {
-      default_source: result.default_options?.default_source || 'BNI Lead Workbook',
+      default_source: result.default_options?.default_source || 'IGLO Lead Workbook',
       default_channel: result.default_options?.default_channel || 'Excel Import',
       create_follow_up_tasks: Boolean(result.default_options?.create_follow_up_tasks ?? true),
       create_notes: Boolean(result.default_options?.create_notes ?? true),

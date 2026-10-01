@@ -8,7 +8,7 @@
           </div>
           <div>
             <h1 class="text-base font-bold text-slate-900">{{ __('AI Agent Center') }}</h1>
-            <p class="text-xs text-slate-500">{{ __('BNI SUMMON agent workspace') }}</p>
+            <p class="text-xs text-slate-500">{{ __('IGLO agent workspace') }}</p>
           </div>
         </div>
       </div>
@@ -261,7 +261,7 @@
                   <span>Hallucination Guardrails: Active</span>
                 </div>
                 <p class="mt-1 text-[10px] text-slate-500 leading-relaxed">
-                  All AI claims are automatically cross-referenced with BNI SUMMON CRM RAG indexes. Unsupported or speculative statements are systematically blocked.
+                  All AI claims are automatically cross-referenced with IGLO CRM RAG indexes. Unsupported or speculative statements are systematically blocked.
                 </p>
               </PanelBlock>
               <PanelBlock title="Sources">
@@ -911,11 +911,11 @@ async function generateProposalDraft() {
 
   let prompt = ''
   if (selectedAgent.value?.key === 'proposal_generator') {
-    prompt = `Susun draf ucapan personal beserta opsi hadiah menarik yang kreatif, dan buat proposal terstruktur untuk nasabah ${customerName} dengan produk BNI ${productName}.`
+    prompt = `Susun draf ucapan personal beserta opsi hadiah menarik yang kreatif, dan buat proposal terstruktur untuk nasabah ${customerName} dengan produk ${productName}.`
   } else if (selectedAgent.value?.key === 'relationship_manager') {
-    prompt = `Berikan saran next best action dan draf pesan WhatsApp/Email personal untuk nasabah ${customerName} dengan produk BNI ${productName}.`
+    prompt = `Berikan saran next best action dan draf pesan WhatsApp/Email personal untuk nasabah ${customerName} dengan produk ${productName}.`
   } else {
-    prompt = `Analisis nasabah ${customerName} untuk produk BNI ${productName}.`
+    prompt = `Analisis nasabah ${customerName} untuk produk ${productName}.`
   }
   
   await sendMessage(prompt)

@@ -50,7 +50,7 @@
 .djs-shape:hover .djs-visual rect,
 .djs-shape:hover .djs-visual circle,
 .djs-shape:hover .djs-visual polygon {
-  stroke: #0d9488 !important; /* teal 600 */
+  stroke: #980000 !important; /* teal 600 */
   filter: drop-shadow(0 4px 6px -1px rgb(13 148 136 / 0.1)) drop-shadow(0 2px 4px -2px rgb(13 148 136 / 0.1));
 }
 

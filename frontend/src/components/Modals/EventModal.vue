@@ -288,7 +288,7 @@ const _event = ref({
   isFullDay: false,
   eventType: 'Public',
   location: '',
-  color: '#FF6600',
+  color: '#980000',
   referenceDoctype: '',
   referenceDocname: '',
   event_participants: [],

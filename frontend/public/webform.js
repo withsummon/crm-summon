@@ -18,7 +18,7 @@
   var CONTAINER_ID = 'summon-lead-form-' + SLUG;
   var container = document.getElementById(CONTAINER_ID);
   if (!container) {
-    console.error('BNI CRM WebForm: container #' + CONTAINER_ID + ' not found');
+    console.error('IGLO CRM WebForm: container #' + CONTAINER_ID + ' not found');
     return;
   }
 

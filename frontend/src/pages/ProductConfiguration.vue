@@ -191,7 +191,7 @@
                 <span
                   class="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold"
                   :class="step >= i ? 'text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
-                  :style="step >= i ? 'background:#FF6600' : ''"
+                  :style="step >= i ? 'background:#980000' : ''"
                 >{{ i + 1 }}</span>
                 {{ s.label }}
               </button>
@@ -720,8 +720,8 @@
       <template #body-content>
         <div class="space-y-3">
           <div class="flex gap-2">
-            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="schedule" class="size-4 accent-[#FF6600]" /> Schedule</label>
-            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="immediate" class="size-4 accent-[#FF6600]" /> Retire now</label>
+            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="schedule" class="size-4 accent-[#980000]" /> Schedule</label>
+            <label class="flex items-center gap-2 text-sm text-ink-gray-7"><input v-model="retireDialog.mode" type="radio" value="immediate" class="size-4 accent-[#980000]" /> Retire now</label>
           </div>
           <div v-if="retireDialog.mode === 'schedule'">
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">Retirement Date</label>
@@ -1180,7 +1180,7 @@ const KpiCard = defineComponent({
         style: props.theme === 'red' ? 'color:#dc2626'
           : props.theme === 'orange' ? 'color:#d97706'
           : props.theme === 'blue' ? 'color:#1d4ed8'
-          : props.theme === 'teal' ? 'color:#FF6600'
+          : props.theme === 'teal' ? 'color:#980000'
           : 'color:#111827',
       }, String(props.value ?? 0)),
     ])

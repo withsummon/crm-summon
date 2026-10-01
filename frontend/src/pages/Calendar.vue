@@ -509,7 +509,7 @@ function buildTempEvent(e = {}, duplicate = false) {
     location: e.location || '',
     isFullDay: e.isFullDay || false,
     eventType: e.eventType || 'Private',
-    color: e.color || '#FF6600',
+    color: e.color || '#980000',
     attending: e.attending || 'Yes',
     referenceDoctype: e.referenceDoctype,
     referenceDocname: e.referenceDocname,

@@ -71,12 +71,12 @@
         <div class="flex shrink-0 items-center gap-2">
           <button
             class="flex items-center gap-2 rounded-md border border-outline-gray-2 bg-surface-gray-1 px-3 py-2 text-sm text-ink-gray-7"
-            :class="liveTail ? 'border-[#FF6600] text-[#FF6600]' : ''"
+            :class="liveTail ? 'border-[#980000] text-[#980000]' : ''"
             @click="liveTail = !liveTail"
           >
             <span
               class="h-2 w-2 rounded-full"
-              :class="liveTail ? 'bg-[#FF6600]' : 'bg-ink-gray-3'"
+              :class="liveTail ? 'bg-[#980000]' : 'bg-ink-gray-3'"
             />
             {{ __('Live Tail') }}
           </button>
@@ -121,7 +121,7 @@
                     v-model="filters.query"
                     type="text"
                     :placeholder="__('Search user, entity, IP, payload...')"
-                    class="h-8 w-full rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20"
+                    class="h-8 w-full rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20"
                   />
                 </div>
                 <select v-model="filters.category" class="audit-select">
@@ -200,7 +200,7 @@
                       <div class="mt-1 flex min-w-0 items-center gap-2 text-xs">
                         <span class="truncate text-ink-red-3">{{ change.old || '—' }}</span>
                         <FeatherIcon name="arrow-right" class="h-3 w-3 shrink-0 text-ink-gray-4" />
-                        <span class="truncate text-[#FF6600]">{{ change.new || '—' }}</span>
+                        <span class="truncate text-[#980000]">{{ change.new || '—' }}</span>
                       </div>
                     </div>
                   </div>
@@ -403,20 +403,20 @@
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Action') }}</label>
-            <input v-model="recordForm.action" type="text" :placeholder="__('e.g. override, export, view')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+            <input v-model="recordForm.action" type="text" :placeholder="__('e.g. override, export, view')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Actor') }}</label>
-            <input v-model="recordForm.actor" type="text" :placeholder="__('User name or email')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+            <input v-model="recordForm.actor" type="text" :placeholder="__('User name or email')" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
           </div>
           <div class="grid gap-3 md:grid-cols-2">
             <div>
               <label class="text-xs text-ink-gray-5">{{ __('Target Doctype') }}</label>
-              <input v-model="recordForm.target_doctype" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+              <input v-model="recordForm.target_doctype" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
             </div>
             <div>
               <label class="text-xs text-ink-gray-5">{{ __('Target Name') }}</label>
-              <input v-model="recordForm.target_name" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+              <input v-model="recordForm.target_name" type="text" class="mt-1 h-8 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
             </div>
           </div>
           <div>
@@ -430,7 +430,7 @@
           </div>
           <div>
             <label class="text-xs text-ink-gray-5">{{ __('Summary') }}</label>
-            <textarea v-model="recordForm.summary" rows="3" class="mt-1 w-full rounded-md border border-outline-gray-2 bg-white px-3 py-2 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+            <textarea v-model="recordForm.summary" rows="3" class="mt-1 w-full rounded-md border border-outline-gray-2 bg-white px-3 py-2 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
           </div>
         </div>
       </template>
@@ -606,7 +606,7 @@ const demoEvents = computed(() => {
       action: 'view',
       actor,
       target_doctype: 'Customer',
-      target_name: 'BNI Corporate Customer',
+      target_name: 'IGLO Corporate Customer',
       severity: 'info',
       ip: '10.20.18.41',
       geo: 'ID-JK',
@@ -943,7 +943,7 @@ const StatCard = defineComponent({
           h('p', { class: 'text-sm text-ink-gray-5' }, __(props.label)),
           h(FeatherIcon, {
             name: props.icon || 'activity',
-            class: props.warn ? 'h-4 w-4 text-crm-warning' : 'h-4 w-4 text-[#FF6600]',
+            class: props.warn ? 'h-4 w-4 text-crm-warning' : 'h-4 w-4 text-[#980000]',
           }),
         ]),
         h('p', { class: 'mt-2 text-2xl font-semibold text-ink-gray-9' }, props.value),
@@ -1051,7 +1051,7 @@ const SegmentedControl = defineComponent({
             key: option.key,
             class: [
               'rounded px-3 py-1.5 text-sm transition-colors',
-              props.modelValue === option.key ? 'bg-[#FF6600] text-white' : 'text-ink-gray-6 hover:bg-surface-gray-1',
+              props.modelValue === option.key ? 'bg-[#980000] text-white' : 'text-ink-gray-6 hover:bg-surface-gray-1',
             ],
             onClick: () => emit('update:modelValue', option.key),
           }, __(option.label)),
@@ -1116,7 +1116,7 @@ const TrendPanel = defineComponent({
             ]),
             h('div', { class: 'h-2 overflow-hidden rounded-full bg-surface-gray-2' }, [
               h('div', {
-                class: 'h-full rounded-full bg-[#FF6600]',
+                class: 'h-full rounded-full bg-[#980000]',
                 style: { width: `${Math.max(8, Math.min(100, item.value * 14))}%` },
               }),
             ]),
@@ -1215,7 +1215,7 @@ usePageMeta(() => ({ title: __('Audit Trail') }))
 }
 
 .audit-select:focus {
-  border-color: #FF6600;
+  border-color: #980000;
   box-shadow: 0 0 0 2px rgb(0 140 149 / 20%);
 }
 
@@ -1231,7 +1231,7 @@ usePageMeta(() => ({ title: __('Audit Trail') }))
 }
 
 .audit-input:focus {
-  border-color: #FF6600;
+  border-color: #980000;
   box-shadow: 0 0 0 2px rgb(0 140 149 / 20%);
 }
 </style>

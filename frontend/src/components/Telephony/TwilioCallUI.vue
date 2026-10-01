@@ -486,7 +486,7 @@ defineExpose({ makeOutgoingCall, setup: startupClient })
 .pulse::before {
   content: '';
   position: absolute;
-  border: 1px solid #ff6600;
+  border: 1px solid #980000;
   width: calc(100% + 20px);
   height: calc(100% + 20px);
   border-radius: 50%;
@@ -496,7 +496,7 @@ defineExpose({ makeOutgoingCall, setup: startupClient })
 .pulse::after {
   content: '';
   position: absolute;
-  border: 1px solid #ff6600;
+  border: 1px solid #980000;
   width: calc(100% + 20px);
   height: calc(100% + 20px);
   border-radius: 50%;

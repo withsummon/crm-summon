@@ -849,7 +849,7 @@ const FieldGroup = {
   transition: border-color 0.15s ease-in-out;
 }
 .form-input:focus {
-  border-color: #0d9488;
+  border-color: #980000;
 }
 select.form-input {
   cursor: pointer;

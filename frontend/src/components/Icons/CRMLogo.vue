@@ -1,11 +1,11 @@
 <template>
   <img
     :src="logo"
-    alt="BNI CRM"
+    alt="IGLO CRM"
     class="object-contain"
   />
 </template>
 
 <script setup>
-const logo = '/assets/crm/images/bni-logo.png'
+const logo = '/assets/crm/images/iglo-logo.png'
 </script>

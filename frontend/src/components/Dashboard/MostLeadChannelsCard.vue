@@ -97,8 +97,8 @@ const channelConfigs = [
   {
     name: 'Messenger',
     icon: 'message-circle',
-    bgColor: '#D9F3F4',
-    iconColor: '#008C95',
+    bgColor: '#fceaea',
+    iconColor: '#980000',
   },
   {
     name: 'Viber',

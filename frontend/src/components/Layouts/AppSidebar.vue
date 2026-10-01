@@ -491,7 +491,7 @@ const articles = ref([
     ],
   },
   {
-    title: __('BNI CRM mobile'),
+    title: __('IGLO CRM mobile'),
     opened: false,
     subArticles: [
       { name: 'mobile-app-installation', title: __('Mobile App Installation') },

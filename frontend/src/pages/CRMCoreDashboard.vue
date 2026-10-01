@@ -817,7 +817,7 @@ function goToLeads() { router.push({ name: 'Lead' }) }
 function goToCustomers() { router.push({ name: 'Customer' }) }
 
 // ─── Bank Breakdown Pie Chart ──────────────────────────────
-const pieColors = ['#008c95', '#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#ccfbf1']
+const pieColors = ['#980000', '#980000', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#ccfbf1']
 const pieChartData = computed(() => {
   const items = displayCompanies.value || []
   const total = items.reduce((s, i) => s + (Number(i.count) || 0), 0) || 1
@@ -859,16 +859,16 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   --text: #101828;
   --text-2: #667085;
   --text-3: #98a2b3;
-  --teal: #008c95;
-  --primary-dark: #00747c;
-  --primary-soft: #dff7f7;
-  --primary-chart: #0e9298;
-  --cyan-light: #d9f3f4;
+  --teal: #980000;
+  --primary-dark: #750000;
+  --primary-soft: #fceaea;
+  --primary-chart: #980000;
+  --cyan-light: #fceaea;
   --green: #12b76a;
   --green-soft: #ecfdf3;
   --red: #f04438;
   --red-soft: #fff1f3;
-  --orange: #f79009;
+  --orange: #980000;
   --shadow: 0 8px 20px rgba(16,24,40,.05);
   --shadow-soft: 0 4px 12px rgba(16,24,40,.04);
   --radius: 16px;
@@ -1622,7 +1622,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
 .bni-lb-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #0e9298, #15b8bd);
+  background: linear-gradient(90deg, #980000, #bd3b3b);
   transition: width .4s ease;
 }
 
@@ -1677,7 +1677,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
 }
 .bni-ghost {
   opacity: 0.4;
-  background: #f0fdfa;
+  background: #fff5f5;
   border-radius: 8px;
 }
 
@@ -1810,7 +1810,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   border-radius: 50%;
   display: inline-block;
 }
-.dot-ukm { background: #0e9298; }
+.dot-ukm { background: #980000; }
 .dot-kor { background: #5cc5c8; }
 .dot-kon { background: #b5e4e5; }
 
@@ -1843,7 +1843,7 @@ usePageMeta(() => ({ title: __('Dashboard') }))
   min-height: 3px;
   transition: height .4s ease;
 }
-.r-ukm { background: #0e9298; }
+.r-ukm { background: #980000; }
 .r-kor { background: #5cc5c8; }
 .r-kon { background: #b5e4e5; }
 .bni-ret-col small {

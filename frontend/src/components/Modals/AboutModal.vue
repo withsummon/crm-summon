@@ -5,7 +5,7 @@
         <div class="flex justify-center">
           <div class="flex flex-col items-center">
             <CRMLogo class="mb-3 size-12 text-secondary-500" />
-            <h3 class="font-semibold text-xl text-ink-gray-9">BNI CRM</h3>
+            <h3 class="font-semibold text-xl text-ink-gray-9">IGLO CRM</h3>
           </div>
         </div>
         <hr class="border-t my-3 mx-2" />
@@ -29,7 +29,7 @@
         </div>
         <hr class="border-t my-3 mx-2" />
         <p class="text-sm text-ink-gray-6 px-2 mt-2">
-          © BNI CRM workspace
+          © IGLO CRM workspace
         </p>
       </div>
     </template>
@@ -48,27 +48,27 @@ let show = defineModel({ type: Boolean })
 let links = [
   {
     label: __('Website'),
-    url: 'https://withsummon.com',
+    url: 'https://www.indocyber.co.id/',
     icon: LucideGlobe,
   },
   {
     label: __('GitHub Repository'),
-    url: 'https://github.com/withsummon/summon',
+    url: 'https://github.com/withsummon/crm-summon',
     icon: LucideGitHub,
   },
   {
     label: __('Documentation'),
-    url: 'https://docs.withsummon.com',
+    url: 'https://github.com/withsummon/crm-summon/tree/develop',
     icon: LucideBookOpen,
   },
   {
     label: __('Report an Issue'),
-    url: 'https://github.com/withsummon/summon/issues',
+    url: 'https://github.com/withsummon/crm-summon/issues',
     icon: LucideBug,
   },
   {
     label: __('Contact Support'),
-    url: 'https://support.withsummon.com',
+    url: 'https://www.indocyber.co.id/contact-us',
     icon: LucideHeadset,
   },
 ]

@@ -240,7 +240,7 @@ async function toggleBiometric() {
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge: generateChallenge(),
-        rp: { name: 'BNI CRM' },
+        rp: { name: 'IGLO CRM' },
         user: {
           id: generateChallenge(),
           name: session.user.value || 'user',

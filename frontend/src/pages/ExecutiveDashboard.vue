@@ -699,7 +699,7 @@ function initCharts() {
       datasets: [{
         label: 'Miliar IDR',
         data: [58, 42, 35, 28, 23],
-        backgroundColor: ['#FF6600', '#FF8533', '#FF944D', '#FFA366', '#FFB380'],
+        backgroundColor: ['#980000', '#b92d2d', '#c45050', '#FFA366', '#db8a8a'],
         borderRadius: 6,
         borderSkipped: false,
       }],
@@ -734,12 +734,12 @@ function initCharts() {
         {
           label: 'NPL Ratio (%)',
           data: [2.8, 2.6, 2.5, 2.3, 2.2, 2.14].slice(-n),
-          borderColor: '#FF6600',
-          backgroundColor: 'rgba(255,102,0,.08)',
+          borderColor: '#980000',
+          backgroundColor: 'rgba(152,0,0,.08)',
           fill: true,
           tension: 0.4,
           pointRadius: 5,
-          pointBackgroundColor: '#FF6600',
+          pointBackgroundColor: '#980000',
         },
         {
           label: 'Threshold (3%)',
@@ -805,7 +805,7 @@ function showHmTip(e, seg, prod, val) {
 // RISK / RM HELPERS
 // ══════════════════════════════════════════════════════
 function rmScoreColor(score) {
-  return score >= 90 ? '#12b76a' : score >= 80 ? '#006699' : '#f79009'
+  return score >= 90 ? '#12b76a' : score >= 80 ? '#980000' : '#980000'
 }
 
 // ══════════════════════════════════════════════════════
@@ -959,17 +959,17 @@ onUnmounted(() => {
   --ed-text2: #667085;
   --ed-text3: #98a2b3;
 
-  /* Primary (#FF6600) */
-  --ed-primary: #FF6600;
-  --ed-secondary-dark: #CC5200;
-  --ed-secondary-light: #FFF0E0;
+  /* Primary (#980000) */
+  --ed-primary: #980000;
+  --ed-secondary-dark: #750000;
+  --ed-secondary-light: #fceaea;
 
   /* Status */
   --ed-green: #12b76a;
   --ed-green-soft: #ecfdf3;
   --ed-red: #f04438;
   --ed-red-soft: #fff1f3;
-  --ed-orange: #f79009;
+  --ed-orange: #980000;
   --ed-orange-soft: #fef3c7;
 
   /* Elevation */
@@ -1042,7 +1042,7 @@ onUnmounted(() => {
   transition: border-color .15s, box-shadow .15s;
   box-shadow: 0 1px 3px rgba(16,24,40,.06);
 }
-.ed-search-box:hover { border-color: #FF6600; box-shadow: 0 0 0 2px rgba(255,102,0,.1); }
+.ed-search-box:hover { border-color: #980000; box-shadow: 0 0 0 2px rgba(152,0,0,.1); }
 .ed-search-text {
   flex: 1;
   font-size: 12px;
@@ -1071,14 +1071,14 @@ onUnmounted(() => {
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(16,24,40,.06);
 }
-.ed-action-btn:hover { border-color: #FF6600; color: #FF6600; box-shadow: 0 0 0 2px rgba(255,102,0,.1); }
+.ed-action-btn:hover { border-color: #980000; color: #980000; box-shadow: 0 0 0 2px rgba(152,0,0,.1); }
 .ed-action-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Export / primary button (filled teal) */
 .ed-export-btn {
   height: 36px;
   border-radius: var(--ed-r);
-  background: #FF6600;
+  background: #980000;
   color: #fff;
   border: none;
   padding: 0 16px;
@@ -1092,7 +1092,7 @@ onUnmounted(() => {
   transition: background .15s;
   white-space: nowrap;
 }
-.ed-export-btn:hover { background: #CC5200; }
+.ed-export-btn:hover { background: #750000; }
 
 /* Size modifiers */
 .ed-btn-xs { height: 28px; padding: 0 10px; font-size: 11px; }
@@ -1112,7 +1112,7 @@ onUnmounted(() => {
   transition: border-color .15s, color .15s, box-shadow .15s;
   box-shadow: 0 1px 3px rgba(16,24,40,.06);
 }
-.ed-icon-btn:hover { border-color: #FF6600; color: #FF6600; box-shadow: 0 0 0 2px rgba(255,102,0,.1); }
+.ed-icon-btn:hover { border-color: #980000; color: #980000; box-shadow: 0 0 0 2px rgba(152,0,0,.1); }
 
 /* Keyboard shortcut badge */
 .ed-kbd {
@@ -1574,18 +1574,18 @@ onUnmounted(() => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #FF6600;
+  background: #980000;
   border: none;
   color: #fff;
   font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255,102,0,.4);
+  box-shadow: 0 4px 20px rgba(152,0,0,.4);
   transition: transform .2s, box-shadow .2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.ed-ai-fab:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(255,102,0,.6); }
+.ed-ai-fab:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(152,0,0,.6); }
 .ed-ai-panel {
   position: absolute;
   bottom: 62px;
@@ -1601,7 +1601,7 @@ onUnmounted(() => {
 }
 .ed-ai-panel-hdr {
   padding: 12px 14px;
-  background: #FF6600;
+  background: #980000;
   color: #fff;
   border-radius: var(--ed-r-lg) var(--ed-r-lg) 0 0;
   display: flex;

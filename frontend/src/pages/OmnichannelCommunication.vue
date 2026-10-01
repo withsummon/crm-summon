@@ -1142,7 +1142,7 @@ const conversations = ref([
     context: { segment: 'Commercial', facility: 'Revolving Credit — IDR 5B', nextAction: 'Prepare revised proposal' },
     messages: [
       { id: 'm-003a', direction: 'in', body: 'Dear RM,\n\nWe reviewed the term sheet and have some concerns on the interest rate floor. Could you send a revised version by end of day?\n\nRegards,\nAndi - Sari Logistics', time: '08:30', status: 'read', sentiment: 'negative' },
-      { id: 'm-004a', direction: 'out', body: 'Dear Pak Andi,\n\nThank you for your feedback. We will prepare a revised term sheet and revert by 17:00 today.\n\nBest regards,\nRizky — BNI CRM Team', time: '08:45', status: 'delivered' },
+      { id: 'm-004a', direction: 'out', body: 'Dear Pak Andi,\n\nThank you for your feedback. We will prepare a revised term sheet and revert by 17:00 today.\n\nBest regards,\nRizky — IGLO CRM Team', time: '08:45', status: 'delivered' },
     ],
   },
   {
@@ -1195,7 +1195,7 @@ const conversations = ref([
     tags: ['Credit', 'Follow-up'],
     context: { segment: 'Enterprise Banking', facility: 'New Application — KPR Korporat', nextAction: 'Schedule video call' },
     messages: [
-      { id: 'm-007', direction: 'in', body: 'Selamat siang, kami tertarik dengan produk KPR Korporat BNI untuk pembangunan gedung kantor.', time: '11:10', status: 'read', sentiment: 'positive' },
+      { id: 'm-007', direction: 'in', body: 'Selamat siang, kami tertarik dengan produk KPR Korporat untuk pembangunan gedung kantor.', time: '11:10', status: 'read', sentiment: 'positive' },
       { id: 'm-008', direction: 'out', body: 'Selamat siang Bapak! Terima kasih atas minatnya. Saya Budi, RM yang akan mendampingi Anda. Boleh saya pelajari kebutuhannya?', time: '11:15', status: 'read' },
       { id: 'm-009', direction: 'in', body: 'Tentu. Kami butuh fasilitas sekitar IDR 30 miliar untuk konstruksi. Bisa jadwalkan video call besok?', time: '11:30', status: 'delivered', sentiment: 'positive' },
     ],
@@ -1236,7 +1236,7 @@ const templates = [
   { id: 'wa_payment', channel: 'WhatsApp', name: 'Payment Reminder', body: 'Kepada {{name}}, angsuran sebesar {{amount}} jatuh tempo pada {{due_date}}. Mohon segera lakukan pembayaran.', isApproved: true, language: 'Bahasa Indonesia', mergeFields: ['name', 'amount', 'due_date'] },
   { id: 'email_summary', channel: 'Email', name: 'Meeting Summary', body: 'Dear {{name}},\n\nBerikut ringkasan pertemuan kita:\n{{summary}}\n\nAction items:\n{{action_items}}\n\nSalam,\n{{rm_name}}', isApproved: false, language: 'Bahasa Indonesia', mergeFields: ['name', 'summary', 'action_items', 'rm_name'] },
   { id: 'sms_otp', channel: 'SMS', name: 'OTP Verification', body: 'Kode OTP Anda: {{otp}}. Berlaku 5 menit. Jangan bagikan ke siapapun.', isApproved: true, language: 'Bahasa Indonesia', mergeFields: ['otp'] },
-  { id: 'all_welcome', channel: 'All', name: 'Welcome Message', body: 'Selamat datang di layanan BNI CRM, {{name}}. Kami siap membantu kebutuhan perbankan Anda.', isApproved: true, language: 'Bahasa Indonesia', mergeFields: ['name'] },
+  { id: 'all_welcome', channel: 'All', name: 'Welcome Message', body: 'Selamat datang di layanan IGLO CRM, {{name}}. Kami siap membantu kebutuhan perbankan Anda.', isApproved: true, language: 'Bahasa Indonesia', mergeFields: ['name'] },
 ]
 const allTemplates = ref([...templates])
 
@@ -1244,7 +1244,7 @@ const allTemplates = ref([...templates])
 const campaigns = ref([
   { id: 'camp-001', name: 'Payment Reminder — May 2026', channel: 'WhatsApp', audience: 'Overdue > 30 Days', message: 'Kepada nasabah terhormat, angsuran Anda telah melewati jatuh tempo lebih dari 30 hari...', status: 'Sent', sent: 245, delivered: 238, opened: 201, scheduled: '2026-05-20 08:00' },
   { id: 'camp-002', name: 'Loan Maturity Alert — June', channel: 'SMS', audience: 'Loan Maturity Next 30 Days', message: 'Fasilitas kredit Anda akan jatuh tempo pada bulan Juni 2026. Silakan hubungi RM Anda...', status: 'Scheduled', sent: 0, delivered: 0, opened: 0, scheduled: '2026-06-01 09:00' },
-  { id: 'camp-003', name: 'New Product — KPR Korporat', channel: 'Email', audience: 'Enterprise Segment', message: 'Kami dengan bangga memperkenalkan produk KPR Korporat BNI dengan suku bunga kompetitif...', status: 'Draft', sent: 0, delivered: 0, opened: 0, scheduled: '-' },
+  { id: 'camp-003', name: 'New Product — KPR Korporat', channel: 'Email', audience: 'Enterprise Segment', message: 'Kami dengan bangga memperkenalkan produk KPR Korporat dengan suku bunga kompetitif...', status: 'Draft', sent: 0, delivered: 0, opened: 0, scheduled: '-' },
 ])
 
 // ── Analytics data ───────────────────────────────────────────

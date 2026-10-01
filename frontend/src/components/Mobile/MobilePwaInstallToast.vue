@@ -19,7 +19,7 @@
         </div>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold text-ink-gray-9">
-            {{ __('Install BNI CRM') }}
+            {{ __('Install IGLO CRM') }}
           </p>
           <p class="text-xs text-ink-gray-6 mt-0.5">
             {{ __('Install for quick access & offline support') }}

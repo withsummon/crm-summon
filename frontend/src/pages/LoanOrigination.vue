@@ -3,7 +3,7 @@
     <LayoutHeader stretch-left>
       <template #left-header>
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#FF6600] to-[#CC5200]">
+          <div class="flex h-9 w-9 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#980000] to-[#750000]">
             <FeatherIcon name="file-text" class="h-4 w-4 text-white" />
           </div>
           <div class="min-w-0">
@@ -12,7 +12,7 @@
         </div>
       </template>
       <template #right-header>
-        <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] transition-colors">
+        <button @click="startNew" class="flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] transition-colors">
           <FeatherIcon name="plus" class="h-3.5 w-3.5" />
           {{ __('New Loan Application') }}
         </button>
@@ -26,7 +26,7 @@
       </div>
       <div class="p-3 border-b border-gray-100">
         <div class="relative">
-          <input v-model="searchQuery" type="text" :placeholder="__('Search...')" class="w-full pl-8 pr-3 py-1.5 bg-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#FF6600]" />
+          <input v-model="searchQuery" type="text" :placeholder="__('Search...')" class="w-full pl-8 pr-3 py-1.5 bg-gray-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-[#980000]" />
           <FeatherIcon name="search" class="absolute left-2.5 top-2 h-3.5 w-3.5 text-gray-400" />
         </div>
       </div>
@@ -35,7 +35,7 @@
           v-for="app in filteredApps" :key="app.id"
           @click="selectApp(app)"
           class="group p-3 rounded-lg cursor-pointer border transition-all"
-          :class="selected?.id === app.id ? 'bg-[#FFF8F2] border-[#FFD9B3]' : 'border-transparent hover:bg-gray-50'"
+          :class="selected?.id === app.id ? 'bg-[#fff8f8] border-[#f2b7b7]' : 'border-transparent hover:bg-gray-50'"
         >
           <div class="flex items-start justify-between gap-1">
             <span class="text-xs font-semibold text-gray-800 truncate">{{ app.borrower_name }}</span>
@@ -48,7 +48,7 @@
           </div>
           <div class="text-[10px] text-gray-400 mt-0.5 truncate">{{ app.id }} · {{ app.facility_type }}</div>
           <div class="flex gap-0.5 mt-2">
-            <div v-for="s in 8" :key="s" class="h-1 flex-1 rounded-full" :class="(app.step||1) >= s ? 'bg-[#FF6600]' : 'bg-gray-200'" />
+            <div v-for="s in 8" :key="s" class="h-1 flex-1 rounded-full" :class="(app.step||1) >= s ? 'bg-[#980000]' : 'bg-gray-200'" />
           </div>
           <div class="text-[9px] text-gray-400 mt-1">{{ STEPS[Math.min((app.step||1)-1,7)].short }}</div>
         </div>
@@ -59,12 +59,12 @@
     <div v-if="!isMobile || selected" class="flex-1 flex flex-col min-w-0 overflow-hidden h-full">
       <!-- Empty state -->
       <div v-if="!selected" class="flex-1 flex flex-col items-center justify-center p-8">
-        <div class="w-16 h-16 rounded-full bg-[#FFF8F2] flex items-center justify-center mb-4">
-          <FeatherIcon name="file-text" class="h-8 w-8 text-[#FFB380]" />
+        <div class="w-16 h-16 rounded-full bg-[#fff8f8] flex items-center justify-center mb-4">
+          <FeatherIcon name="file-text" class="h-8 w-8 text-[#db8a8a]" />
         </div>
         <h3 class="text-base font-semibold text-gray-700">{{ __('Select an Application') }}</h3>
         <p class="text-sm text-gray-400 mt-1 text-center max-w-xs">{{ __('Or create a new loan application to start the origination process.') }}</p>
-        <button @click="startNew" class="mt-4 flex items-center gap-2 rounded-lg bg-[#FF6600] px-4 py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">
+        <button @click="startNew" class="mt-4 flex items-center gap-2 rounded-lg bg-[#980000] px-4 py-2 text-sm font-semibold text-white hover:bg-[#750000] transition-colors">
           <FeatherIcon name="plus" class="h-4 w-4" />{{ __('New Loan Application') }}
         </button>
       </div>
@@ -73,11 +73,11 @@
         <!-- App Header -->
         <div class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between shrink-0 shadow-sm">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-[#FF6600] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-[#FF6600]/20">{{ initials(selected.borrower_name) }}</div>
+            <div class="w-10 h-10 rounded-xl bg-[#980000] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-md shadow-[#980000]/20">{{ initials(selected.borrower_name) }}</div>
             <div class="min-w-0">
               <div class="flex items-center gap-2">
                 <h1 class="text-base font-bold text-gray-800 truncate">{{ selected.borrower_name }}</h1>
-                <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="selected.borrower_type==='Corporate' ? 'bg-purple-100 text-purple-700' : 'bg-[#FFF0E6] text-[#CC5200]'">{{ selected.borrower_type }}</span>
+                <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="selected.borrower_type==='Corporate' ? 'bg-purple-100 text-purple-700' : 'bg-[#fceaea] text-[#750000]'">{{ selected.borrower_type }}</span>
               </div>
               <div class="text-xs text-gray-400 flex gap-2">
                 <span class="font-mono">{{ selected.id }}</span>
@@ -92,12 +92,12 @@
               <span>{{ __('Queue') }}</span>
             </button>
             <span v-if="autoSaved" class="text-[10px] text-gray-400 flex items-center gap-1">
-              <FeatherIcon name="check" class="h-3 w-3 text-[#FF6600]" />{{ __('Auto-saved') }}
+              <FeatherIcon name="check" class="h-3 w-3 text-[#980000]" />{{ __('Auto-saved') }}
             </span>
             <button @click="prevStep" :disabled="currentStep===1" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
               <FeatherIcon name="chevron-left" class="h-4 w-4" />
             </button>
-            <button @click="nextStep" :disabled="currentStep===8" class="flex items-center gap-1.5 rounded-lg bg-[#FF6600] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#CC5200] disabled:opacity-40 transition-colors">
+            <button @click="nextStep" :disabled="currentStep===8" class="flex items-center gap-1.5 rounded-lg bg-[#980000] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#750000] disabled:opacity-40 transition-colors">
               <FeatherIcon v-if="saving" name="loader" class="h-3.5 w-3.5 animate-spin" />
               <span>{{ currentStep < 3 ? __('Save & Next') : __('Next') }}</span>
               <FeatherIcon v-if="!saving" name="chevron-right" class="h-3.5 w-3.5" />
@@ -114,16 +114,16 @@
             <div v-for="(step, idx) in STEPS" :key="step.id" class="flex items-center">
               <div class="flex flex-col items-center w-20 cursor-pointer" @click="jumpStep(step.id)">
                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all"
-                  :class="currentStep>step.id ? 'bg-[#FF6600] border-[#FF6600] text-white' : currentStep===step.id ? 'bg-white border-[#FF6600] text-[#FF6600]' : 'bg-white border-gray-300 text-gray-400'">
+                  :class="currentStep>step.id ? 'bg-[#980000] border-[#980000] text-white' : currentStep===step.id ? 'bg-white border-[#980000] text-[#980000]' : 'bg-white border-gray-300 text-gray-400'">
                   <FeatherIcon v-if="currentStep>step.id" name="check" class="h-3.5 w-3.5" />
                   <span v-else>{{ step.id }}</span>
                 </div>
                 <div class="text-center mt-1.5">
-                  <div class="text-[10px] font-medium leading-tight" :class="currentStep===step.id ? 'text-[#FF6600] font-bold' : currentStep>step.id ? 'text-gray-500' : 'text-gray-400'">{{ step.short }}</div>
-                  <div v-if="step.id <= 3" class="text-[8px] text-[#FF8533]">backend</div>
+                  <div class="text-[10px] font-medium leading-tight" :class="currentStep===step.id ? 'text-[#980000] font-bold' : currentStep>step.id ? 'text-gray-500' : 'text-gray-400'">{{ step.short }}</div>
+                  <div v-if="step.id <= 3" class="text-[8px] text-[#b92d2d]">backend</div>
                 </div>
               </div>
-              <div v-if="idx<7" class="w-6 h-0.5 mb-4 shrink-0" :class="currentStep>step.id ? 'bg-[#FF6600]' : 'bg-gray-200'" />
+              <div v-if="idx<7" class="w-6 h-0.5 mb-4 shrink-0" :class="currentStep>step.id ? 'bg-[#980000]' : 'bg-gray-200'" />
             </div>
           </div>
         </div>
@@ -147,13 +147,13 @@
                 <div v-for="prod in products" :key="prod.id"
                   @click="form.facility_type = prod.id"
                   class="rounded-xl border-2 p-3 cursor-pointer transition-all"
-                  :class="form.facility_type===prod.id ? 'border-[#FF6600] bg-[#FFF8F2]' : 'border-gray-200 hover:border-[#FFB380]'">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-2" :class="form.facility_type===prod.id ? 'bg-[#FFF0E6]' : 'bg-gray-100'">
-                    <FeatherIcon :name="prod.icon" class="h-4 w-4" :class="form.facility_type===prod.id ? 'text-[#FF6600]' : 'text-gray-500'" />
+                  :class="form.facility_type===prod.id ? 'border-[#980000] bg-[#fff8f8]' : 'border-gray-200 hover:border-[#db8a8a]'">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-2" :class="form.facility_type===prod.id ? 'bg-[#fceaea]' : 'bg-gray-100'">
+                    <FeatherIcon :name="prod.icon" class="h-4 w-4" :class="form.facility_type===prod.id ? 'text-[#980000]' : 'text-gray-500'" />
                   </div>
                   <div class="text-xs font-semibold text-gray-800">{{ prod.name }}</div>
                   <div class="text-[10px] text-gray-400 mt-0.5">{{ prod.tenor }}</div>
-                  <div v-if="form.facility_type===prod.id" class="mt-2 text-[9px] bg-[#FFF0E6] text-[#CC5200] rounded px-1.5 py-0.5 font-semibold w-fit">{{ __('Selected') }}</div>
+                  <div v-if="form.facility_type===prod.id" class="mt-2 text-[9px] bg-[#fceaea] text-[#750000] rounded px-1.5 py-0.5 font-semibold w-fit">{{ __('Selected') }}</div>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@
                   <label class="field-label">{{ __('NPWP') }}</label>
                   <div class="relative">
                     <input v-model="form.npwp" type="text" placeholder="XX.XXX.XXX.X-XXX.XXX" class="field-input font-mono pr-16" />
-                    <button @click="fakeNpwpValidate" class="absolute right-2 top-1.5 text-[10px] bg-[#FF6600] text-white px-2 py-0.5 rounded font-semibold">{{ npwpStatus || __('Validate') }}</button>
+                    <button @click="fakeNpwpValidate" class="absolute right-2 top-1.5 text-[10px] bg-[#980000] text-white px-2 py-0.5 rounded font-semibold">{{ npwpStatus || __('Validate') }}</button>
                   </div>
                 </div>
                 <div>
@@ -218,7 +218,7 @@
                     <div class="text-xs font-semibold text-gray-800">{{ kyc.name }}</div>
                     <div class="text-[10px]" :class="kyc.status==='Verified' ? 'text-green-600' : kyc.status==='Pending' ? 'text-amber-600' : 'text-gray-400'">{{ kyc.status }}</div>
                   </div>
-                  <button @click="fakeOcr(kyc)" v-if="kyc.ocr" class="text-[10px] text-[#FF6600] font-semibold hover:underline shrink-0">OCR</button>
+                  <button @click="fakeOcr(kyc)" v-if="kyc.ocr" class="text-[10px] text-[#980000] font-semibold hover:underline shrink-0">OCR</button>
                 </div>
               </div>
               <!-- PEP/AML result -->
@@ -229,11 +229,11 @@
             </div>
 
             <!-- OCR Result (shown after OCR click) -->
-            <div v-if="ocrResult" class="bg-white rounded-xl border border-[#FFD9B3] shadow-sm p-5">
+            <div v-if="ocrResult" class="bg-white rounded-xl border border-[#f2b7b7] shadow-sm p-5">
               <div class="flex items-center gap-2 mb-3">
-                <FeatherIcon name="cpu" class="h-4 w-4 text-[#FF6600]" />
-                <h4 class="text-xs font-bold text-[#CC5200] uppercase tracking-wide">{{ __('OCR Extraction Result') }}</h4>
-                <span class="ml-auto text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold">Confidence: 94%</span>
+                <FeatherIcon name="cpu" class="h-4 w-4 text-[#980000]" />
+                <h4 class="text-xs font-bold text-[#750000] uppercase tracking-wide">{{ __('OCR Extraction Result') }}</h4>
+                <span class="ml-auto text-[10px] bg-[#fceaea] text-[#750000] px-2 py-0.5 rounded-full font-semibold">Confidence: 94%</span>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div v-for="field in ocrResult" :key="field.key" class="rounded-lg bg-gray-50 border border-gray-200 p-2.5">
@@ -244,7 +244,7 @@
                   </div>
                 </div>
               </div>
-              <button @click="applyOcr" class="mt-3 w-full rounded-lg bg-[#FF6600] text-white text-xs font-semibold py-2 hover:bg-[#CC5200] transition-colors">{{ __('Apply to Form') }}</button>
+              <button @click="applyOcr" class="mt-3 w-full rounded-lg bg-[#980000] text-white text-xs font-semibold py-2 hover:bg-[#750000] transition-colors">{{ __('Apply to Form') }}</button>
             </div>
           </div>
 
@@ -253,9 +253,9 @@
             <StepHeader icon="paperclip" title="Document Collection" sub="Upload, checklist, expiry tracking & version control" badge="Connects to Backend" />
 
             <!-- Upload zone -->
-            <div class="bg-white rounded-xl border-2 border-dashed border-gray-300 hover:border-[#FF8533] transition-colors p-8 text-center cursor-pointer" @click="fakeUpload" @dragover.prevent @drop.prevent="fakeUpload">
-              <div class="w-12 h-12 rounded-full bg-[#FFF8F2] flex items-center justify-center mx-auto mb-3">
-                <FeatherIcon name="upload-cloud" class="h-6 w-6 text-[#FF8533]" />
+            <div class="bg-white rounded-xl border-2 border-dashed border-gray-300 hover:border-[#b92d2d] transition-colors p-8 text-center cursor-pointer" @click="fakeUpload" @dragover.prevent @drop.prevent="fakeUpload">
+              <div class="w-12 h-12 rounded-full bg-[#fff8f8] flex items-center justify-center mx-auto mb-3">
+                <FeatherIcon name="upload-cloud" class="h-6 w-6 text-[#b92d2d]" />
               </div>
               <p class="text-sm font-semibold text-gray-700">{{ __('Drag & drop files here, or click to upload') }}</p>
               <p class="text-xs text-gray-400 mt-1">{{ __('PDF, JPG, PNG, XLSX, DOCX — max 25 MB per file') }}</p>
@@ -265,7 +265,7 @@
                   <span>{{ uploadProgress }}%</span>
                 </div>
                 <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-[#FF6600] rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }" />
+                  <div class="h-full bg-[#980000] rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }" />
                 </div>
               </div>
             </div>
@@ -297,7 +297,7 @@
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     <span v-if="doc.version" class="text-[9px] text-gray-400">v{{ doc.version }}</span>
-                    <select v-model="doc.status" class="text-xs rounded border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#FF6600]"
+                    <select v-model="doc.status" class="text-xs rounded border px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#980000]"
                       :class="doc.status==='Received' ? 'border-green-200 text-green-700 bg-green-50' : doc.status==='Missing' ? 'border-red-200 text-red-600 bg-red-50' : 'border-gray-200 text-gray-600'">
                       <option>Pending</option><option>Received</option><option>Missing</option><option>Waived</option>
                     </select>
@@ -310,7 +310,7 @@
                 <span class="text-xs" :class="docsMissing > 0 ? 'text-amber-700' : 'text-green-700'">
                   {{ docsMissing > 0 ? `${docsMissing} mandatory document(s) missing — submission blocked` : 'All required documents received — ready to proceed' }}
                 </span>
-                <span class="ml-auto text-xs font-bold text-[#FF6600]">{{ Math.round(docsReceived / documents.length * 100) }}% complete</span>
+                <span class="ml-auto text-xs font-bold text-[#980000]">{{ Math.round(docsReceived / documents.length * 100) }}% complete</span>
               </div>
             </div>
 
@@ -342,7 +342,7 @@
               <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Uploaded Files') }}</h4>
               <div class="space-y-2">
                 <div v-for="file in uploadedFiles" :key="file.name" class="flex items-center gap-3 p-2.5 rounded-lg bg-gray-50 border border-gray-200">
-                  <FeatherIcon name="file" class="h-4 w-4 text-[#FF6600] shrink-0" />
+                  <FeatherIcon name="file" class="h-4 w-4 text-[#980000] shrink-0" />
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold text-gray-800 truncate">{{ file.name }}</div>
                     <div class="text-[10px] text-gray-400">{{ file.size }} · {{ file.uploaded }}</div>
@@ -360,7 +360,7 @@
             <!-- Key Ratios -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div v-for="r in ratios" :key="r.label" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
-                <div class="text-xl font-black" :class="r.ok ? 'text-[#FF6600]' : 'text-red-500'">{{ r.value }}</div>
+                <div class="text-xl font-black" :class="r.ok ? 'text-[#980000]' : 'text-red-500'">{{ r.value }}</div>
                 <div class="text-[10px] text-gray-500 mt-1">{{ r.label }}</div>
                 <div class="text-[9px] mt-1 font-semibold" :class="r.ok ? 'text-green-600' : 'text-red-500'">{{ r.ok ? '✓ Pass' : '✗ Breach' }}</div>
               </div>
@@ -371,7 +371,7 @@
               <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Financial Spreading') }}</h4>
                 <div class="flex gap-2">
-                  <button class="text-xs text-[#FF6600] font-semibold hover:underline">{{ __('AI Extract from PDF') }}</button>
+                  <button class="text-xs text-[#980000] font-semibold hover:underline">{{ __('AI Extract from PDF') }}</button>
                   <button class="text-xs text-gray-500 hover:text-gray-700">{{ __('Export Excel') }}</button>
                 </div>
               </div>
@@ -384,9 +384,9 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100">
-                    <tr v-for="row in spreadingRows" :key="row.label" :class="row.bold ? 'bg-[#FFF8F2] font-semibold' : 'hover:bg-gray-50'">
+                    <tr v-for="row in spreadingRows" :key="row.label" :class="row.bold ? 'bg-[#fff8f8] font-semibold' : 'hover:bg-gray-50'">
                       <td class="px-4 py-2 text-gray-700" :class="row.indent ? 'pl-7 text-gray-500' : ''">{{ row.label }}</td>
-                      <td v-for="val in row.values" :key="val" class="px-4 py-2 text-right font-mono text-gray-800" :class="row.bold ? 'text-[#CC5200]' : ''">{{ val }}</td>
+                      <td v-for="val in row.values" :key="val" class="px-4 py-2 text-right font-mono text-gray-800" :class="row.bold ? 'text-[#750000]' : ''">{{ val }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -401,10 +401,10 @@
                   <div v-for="c in fiveC" :key="c.label">
                     <div class="flex justify-between text-xs mb-1">
                       <span class="text-gray-700">{{ c.label }}</span>
-                      <span class="font-bold" :class="c.score>=70 ? 'text-[#FF6600]' : c.score>=50 ? 'text-amber-600' : 'text-red-500'">{{ c.score }}/100</span>
+                      <span class="font-bold" :class="c.score>=70 ? 'text-[#980000]' : c.score>=50 ? 'text-amber-600' : 'text-red-500'">{{ c.score }}/100</span>
                     </div>
                     <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div class="h-full rounded-full" :class="c.score>=70 ? 'bg-[#FF6600]' : c.score>=50 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.score+'%'}" />
+                      <div class="h-full rounded-full" :class="c.score>=70 ? 'bg-[#980000]' : c.score>=50 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.score+'%'}" />
                     </div>
                   </div>
                 </div>
@@ -413,26 +413,26 @@
               <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-4">{{ __('Risk Scoring') }}</h4>
                 <div class="text-center mb-4">
-                  <div class="text-5xl font-black text-[#FF6600]">742</div>
+                  <div class="text-5xl font-black text-[#980000]">742</div>
                   <div class="text-sm font-bold text-gray-600 mt-1">{{ __('Grade') }}: B+</div>
                   <div class="text-xs text-gray-400">0 — 1000 scale</div>
                 </div>
                 <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
                   <div class="rounded-lg bg-red-50 p-2"><div class="font-bold text-red-600">0–499</div><div class="text-gray-500">High Risk</div></div>
                   <div class="rounded-lg bg-amber-50 p-2"><div class="font-bold text-amber-600">500–699</div><div class="text-gray-500">Medium</div></div>
-                  <div class="rounded-lg bg-[#FFF8F2] border border-[#FFD9B3] p-2"><div class="font-bold text-[#FF6600]">700–1000</div><div class="text-gray-500">Low Risk ✓</div></div>
+                  <div class="rounded-lg bg-[#fff8f8] border border-[#f2b7b7] p-2"><div class="font-bold text-[#980000]">700–1000</div><div class="text-gray-500">Low Risk ✓</div></div>
                 </div>
               </div>
             </div>
 
             <!-- AI Recommendation -->
-            <div class="bg-white rounded-xl border border-[#FFD9B3] shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-[#f2b7b7] shadow-sm p-5">
               <div class="flex items-center gap-2 mb-3">
-                <div class="w-7 h-7 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
-                  <FeatherIcon name="cpu" class="h-4 w-4 text-[#FF6600]" />
+                <div class="w-7 h-7 rounded-lg bg-[#fceaea] flex items-center justify-center">
+                  <FeatherIcon name="cpu" class="h-4 w-4 text-[#980000]" />
                 </div>
-                <h4 class="text-xs font-bold text-[#CC5200] uppercase tracking-wide">{{ __('AI Recommendation') }}</h4>
-                <span class="ml-auto text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold">Confidence: 87%</span>
+                <h4 class="text-xs font-bold text-[#750000] uppercase tracking-wide">{{ __('AI Recommendation') }}</h4>
+                <span class="ml-auto text-[10px] bg-[#fceaea] text-[#750000] px-2 py-0.5 rounded-full font-semibold">Confidence: 87%</span>
               </div>
               <div class="flex gap-3 mb-3">
                 <div v-for="rec in ['Approve','Refer','Reject']" :key="rec"
@@ -458,8 +458,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div v-for="c in collaterals" :key="c.id" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                 <div class="flex items-start justify-between mb-3">
-                  <div class="w-8 h-8 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
-                    <FeatherIcon :name="c.icon" class="h-4 w-4 text-[#FF6600]" />
+                  <div class="w-8 h-8 rounded-lg bg-[#fceaea] flex items-center justify-center">
+                    <FeatherIcon :name="c.icon" class="h-4 w-4 text-[#980000]" />
                   </div>
                   <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="c.status==='Appraised' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">{{ c.status }}</span>
                 </div>
@@ -467,11 +467,11 @@
                 <div class="text-[10px] text-gray-500 mt-0.5">{{ c.id }}</div>
                 <div class="mt-3 space-y-1.5 text-xs">
                   <div class="flex justify-between"><span class="text-gray-500">Market Value</span><span class="font-bold text-gray-800">{{ fmt(c.value) }}</span></div>
-                  <div class="flex justify-between"><span class="text-gray-500">LTV</span><span class="font-bold" :class="c.ltv <= 80 ? 'text-[#FF6600]' : 'text-red-500'">{{ c.ltv }}%</span></div>
+                  <div class="flex justify-between"><span class="text-gray-500">LTV</span><span class="font-bold" :class="c.ltv <= 80 ? 'text-[#980000]' : 'text-red-500'">{{ c.ltv }}%</span></div>
                   <div class="flex justify-between"><span class="text-gray-500">Insured Until</span><span class="font-semibold text-gray-700">{{ c.insured }}</span></div>
                 </div>
                 <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" :class="c.ltv<=70 ? 'bg-[#FF6600]' : c.ltv<=80 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.ltv+'%'}" />
+                  <div class="h-full rounded-full" :class="c.ltv<=70 ? 'bg-[#980000]' : c.ltv<=80 ? 'bg-amber-400' : 'bg-red-400'" :style="{width: c.ltv+'%'}" />
                 </div>
               </div>
             </div>
@@ -495,7 +495,7 @@
                     <tr v-for="a in appraisals" :key="a.col" class="hover:bg-gray-50">
                       <td class="px-3 py-2 font-semibold text-gray-800">{{ a.col }}</td>
                       <td class="px-3 py-2 text-gray-600">{{ a.appraiser }}</td>
-                      <td class="px-3 py-2 text-right font-mono font-bold text-[#CC5200]">{{ fmt(a.value) }}</td>
+                      <td class="px-3 py-2 text-right font-mono font-bold text-[#750000]">{{ fmt(a.value) }}</td>
                       <td class="px-3 py-2 text-center text-gray-500">{{ a.date }}</td>
                       <td class="px-3 py-2 text-center text-gray-500">{{ a.next }}</td>
                       <td class="px-3 py-2 text-center"><span class="rounded-full px-2 py-0.5 text-[9px] font-semibold" :class="a.status==='Completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">{{ a.status }}</span></td>
@@ -517,11 +517,11 @@
                 <div v-for="(lvl, idx) in approvalLevels" :key="lvl.id" class="flex items-start gap-4">
                   <div class="flex flex-col items-center">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 text-xs font-bold shrink-0"
-                      :class="lvl.state==='Approved' ? 'bg-[#FF6600] border-[#FF6600] text-white' : lvl.state==='Pending' ? 'bg-white border-[#FF6600] text-[#FF6600]' : 'bg-white border-gray-300 text-gray-400'">
+                      :class="lvl.state==='Approved' ? 'bg-[#980000] border-[#980000] text-white' : lvl.state==='Pending' ? 'bg-white border-[#980000] text-[#980000]' : 'bg-white border-gray-300 text-gray-400'">
                       <FeatherIcon v-if="lvl.state==='Approved'" name="check" class="h-4 w-4" />
                       <span v-else>{{ lvl.id }}</span>
                     </div>
-                    <div v-if="idx<approvalLevels.length-1" class="w-0.5 h-10 mt-1" :class="lvl.state==='Approved' ? 'bg-[#FF8533]' : 'bg-gray-200'" />
+                    <div v-if="idx<approvalLevels.length-1" class="w-0.5 h-10 mt-1" :class="lvl.state==='Approved' ? 'bg-[#b92d2d]' : 'bg-gray-200'" />
                   </div>
                   <div class="flex-1 pb-4">
                     <div class="flex items-center justify-between gap-2">
@@ -550,7 +550,7 @@
                 <span class="ml-auto text-[10px] text-gray-400">{{ restructures.length }} records</span>
               </div>
               <div class="space-y-3">
-                <div v-for="r in restructures" :key="r.id" class="rounded-lg border p-3" :class="r.type==='Top-Up' ? 'border-green-200 bg-green-50' : r.type==='Restructure' ? 'border-amber-200 bg-amber-50' : 'border-[#E6F4FA] bg-[#F0F8FC]'">
+                <div v-for="r in restructures" :key="r.id" class="rounded-lg border p-3" :class="r.type==='Top-Up' ? 'border-green-200 bg-green-50' : r.type==='Restructure' ? 'border-amber-200 bg-amber-50' : 'border-[#fceaea] bg-[#fff5f5]'">
                   <div class="flex items-start justify-between gap-3 mb-2">
                     <div>
                       <div class="flex items-center gap-2">
@@ -573,7 +573,7 @@
                   </div>
                 </div>
               </div>
-              <button @click="showToast('Restructuring request submitted')" class="mt-3 flex items-center gap-1.5 rounded-lg border border-[#006699] text-[#006699] px-3 py-1.5 text-xs font-semibold hover:bg-[#E6F4FA] transition-colors">
+              <button @click="showToast('Restructuring request submitted')" class="mt-3 flex items-center gap-1.5 rounded-lg border border-[#980000] text-[#980000] px-3 py-1.5 text-xs font-semibold hover:bg-[#fceaea] transition-colors">
                 <FeatherIcon name="plus" class="h-3 w-3" />{{ __('New Restructuring / Top-Up Request') }}
               </button>
             </div>
@@ -581,7 +581,7 @@
                         <span class="text-[10px] text-amber-600 font-semibold">SLA: 14h remaining</span>
                       </div>
                       <div class="flex items-center gap-2">
-                        <button @click="openDelegate(lvl)" class="flex items-center gap-1.5 text-[10px] border border-[#006699] text-[#006699] rounded-lg px-2.5 py-1 hover:bg-[#E6F4FA] transition-colors font-semibold">
+                        <button @click="openDelegate(lvl)" class="flex items-center gap-1.5 text-[10px] border border-[#980000] text-[#980000] rounded-lg px-2.5 py-1 hover:bg-[#fceaea] transition-colors font-semibold">
                           <FeatherIcon name="user-check" class="h-3 w-3" />Delegate
                         </button>
                         <span v-if="lvl.delegatedTo" class="text-[10px] text-gray-400">→ delegated to <span class="font-semibold text-gray-600">{{ lvl.delegatedTo }}</span></span>
@@ -601,7 +601,7 @@
                 </div>
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <div class="relative" @click="autoEscalation = !autoEscalation">
-                    <div class="w-9 h-5 rounded-full transition-colors" :class="autoEscalation ? 'bg-[#FF6600]' : 'bg-gray-300'" />
+                    <div class="w-9 h-5 rounded-full transition-colors" :class="autoEscalation ? 'bg-[#980000]' : 'bg-gray-300'" />
                     <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" :class="autoEscalation ? 'left-4.5' : 'left-0.5'" />
                   </div>
                   <span class="text-xs text-gray-600">{{ autoEscalation ? 'Enabled' : 'Disabled' }}</span>
@@ -635,19 +635,19 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Committee Voting') }}</h4>
               <div class="grid grid-cols-2 gap-3 mb-4">
-                <div v-for="m in committeeMembers" :key="m.name" class="flex items-center gap-2 p-3 rounded-lg border" :class="m.vote ? 'bg-[#FFF8F2] border-[#FFD9B3]' : 'bg-gray-50 border-gray-200'">
-                  <div class="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-black shrink-0" :class="m.vote==='Approve' ? 'bg-[#FF6600]' : m.vote==='Reject' ? 'bg-red-500' : 'bg-gray-400'">{{ m.name[0] }}</div>
+                <div v-for="m in committeeMembers" :key="m.name" class="flex items-center gap-2 p-3 rounded-lg border" :class="m.vote ? 'bg-[#fff8f8] border-[#f2b7b7]' : 'bg-gray-50 border-gray-200'">
+                  <div class="w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-black shrink-0" :class="m.vote==='Approve' ? 'bg-[#980000]' : m.vote==='Reject' ? 'bg-red-500' : 'bg-gray-400'">{{ m.name[0] }}</div>
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold text-gray-800">{{ m.name }}</div>
                     <div class="text-[10px] text-gray-500">{{ m.role }}</div>
                   </div>
-                  <span class="text-[10px] font-bold shrink-0" :class="m.vote==='Approve' ? 'text-[#FF6600]' : m.vote==='Reject' ? 'text-red-500' : 'text-gray-400'">{{ m.vote || 'Pending' }}</span>
+                  <span class="text-[10px] font-bold shrink-0" :class="m.vote==='Approve' ? 'text-[#980000]' : m.vote==='Reject' ? 'text-red-500' : 'text-gray-400'">{{ m.vote || 'Pending' }}</span>
                 </div>
               </div>
               <!-- Quorum -->
-              <div class="rounded-lg bg-[#FFF8F2] border border-[#FFD9B3] px-4 py-3 flex items-center gap-3">
-                <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF6600] shrink-0" />
-                <div class="text-xs text-[#CC5200]">
+              <div class="rounded-lg bg-[#fff8f8] border border-[#f2b7b7] px-4 py-3 flex items-center gap-3">
+                <FeatherIcon name="check-circle" class="h-4 w-4 text-[#980000] shrink-0" />
+                <div class="text-xs text-[#750000]">
                   <span class="font-bold">Quorum met</span> — 3/4 voted · Majority: <span class="font-bold">Approved (3-0-1)</span>
                 </div>
               </div>
@@ -662,17 +662,17 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('Agreements') }}</h4>
-                <button class="text-xs bg-[#FF6600] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#CC5200] transition-colors">{{ __('Generate from Template') }}</button>
+                <button class="text-xs bg-[#980000] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#750000] transition-colors">{{ __('Generate from Template') }}</button>
               </div>
               <div class="divide-y divide-gray-100">
                 <div v-for="ag in agreements" :key="ag.id" class="flex items-center gap-3 px-5 py-3">
-                  <FeatherIcon name="file-text" class="h-4 w-4 text-[#FF6600] shrink-0" />
+                  <FeatherIcon name="file-text" class="h-4 w-4 text-[#980000] shrink-0" />
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold text-gray-800">{{ ag.name }}</div>
                     <div class="text-[10px] text-gray-400">{{ ag.version }} · {{ ag.date }}</div>
                   </div>
                   <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="ag.status==='Signed' ? 'bg-green-100 text-green-700' : ag.status==='Pending Signature' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'">{{ ag.status }}</span>
-                  <button class="text-[10px] text-[#FF6600] hover:underline font-semibold ml-2">{{ ag.status==='Draft' ? 'Review' : 'View' }}</button>
+                  <button class="text-[10px] text-[#980000] hover:underline font-semibold ml-2">{{ ag.status==='Draft' ? 'Review' : 'View' }}</button>
                 </div>
               </div>
             </div>
@@ -681,11 +681,11 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Digital Signing (e-Sign)') }}</h4>
               <div class="grid grid-cols-3 gap-3 mb-3">
-                <div v-for="sg in signers" :key="sg.name" class="rounded-xl border p-3 text-center" :class="sg.signed ? 'border-[#FFD9B3] bg-[#FFF8F2]' : 'border-gray-200'">
-                  <div class="w-8 h-8 rounded-full bg-[#FF6600] text-white flex items-center justify-center text-xs font-black mx-auto mb-2">{{ sg.name[0] }}</div>
+                <div v-for="sg in signers" :key="sg.name" class="rounded-xl border p-3 text-center" :class="sg.signed ? 'border-[#f2b7b7] bg-[#fff8f8]' : 'border-gray-200'">
+                  <div class="w-8 h-8 rounded-full bg-[#980000] text-white flex items-center justify-center text-xs font-black mx-auto mb-2">{{ sg.name[0] }}</div>
                   <div class="text-xs font-semibold text-gray-800">{{ sg.name }}</div>
                   <div class="text-[10px] text-gray-400">{{ sg.role }}</div>
-                  <div class="mt-2 text-[10px] font-bold" :class="sg.signed ? 'text-[#FF6600]' : 'text-gray-400'">{{ sg.signed ? '✓ Signed' : 'Awaiting' }}</div>
+                  <div class="mt-2 text-[10px] font-bold" :class="sg.signed ? 'text-[#980000]' : 'text-gray-400'">{{ sg.signed ? '✓ Signed' : 'Awaiting' }}</div>
                   <div v-if="sg.signed" class="text-[9px] text-gray-400">{{ sg.signed_at }}</div>
                 </div>
               </div>
@@ -699,7 +699,7 @@
               <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Covenant Setup') }}</h4>
               <div class="space-y-2">
                 <div v-for="cov in covenants" :key="cov.id" class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
-                  <div class="w-2 h-2 rounded-full shrink-0" :class="cov.type==='Financial' ? 'bg-[#FF6600]' : 'bg-purple-400'" />
+                  <div class="w-2 h-2 rounded-full shrink-0" :class="cov.type==='Financial' ? 'bg-[#980000]' : 'bg-purple-400'" />
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold text-gray-800">{{ cov.name }}</div>
                     <div class="text-[10px] text-gray-400">{{ cov.type }} · Tested {{ cov.frequency }}</div>
@@ -723,17 +723,17 @@
               </div>
               <div class="divide-y divide-gray-100">
                 <div v-for="cp in cpItems" :key="cp.id" class="flex items-center gap-3 px-5 py-3">
-                  <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="cp.cleared ? 'bg-[#FF6600]' : 'bg-gray-200'">
+                  <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="cp.cleared ? 'bg-[#980000]' : 'bg-gray-200'">
                     <FeatherIcon :name="cp.cleared ? 'check' : 'minus'" class="h-3 w-3 text-white" />
                   </div>
                   <div class="flex-1 text-xs font-medium text-gray-800">{{ cp.name }}</div>
-                  <span class="text-[10px] font-semibold" :class="cp.cleared ? 'text-[#FF6600]' : 'text-gray-400'">{{ cp.cleared ? 'Cleared' : 'Open' }}</span>
+                  <span class="text-[10px] font-semibold" :class="cp.cleared ? 'text-[#980000]' : 'text-gray-400'">{{ cp.cleared ? 'Cleared' : 'Open' }}</span>
                 </div>
               </div>
               <div class="px-5 py-3 bg-gray-50 border-t border-gray-200">
                 <div class="flex items-center gap-2">
-                  <FeatherIcon :name="cpItems.every(c=>c.cleared) ? 'check-circle' : 'alert-triangle'" class="h-4 w-4 shrink-0" :class="cpItems.every(c=>c.cleared) ? 'text-[#FF6600]' : 'text-amber-500'" />
-                  <span class="text-xs font-semibold" :class="cpItems.every(c=>c.cleared) ? 'text-[#CC5200]' : 'text-amber-700'">
+                  <FeatherIcon :name="cpItems.every(c=>c.cleared) ? 'check-circle' : 'alert-triangle'" class="h-4 w-4 shrink-0" :class="cpItems.every(c=>c.cleared) ? 'text-[#980000]' : 'text-amber-500'" />
+                  <span class="text-xs font-semibold" :class="cpItems.every(c=>c.cleared) ? 'text-[#750000]' : 'text-amber-700'">
                     {{ cpItems.filter(c=>c.cleared).length }}/{{ cpItems.length }} {{ __('conditions cleared') }}
                     {{ cpItems.every(c=>c.cleared) ? '— Disbursement authorized' : '— Block active' }}
                   </span>
@@ -745,13 +745,13 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
               <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">{{ __('Disbursement Tranches') }}</h4>
               <div class="space-y-2">
-                <div v-for="t in tranches" :key="t.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="t.status==='Disbursed' ? 'bg-[#FFF8F2] border-[#FFD9B3]' : t.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'border-gray-200'">
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0" :class="t.status==='Disbursed' ? 'bg-[#FFF0E6] text-[#CC5200]' : 'bg-gray-100 text-gray-500'">{{ t.id }}</div>
+                <div v-for="t in tranches" :key="t.id" class="flex items-center gap-3 p-3 rounded-lg border" :class="t.status==='Disbursed' ? 'bg-[#fff8f8] border-[#f2b7b7]' : t.status==='Pending' ? 'bg-amber-50 border-amber-200' : 'border-gray-200'">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0" :class="t.status==='Disbursed' ? 'bg-[#fceaea] text-[#750000]' : 'bg-gray-100 text-gray-500'">{{ t.id }}</div>
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold text-gray-800">Tranche {{ t.id }} — {{ fmt(t.amount) }}</div>
                     <div class="text-[10px] text-gray-400">{{ t.date }} · {{ t.condition }}</div>
                   </div>
-                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0" :class="t.status==='Disbursed' ? 'bg-[#FFF0E6] text-[#CC5200]' : 'bg-amber-100 text-amber-700'">{{ t.status }}</span>
+                  <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold shrink-0" :class="t.status==='Disbursed' ? 'bg-[#fceaea] text-[#750000]' : 'bg-amber-100 text-amber-700'">{{ t.status }}</span>
                 </div>
               </div>
             </div>
@@ -821,7 +821,7 @@
                       <td class="px-4 py-2.5 text-gray-500">{{ p.n }}</td>
                       <td class="px-4 py-2.5 text-gray-700">{{ p.due }}</td>
                       <td class="px-4 py-2.5 text-right font-mono text-gray-700">{{ fmt(p.scheduled) }}</td>
-                      <td class="px-4 py-2.5 text-right font-mono" :class="p.paid ? 'text-[#CC5200] font-semibold' : 'text-gray-400'">{{ p.paid ? fmt(p.paid) : '—' }}</td>
+                      <td class="px-4 py-2.5 text-right font-mono" :class="p.paid ? 'text-[#750000] font-semibold' : 'text-gray-400'">{{ p.paid ? fmt(p.paid) : '—' }}</td>
                       <td class="px-4 py-2.5 text-right font-mono text-gray-600">{{ fmt(p.outstanding) }}</td>
                       <td class="px-4 py-2.5 text-center">
                         <span class="rounded-full px-2 py-0.5 text-[9px] font-bold" :class="p.status==='Paid' ? 'bg-green-100 text-green-700' : p.status==='Overdue' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'">{{ p.status }}</span>
@@ -843,12 +843,12 @@
                       <span class="ml-2 text-[10px] text-gray-400">Threshold: {{ cov.threshold }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-black" :class="cov.ok ? 'text-[#FF6600]' : 'text-red-500'">{{ cov.actual }}</span>
+                      <span class="text-xs font-black" :class="cov.ok ? 'text-[#980000]' : 'text-red-500'">{{ cov.actual }}</span>
                       <span class="text-[10px] rounded-full px-2 py-0.5 font-semibold" :class="cov.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">{{ cov.ok ? 'Pass' : 'Breach' }}</span>
                     </div>
                   </div>
                   <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div class="h-full rounded-full transition-all" :class="cov.ok ? 'bg-[#FF6600]' : 'bg-red-400'" :style="{width: Math.min(cov.pct, 100)+'%'}" />
+                    <div class="h-full rounded-full transition-all" :class="cov.ok ? 'bg-[#980000]' : 'bg-red-400'" :style="{width: Math.min(cov.pct, 100)+'%'}" />
                   </div>
                 </div>
               </div>
@@ -882,8 +882,8 @@
           </div>
         </div>
         <div class="mt-5 flex gap-2">
-          <button @click="showModal=false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">{{ __('Cancel') }}</button>
-          <button @click="createApp" :disabled="!newApp.borrower_name" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-50 transition-colors">{{ __('Create') }}</button>
+          <button @click="showModal=false" class="flex-1 rounded-lg border border-[#980000] py-2 text-sm font-semibold text-[#980000] hover:bg-[#fceaea]">{{ __('Cancel') }}</button>
+          <button @click="createApp" :disabled="!newApp.borrower_name" class="flex-1 rounded-lg bg-[#980000] py-2 text-sm font-semibold text-white hover:bg-[#750000] disabled:opacity-50 transition-colors">{{ __('Create') }}</button>
         </div>
       </div>
     </div>
@@ -906,7 +906,7 @@
         <p class="text-[10px] text-gray-400 mt-0.5">{{ deleteTarget?.id }} · {{ deleteTarget?.facility_type || 'No facility selected' }}</p>
       </div>
       <div class="flex gap-2">
-        <button @click="deleteTarget = null" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">{{ __('Cancel') }}</button>
+        <button @click="deleteTarget = null" class="flex-1 rounded-lg border border-[#980000] py-2 text-sm font-semibold text-[#980000] hover:bg-[#fceaea]">{{ __('Cancel') }}</button>
         <button @click="deleteApp" class="flex-1 rounded-lg bg-red-500 py-2 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{{ __('Delete') }}</button>
       </div>
     </div>
@@ -915,7 +915,7 @@
   <!-- Toast -->
   <transition name="fade">
     <div v-if="toast" class="fixed bottom-5 right-5 z-50 bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2">
-      <FeatherIcon name="check-circle" class="h-4 w-4 text-[#FF8533]" />{{ toast }}
+      <FeatherIcon name="check-circle" class="h-4 w-4 text-[#b92d2d]" />{{ toast }}
     </div>
   </transition>
 
@@ -923,8 +923,8 @@
   <div v-if="showDelegateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showDelegateModal = false">
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
       <div class="flex items-center gap-3 mb-5">
-        <div class="w-10 h-10 rounded-xl bg-[#E6F4FA] flex items-center justify-center shrink-0">
-          <FeatherIcon name="user-check" class="h-5 w-5 text-[#006699]" />
+        <div class="w-10 h-10 rounded-xl bg-[#fceaea] flex items-center justify-center shrink-0">
+          <FeatherIcon name="user-check" class="h-5 w-5 text-[#980000]" />
         </div>
         <div>
           <h3 class="text-base font-bold text-gray-800">Delegate Approver</h3>
@@ -934,19 +934,19 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Delegate To <span class="text-red-400">*</span></label>
-          <select v-model="delegatee" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]">
+          <select v-model="delegatee" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#b92d2d]">
             <option value="">Select officer…</option>
             <option v-for="o in delegateOptions" :key="o">{{ o }}</option>
           </select>
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Reason</label>
-          <input v-model="delegateReason" type="text" placeholder="e.g. Out of office until 30 May" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF8533]" />
+          <input v-model="delegateReason" type="text" placeholder="e.g. Out of office until 30 May" class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#b92d2d]" />
         </div>
       </div>
       <div class="flex gap-2 mt-5">
-        <button @click="showDelegateModal = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">Cancel</button>
-        <button @click="submitDelegate" :disabled="!delegatee" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] disabled:opacity-40 transition-colors">Delegate</button>
+        <button @click="showDelegateModal = false" class="flex-1 rounded-lg border border-[#980000] py-2 text-sm font-semibold text-[#980000] hover:bg-[#fceaea]">Cancel</button>
+        <button @click="submitDelegate" :disabled="!delegatee" class="flex-1 rounded-lg bg-[#980000] py-2 text-sm font-semibold text-white hover:bg-[#750000] disabled:opacity-40 transition-colors">Delegate</button>
       </div>
     </div>
   </div>
@@ -967,7 +967,7 @@
         <div v-for="(field, i) in formBuilderFields" :key="field.key" class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
           <div class="flex items-center gap-2 flex-1 min-w-0">
             <label class="flex items-center gap-2 cursor-pointer shrink-0">
-              <input type="checkbox" v-model="field.enabled" class="rounded text-[#FF6600]" />
+              <input type="checkbox" v-model="field.enabled" class="rounded text-[#980000]" />
             </label>
             <FeatherIcon :name="field.icon" class="h-4 w-4 text-gray-400 shrink-0" />
             <div class="min-w-0">
@@ -984,8 +984,8 @@
       </div>
       <div class="text-xs text-gray-400 mt-3">{{ formBuilderFields.filter(f => f.enabled).length }} of {{ formBuilderFields.length }} fields active</div>
       <div class="flex gap-2 mt-5">
-        <button @click="showFormBuilder = false" class="flex-1 rounded-lg border border-[#006699] py-2 text-sm font-semibold text-[#006699] hover:bg-[#E6F4FA]">{{ __('Cancel') }}</button>
-        <button @click="applyFormBuilder" class="flex-1 rounded-lg bg-[#FF6600] py-2 text-sm font-semibold text-white hover:bg-[#CC5200] transition-colors">{{ __('Apply Changes') }}</button>
+        <button @click="showFormBuilder = false" class="flex-1 rounded-lg border border-[#980000] py-2 text-sm font-semibold text-[#980000] hover:bg-[#fceaea]">{{ __('Cancel') }}</button>
+        <button @click="applyFormBuilder" class="flex-1 rounded-lg bg-[#980000] py-2 text-sm font-semibold text-white hover:bg-[#750000] transition-colors">{{ __('Apply Changes') }}</button>
       </div>
     </div>
   </div>
@@ -1001,13 +1001,13 @@ const StepHeader = defineComponent({
   props: { icon: String, title: String, sub: String, badge: String },
   setup(props) {
     return () => h('div', { class: 'flex items-center gap-3' }, [
-      h('div', { class: 'w-9 h-9 rounded-xl bg-[#FFF0E6] flex items-center justify-center shrink-0' },
-        [h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-[#FF6600]' })]),
+      h('div', { class: 'w-9 h-9 rounded-xl bg-[#fceaea] flex items-center justify-center shrink-0' },
+        [h(FeatherIcon, { name: props.icon, class: 'h-5 w-5 text-[#980000]' })]),
       h('div', { class: 'flex-1' }, [
         h('h3', { class: 'text-base font-bold text-gray-800' }, props.title),
         h('p', { class: 'text-xs text-gray-500' }, props.sub),
       ]),
-      props.badge ? h('span', { class: 'text-[10px] bg-[#FFF0E6] text-[#CC5200] px-2 py-0.5 rounded-full font-semibold' }, props.badge) : null,
+      props.badge ? h('span', { class: 'text-[10px] bg-[#fceaea] text-[#750000] px-2 py-0.5 rounded-full font-semibold' }, props.badge) : null,
     ])
   },
 })
@@ -1202,10 +1202,10 @@ const tranches = [
 ]
 
 const healthKpis = [
-  { label: 'Outstanding Balance', value: 'Rp 11.2B', color: 'text-gray-800', barColor: 'bg-[#FF6600]', pct: 89 },
-  { label: 'Paid to Date', value: 'Rp 1.3B', color: 'text-[#FF6600]', barColor: 'bg-green-500', pct: 11 },
+  { label: 'Outstanding Balance', value: 'Rp 11.2B', color: 'text-gray-800', barColor: 'bg-[#980000]', pct: 89 },
+  { label: 'Paid to Date', value: 'Rp 1.3B', color: 'text-[#980000]', barColor: 'bg-green-500', pct: 11 },
   { label: 'Days Past Due', value: '0 days', color: 'text-green-600', barColor: 'bg-green-500', pct: 0 },
-  { label: 'Installment Cover', value: '1.42x', color: 'text-[#FF6600]', barColor: 'bg-[#FF6600]', pct: 71 },
+  { label: 'Installment Cover', value: '1.42x', color: 'text-[#980000]', barColor: 'bg-[#980000]', pct: 71 },
 ]
 
 const paymentRows = [
@@ -1239,7 +1239,7 @@ function initials(name) { return (name||'?').split(' ').slice(0,2).map(w=>w[0]).
 function fmt(v) { return v ? 'Rp ' + Math.round(v).toLocaleString('id-ID') : '—' }
 
 function statusBadge(s) {
-  const m = { Draft:'bg-gray-100 text-gray-600', 'Document Collection':'bg-amber-100 text-amber-700', 'Credit Analysis':'bg-[#E6F4FA] text-[#004D73]', Committee:'bg-purple-100 text-purple-700', Active:'bg-green-100 text-green-700', Rejected:'bg-red-100 text-red-600' }
+  const m = { Draft:'bg-gray-100 text-gray-600', 'Document Collection':'bg-amber-100 text-amber-700', 'Credit Analysis':'bg-[#fceaea] text-[#6f0000]', Committee:'bg-purple-100 text-purple-700', Active:'bg-green-100 text-green-700', Rejected:'bg-red-100 text-red-600' }
   return m[s] || 'bg-gray-100 text-gray-600'
 }
 
@@ -1439,6 +1439,6 @@ onUnmounted(() => {
 
 <style scoped>
 .field-label { @apply block text-xs font-semibold text-gray-700 mb-1.5; }
-.field-input { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] transition-colors; }
-.field-select { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#FF6600] bg-white transition-colors; }
+.field-input { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#980000] transition-colors; }
+.field-select { @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#980000] bg-white transition-colors; }
 </style>

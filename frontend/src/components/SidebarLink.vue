@@ -67,7 +67,7 @@ const buttonClasses = computed(() => {
       ? 'bg-surface-selected text-ink-gray-9 shadow-sm'
       : 'text-ink-gray-7 hover:bg-surface-gray-3 hover:text-ink-gray-9'
   }
-  // CRM theme (DESIGN.md — BNI Teal)
+  // CRM theme (DESIGN.md — IGLO Red)
   return isActive.value
     ? 'bg-crm-surface text-crm-text font-semibold'
     : 'text-crm-text-secondary hover:bg-crm-surface hover:text-crm-text'

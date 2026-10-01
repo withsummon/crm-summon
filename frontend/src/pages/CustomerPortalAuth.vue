@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#FFF5EF] to-[#FFE8D6] p-4">
+  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#fff5f5] to-[#fce7e7] p-4">
     <div class="w-full max-w-md rounded-[14px] border border-outline-gray-2 bg-white p-6 shadow-xl">
       <div class="mb-6 text-center">
         <h1 class="text-xl font-bold text-ink-gray-9">{{ __('Customer Portal') }}</h1>
@@ -9,12 +9,12 @@
       <div class="mb-4 flex border-b border-outline-gray-2">
         <button
           class="flex-1 pb-2 text-sm font-medium"
-          :class="authTab === 'login' ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5'"
+          :class="authTab === 'login' ? 'border-b-2 border-[#980000] text-[#980000]' : 'text-ink-gray-5'"
           @click="authTab = 'login'"
         >{{ __('Login') }}</button>
         <button
           class="flex-1 pb-2 text-sm font-medium"
-          :class="authTab === 'register' ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5'"
+          :class="authTab === 'register' ? 'border-b-2 border-[#980000] text-[#980000]' : 'text-ink-gray-5'"
           @click="authTab = 'register'"
         >{{ __('Register') }}</button>
       </div>
@@ -22,15 +22,15 @@
       <div v-if="authTab === 'login'" class="space-y-3">
         <div>
           <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Email or Phone') }}</label>
-          <input v-model="loginForm.identifier" type="text" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+          <input v-model="loginForm.identifier" type="text" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
         </div>
         <div>
           <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Password') }}</label>
-          <input v-model="loginForm.password" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+          <input v-model="loginForm.password" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
         </div>
         <div class="flex items-center justify-between text-xs">
-          <label class="flex items-center gap-2 text-ink-gray-7"><input v-model="loginForm.remember" type="checkbox" class="size-4 accent-[#FF6600]" /> {{ __('Remember me') }}</label>
-          <button class="text-[#FF6600] hover:underline" @click="showReset = true">{{ __('Forgot password?') }}</button>
+          <label class="flex items-center gap-2 text-ink-gray-7"><input v-model="loginForm.remember" type="checkbox" class="size-4 accent-[#980000]" /> {{ __('Remember me') }}</label>
+          <button class="text-[#980000] hover:underline" @click="showReset = true">{{ __('Forgot password?') }}</button>
         </div>
         <Button class="w-full" variant="solid" :loading="loggingIn" @click="doLogin">{{ __('Sign In') }}</Button>
       </div>
@@ -39,26 +39,26 @@
         <div v-if="registerStep === 1">
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Full Name') }}</label>
-            <input v-model="registerForm.name" type="text" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="registerForm.name" type="text" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Email') }}</label>
-            <input v-model="registerForm.email" type="email" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="registerForm.email" type="email" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Phone') }}</label>
-            <input v-model="registerForm.phone" type="tel" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="registerForm.phone" type="tel" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Password') }}</label>
-            <input v-model="registerForm.password" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="registerForm.password" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
           </div>
           <div>
             <label class="mb-1 block text-xs font-medium text-ink-gray-6">{{ __('Confirm Password') }}</label>
-            <input v-model="registerForm.confirm" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="registerForm.confirm" type="password" class="h-9 w-full rounded-md border border-outline-gray-2 bg-white px-3 text-sm focus:border-[#980000] focus:outline-none" />
           </div>
           <label class="flex items-center gap-2 text-xs text-ink-gray-7">
-            <input v-model="registerForm.accept" type="checkbox" class="size-4 accent-[#FF6600]" />
+            <input v-model="registerForm.accept" type="checkbox" class="size-4 accent-[#980000]" />
             {{ __('I accept the Terms & Conditions') }}
           </label>
           <Button class="w-full" variant="solid" :loading="registering" @click="startRegister">{{ __('Continue') }}</Button>
@@ -66,7 +66,7 @@
         <div v-else class="space-y-3">
           <p class="text-sm text-ink-gray-7">{{ __('Enter the 6-digit OTP sent to your email/phone') }}</p>
           <div class="flex justify-center gap-2">
-            <input v-model="otp" type="text" maxlength="6" class="h-10 w-32 rounded-md border border-outline-gray-2 bg-white px-3 text-center text-lg tracking-widest focus:border-[#FF6600] focus:outline-none" />
+            <input v-model="otp" type="text" maxlength="6" class="h-10 w-32 rounded-md border border-outline-gray-2 bg-white px-3 text-center text-lg tracking-widest focus:border-[#980000] focus:outline-none" />
           </div>
           <Button class="w-full" variant="solid" :loading="verifying" @click="verifyOtp">{{ __('Verify & Create Account') }}</Button>
           <button class="w-full text-xs text-ink-gray-5" @click="registerStep = 1">{{ __('Back') }}</button>

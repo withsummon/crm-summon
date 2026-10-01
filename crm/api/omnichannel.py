@@ -483,8 +483,8 @@ def _ensure_demo_whatsapp_conversations():
 		# Generate messages
 		if normalized == "6285591150319":
 			messages = [
-				("Inbound", "Halo BNI, saya tertarik dengan Kredit Modal Kerja BNI. Bagaimana persyaratannya?", -30),
-				("Outbound", "Halo Pak! Terima kasih telah menghubungi BNI. Persyaratannya cukup mudah, salah satunya melampirkan NPWP dan laporan keuangan audit. Apakah Bapak sudah memiliki dokumen tersebut?", -25),
+				("Inbound", "Halo IGLO, saya tertarik dengan Kredit Modal Kerja. Bagaimana persyaratannya?", -30),
+				("Outbound", "Halo Pak! Terima kasih telah menghubungi IGLO. Persyaratannya cukup mudah, salah satunya melampirkan NPWP dan laporan keuangan audit. Apakah Bapak sudah memiliki dokumen tersebut?", -25),
 				("Inbound", "NPWP sudah ada, laporan keuangan juga ada. Nanti saya kirimkan lewat sini ya.", -20),
 				("Outbound", "Baik Pak, siap kami terima dan proses segera.", -15),
 				("Inbound", "Oke siap Pak RM!", -10),
@@ -492,7 +492,7 @@ def _ensure_demo_whatsapp_conversations():
 		else:
 			messages = [
 				("Inbound", "Siang Pak, permohonan restructuring untuk PT Bhakti Nusantara apakah sudah disetujui?", -30),
-				("Outbound", "Selamat siang Pak. Restructuring proposal saat ini sedang dalam proses review oleh komite kredit BNI. Kami targetkan selesai akhir minggu ini.", -25),
+				("Outbound", "Selamat siang Pak. Restructuring proposal saat ini sedang dalam proses review oleh komite kredit. Kami targetkan selesai akhir minggu ini.", -25),
 				("Inbound", "Baik Pak, tolong dibantu ya karena cashflow kami agak ketat bulan ini.", -20),
 				("Outbound", "Tentu Pak, kami upayakan solusi terbaik untuk menjaga DSCR perusahaan Bapak.", -15),
 				("Inbound", "Terima kasih banyak atas dukungannya!", -10),
@@ -1057,7 +1057,7 @@ def generate_reply_suggestions(conversation_id: str, tone: str = "Formal"):
 				"Terima kasih atas laporannya. Kami akan menghubungi Anda dalam 1x24 jam.",
 			]
 		return [
-			"Terima kasih telah menghubungi BNI. Ada yang bisa kami bantu lebih lanjut?",
+			"Terima kasih telah menghubungi IGLO. Ada yang bisa kami bantu lebih lanjut?",
 			"Kami akan menindaklanjuti permintaan Anda dan menghubungi kembali segera.",
 			"Silakan informasikan jika ada kebutuhan lain yang dapat kami bantu.",
 		]
@@ -1642,9 +1642,9 @@ def get_auto_responder_settings():
 	val = frappe.db.get_default("auto_responder_rules")
 	if not val:
 		defaults = {
-			"WhatsApp": {"enabled": 1, "message": "Halo! Terima kasih telah menghubungi BNI SUMMON. Kami telah menerima pesan Anda dan akan segera merespons dalam waktu 15 menit."},
-			"Email": {"enabled": 1, "message": "Yth. Nasabah BNI SUMMON, terima kasih atas email Anda. Tiket bantuan Anda telah dibuat dan tim Customer Service kami akan memprosesnya segera."},
-			"SMS": {"enabled": 0, "message": "BNI SUMMON: Pesan Anda telah diterima. Kami akan segera menghubungi Anda."},
+			"WhatsApp": {"enabled": 1, "message": "Halo! Terima kasih telah menghubungi IGLO. Kami telah menerima pesan Anda dan akan segera merespons dalam waktu 15 menit."},
+			"Email": {"enabled": 1, "message": "Yth. Nasabah IGLO, terima kasih atas email Anda. Tiket bantuan Anda telah dibuat dan tim Customer Service kami akan memprosesnya segera."},
+			"SMS": {"enabled": 0, "message": "IGLO: Pesan Anda telah diterima. Kami akan segera menghubungi Anda."},
 			"In-App": {"enabled": 1, "message": "Halo! Ada yang bisa kami bantu hari ini? Agen kami akan segera bergabung dalam chat."},
 		}
 		return defaults
@@ -1715,5 +1715,5 @@ def verify_conversation_integrity(conversation_id):
 		"archive_name": existing.name,
 		"archive_hash": existing.archive_hash,
 		"retention_until": existing.retention_until,
-		"message": "SHA256 hash verified. Transcript locked and secured under BNI compliance regulations."
+		"message": "SHA256 hash verified. Transcript locked and secured under internal compliance requirements."
 	}

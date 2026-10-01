@@ -40,7 +40,7 @@
           v-for="tab in INBOX_TABS"
           :key="tab.key"
           class="whitespace-nowrap border-b-2 px-1 py-2 text-sm leading-5 transition-colors"
-          :class="inboxTab === tab.key ? 'border-[#FF6600] font-medium text-ink-gray-9' : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
+          :class="inboxTab === tab.key ? 'border-[#980000] font-medium text-ink-gray-9' : 'border-transparent text-ink-gray-5 hover:text-ink-gray-8'"
           @click="inboxTab = tab.key"
         >
           {{ __(tab.label) }}
@@ -49,7 +49,7 @@
         <div class="flex-1"></div>
         <div class="relative">
           <FeatherIcon name="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-gray-4" />
-          <input v-model="query" type="text" :placeholder="__('Search notifications…')" class="h-8 w-64 rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#FF6600] focus:ring-2 focus:ring-[#FF6600]/20" />
+          <input v-model="query" type="text" :placeholder="__('Search notifications…')" class="h-8 w-64 rounded-md border border-outline-gray-2 bg-white pl-9 pr-3 text-sm text-ink-gray-8 outline-none focus:border-[#980000] focus:ring-2 focus:ring-[#980000]/20" />
         </div>
       </div>
     </div>
@@ -75,7 +75,7 @@
               @click="openNotification(n)"
             >
               <div class="mt-0.5 flex items-center gap-2.5">
-                <div class="size-[5px] rounded-full" :class="[n.read ? 'bg-transparent' : 'bg-[#FF6600]']" />
+                <div class="size-[5px] rounded-full" :class="[n.read ? 'bg-transparent' : 'bg-[#980000]']" />
                 <UserAvatar :user="n.from_user.name" size="lg" />
               </div>
               <div class="min-w-0 flex-1">
@@ -84,7 +84,7 @@
                   <Badge :label="labelize(n.type)" theme="primary" variant="subtle" size="sm" />
                   <Badge v-if="n.snoozed_until" :label="`Snoozed · ${formatDate(n.snoozed_until)}`" theme="orange" variant="subtle" size="sm" />
                   <Badge v-if="n.delivery_status" :label="n.delivery_status" :theme="deliveryTheme(n.delivery_status)" variant="subtle" size="sm" />
-                  <span v-if="!n.read" class="text-xs text-[#FF6600]">{{ __('Unread') }}</span>
+                  <span v-if="!n.read" class="text-xs text-[#980000]">{{ __('Unread') }}</span>
                 </div>
                 <p class="mt-1 text-sm text-ink-gray-7" v-html="sanitizeHTML(n.notification_text || n.message || '')" />
                 <div class="mt-2 flex items-center gap-3 text-xs text-ink-gray-5">
@@ -212,7 +212,7 @@
                   <span class="text-ink-gray-5">{{ c.delivered }}/{{ c.sent }} ({{ c.deliveryRate }}%)</span>
                 </div>
                 <div class="h-2 rounded-full bg-surface-gray-2 overflow-hidden">
-                  <div class="h-full rounded-full bg-[#FF6600]" :style="{ width: c.deliveryRate + '%' }" />
+                  <div class="h-full rounded-full bg-[#980000]" :style="{ width: c.deliveryRate + '%' }" />
                 </div>
               </div>
             </div>
@@ -233,7 +233,7 @@
               <div class="flex items-end gap-2 h-32">
                 <div v-for="(d, i) in analyticsTimeseries" :key="i" class="flex-1 flex flex-col items-center gap-1">
                   <span class="text-[10px] text-ink-gray-5">{{ d.count }}</span>
-                  <div class="w-full bg-[#FF6600] rounded-t" :style="{ height: (d.count / 50 * 100) + '%' }" />
+                  <div class="w-full bg-[#980000] rounded-t" :style="{ height: (d.count / 50 * 100) + '%' }" />
                   <span class="text-[10px] text-ink-gray-4">{{ d.day }}</span>
                 </div>
               </div>
@@ -847,9 +847,9 @@ async function deleteRule(r) {
 
 const templates = ref(loadPersisted('crm:notif:templates', [
   { id: 1, name: 'SLA Breach', channel: 'Email', subject: 'SLA Breached on {{ref}}', body: 'The SLA on {{ref}} has been breached.', variables: ['ref', 'owner'] },
-  { id: 2, name: 'Lead Welcome', channel: 'Email', subject: 'Welcome to BNI', body: 'Hi {{name}}, welcome.', variables: ['name'] },
+  { id: 2, name: 'Lead Welcome', channel: 'Email', subject: 'Welcome to IGLO', body: 'Hi {{name}}, welcome.', variables: ['name'] },
   { id: 3, name: 'Payment Reminder', channel: 'SMS', subject: '', body: 'Hi {{name}}, your payment of {{amount}} is due {{due_date}}.', variables: ['name', 'amount', 'due_date'] },
-  { id: 4, name: 'Birthday Greeting', channel: 'WhatsApp', subject: '', body: 'Selamat ulang tahun, {{name}}! Seluruh keluarga besar BNI mengucapkan selamat dan terima kasih atas kepercayaan Anda.', variables: ['name'] },
+  { id: 4, name: 'Birthday Greeting', channel: 'WhatsApp', subject: '', body: 'Selamat ulang tahun, {{name}}! Seluruh tim IGLO mengucapkan selamat dan terima kasih atas kepercayaan Anda.', variables: ['name'] },
 ]))
 persistRef('crm:notif:templates', templates)
 

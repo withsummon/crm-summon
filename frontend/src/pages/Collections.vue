@@ -34,7 +34,7 @@
         v-for="tab in pageTabs"
         :key="tab.key"
         class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors"
-        :class="activeTab === tab.key ? 'border-b-2 border-[#FF6600] text-[#FF6600]' : 'text-ink-gray-5 hover:text-ink-gray-8'"
+        :class="activeTab === tab.key ? 'border-b-2 border-[#980000] text-[#980000]' : 'text-ink-gray-5 hover:text-ink-gray-8'"
         @click="activeTab = tab.key"
       >
         {{ __(tab.label) }}
@@ -103,7 +103,7 @@
                 v-for="m in ['Count', 'Amount']"
                 :key="m"
                 class="rounded-md px-2 py-1"
-                :class="agingMetric === m ? 'bg-[#FF6600] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
+                :class="agingMetric === m ? 'bg-[#980000] text-white' : 'bg-surface-gray-2 text-ink-gray-5'"
                 @click="agingMetric = m"
               >
                 {{ __(m) }}
@@ -343,7 +343,7 @@
             v-for="f in ['All', 'Pending', 'Kept', 'Broken', 'Today']"
             :key="f"
             class="rounded-full border px-3 py-1 text-xs"
-            :class="ptpFilter === f ? 'border-[#FF6600] bg-[#FFF0E0] text-[#CC5200]' : 'border-outline-gray-2 text-ink-gray-5'"
+            :class="ptpFilter === f ? 'border-[#980000] bg-[#fceaea] text-[#750000]' : 'border-outline-gray-2 text-ink-gray-5'"
             @click="ptpFilter = f"
           >
             {{ __(f) }}

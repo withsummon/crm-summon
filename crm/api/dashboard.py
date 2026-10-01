@@ -67,7 +67,7 @@ def get_dashboard(from_date: str | None = None, to_date: str | None = None, user
 @frappe.whitelist()
 @sales_user_only
 def get_bni_crm_dashboard(from_date: str | None = None, to_date: str | None = None, user: str | None = None):
-	"""Return lead-gen-centric dashboard payload for the BNI teal CRM workspace."""
+	"""Return lead-gen-centric dashboard payload for the IGLO red CRM workspace."""
 	if not from_date or not to_date:
 		from_date = frappe.utils.get_first_day(from_date or frappe.utils.nowdate())
 		to_date = frappe.utils.get_last_day(to_date or frappe.utils.nowdate())

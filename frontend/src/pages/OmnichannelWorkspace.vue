@@ -496,7 +496,7 @@
                   <span class="text-xs font-bold text-slate-800">9:41</span>
                   <span class="text-xs font-bold text-primary-700 flex items-center gap-1">
                     <FeatherIcon name="message-square" class="h-3 w-3" />
-                    BNI SUMMON
+                    IGLO
                   </span>
                   <div class="flex gap-1">
                     <div class="w-2 h-2 bg-slate-800 rounded-full" />
@@ -1581,7 +1581,7 @@ async function verifyComplianceIntegrity() {
   height: 40px;
   place-items: center;
   border-radius: 8px;
-  background: #ff6600;
+  background: #980000;
   color: #ffffff;
 }
 
@@ -1621,9 +1621,9 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-channel.active {
-  border-color: #ffc7a8;
-  background: #fff4ed;
-  color: #ff6600;
+  border-color: #f5b8b8;
+  background: #fff5f5;
+  color: #980000;
 }
 
 .omni-channel-main,
@@ -1754,8 +1754,8 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-row.active {
-  border-color: #ff6600;
-  background: #fff4ed;
+  border-color: #980000;
+  background: #fff5f5;
 }
 
 .omni-row input {
@@ -1821,8 +1821,8 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-channel-pill.teal {
-  background: #ffe5d4;
-  color: #ff6600;
+  background: #fce7e7;
+  color: #980000;
 }
 
 .omni-channel-pill.slate,
@@ -1905,8 +1905,8 @@ async function verifyComplianceIntegrity() {
 
 .omni-message.outbound {
   margin-left: auto;
-  border-color: #ffc7a8;
-  background: #fff4ed;
+  border-color: #f5b8b8;
+  background: #fff5f5;
 }
 
 .omni-message.internal {
@@ -1936,7 +1936,7 @@ async function verifyComplianceIntegrity() {
   align-items: center;
   gap: 6px;
   margin-top: 8px;
-  color: #ff6600;
+  color: #980000;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1991,19 +1991,19 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-suggestions button.omni-suggestion-approved {
-  border: 1px solid #ffc7a8;
-  background: #fff4ed;
-  color: #ff6600;
+  border: 1px solid #f5b8b8;
+  background: #fff5f5;
+  color: #980000;
   font-weight: 500;
 }
 
 .omni-suggestions button.omni-suggestion-approved:hover {
-  background: #ffe5d4;
-  border-color: #ffa06f;
+  background: #fce7e7;
+  border-color: #e47c7c;
 }
 
 .omni-suggestion-badge {
-  color: #e65c00;
+  color: #850000;
   font-weight: bold;
 }
 
@@ -2043,8 +2043,8 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-primary {
-  border-color: #ff6600;
-  background: #ff6600;
+  border-color: #980000;
+  background: #980000;
   color: #ffffff;
 }
 
@@ -2092,7 +2092,7 @@ async function verifyComplianceIntegrity() {
 }
 
 .omni-note {
-  border-left: 3px solid #ff6600;
+  border-left: 3px solid #980000;
   padding-left: 10px;
   color: #334155;
   font-size: 12px;
@@ -2105,7 +2105,7 @@ async function verifyComplianceIntegrity() {
   text-align: center;
   font-size: 12px;
   font-weight: 700;
-  color: #ff6600;
+  color: #980000;
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
   background: transparent;
@@ -2113,7 +2113,7 @@ async function verifyComplianceIntegrity() {
   transition: background 0.15s;
 }
 .omni-load-more:hover {
-  background: #fff4ed;
+  background: #fff5f5;
 }
 
 @media (max-width: 1180px) {

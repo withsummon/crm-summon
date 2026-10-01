@@ -65,32 +65,32 @@ export default defineConfig(async ({ mode }) => {
         },
         manifest: {
           display: 'standalone',
-          name: 'BNI CRM',
-          short_name: 'BNI CRM',
+          name: 'IGLO CRM',
+          short_name: 'IGLO CRM',
           start_url: '/crm',
           description:
-            'BNI teal CRM workspace for lead generation and customer 360',
+            'IGLO CRM workspace for lead generation and customer 360',
           icons: [
             {
-              src: '/assets/crm/images/bni-logo.png',
+              src: '/assets/crm/images/iglo-logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/images/bni-logo.png',
+              src: '/assets/crm/images/iglo-logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: '/assets/crm/images/bni-logo.png',
+              src: '/assets/crm/images/iglo-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/assets/crm/images/bni-logo.png',
+              src: '/assets/crm/images/iglo-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',

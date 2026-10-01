@@ -246,7 +246,7 @@
               </button>
               <div v-else class="flex items-center gap-1">
                 <button class="text-xs text-ink-gray-5 hover:text-ink-gray-8" @click="referralEditing = false">{{ __('Cancel') }}</button>
-                <button class="text-xs font-medium text-[#FF6600]" :disabled="savingReferral" @click="saveReferral">{{ savingReferral ? __('Saving…') : __('Save') }}</button>
+                <button class="text-xs font-medium text-[#980000]" :disabled="savingReferral" @click="saveReferral">{{ savingReferral ? __('Saving…') : __('Save') }}</button>
               </div>
             </div>
             <div v-if="!referralEditing" class="grid grid-cols-3 gap-2 text-sm">
@@ -329,7 +329,7 @@
                 v-for="tag in uatSummary.data?.tags || []"
                 :key="tag.tag"
                 class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs"
-                :style="{ borderColor: (tag.color || '#0f766e') + '40', backgroundColor: (tag.color || '#0f766e') + '14', color: tag.color || '#0f766e' }"
+                :style="{ borderColor: (tag.color || '#750000') + '40', backgroundColor: (tag.color || '#750000') + '14', color: tag.color || '#750000' }"
               >
                 {{ tag.tag }}
                 <button class="text-ink-gray-5 hover:text-ink-gray-8" @click="removeTag(tag.tag)">×</button>
@@ -359,13 +359,13 @@
                       class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs hover:bg-surface-gray-1"
                       @click="addTag(t.tag)"
                     >
-                      <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: t.color || '#0f766e' }" />
+                      <span class="inline-block size-2.5 rounded-full" :style="{ backgroundColor: t.color || '#750000' }" />
                       {{ t.tag }}
                     </button>
                     <div v-if="!tagSuggestions.length && !tagSearch" class="px-2 py-1 text-xs text-ink-gray-5">{{ __('No tags yet') }}</div>
                     <button
                       v-if="tagSearch && !tagSuggestions.some((s) => s.tag.toLowerCase() === tagSearch.toLowerCase())"
-                      class="w-full rounded px-2 py-1 text-left text-xs text-[#FF6600] hover:bg-surface-gray-1"
+                      class="w-full rounded px-2 py-1 text-left text-xs text-[#980000] hover:bg-surface-gray-1"
                       @click="addNewTag()"
                     >
                       + Create "{{ tagSearch }}"

@@ -783,7 +783,7 @@ const hasSelection = computed(() => selections.value.length > 0)
 const quickView = reactive({ visible: false, leadName: '', style: {} })
 const scoringDrawer = reactive({ open: false, leadName: '' })
 const reassignDialog = reactive({ open: false, toUser: '', reason: '' })
-const tagDialog = reactive({ open: false, tag: '', color: '#0f766e' })
+const tagDialog = reactive({ open: false, tag: '', color: '#750000' })
   const exportDialog = reactive({ open: false, rowCount: 0, email: '', format: 'CSV' })
   const mergeDialog = reactive({ open: false, candidates: [], primary: '' })
   const closeDialog = reactive({ open: false, reason: '' })
@@ -1098,7 +1098,7 @@ async function submitReassign() {
 
 function openTagDialog() {
   tagDialog.tag = ''
-  tagDialog.color = '#0f766e'
+  tagDialog.color = '#750000'
   tagDialog.open = true
 }
 

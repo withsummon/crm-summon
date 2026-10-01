@@ -64,7 +64,7 @@ STATUS_MAP = {
 XML_NS = {"a": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
 DEFAULT_IMPORT_OPTIONS = {
-	"default_source": "BNI Lead Workbook",
+	"default_source": "IGLO Lead Workbook",
 	"default_channel": "Excel Import",
 	"create_follow_up_tasks": 1,
 	"create_notes": 1,

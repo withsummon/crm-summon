@@ -1099,8 +1099,8 @@ async function exportMemo() {
     const now = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
     const htmlContent = `
       <div style="font-family: 'Inter', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
-        <div style="border-bottom: 3px solid #0f766e; padding-bottom: 20px; margin-bottom: 30px;">
-          <h1 style="font-size: 24px; font-weight: 800; color: #0f766e; margin: 0;">Credit Memo</h1>
+        <div style="border-bottom: 3px solid #750000; padding-bottom: 20px; margin-bottom: 30px;">
+          <h1 style="font-size: 24px; font-weight: 800; color: #750000; margin: 0;">Credit Memo</h1>
           <p style="color: #64748b; margin: 4px 0 0 0;">${borrowerName} — ${app.name}</p>
           <p style="color: #94a3b8; font-size: 12px; margin: 2px 0 0 0;">Generated: ${now}</p>
         </div>

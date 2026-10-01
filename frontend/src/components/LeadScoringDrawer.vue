@@ -69,7 +69,7 @@
               <div v-if="activeQualityModel" class="mt-1 text-[11px] text-ink-gray-5">
                 Model {{ activeQualityModel.model_name }} · {{ formatDate(activeQualityModel.trained_on) }}
               </div>
-              <button class="mt-2 text-xs text-[#FF6600] hover:underline" @click="openHistory">
+              <button class="mt-2 text-xs text-[#980000] hover:underline" @click="openHistory">
                 {{ __('View model history') }}
               </button>
             </div>
@@ -108,7 +108,7 @@
             </div>
           </div>
 
-          <router-link :to="{ name: 'Lead Scoring Rules' }" class="block text-center text-sm text-[#FF6600] hover:underline" @click="emit('update:visible', false)">
+          <router-link :to="{ name: 'Lead Scoring Rules' }" class="block text-center text-sm text-[#980000] hover:underline" @click="emit('update:visible', false)">
             {{ __('Manage rules') }}
           </router-link>
           <Button class="w-full" variant="outline" @click="rerunScoring">

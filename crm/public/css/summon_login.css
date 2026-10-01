@@ -1,4 +1,4 @@
-/* BNI CRM - Login Page Branding Override */
+/* IGLO CRM - Login Page Branding Override */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 .for-login,
@@ -23,7 +23,7 @@ img.app-logo,
   display: block;
   width: 180px;
   height: 56px;
-  background-image: url('/assets/crm/images/bni-logo.png');
+  background-image: url('/assets/crm/images/iglo-logo.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -39,7 +39,7 @@ img.app-logo,
 
 .for-login .page-card-head h4::after,
 .page-card-head > h4::after {
-  content: 'Login to BNI CRM';
+  content: 'Login to IGLO CRM';
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
@@ -56,7 +56,7 @@ img.app-logo,
   display: inline-block;
   width: 86px;
   height: 28px;
-  background-image: url('/assets/crm/images/bni-logo.png');
+  background-image: url('/assets/crm/images/iglo-logo.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -70,7 +70,7 @@ img.app-logo,
 }
 
 .navbar .navbar-brand::after {
-  content: 'BNI CRM';
+  content: 'IGLO CRM';
   font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
@@ -78,22 +78,22 @@ img.app-logo,
 
 .for-login .btn-primary,
 .login-content .btn-primary {
-  background: linear-gradient(135deg, #008c95, #00a7b0) !important;
-  border-color: #008c95 !important;
+  background: linear-gradient(135deg, #980000, #bd3b3b) !important;
+  border-color: #980000 !important;
 }
 
 .for-login .btn-primary:hover,
 .login-content .btn-primary:hover {
-  background: linear-gradient(135deg, #00747c, #008c95) !important;
-  border-color: #00747c !important;
+  background: linear-gradient(135deg, #750000, #980000) !important;
+  border-color: #750000 !important;
 }
 
 .for-login a,
 .login-content a {
-  color: #008c95 !important;
+  color: #980000 !important;
 }
 
 .for-login a:hover,
 .login-content a:hover {
-  color: #00747c !important;
+  color: #750000 !important;
 }

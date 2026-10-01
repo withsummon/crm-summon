@@ -225,13 +225,13 @@ function onPaneClick() {
 
 .vue-flow-credit .vue-flow__edge:hover .vue-flow__edge-path,
 .vue-flow-credit .vue-flow__edge.selected .vue-flow__edge-path {
-  stroke: #006699;
+  stroke: #980000;
   stroke-width: 3;
 }
 
 /* Connection line animation */
 .vue-flow-credit .vue-flow__connection-path {
-  stroke: #006699;
+  stroke: #980000;
   stroke-dasharray: 5;
   animation: dashdraw 0.5s linear infinite;
 }
