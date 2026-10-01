@@ -23,6 +23,7 @@ AGENTS.md
 .claude
 .pi
 my-frappe-bench/
+crm.localhost/
 *.md
 module/
 .env.prod
