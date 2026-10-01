@@ -656,7 +656,7 @@ def generate_meeting_content(meeting, kind):
 		"title": doc.title,
 		"committee": doc.committee,
 		"agenda": agenda,
-		"transcript": [{"segment": index + 1, "text": segment.get("text", "")} for index, segment in enumerate(segments)],
+		"transcript": [{"segment": index + 1, "speaker": segment.get("speaker", "Peserta rapat"), "bookmarked": bool(segment.get("bookmarked")), "text": segment.get("text", "")} for index, segment in enumerate(segments)],
 	}
 	context_json = json.dumps(context, ensure_ascii=False)
 	if len(context_json) > 60000:
@@ -711,15 +711,40 @@ def create_live_transcript_token(meeting):
 
 
 @frappe.whitelist()
-def save_live_transcript_segment(meeting, text):
+def save_live_transcript_segment(meeting, text, source="meeting", offset_ms=0):
 	doc = _transcript_meeting(meeting, "write")
 	text = (text or "").strip()
 	if not text or len(text) > 4000:
 		frappe.throw(_("Invalid transcript segment"))
+	if source not in ("meeting", "mic"):
+		frappe.throw(_("Invalid audio source"))
+	try:
+		offset_ms = int(offset_ms)
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid transcript offset"))
+	if not 0 <= offset_ms <= 43200000:
+		frappe.throw(_("Invalid transcript offset"))
 	segments = json.loads(doc.transcript_json or "[]")
-	segments.append({"text": text, "at": now_datetime().isoformat(), "by": frappe.session.user})
+	segments.append({"text": text, "source": source, "speaker": "Anda" if source == "mic" else "Peserta rapat", "offset_ms": offset_ms, "at": now_datetime().isoformat(), "by": frappe.session.user})
 	doc.db_set("transcript_json", json.dumps(segments, ensure_ascii=False))
 	return segments[-1]
+
+
+@frappe.whitelist()
+def set_live_transcript_bookmark(meeting, index, bookmarked):
+	doc = _transcript_meeting(meeting, "write")
+	segments = json.loads(doc.transcript_json or "[]")
+	try:
+		index = int(index)
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid transcript segment"))
+	if not 0 <= index < len(segments):
+		frappe.throw(_("Invalid transcript segment"))
+	if str(bookmarked).lower() not in ("1", "0", "true", "false"):
+		frappe.throw(_("Invalid bookmark value"))
+	segments[index]["bookmarked"] = str(bookmarked).lower() in ("1", "true")
+	doc.db_set("transcript_json", json.dumps(segments, ensure_ascii=False))
+	return segments[index]
 
 
 @frappe.whitelist()

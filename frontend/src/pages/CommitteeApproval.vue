@@ -499,61 +499,91 @@
       </div>
 
       <!-- ───── TAB: Live Meeting ───── -->
-      <div v-if="activeTab === 'live'" class="space-y-3">
-        <div v-if="!liveStarted" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-3 text-center">
-          <p class="text-ink-gray-7 mb-3">Open a meeting to capture its live transcript.</p>
-          <select v-model="liveMeetingId" class="px-3 py-2 border border-outline-gray-2 rounded-lg text-sm mr-2">
+      <div v-if="activeTab === 'live'" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline-gray-2 bg-white p-4">
+          <div>
+            <h2 class="text-lg font-semibold text-ink-gray-9">Transkrip langsung rapat</h2>
+            <p class="text-sm text-ink-gray-5">Ikuti pembahasan, pertanyaan, dan hasil rapat dalam satu ruang kerja.</p>
+          </div>
+          <select v-model="liveMeetingId" :disabled="capturing" aria-label="Pilih rapat" class="min-w-56 rounded-lg border border-outline-gray-2 px-3 py-2 text-sm">
+            <option :value="null">Pilih rapat</option>
             <option v-for="m in meetings" :key="m.id" :value="m.id">{{ m.title }}</option>
           </select>
-          <button @click="liveMeetingId && startLiveMeeting(liveMeetingId)" class="px-3 py-1.5 bg-[#980000] text-white rounded-lg text-sm font-medium">Start Live Mode</button>
         </div>
-        <div v-else class="bg-gray-900 text-white rounded-[14px] p-8">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <p class="text-xs uppercase tracking-widest text-ink-gray-4">LIVE · {{ liveCurrentMeeting?.title }}</p>
-              <p class="text-2xl font-bold mt-1">{{ liveCurrentAgenda?.caseId }} — {{ liveCurrentAgenda?.applicant }}</p>
+
+        <div v-if="liveCurrentMeeting" class="overflow-hidden rounded-xl border border-outline-gray-2 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-outline-gray-2 bg-white px-5 py-4">
+            <div class="flex items-center gap-3">
+              <span class="size-2.5 rounded-full" :class="capturing ? 'animate-pulse bg-[#980000]' : 'bg-gray-400'"></span>
+              <div>
+                <h3 class="font-semibold text-ink-gray-9">{{ liveCurrentMeeting.title }}</h3>
+                <p class="text-xs text-ink-gray-5">{{ capturing ? 'Transkrip berjalan' : liveStarted ? 'Sesi aktif · siap menangkap audio' : 'Sesi belum dimulai' }}</p>
+              </div>
             </div>
-            <button @click="endLiveMeeting" class="px-3 py-1.5 border border-white/30 rounded text-sm">End Session</button>
-          </div>
-          <div class="bg-surface-white/5 rounded-[10px] p-3">
-            <p class="text-xs uppercase tracking-widest text-ink-gray-4 mb-2">Members Present</p>
-            <div class="flex flex-wrap gap-2">
-              <span v-for="m in (liveCurrentMeeting?.members || [])" :key="m.name" class="px-3 py-1 rounded-full bg-surface-gray-2 text-xs">
-                {{ m.name }}
-              </span>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-sm tabular-nums text-ink-gray-7">{{ liveElapsedLabel }}</span>
+              <button v-if="!liveStarted" @click="startLiveMeeting(liveMeetingId)" class="rounded-lg bg-[#980000] px-3 py-2 text-sm font-medium text-white">Mulai sesi</button>
+              <button v-else @click="endLiveMeeting" :disabled="startingCapture" class="rounded-lg border border-outline-gray-2 px-3 py-2 text-sm text-ink-gray-8 disabled:opacity-50">Akhiri sesi</button>
             </div>
           </div>
-          <div class="mt-4 flex justify-end">
-            <button @click="nextLiveItem" class="px-3 py-1.5 bg-[#980000] rounded text-sm font-medium">Next Item →</button>
+
+          <div class="grid lg:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.8fr)]">
+            <section class="flex min-h-[560px] flex-col border-b border-outline-gray-2 lg:border-b-0 lg:border-r" aria-label="Transkrip langsung">
+              <div class="flex items-center justify-between gap-3 border-b border-outline-gray-2 px-5 py-4">
+                <div>
+                  <h4 class="font-semibold text-ink-gray-9">Live transcript</h4>
+                  <p class="text-xs text-ink-gray-5">Audio rapat dan suara Anda tampil sebagai sumber terpisah.</p>
+                </div>
+                <span class="rounded-full bg-[#980000]/10 px-2.5 py-1 text-xs font-semibold text-[#980000]">{{ transcriptSegments.length }} segmen</span>
+              </div>
+              <p v-if="transcriptStatus" role="status" class="mx-5 mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{{ transcriptStatus }}</p>
+              <div class="max-h-[560px] min-h-[380px] flex-1 space-y-4 overflow-y-auto p-5" aria-live="polite">
+                <div v-if="!transcriptSegments.length && !partialTranscript.meeting && !partialTranscript.mic" class="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
+                  <FeatherIcon name="mic" class="mb-3 h-8 w-8 text-[#980000]" />
+                  <p class="font-medium text-ink-gray-8">Siap mengikuti rapat</p>
+                  <p class="mt-2 max-w-sm text-sm text-ink-gray-5">Klik Mulai tangkap, pilih tab Zoom atau Google Meet, lalu aktifkan Bagikan audio tab. Mikrofon Anda juga akan ditangkap jika diizinkan.</p>
+                </div>
+                <article v-for="(segment, index) in transcriptSegments" :key="index" class="flex gap-3">
+                  <span class="flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold" :class="segment.source === 'mic' ? 'bg-gray-100 text-gray-700' : 'bg-[#980000]/10 text-[#980000]'">{{ segment.source === 'mic' ? 'IN' : 'ME' }}</span>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2 text-xs"><strong class="text-ink-gray-8">{{ segment.speaker || (segment.source === 'mic' ? 'Anda' : 'Peserta rapat') }}</strong><span class="text-ink-gray-5">{{ formatLiveOffset(segment.offset_ms) }}</span></div>
+                    <p class="mt-1 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ segment.text }}</p>
+                    <button @click="toggleTranscriptBookmark(index)" :aria-pressed="!!segment.bookmarked" class="mt-1 text-xs font-medium" :class="segment.bookmarked ? 'text-amber-700' : 'text-ink-gray-5'">{{ segment.bookmarked ? '★ Ditandai' : '☆ Tandai bagian ini' }}</button>
+                  </div>
+                </article>
+                <p v-if="partialTranscript.meeting" class="ml-11 text-sm italic text-ink-gray-5">Peserta rapat · {{ partialTranscript.meeting }}</p>
+                <p v-if="partialTranscript.mic" class="ml-11 text-sm italic text-ink-gray-5">Anda · {{ partialTranscript.mic }}</p>
+              </div>
+              <div class="flex flex-wrap items-center justify-center gap-2 border-t border-outline-gray-2 p-4">
+                <button v-if="!capturing" @click="startTranscription" :disabled="!liveStarted || startingCapture" class="rounded-lg bg-[#980000] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{{ startingCapture ? 'Menyiapkan…' : 'Mulai tangkap' }}</button>
+                <button v-else @click="stopTranscription" class="rounded-lg bg-[#980000] px-4 py-2 text-sm font-medium text-white">Hentikan transkrip</button>
+                <button v-if="capturing && microphoneAvailable" @click="toggleMicrophone" :aria-pressed="microphoneEnabled" class="rounded-lg border border-outline-gray-2 px-3 py-2 text-sm">{{ microphoneEnabled ? 'Matikan mikrofon' : 'Aktifkan mikrofon' }}</button>
+              </div>
+            </section>
+
+            <aside class="space-y-4 bg-surface-gray-1 p-4">
+              <section class="rounded-xl border border-outline-gray-2 bg-white p-4">
+                <h4 class="font-semibold text-ink-gray-9">Agenda rapat</h4>
+                <p class="mt-1 text-xs text-ink-gray-5">{{ liveCurrentMeeting.committee }} · {{ liveCurrentMeeting.members.length }} anggota</p>
+                <ol v-if="liveCurrentMeeting.agenda.length" class="mt-3 space-y-2">
+                  <li v-for="(item, index) in liveCurrentMeeting.agenda" :key="index" class="rounded-lg border p-2.5 text-sm" :class="index === liveAgendaIdx ? 'border-[#980000]/40 bg-[#980000]/5 text-ink-gray-9' : 'border-outline-gray-2 text-ink-gray-6'">{{ index + 1 }}. {{ item }}</li>
+                </ol>
+                <p v-else class="mt-3 text-sm text-ink-gray-5">Belum ada agenda tersimpan.</p>
+                <button v-if="liveStarted && liveCurrentMeeting.agenda.length > 1" @click="nextLiveItem" class="mt-3 text-sm font-medium text-[#980000]">Agenda berikutnya →</button>
+              </section>
+              <section v-for="item in meetingContentSections" :key="item.kind" class="rounded-xl border border-outline-gray-2 bg-white p-4">
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="font-semibold text-ink-gray-9">{{ item.title }}</h4>
+                  <button @click="generateMeetingContent(item.kind)" :disabled="!!generatingContent || (item.kind === 'analysis' && !transcriptSegments.length)" class="rounded-lg bg-[#980000] px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-50">{{ generatingContent === item.kind ? 'Menyusun…' : meetingContent[item.kind] ? 'Buat ulang' : 'Buat' }}</button>
+                </div>
+                <p v-if="meetingContent[item.kind]?.transcript_count < transcriptSegments.length" class="mt-2 text-xs text-amber-700">Transkrip bertambah. Buat ulang untuk memperbarui hasil.</p>
+                <p v-if="meetingContent[item.kind]" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ meetingText(meetingContent[item.kind].content) }}</p>
+                <p v-else class="mt-3 text-sm text-ink-gray-5">{{ item.empty }}</p>
+              </section>
+            </aside>
           </div>
         </div>
-        <div v-if="liveMeetingId" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-4">
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="font-semibold">Transkrip rapat · {{ liveCurrentMeeting?.title }}</h3>
-            <button v-if="liveStarted" @click="capturing ? stopTranscription() : startTranscription()" class="rounded bg-[#980000] px-3 py-1.5 text-sm text-white">
-              {{ capturing ? 'Hentikan transkrip' : 'Mulai transkrip' }}
-            </button>
-          </div>
-          <p v-if="transcriptStatus" role="status" class="mt-2 text-sm text-red-700">{{ transcriptStatus }}</p>
-          <div class="mt-3 max-h-56 space-y-2 overflow-y-auto text-sm" aria-live="polite">
-            <p v-for="(segment, index) in transcriptSegments" :key="index"><span class="text-ink-gray-5">{{ index + 1 }}.</span> {{ segment.text }}</p>
-            <p v-if="partialTranscript" class="italic text-ink-gray-5">{{ partialTranscript }}</p>
-            <p v-if="!transcriptSegments.length && !partialTranscript" class="text-ink-gray-5">Belum ada transkrip tersimpan.</p>
-          </div>
-        </div>
-        <div v-if="liveMeetingId" class="grid gap-3 lg:grid-cols-3">
-          <section v-for="item in meetingContentSections" :key="item.kind" class="bg-surface-white rounded-[10px] border border-outline-gray-2 p-4">
-            <div class="flex items-start justify-between gap-2">
-              <h3 class="font-semibold">{{ item.title }}</h3>
-              <button @click="generateMeetingContent(item.kind)" :disabled="!!generatingContent || (item.kind === 'analysis' && !transcriptSegments.length)" class="rounded bg-[#980000] px-3 py-1.5 text-xs text-white disabled:opacity-50">
-                {{ generatingContent === item.kind ? 'Menyusun…' : meetingContent[item.kind] ? 'Buat ulang' : 'Buat' }}
-              </button>
-            </div>
-            <p v-if="meetingContent[item.kind]?.transcript_count < transcriptSegments.length" class="mt-2 text-xs text-amber-700">Transkrip bertambah setelah hasil ini dibuat. Buat ulang untuk memperbarui.</p>
-            <p v-if="meetingContent[item.kind]" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-gray-8">{{ meetingText(meetingContent[item.kind].content) }}</p>
-            <p v-else class="mt-3 text-sm text-ink-gray-5">{{ item.empty }}</p>
-          </section>
-        </div>
+        <p v-else class="rounded-xl border border-outline-gray-2 bg-white p-8 text-center text-sm text-ink-gray-5">Belum ada rapat yang dapat dipilih. Jadwalkan rapat terlebih dahulu.</p>
       </div>
 
       <!-- ───── TAB: Decisions ───── -->
@@ -784,7 +814,8 @@
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import { Badge, Button, FeatherIcon, LoadingIndicator, usePageMeta, call } from 'frappe-ui'
-import { Scribe, RealtimeEvents, CommitStrategy } from '@elevenlabs/client'
+import { Scribe, RealtimeEvents, CommitStrategy, AudioFormat } from '@elevenlabs/client'
+import { startMeetingAudioCapture, pcmFrameToBase64 } from '@/lib/committeeAudioCapture'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const viewControls = ref(null)
@@ -937,9 +968,14 @@ const liveMeetingId = ref(null)
 const liveAgendaIdx = ref(0)
 const liveStarted = ref(false)
 const capturing = ref(false)
-const partialTranscript = ref('')
+const startingCapture = ref(false)
+const microphoneAvailable = ref(false)
+const microphoneEnabled = ref(false)
+const partialTranscript = reactive({ meeting: '', mic: '' })
 const transcriptStatus = ref('')
 const transcriptSegments = ref([])
+const liveElapsedSeconds = ref(0)
+const liveElapsedLabel = computed(() => `${String(Math.floor(liveElapsedSeconds.value / 60)).padStart(2, '0')}:${String(liveElapsedSeconds.value % 60).padStart(2, '0')}`)
 const meetingContent = ref({})
 const generatingContent = ref('')
 const meetingContentSections = [
@@ -947,7 +983,18 @@ const meetingContentSections = [
   { kind: 'questions', title: 'Pertanyaan rapat', empty: 'Buat pertanyaan dari agenda dan transkrip yang tersedia.' },
   { kind: 'analysis', title: 'Analisis hasil rapat', empty: 'Simpan transkrip sebelum membuat analisis.' },
 ]
-let transcriptConnection = null
+let audioCapture = null
+let transcriptConnections = {}
+let readySources = new Set()
+let captureStartedAt = 0
+let elapsedTimer = null
+let saveQueue = Promise.resolve()
+let stopPromise = null
+
+function formatLiveOffset(offset) {
+  const seconds = Math.floor(Number(offset || 0) / 1000)
+  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
 
 function meetingText(content) {
   return content.replace(/^#{1,6}\s+/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*\n]+)\*/g, '$1')
@@ -958,6 +1005,7 @@ async function loadMeetingWorkspace(meetingId) {
   transcriptSegments.value = []
   meetingContent.value = {}
   if (!meetingId) return
+  liveStarted.value = meetings.value.find((meeting) => meeting.id === meetingId)?.status === 'in_progress'
   try {
     const [segments, content] = await Promise.all([
       call('crm.api.committee.get_live_transcript', { meeting: meetingId }),
@@ -1004,48 +1052,120 @@ async function startLiveMeeting(meetingId) {
 }
 
 async function startTranscription() {
-  if (capturing.value || !liveMeetingId.value) return
+  if (capturing.value || startingCapture.value || !liveMeetingId.value || !liveStarted.value) return
   transcriptStatus.value = ''
+  startingCapture.value = true
+  const meetingId = liveMeetingId.value
   try {
-    const { token } = await call('crm.api.committee.create_live_transcript_token', { meeting: liveMeetingId.value })
-    transcriptConnection = Scribe.connect({
-      token,
-      modelId: 'scribe_v2_realtime',
-      commitStrategy: CommitStrategy.VAD,
-      languageCode: 'id',
-      microphone: { echoCancellation: true, noiseSuppression: true },
+    audioCapture = await startMeetingAudioCapture({
+      onFrame(source, buffer) {
+        if (!readySources.has(source)) return
+        try {
+          transcriptConnections[source]?.send({ audioBase64: pcmFrameToBase64(buffer) })
+        } catch {
+          transcriptStatus.value = 'Aliran audio terputus. Mulai tangkap kembali.'
+          stopTranscription()
+        }
+      },
+      onEnded() {
+        transcriptStatus.value = 'Berbagi tab dihentikan. Transkrip sedang disimpan.'
+        stopTranscription()
+      },
     })
-    transcriptConnection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, ({ text }) => { partialTranscript.value = text })
-    transcriptConnection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, async ({ text }) => {
-      partialTranscript.value = ''
-      if (!text?.trim()) return
-      try {
-        const saved = await call('crm.api.committee.save_live_transcript_segment', { meeting: liveMeetingId.value, text })
-        transcriptSegments.value.push(saved)
-      } catch {
-        transcriptStatus.value = 'A transcript segment could not be saved. Please retry recording.'
-      }
-    })
-    transcriptConnection.on(RealtimeEvents.ERROR, () => {
-      transcriptStatus.value = 'Live transcription stopped unexpectedly.'
-      stopTranscription()
-    })
+    microphoneAvailable.value = audioCapture.microphoneAvailable
+    microphoneEnabled.value = audioCapture.microphoneAvailable
+    const sources = microphoneAvailable.value ? ['meeting', 'mic'] : ['meeting']
+    const tokens = await Promise.all(sources.map(() => call('crm.api.committee.create_live_transcript_token', { meeting: meetingId })))
+    captureStartedAt = Date.now()
+    for (const [index, source] of sources.entries()) {
+      const connection = Scribe.connect({
+        token: tokens[index].token,
+        modelId: 'scribe_v2_realtime',
+        commitStrategy: CommitStrategy.VAD,
+        languageCode: 'id',
+        audioFormat: AudioFormat.PCM_16000,
+        sampleRate: 16000,
+      })
+      transcriptConnections[source] = connection
+      connection.on(RealtimeEvents.OPEN, () => readySources.add(source))
+      connection.on(RealtimeEvents.PARTIAL_TRANSCRIPT, ({ text }) => { partialTranscript[source] = text || '' })
+      connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, ({ text }) => {
+        partialTranscript[source] = ''
+        if (!text?.trim()) return
+        const offset_ms = Date.now() - captureStartedAt
+        saveQueue = saveQueue.then(async () => {
+          const saved = await call('crm.api.committee.save_live_transcript_segment', { meeting: meetingId, text, source, offset_ms })
+          if (liveMeetingId.value === meetingId) transcriptSegments.value.push(saved)
+        }).catch(() => { transcriptStatus.value = 'Sebagian transkrip gagal disimpan. Periksa koneksi lalu mulai ulang.' })
+      })
+      connection.on(RealtimeEvents.ERROR, () => {
+        transcriptStatus.value = source === 'meeting' ? 'Audio rapat terputus. Mulai tangkap kembali.' : 'Mikrofon terputus; audio rapat tetap ditangkap.'
+        if (source === 'meeting') stopTranscription()
+      })
+    }
     capturing.value = true
-  } catch {
-    transcriptStatus.value = 'Live transcription is unavailable. Check microphone access and service configuration.'
-    stopTranscription()
+    liveElapsedSeconds.value = 0
+    elapsedTimer = window.setInterval(() => { liveElapsedSeconds.value = Math.floor((Date.now() - captureStartedAt) / 1000) }, 1000)
+    if (!microphoneAvailable.value) transcriptStatus.value = 'Mikrofon tidak diizinkan. Audio rapat tetap ditangkap.'
+  } catch (error) {
+    transcriptStatus.value = error?.message || 'Audio rapat belum dapat ditangkap. Coba lagi.'
+    await stopTranscription()
+  } finally {
+    startingCapture.value = false
   }
 }
 
 function stopTranscription() {
-  transcriptConnection?.close()
-  transcriptConnection = null
-  capturing.value = false
-  partialTranscript.value = ''
+  if (stopPromise) return stopPromise
+  stopPromise = (async () => {
+    capturing.value = false
+    window.clearInterval(elapsedTimer)
+    elapsedTimer = null
+    readySources.clear()
+    const capture = audioCapture
+    audioCapture = null
+    try { await capture?.stop() } catch { /* Continue closing transcript connections. */ }
+    const connections = Object.values(transcriptConnections)
+    transcriptConnections = {}
+    await Promise.all(connections.map((connection) => new Promise((resolve) => {
+      let finished = false
+      const finish = () => {
+        if (finished) return
+        finished = true
+        try { connection.close() } finally { resolve() }
+      }
+      const timeout = window.setTimeout(finish, 2000)
+      connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT, () => {
+        window.clearTimeout(timeout)
+        window.setTimeout(finish, 300)
+      })
+      try { connection.commit() } catch { window.clearTimeout(timeout); finish() }
+    })))
+    await saveQueue
+    partialTranscript.meeting = ''
+    partialTranscript.mic = ''
+  })().finally(() => { stopPromise = null })
+  return stopPromise
+}
+
+function toggleMicrophone() {
+  microphoneEnabled.value = !microphoneEnabled.value
+  audioCapture?.setMicrophoneEnabled(microphoneEnabled.value)
+}
+
+async function toggleTranscriptBookmark(index) {
+  if (!liveMeetingId.value) return
+  const meetingId = liveMeetingId.value
+  const bookmarked = !transcriptSegments.value[index]?.bookmarked
+  saveQueue = saveQueue.then(async () => {
+    const segment = await call('crm.api.committee.set_live_transcript_bookmark', { meeting: meetingId, index, bookmarked })
+    if (liveMeetingId.value === meetingId) transcriptSegments.value[index] = segment
+  }).catch(() => { transcriptStatus.value = 'Penanda belum tersimpan. Coba lagi.' })
+  await saveQueue
 }
 
 async function endLiveMeeting() {
-  stopTranscription()
+  await stopTranscription()
   try {
     await call('crm.api.committee.set_meeting_status', { meeting: liveMeetingId.value, status: 'Completed' })
     await loadMeetings()
@@ -1061,17 +1181,11 @@ function nextLiveItem() {
   if (liveAgendaIdx.value < items.length - 1) {
     liveAgendaIdx.value++
   } else {
-    showToast('Live meeting completed')
-    endLiveMeeting()
+    showToast('Ini agenda terakhir. Akhiri sesi setelah pembahasan selesai.')
   }
 }
 
 const liveCurrentMeeting = computed(() => meetings.value.find((m) => m.id === liveMeetingId.value))
-const liveCurrentAgenda = computed(() => {
-  const items = agendaItems.value.filter((a) => a.meetingId === liveMeetingId.value)
-  return items[liveAgendaIdx.value]
-})
-
 const queueItems = ref([])
 const queueKPIs = computed(() => [
   { label: 'Pending Cases', value: String(queueItems.value.length), sub: 'Awaiting committee', color: 'text-amber-600' },
