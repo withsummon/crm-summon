@@ -55,7 +55,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="row in rows"
+                v-for="row in pagedRows"
                 :key="row.name"
                 class="cursor-pointer border-b border-slate-100 transition hover:bg-primary-50/60"
                 @click="openApplication(row)"
@@ -99,7 +99,7 @@
         <!-- Mobile Card List view -->
         <div class="block md:hidden divide-y divide-slate-100">
           <div
-            v-for="row in rows"
+            v-for="row in pagedRows"
             :key="row.name"
             class="p-4 active:bg-slate-50 transition cursor-pointer"
             @click="openApplication(row)"
@@ -129,6 +129,7 @@
             {{ __('Loading application list...') }}
           </div>
         </div>
+        <ListPagination v-model:page="page" :page-size="pageSize" :total="rows.length" />
       </div>
     </div>
 
@@ -508,9 +509,12 @@ import { computed, h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Link from '@/components/Controls/Link.vue'
 import RupiahInput from '@/components/Controls/RupiahInput.vue'
+import ListPagination from '@/components/ListPagination.vue'
 
 const router = useRouter()
 const query = ref('')
+const page = ref(1)
+const pageSize = 20
 const showCreateDialog = ref(false)
 const creatingApplication = ref(false)
 const activeCreateTab = ref('borrower')
@@ -703,6 +707,7 @@ const applications = createResource({
 })
 
 const rows = computed(() => applications.data || [])
+const pagedRows = computed(() => rows.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 const totalRequested = computed(() => rows.value.reduce((sum, row) => sum + Number(row.requested_amount || 0), 0))
 const withTicker = computed(() => rows.value.filter((row) => row.public_company_ticker).length)
 
@@ -798,9 +803,11 @@ function formatDate(value) {
 }
 
 watch(query, () => {
+  page.value = 1
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => applications.fetch(), 250)
 })
+watch(rows, () => { page.value = Math.min(page.value, Math.max(1, Math.ceil(rows.value.length / pageSize))) })
 
 usePageMeta(() => ({ title: 'Credit Analysis' }))
 

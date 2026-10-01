@@ -50,7 +50,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="row in rows"
+                v-for="row in pagedRows"
                 :key="row.name"
                 class="cursor-pointer border-b border-slate-100 transition hover:bg-primary-50/60"
                 @click="openCustomer(row)"
@@ -101,7 +101,7 @@
         <!-- Mobile Card List view -->
         <div class="block md:hidden divide-y divide-slate-100">
           <div
-            v-for="row in rows"
+            v-for="row in pagedRows"
             :key="row.name"
             class="p-4 active:bg-slate-50 transition cursor-pointer"
             @click="openCustomer(row)"
@@ -131,6 +131,7 @@
             {{ __('Loading customer list...') }}
           </div>
         </div>
+        <ListPagination v-model:page="page" :page-size="pageSize" :total="rows.length" />
       </div>
     </div>
   </div>
@@ -140,9 +141,12 @@
 import { Badge, Button, FeatherIcon, createResource, usePageMeta } from 'frappe-ui'
 import { computed, h, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import ListPagination from '@/components/ListPagination.vue'
 
 const router = useRouter()
 const query = ref('')
+const page = ref(1)
+const pageSize = 20
 let searchTimer = null
 
 const customers = createResource({
@@ -154,6 +158,7 @@ const customers = createResource({
 })
 
 const rows = computed(() => customers.data || [])
+const pagedRows = computed(() => rows.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 const totalFacilities = computed(() => rows.value.reduce((sum, row) => sum + Number(row.active_facilities || 0), 0))
 const totalOutstanding = computed(() => rows.value.reduce((sum, row) => sum + Number(row.total_outstanding || 0), 0))
 const watchlistCount = computed(() => rows.value.filter((row) => row.watchlist).length)
@@ -180,9 +185,11 @@ function formatDate(value) {
 }
 
 watch(query, () => {
+  page.value = 1
   clearTimeout(searchTimer)
   searchTimer = setTimeout(() => customers.fetch(), 250)
 })
+watch(rows, () => { page.value = Math.min(page.value, Math.max(1, Math.ceil(rows.value.length / pageSize))) })
 
 usePageMeta(() => ({ title: 'Customer 360' }))
 

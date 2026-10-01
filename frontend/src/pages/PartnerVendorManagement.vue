@@ -251,7 +251,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="vendor in filteredVendors"
+                v-for="vendor in pagedVendors"
                 :key="vendor.id"
                 class="cursor-pointer border-b border-outline-gray-1 hover:bg-surface-gray-1 last:border-0"
                 @click="openVendorProfile(vendor)"
@@ -287,6 +287,7 @@
           </table>
         </div>
       </div>
+      <ListPagination v-model:page="vendorPage" :page-size="vendorPageSize" :total="filteredVendors.length" />
     </div>
 
     <!-- ── ONBOARDING ── -->
@@ -879,8 +880,9 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import ListPagination from '@/components/ListPagination.vue'
 import { Badge, Button, FeatherIcon, usePageMeta } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 usePageMeta(() => ({ title: __('Partner & Vendor Management') }))
 
@@ -1775,6 +1777,8 @@ const vendorSearch = ref('')
 const vendorCategory = ref('')
 const vendorTier = ref('')
 const vendorStatus = ref('')
+const vendorPage = ref(1)
+const vendorPageSize = 20
 
 const vendorCategories = computed(() => Array.from(new Set(vendors.value.map((v) => v.category))))
 const vendorTiers = computed(() => Array.from(new Set(vendors.value.map((v) => v.tier))))
@@ -1795,6 +1799,9 @@ const filteredVendors = computed(() =>
     return matchesSearch && matchesCategory && matchesTier && matchesStatus
   })
 )
+const pagedVendors = computed(() => filteredVendors.value.slice((vendorPage.value - 1) * vendorPageSize, vendorPage.value * vendorPageSize))
+watch([vendorSearch, vendorCategory, vendorTier, vendorStatus], () => { vendorPage.value = 1 })
+watch(filteredVendors, () => { vendorPage.value = Math.min(vendorPage.value, Math.max(1, Math.ceil(filteredVendors.value.length / vendorPageSize))) })
 
 const onboardingStages = [
   { label: 'Pre-screen', count: 4, desc: 'Vendor intake & pre-qualify', color: 'bg-[#980000]', lineColor: 'bg-[#f2b7b7]' },
