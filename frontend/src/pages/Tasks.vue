@@ -918,7 +918,7 @@
 
 <script setup>
 import { ref, reactive, computed, h, defineComponent, onMounted, watch } from 'vue'
-import { Avatar, Badge, Button, Dialog, FeatherIcon, LoadingIndicator, createResource, toast } from 'frappe-ui'
+import { Avatar, Badge, Button, Dialog, FeatherIcon, LoadingIndicator, createResource, toast, usePageMeta } from 'frappe-ui'
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import TaskDetailDrawer from '@/components/TaskDetailDrawer.vue'
@@ -1460,4 +1460,5 @@ onMounted(() => {
   const t = params.get('task')
   if (t) openDrawer(t)
 })
+usePageMeta(() => ({ title: __('Tasks') }))
 </script>
