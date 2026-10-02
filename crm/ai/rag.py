@@ -14,6 +14,8 @@ from crm.ai.openrouter import call_llm_chat, get_ai_settings
 
 
 STRUCTURED_DOCTYPES = {
+	"Customer": ["name", "customer_name", "customer_type", "modified"],
+	"CRM Product": ["name", "product_name", "product_type", "status", "description", "modified"],
 	"CRM Lead": ["name", "lead_name", "status", "organization", "email", "mobile_no", "source", "modified"],
 	"CRM Deal": ["name", "organization", "status", "annual_revenue", "deal_value", "modified"],
 	"Contact": ["name", "first_name", "last_name", "email_id", "mobile_no", "company_name", "modified"],
@@ -378,6 +380,22 @@ def retrieve_sources(query, customer=None, limit=8):
 	return results
 
 
+def _selected_record_source(doctype, name, fields):
+	if not name or not _doctype_ready(doctype):
+		return None
+	rows = frappe.get_list(doctype, filters={"name": name}, fields=_safe_fields(doctype, fields), limit=1)
+	if not rows:
+		return None
+	row = rows[0]
+	return {
+		"title": row.get("customer_name") or row.get("product_name") or row.name,
+		"doctype": doctype,
+		"docname": row.name,
+		"customer": name if doctype == "Customer" else None,
+		"excerpt": _record_to_text(doctype, row),
+	}
+
+
 def is_conversational_query(query):
 	q = re.sub(r"[^\w\s]", "", (query or "").strip().lower())
 	greetings = {
@@ -398,7 +416,7 @@ def is_conversational_query(query):
 	return False
 
 
-def query_rag(query, agent_key=None, customer=None):
+def query_rag(query, agent_key=None, customer=None, product=None):
 	settings = get_ai_settings()
 	from frappe.utils import flt
 
@@ -411,6 +429,13 @@ def query_rag(query, agent_key=None, customer=None):
 		}
 
 	sources = retrieve_sources(query, customer=customer)
+	for source in (
+		_selected_record_source("Customer", customer, ["name", "customer_name", "customer_type"]),
+		_selected_record_source("CRM Product", product, ["name", "product_name", "product_type", "status"]),
+	):
+		if source:
+			sources = [row for row in sources if row.get("doctype") != source["doctype"] or row.get("docname") != source["docname"]]
+			sources.insert(0, source)
 	if not sources:
 		chunk_count = frappe.db.count("CRM AI RAG Chunk") if frappe.db.table_exists("CRM AI RAG Chunk") else 0
 		if chunk_count == 0:

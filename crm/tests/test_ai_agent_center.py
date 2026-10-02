@@ -17,6 +17,7 @@ from crm.api.ai_agent_center import (
 	save_ai_settings,
 	_parse_structured_response,
 )
+from crm.ai.rag import query_rag
 
 
 class TestAIAgentCenter(TestCase):
@@ -34,6 +35,21 @@ class TestAIAgentCenter(TestCase):
 		fake_frappe = SimpleNamespace(db=SimpleNamespace(sql=lambda *args, **kwargs: [[0]]), utils=SimpleNamespace(today=lambda: "2026-05-24"))
 		with patch("crm.api.ai_agent_center.ensure_ai_tables"), patch("crm.api.ai_agent_center.get_ai_settings", return_value=settings), patch("crm.api.ai_agent_center.frappe", fake_frappe):
 			self.assertEqual(len(get_agents.__wrapped__()), 10)
+
+	def test_selected_customer_and_product_are_grounding_sources_without_chunks(self):
+		customer = {"title": "Nasabah A", "doctype": "Customer", "docname": "C-1", "excerpt": "Customer Name: Nasabah A"}
+		product = {"title": "Produk B", "doctype": "CRM Product", "docname": "P-1", "excerpt": "Status: Pending Approval"}
+		with (
+			patch("crm.ai.rag.get_ai_settings"),
+			patch("crm.ai.rag.retrieve_sources", return_value=[]),
+			patch("crm.ai.rag._selected_record_source", side_effect=[customer, product]),
+			patch("crm.ai.rag.frappe.db.table_exists", return_value=True),
+			patch("crm.ai.rag.frappe.db.count", return_value=1),
+		):
+			result = query_rag("Buat draf ucapan ulang tahun", customer="C-1", product="P-1")
+		self.assertTrue(result["passes_guardrail"])
+		self.assertEqual({source["doctype"] for source in result["sources"]}, {"Customer", "CRM Product"})
+		self.assertIn("Pending Approval", result["context"])
 
 	def test_openrouter_client_uses_configured_model_and_actual_cost(self):
 		settings = frappe._dict({"api_key": "test-key", "model": DEFAULT_LLM_MODEL})

@@ -364,6 +364,9 @@ def _system_prompt(agent, rag_context, customer=None):
 		"Jawab selalu dalam Bahasa Indonesia profesional, ringkas, dan spesifik untuk konteks banking/CRM.\n"
 		"Gunakan hanya sumber CRM/RAG yang diberikan untuk klaim faktual terkait nasabah, kredit, risiko, dokumen, transaksi, dan portofolio.\n"
 		"Jika sumber tidak cukup, jelaskan data yang kurang di field limitations. Jangan mengarang fakta.\n"
+		"Untuk permintaan draf ucapan atau hadiah, buat draf kreatif dari nama dan produk yang terverifikasi tanpa mengklaim tanggal lahir, preferensi, atau riwayat yang tidak ada. "
+		"Jika tanggal ulang tahun belum tersedia, tulis di limitations bahwa tanggal dan persetujuan pengiriman harus diverifikasi sebelum pesan dikirim. "
+		"Jika status produk belum Active, nyatakan proposal hanya konsep internal; jangan menjanjikan ketersediaan, harga, bunga, atau persetujuan kredit.\n"
 		"WAJIB mengembalikan hanya JSON valid. Jangan gunakan markdown, heading markdown, tabel markdown, fenced code block, atau teks di luar JSON.\n"
 		"Gunakan schema JSON berikut secara ketat; pertahankan semua key utama meskipun nilainya kosong:\n"
 		f"{_json_schema_instruction(agent)}\n"
@@ -743,7 +746,7 @@ def _guardrail_structured_response(agent_key, sources=None, confidence=0):
 	response = _response_shell(
 		agent_key,
 		title="Data belum cukup untuk dianalisis",
-		summary="Saya belum memiliki sumber CRM/RAG yang cukup untuk menjawab dengan aman. Mohon index atau lampirkan data nasabah, dokumen, atau transaksi yang relevan terlebih dahulu.",
+		summary="Data yang tersedia belum cukup untuk menjawab dengan aman. Pilih nasabah dan produk yang relevan atau lengkapi dokumen pendukungnya.",
 		confidence=confidence,
 		sources=sources,
 		limitations=["Sumber terindeks belum cukup untuk membuat klaim faktual.", "Tidak ada analisis spekulatif yang dibuat."],
@@ -751,8 +754,8 @@ def _guardrail_structured_response(agent_key, sources=None, confidence=0):
 	response["sections"] = [
 		{
 			"title": "Data yang Dibutuhkan",
-			"summary": "Tambahkan dokumen atau konteks CRM yang relevan agar agent dapat membuat analisis berbasis sumber.",
-			"items": ["Customer/application context", "Dokumen pendukung", "Data transaksi atau portofolio terkait"],
+			"summary": "Pilih nasabah dan produk atau lengkapi informasi pendukung agar analisis dapat dibuat.",
+			"items": ["Profil nasabah atau aplikasi", "Dokumen pendukung", "Data transaksi atau portofolio terkait"],
 			"metrics": [],
 		}
 	]
@@ -1179,14 +1182,14 @@ def _inject_rag_context(message, rag, customer=None):
 
 
 @frappe.whitelist()
-def query_agent(agent_key="general", message=None, session_id=None, customer=None, attachments=None):
+def query_agent(agent_key="general", message=None, session_id=None, customer=None, attachments=None, product=None):
 	if not message or not str(message).strip():
 		frappe.throw(_("Message is required"))
 	agent = _get_agent(agent_key)
 	session_id = _save_session(agent["key"], customer=customer, session_id=session_id, title=agent["name"])
 	_save_message(session_id, agent["key"], "user", message)
 
-	rag = query_rag(message, agent_key=agent["key"], customer=customer)
+	rag = query_rag(message, agent_key=agent["key"], customer=customer, product=product)
 	rag = _inject_rag_context(message, rag, customer=customer)
 	if not rag["passes_guardrail"]:
 		structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])
@@ -1224,7 +1227,7 @@ def _sse(event, data):
 
 
 @frappe.whitelist(methods=["POST"])
-def query_agent_stream(agent_key="general", message=None, session_id=None, customer=None, attachments=None):
+def query_agent_stream(agent_key="general", message=None, session_id=None, customer=None, attachments=None, product=None):
 	def generate():
 		try:
 			if not message or not str(message).strip():
@@ -1235,9 +1238,9 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 			current_session = _save_session(agent["key"], customer=customer, session_id=session_id, title=agent["name"])
 			_save_message(current_session, agent["key"], "user", message)
 			yield _sse("meta", {"session_id": current_session, "agent_key": agent["key"]})
-			yield _sse("status", {"code": "mengambil_sumber", "message": "Mengambil sumber CRM/RAG yang relevan..."})
+			yield _sse("status", {"code": "mengambil_sumber", "message": "Menyiapkan konteks nasabah yang relevan..."})
 
-			rag = query_rag(message, agent_key=agent["key"], customer=customer)
+			rag = query_rag(message, agent_key=agent["key"], customer=customer, product=product)
 			rag = _inject_rag_context(message, rag, customer=customer)
 			if not rag["passes_guardrail"]:
 				structured = _guardrail_structured_response(agent["key"], rag["sources"], rag["confidence"])

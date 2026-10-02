@@ -186,7 +186,7 @@
                 </label>
                 <select v-model="selectedProduct" class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-100">
                   <option value="">-- {{ __('Pilih Produk') }} --</option>
-                  <option v-for="prod in productsList" :key="prod.name" :value="prod.name">{{ prod.product_name }}</option>
+                  <option v-for="prod in productsList" :key="prod.name" :value="prod.name">{{ prod.product_name }} ({{ prod.status }})</option>
                 </select>
               </div>
               <div class="flex items-end shrink-0">
@@ -720,6 +720,7 @@ async function streamAgentResponse({ agent, content, loadingId }) {
       message: content,
       session_id: sessionId.value,
       customer: selectedCustomer.value || undefined,
+      product: selectedProduct.value || undefined,
       attachments: attachments.value.map((file) => ({ name: file.name, size: file.size, type: file.type })),
     }),
   })
@@ -882,7 +883,7 @@ async function loadCustomersAndProducts() {
     customersList.value = await call('crm.api.omnichannel.search_customers', { query: '' })
     productsList.value = await call('frappe.client.get_list', {
       doctype: 'CRM Product',
-      fields: ['name', 'product_name'],
+      fields: ['name', 'product_name', 'status'],
       limit_page_length: 100
     })
   } catch (error) {
@@ -901,7 +902,7 @@ async function generateProposalDraft() {
 
   let prompt = ''
   if (selectedAgent.value?.key === 'proposal_generator') {
-    prompt = `Susun draf ucapan personal beserta opsi hadiah menarik yang kreatif, dan buat proposal terstruktur untuk nasabah ${customerName} dengan produk ${productName}.`
+    prompt = `Susun draf ucapan ulang tahun personal beserta opsi hadiah kreatif, dan buat proposal terstruktur untuk nasabah ${customerName} dengan produk ${productName}. Tanggal ulang tahun dan persetujuan pengiriman harus diverifikasi sebelum digunakan.`
   } else if (selectedAgent.value?.key === 'relationship_manager') {
     prompt = `Berikan saran next best action dan draf pesan WhatsApp/Email personal untuk nasabah ${customerName} dengan produk ${productName}.`
   } else {
