@@ -76,7 +76,7 @@
                 </div>
                 <div>
                   <h3 class="text-lg font-bold text-slate-900">{{ __('Select an agent and ask a banking workflow question') }}</h3>
-                  <p class="mt-1 text-sm text-slate-500">{{ __('Answers use indexed CRM and Customer 360 sources. Unsupported facts are blocked by guardrails.') }}</p>
+                  <p class="mt-1 text-sm text-slate-500">{{ __('Answers use available CRM records. Details without a reliable source are clearly identified.') }}</p>
                 </div>
               </div>
               <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -258,7 +258,7 @@
                   <span>Hallucination Guardrails: Active</span>
                 </div>
                 <p class="mt-1 text-[10px] text-slate-500 leading-relaxed">
-                  All AI claims are automatically cross-referenced with IGLO CRM RAG indexes. Unsupported or speculative statements are systematically blocked.
+                  Answers are checked against available CRM records. Details without a reliable source are clearly identified.
                 </p>
               </PanelBlock>
               <PanelBlock title="Sources">
@@ -410,14 +410,14 @@
                 <Button class="mt-2 w-full" size="sm" variant="solid" :label="__('Run Sandbox')" :loading="isSandboxing" @click="runSandbox" />
                 <StructuredResponseCard v-if="sandboxResult" class="mt-3" :response="sandboxResult" :fallback="sandboxFallback" compact />
               </PanelBlock>
-              <PanelBlock title="RAG">
+              <PanelBlock title="Knowledge">
                 <div class="space-y-2 text-xs text-slate-600">
                   <div class="flex justify-between gap-3">
                     <span>{{ __('Status') }}</span>
                     <span class="font-semibold text-slate-800">{{ ragStatus.status || '-' }}</span>
                   </div>
                   <div class="flex justify-between gap-3">
-                    <span>{{ __('Indexed records') }}</span>
+                    <span>{{ __('Knowledge entries') }}</span>
                     <span class="font-mono text-slate-800">{{ ragStatus.chunk_count || 0 }}</span>
                   </div>
                 </div>
@@ -838,7 +838,7 @@ async function reindexRag() {
   isReindexing.value = true
   try {
     const result = await call('crm.api.ai_agent_center.reindex_rag', {})
-    toast.success(__('RAG indexed {0} records', [result.indexed]))
+    toast.success(__('Knowledge refreshed for {0} records', [result.indexed]))
   } finally {
     isReindexing.value = false
   }
