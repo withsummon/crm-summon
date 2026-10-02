@@ -72,6 +72,14 @@ class TestAIAgentCenter(TestCase):
 		self.assertEqual({source["docname"] for source in result["sources"]}, {"C-1", "P-1"})
 		retrieve.assert_not_called()
 
+	def test_model_cannot_add_sources_that_were_not_retrieved(self):
+		response = _parse_structured_response(
+			json.dumps({"title": "Draf Ucapan", "sources": [{"title": "Sumber rekaan"}]}),
+			"proposal_generator",
+			sources=[],
+		)
+		self.assertEqual(response["sources"], [])
+
 	def test_openrouter_client_uses_configured_model_and_actual_cost(self):
 		settings = frappe._dict({"api_key": "test-key", "model": DEFAULT_LLM_MODEL})
 		response = SimpleNamespace(

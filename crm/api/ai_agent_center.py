@@ -663,7 +663,7 @@ def _normalize_structured_response(data, agent_key, sources=None, confidence=0):
 		title=_safe_text(data.get("title") or agent["name"], agent["name"]),
 		summary=_safe_text(data.get("executive_summary") or data.get("summary") or "Output AI berhasil dibuat.", "Output AI berhasil dibuat."),
 		confidence=data.get("confidence") if data.get("confidence") is not None else confidence,
-		sources=data.get("sources") or sources,
+		sources=sources if sources is not None else data.get("sources"),
 		limitations=_as_list_of_text(data.get("limitations")),
 	)
 	if normalized["confidence"] > 1:

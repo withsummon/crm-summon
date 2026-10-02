@@ -147,7 +147,7 @@
                   </div>
 
                   <div v-if="message.role === 'assistant' && !message.loading" class="mt-3 flex items-center gap-2 border-t border-slate-200 pt-2">
-                    <Button v-if="message.structuredResponse && selectedAgent?.key === 'proposal_generator'" size="sm" variant="outline" :label="__('Download PDF')" :loading="exportingMessageId === message.id" @click="downloadResponsePdf(message)">
+                    <Button v-if="message.structuredResponse && message.structuredResponse.title !== 'Data belum cukup untuk dianalisis' && selectedAgent?.key === 'proposal_generator'" size="sm" variant="outline" :label="__('Download PDF')" :loading="exportingMessageId === message.id" @click="downloadResponsePdf(message)">
                       <template #prefix><FeatherIcon name="download" class="mr-1 h-3.5 w-3.5" /></template>
                     </Button>
                     <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-primary-700" @click="submitFeedback(message, 'up')">
