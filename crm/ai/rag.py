@@ -416,6 +416,23 @@ def is_conversational_query(query):
 	return False
 
 
+def is_birthday_greeting_query(query):
+	return bool(re.search(r"\b(?:ulang\s+tahun|ultah|birthday)\b", query or "", re.IGNORECASE))
+
+
+def _mentioned_record_name(query, marker, doctype, display_field):
+	match = re.search(
+		rf"\b{marker}\s+(.+?)(?=\s+(?:dengan|dan|untuk|yang|berupa|mengenai|dalam)\b|[.!?\n]|$)",
+		query or "",
+		re.IGNORECASE,
+	)
+	if not match:
+		return None
+	candidate = match.group(1).strip()
+	rows = frappe.get_list(doctype, filters={display_field: candidate}, fields=["name"], limit=1)
+	return rows[0].name if rows else None
+
+
 def query_rag(query, agent_key=None, customer=None, product=None):
 	settings = get_ai_settings()
 	from frappe.utils import flt
@@ -428,7 +445,11 @@ def query_rag(query, agent_key=None, customer=None, product=None):
 			"passes_guardrail": True,
 		}
 
-	sources = retrieve_sources(query, customer=customer)
+	birthday_greeting = is_birthday_greeting_query(query)
+	if birthday_greeting:
+		customer = customer or _mentioned_record_name(query, "nasabah", "Customer", "customer_name")
+		product = product or _mentioned_record_name(query, "produk", "CRM Product", "product_name")
+	sources = [] if birthday_greeting else retrieve_sources(query, customer=customer)
 	for source in (
 		_selected_record_source("Customer", customer, ["name", "customer_name", "customer_type"]),
 		_selected_record_source("CRM Product", product, ["name", "product_name", "product_type", "status"]),
@@ -436,17 +457,19 @@ def query_rag(query, agent_key=None, customer=None, product=None):
 		if source:
 			sources = [row for row in sources if row.get("doctype") != source["doctype"] or row.get("docname") != source["docname"]]
 			sources.insert(0, source)
-	if not sources:
+	if not sources and not birthday_greeting:
 		chunk_count = frappe.db.count("CRM AI RAG Chunk") if frappe.db.table_exists("CRM AI RAG Chunk") else 0
 		if chunk_count == 0:
 			reindex_structured_data(scope="customer_360" if customer else "crm", docname=customer, agent_key=agent_key)
 			sources = retrieve_sources(query, customer=customer)
 
 	context = "\n\n".join(f"[{idx + 1}] {source['title']}\n{source['excerpt']}" for idx, source in enumerate(sources))
+	if birthday_greeting and not sources:
+		context = "Permintaan ini hanya memerlukan draf ucapan kreatif. Tidak ada identitas atau tanggal ulang tahun nasabah yang terverifikasi; gunakan sapaan netral dan minta verifikasi sebelum pengiriman."
 	confidence = min(0.95, 0.2 + (len(sources) * 0.1))
 	
 	# If any sources are retrieved, allow the grounded answer to pass the guardrail
-	passes = len(sources) > 0
+	passes = birthday_greeting or len(sources) > 0
 
 	return {
 		"context": context,

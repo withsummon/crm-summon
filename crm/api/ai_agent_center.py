@@ -12,7 +12,7 @@ from frappe.utils import cstr
 from werkzeug.wrappers import Response
 
 from crm.ai.openrouter import DEFAULT_LLM_MODEL, call_llm_chat, get_ai_settings, stream_llm_chat_events
-from crm.ai.rag import parser_command_available, query_rag, reindex_structured_data
+from crm.ai.rag import is_birthday_greeting_query, parser_command_available, query_rag, reindex_structured_data
 
 
 AGENTS = [
@@ -328,8 +328,8 @@ def _response_shell(agent_key, title=None, summary=None, confidence=0, sources=N
 	}
 
 
-def _json_schema_instruction(agent):
-	sections = _agent_section_titles(agent["key"])
+def _json_schema_instruction(agent, birthday_only=False):
+	sections = ["Draf Ucapan", "Opsi Hadiah", "Catatan Pengiriman"] if birthday_only else _agent_section_titles(agent["key"])
 	return json.dumps(
 		{
 			"schema_version": STRUCTURED_SCHEMA_VERSION,
@@ -357,7 +357,7 @@ def _json_schema_instruction(agent):
 	)
 
 
-def _system_prompt(agent, rag_context, customer=None):
+def _system_prompt(agent, rag_context, customer=None, birthday_only=False):
 	tools = ", ".join(_agent_tools(agent["key"]))
 	return (
 		f"Anda adalah {agent['name']}, {agent['role']} untuk IGLO CRM.\n"
@@ -367,9 +367,10 @@ def _system_prompt(agent, rag_context, customer=None):
 		"Untuk permintaan draf ucapan atau hadiah, buat draf kreatif dari nama dan produk yang terverifikasi tanpa mengklaim tanggal lahir, preferensi, atau riwayat yang tidak ada. "
 		"Jika tanggal ulang tahun belum tersedia, tulis di limitations bahwa tanggal dan persetujuan pengiriman harus diverifikasi sebelum pesan dikirim. "
 		"Jika status produk belum Active, nyatakan proposal hanya konsep internal; jangan menjanjikan ketersediaan, harga, bunga, atau persetujuan kredit.\n"
+		f"{'Untuk permintaan ucapan saja, fokus pada teks ucapan dan ide hadiah. Jangan membuat bagian proposal, pricing, atau analisis kredit.' if birthday_only else ''}\n"
 		"WAJIB mengembalikan hanya JSON valid. Jangan gunakan markdown, heading markdown, tabel markdown, fenced code block, atau teks di luar JSON.\n"
 		"Gunakan schema JSON berikut secara ketat; pertahankan semua key utama meskipun nilainya kosong:\n"
-		f"{_json_schema_instruction(agent)}\n"
+		f"{_json_schema_instruction(agent, birthday_only=birthday_only)}\n"
 		"Field actions hanya boleh berisi action yang benar-benar diminta user atau relevan sebagai low-risk draft. "
 		"High-risk action wajib risk_level high dan akan menunggu konfirmasi.\n"
 		"Jika user meminta laporan/PDF/export, tambahkan action generate_pdf_report dengan payload title, reference_doctype, reference_docname bila tersedia.\n\n"
@@ -1199,7 +1200,8 @@ def query_agent(agent_key="general", message=None, session_id=None, customer=Non
 		return {"response": response, "structured_response": structured, "session_id": session_id, "message_id": message_id, "sources": rag["sources"], "actions": [], "confidence": rag["confidence"]}
 
 	settings = get_ai_settings()
-	system_prompt = _system_prompt(agent, rag["context"], customer=customer)
+	birthday_only = is_birthday_greeting_query(message) and not any(source.get("doctype") == "CRM Product" for source in rag["sources"])
+	system_prompt = _system_prompt(agent, rag["context"], customer=customer, birthday_only=birthday_only)
 	messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
 	result = call_llm_chat(messages, model=settings.model, thinking_mode=settings.thinking_mode)
 	structured = _parse_structured_response(result.content, agent["key"], rag["sources"], rag["confidence"])
@@ -1268,7 +1270,8 @@ def query_agent_stream(agent_key="general", message=None, session_id=None, custo
 				return
 
 			settings = get_ai_settings()
-			system_prompt = _system_prompt(agent, rag["context"], customer=customer)
+			birthday_only = is_birthday_greeting_query(message) and not any(source.get("doctype") == "CRM Product" for source in rag["sources"])
+			system_prompt = _system_prompt(agent, rag["context"], customer=customer, birthday_only=birthday_only)
 			messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
 			yield _sse("sources", {"sources": rag["sources"], "confidence": rag["confidence"]})
 			yield _sse("status", {"code": "menghasilkan_analisis", "message": "Menghasilkan analisis terstruktur Bahasa Indonesia..."})

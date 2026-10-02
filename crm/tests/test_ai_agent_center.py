@@ -51,6 +51,27 @@ class TestAIAgentCenter(TestCase):
 		self.assertEqual({source["doctype"] for source in result["sources"]}, {"Customer", "CRM Product"})
 		self.assertIn("Pending Approval", result["context"])
 
+	def test_generic_birthday_draft_does_not_cite_unrelated_crm_records(self):
+		with patch("crm.ai.rag.get_ai_settings"), patch("crm.ai.rag.retrieve_sources") as retrieve, patch("crm.ai.rag._mentioned_record_name", return_value=None):
+			result = query_rag("buat ucapan ulang tahun untuk nasabah", agent_key="proposal_generator")
+		self.assertTrue(result["passes_guardrail"])
+		self.assertEqual(result["sources"], [])
+		self.assertIn("sapaan netral", result["context"])
+		retrieve.assert_not_called()
+
+	def test_birthday_draft_resolves_records_named_in_text(self):
+		customer = {"title": "Nasabah A", "doctype": "Customer", "docname": "C-1", "excerpt": "Customer Name: Nasabah A"}
+		product = {"title": "Produk B", "doctype": "CRM Product", "docname": "P-1", "excerpt": "Status: Pending Approval"}
+		with (
+			patch("crm.ai.rag.get_ai_settings"),
+			patch("crm.ai.rag._mentioned_record_name", side_effect=["C-1", "P-1"]),
+			patch("crm.ai.rag._selected_record_source", side_effect=[customer, product]),
+			patch("crm.ai.rag.retrieve_sources") as retrieve,
+		):
+			result = query_rag("ucapan ulang tahun untuk nasabah Nasabah A dengan produk Produk B", agent_key="proposal_generator")
+		self.assertEqual({source["docname"] for source in result["sources"]}, {"C-1", "P-1"})
+		retrieve.assert_not_called()
+
 	def test_openrouter_client_uses_configured_model_and_actual_cost(self):
 		settings = frappe._dict({"api_key": "test-key", "model": DEFAULT_LLM_MODEL})
 		response = SimpleNamespace(

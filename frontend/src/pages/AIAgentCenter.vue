@@ -112,7 +112,9 @@
                   <div v-else-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-6">
                     {{ message.content }}
                   </div>
-                  <StructuredResponseCard v-else :response="message.structuredResponse" :fallback="message.content" />
+                  <div v-else :data-ai-response-id="message.id">
+                    <StructuredResponseCard :response="message.structuredResponse" :fallback="message.content" />
+                  </div>
 
                   <div v-if="message.sources?.length" class="mt-3 border-t border-slate-200 pt-3">
                     <button class="text-xs font-semibold text-primary-700" @click="selectedSources = message.sources">
@@ -145,6 +147,9 @@
                   </div>
 
                   <div v-if="message.role === 'assistant' && !message.loading" class="mt-3 flex items-center gap-2 border-t border-slate-200 pt-2">
+                    <Button v-if="message.structuredResponse && selectedAgent?.key === 'proposal_generator'" size="sm" variant="outline" :label="__('Download PDF')" :loading="exportingMessageId === message.id" @click="downloadResponsePdf(message)">
+                      <template #prefix><FeatherIcon name="download" class="mr-1 h-3.5 w-3.5" /></template>
+                    </Button>
                     <button class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-primary-700" @click="submitFeedback(message, 'up')">
                       <FeatherIcon name="thumbs-up" class="h-4 w-4" />
                     </button>
@@ -190,7 +195,7 @@
                 </select>
               </div>
               <div class="flex items-end shrink-0">
-                <Button variant="solid" theme="primary" size="sm" :disabled="!selectedCustomer || !selectedProduct || isLoading" @click="generateProposalDraft">
+                <Button variant="solid" theme="primary" size="sm" :disabled="isLoading" :loading="isLoading" @click="generateProposalDraft">
                   <template #prefix><FeatherIcon name="sparkles" class="h-3.5 w-3.5 mr-0.5" /></template>
                   {{ selectedAgent?.key === 'proposal_generator' ? __('Draft Proposal & Hadiah') : __('Next Best Action & Draf') }}
                 </Button>
@@ -448,6 +453,7 @@ import StructuredResponseCard from '@/components/AI/StructuredResponseCard.vue'
 import { showSettings, activeSettingsPage } from '@/composables/settings'
 import { Badge, Button, FeatherIcon, call, toast } from 'frappe-ui'
 import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
+import html2pdf from 'html2pdf.js'
 
 const router = useRouter()
 
@@ -458,6 +464,7 @@ const messages = ref([])
 const inputMessage = ref('')
 const sessionId = ref(null)
 const isLoading = ref(false)
+const exportingMessageId = ref(null)
 const isReindexing = ref(false)
 const isSandboxing = ref(false)
 const attachments = ref([])
@@ -621,10 +628,9 @@ function selectAgent(agent) {
   persistAgentConversation(messages.value)
   selectedAgent.value = agent
   localStorage.setItem('ai_agent_center_selected_agent', agent.key)
-  selectedCustomer.value = ''
-  selectedProduct.value = ''
   loadAgentConversation(agent)
   loadAutomationRules()
+  if (!customersList.value.length || !productsList.value.length) loadCustomersAndProducts()
 }
 
 function agentStorageKey(agentKey) {
@@ -879,20 +885,24 @@ const PanelBlock = {
 }
 
 async function loadCustomersAndProducts() {
-  try {
-    customersList.value = await call('crm.api.omnichannel.search_customers', { query: '' })
-    productsList.value = await call('frappe.client.get_list', {
+  const [customers, products] = await Promise.allSettled([
+    call('crm.api.omnichannel.search_customers', { query: '' }),
+    call('frappe.client.get_list', {
       doctype: 'CRM Product',
       fields: ['name', 'product_name', 'status'],
       limit_page_length: 100
-    })
-  } catch (error) {
-    console.error('Failed to load customers or products', error)
-  }
+    }),
+  ])
+  if (customers.status === 'fulfilled') customersList.value = customers.value
+  if (products.status === 'fulfilled') productsList.value = products.value
+  if (customers.status === 'rejected' || products.status === 'rejected') toast.error(__('Pilihan nasabah atau produk belum dapat dimuat. Coba lagi.'))
 }
 
 async function generateProposalDraft() {
-  if (!selectedCustomer.value || !selectedProduct.value) return
+  if (!selectedCustomer.value || !selectedProduct.value) {
+    toast.error(__('Pilih nasabah dan produk terlebih dahulu.'))
+    return
+  }
   
   const customerObj = customersList.value.find(c => c.name === selectedCustomer.value)
   const customerName = customerObj ? customerObj.customer_name : selectedCustomer.value
@@ -910,6 +920,30 @@ async function generateProposalDraft() {
   }
   
   await sendMessage(prompt)
+}
+
+async function downloadResponsePdf(message) {
+  const response = document.querySelector(`[data-ai-response-id="${message.id}"]`)
+  if (!response) return
+  exportingMessageId.value = message.id
+  const page = document.createElement('div')
+  page.style.cssText = 'width: 720px; padding: 24px; background: white; color: #0f172a;'
+  page.appendChild(response.cloneNode(true))
+  const birthday = /ulang tahun|ultah|birthday/i.test(message.content || '')
+  const filename = `${birthday ? 'ucapan-ulang-tahun' : 'proposal'}-${new Date().toISOString().slice(0, 10)}.pdf`
+  try {
+    await html2pdf().set({
+      margin: 10,
+      filename,
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    }).from(page).save()
+    toast.success(__('PDF berhasil diunduh'))
+  } catch (error) {
+    toast.error(__('Gagal mengunduh PDF'))
+  } finally {
+    exportingMessageId.value = null
+  }
 }
 
 onMounted(async () => {
